@@ -159,7 +159,8 @@ The intermediate QB buffer makes each stage independently inspectable;
 this implementation does not depend on a hand-written Cube/Vector
 handshake. The obsolete native QB entry and its private header are removed.
 This completes the TP1 SWA projection/cache/Attention/output-projection
-compute path in DSL; mHC and MoE retain their separate implementations.
+compute path in DSL. The mHC boundary leaves are described below; coefficient
+generation and the MoE kernels retain their separate implementations.
 
 With an allocated A5 device, run:
 
@@ -172,6 +173,42 @@ inactive NaN input sentinels, and an M80 boundary. They check normalized
 BF16 values, exact FP8/E8M0 bytes, QB output before RoPE, final Q, and exact
 inactive-output preservation. The composed SWA and layer entries keep
 their original golden functions and comparison thresholds.
+
+## mHC boundary operations in DSL
+
+[`hc_dsl.py`](../../../models/deepseek_v4_1_flash/hc_dsl.py) provides the
+AIV leaves used by the shared `hc_head_norm` and `hc_post` interfaces in
+[`hc.py`](../../../models/deepseek_v4_1_flash/hc.py). PyPTO/simpler schedules
+one task per physical row with a bounded pool of completion dependencies.
+The collapse helper returns a joined TaskId; residual expansion honors the
+existing caller-supplied dependencies.
+
+Collapse uses the incoming delayed pre-mix, multiplies four FP32 streams,
+sums them as `(y0 + y1) + (y2 + y3)`, and rounds to BF16 before computing
+RMSNorm in FP32. The inverse uses square root and precise FP32 division;
+the weighted normalized output is BF16. Residual expansion casts the BF16
+sublayer output to FP32, then adds residual streams 0 through 3 in order
+using `residual_mix[input_stream, output_stream]`. Its output stays FP32.
+Both helpers process every physical row; existing callers own padding clears.
+
+The same shared residual expansion serves Attention and MoE callers. The
+collapse-only `hc_head`, prefill's padding-aware `prefill_sp_post`, HF32
+coefficient projection, and Sinkhorn remain on their existing paths. Their
+migration requires separate validation of their distinct contracts.
+
+With an allocated A5 device, run the standalone boundary checks and the
+SWA/layer entries documented above:
+
+```bash
+python models/deepseek_v4_1_flash/hc.py --op boundary --batch 17 -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/hc.py --op boundary --batch 1 -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/hc.py --op boundary --batch 72 -d "$TASK_DEVICE"
+```
+
+The fused-norm entry checks zero and near-zero rows with no allowed
+outliers. The post entry checks the existing model golden and exact
+elementwise equality against sequential FP32 accumulation. Composed model
+goldens and acceptance thresholds are unchanged.
 
 ## Output projection in DSL
 
@@ -224,3 +261,5 @@ The [QA/KV input archive](../../../artifacts/dsv4_1_dsl/2026-11-03-qkv-input/REA
 records the next projection stage and the #1666/#1667 cache-quantizer alignment.
 The [Q-branch archive](../../../artifacts/dsv4_1_dsl/2026-11-03-q-branch/README.txt)
 contains normalization/QB/RoPE stage evidence, frozen data and generated kernels.
+The [mHC boundary archive](../../../artifacts/dsv4_1_dsl/2026-11-04-mhc-boundary/README.txt)
+contains collapse/RMSNorm and FP32 residual-expansion validation and generated kernels.

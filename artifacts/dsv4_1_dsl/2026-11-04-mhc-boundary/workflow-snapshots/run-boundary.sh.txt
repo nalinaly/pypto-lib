@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+work_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+for batch in 1 72; do
+    bash "$work_dir/../dsv41-semantic-review/run_case.sh" \
+        models/deepseek_v4_1_flash/hc.py --op boundary --batch "$batch" --save-data \
+        > "$work_dir/boundary-$batch.log" 2>&1
+done

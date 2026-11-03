@@ -1,0 +1,9 @@
+Base f1339fb; branch nalinaly/pypto-lib:dsv4.1-dsl.
+Scope: shared hc_head_norm and hc_post, with CANNBotDSL AIV leaves and PyPTO/simpler row scheduling. Keep delayed incoming pre-mix, pairwise FP32 collapse, BF16 before RMSNorm, sequential FP32 residual expansion, TaskId and dependency interfaces.
+No framework edits. Coefficient projection, Sinkhorn, collapse-only hc_head and padding-aware prefill_sp_post retain their existing implementations.
+Compile-only boundary batch17 PASS.
+Initial post test failed due to passing an element coordinate to tile_slice, whose coordinate is a tile index. Corrected the output-stream offset; this was a model-source mistake, not a framework problem.
+Corrected batch17 post and norm PASS: task_20261104_004038_145051327836. Post matches sequential FP32 reference with zero tolerance. Norm checks zero/near-zero rows, rtol 1/128, atol 1e-6, no allowed outliers.
+Batch1 and batch72 post/norm PASS: task_20261104_004128_147139314463. Same six stage checks in total, with dynamic row metadata.
+72-token composed SWA PASS: task_20261104_004128_147145819468; RUN PASS 40.07s. All original goldens and thresholds retained.
+Layer0 EP2 PASS: task_20261104_004220_148508322278; allocated devices 0,5; all 16 outputs passed, RUN PASS 151.64s. Original acceptance thresholds retained, including the 1.5% attention-output budget. No formal performance A/B.

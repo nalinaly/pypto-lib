@@ -17,9 +17,10 @@ import torch.nn.functional as F
 from pypto.runtime import pto_isa_include_dir
 
 from config import FLASH as M, SP_T_DYN, T_DYN
+from hc_dsl import collapse_norm_row, expand_row, TASK_TILE
 
 
-# model config
+# 模型配置
 D = M.hidden_size
 HC_MULT = M.hc_mult
 HC_DIM = M.hc_dim
@@ -29,7 +30,7 @@ HC_SINKHORN_ITER = M.hc_sinkhorn_iters
 HC_EPS = M.hc_eps
 NORM_EPS = M.rms_norm_eps
 
-# tiling
+# 分块参数
 MIX_PAD = 32
 HC_PAD = 8
 T_TILE = 8
@@ -41,12 +42,8 @@ RMS_K_TILE = 1024
 LINEAR_K_TILE = 256
 LINEAR_OK = 4
 LINEAR_K_PER_SPLIT = HC_DIM // LINEAR_OK
-D_TILE = 2560
 PRE_T_TILE = 2
 HEAD_D_TILE = 5120
-PRE_NORM_T_TILE = 8
-PRE_NORM_D_TILE = 512
-POST_WORKER_TILE = 64
 
 
 @pl.jit.extern(core_type="aic", source=Path(__file__).parent / "kernels" / "hc_linear.cpp",
@@ -190,61 +187,23 @@ def hc_head_norm(
     norm_weight: pl.Tensor[[D], pl.BF16],
     output: pl.Tensor,
 ):
-    """Collapse eight HC rows and normalize their rounded BF16 values."""
+    """每行调度一个 DSL 合并/RMSNorm 任务，并返回汇合后的 TaskId。"""
     tokens = pl.tensor.dim(x_hc, 0)
     x_flat = pl.reshape(x_hc, [tokens, HC_DIM])
-    with pl.spmd((tokens + PRE_NORM_T_TILE - 1) // PRE_NORM_T_TILE, name_hint="hc_collapse_norm") as ready:
-        block = pl.tile.get_block_idx()
-        t0 = block * PRE_NORM_T_TILE
-        valid_rows = pl.min(PRE_NORM_T_TILE, tokens - t0)
-        pre_tile = pl.slice(pre_mix, [PRE_NORM_T_TILE, HC_PAD], [t0, 0], valid_shape=[valid_rows, HC_MULT])
-        pre_tile = pl.set_validshape(pre_tile, PRE_NORM_T_TILE, HC_PAD)
-        pre_rows = pl.transpose(pre_tile, 0, 1)
-        pre0 = pl.reshape(pre_rows[0:1, 0:PRE_NORM_T_TILE], [PRE_NORM_T_TILE, 1])
-        pre1 = pl.reshape(pre_rows[1:2, 0:PRE_NORM_T_TILE], [PRE_NORM_T_TILE, 1])
-        pre2 = pl.reshape(pre_rows[2:3, 0:PRE_NORM_T_TILE], [PRE_NORM_T_TILE, 1])
-        pre3 = pl.reshape(pre_rows[3:4, 0:PRE_NORM_T_TILE], [PRE_NORM_T_TILE, 1])
-        pre0 = pl.set_validshape(pre0, valid_rows, 1)
-        pre1 = pl.set_validshape(pre1, valid_rows, 1)
-        pre2 = pl.set_validshape(pre2, valid_rows, 1)
-        pre3 = pl.set_validshape(pre3, valid_rows, 1)
-        collapsed = pl.create_tensor([D // PRE_NORM_D_TILE * PRE_NORM_T_TILE, PRE_NORM_D_TILE], dtype=pl.BF16)
-        sq_sum = pl.full([1, PRE_NORM_T_TILE], dtype=pl.FP32, value=0.0)
-        for d0 in pl.pipeline(0, D, PRE_NORM_D_TILE, stage=2):
-            x0 = pl.slice(x_flat, [PRE_NORM_T_TILE, PRE_NORM_D_TILE], [t0, d0], valid_shape=[valid_rows, PRE_NORM_D_TILE])
-            x1 = pl.slice(x_flat, [PRE_NORM_T_TILE, PRE_NORM_D_TILE], [t0, D + d0], valid_shape=[valid_rows, PRE_NORM_D_TILE])
-            x2 = pl.slice(x_flat, [PRE_NORM_T_TILE, PRE_NORM_D_TILE], [t0, 2 * D + d0], valid_shape=[valid_rows, PRE_NORM_D_TILE])
-            x3 = pl.slice(x_flat, [PRE_NORM_T_TILE, PRE_NORM_D_TILE], [t0, 3 * D + d0], valid_shape=[valid_rows, PRE_NORM_D_TILE])
-            y0 = pl.row_expand_mul(x0, pre0)
-            y1 = pl.row_expand_mul(x1, pre1)
-            y2 = pl.row_expand_mul(x2, pre2)
-            y3 = pl.row_expand_mul(x3, pre3)
-            y01 = pl.add(y0, y1)
-            y23 = pl.add(y2, y3)
-            mixed = pl.add(y01, y23)
-            rounded = pl.cast(mixed, target_type=pl.BF16, mode="rint")
-            cache_row = d0 // PRE_NORM_D_TILE * PRE_NORM_T_TILE
-            collapsed[cache_row : cache_row + PRE_NORM_T_TILE, 0:PRE_NORM_D_TILE] = rounded
-            padded = pl.fillpad(rounded, pad_value=pl.PadValue.zero)
-            padded = pl.set_validshape(padded, PRE_NORM_T_TILE, PRE_NORM_D_TILE)
-            value = pl.cast(padded, target_type=pl.FP32)
-            squared = pl.mul(value, value)
-            partial = pl.reshape(pl.row_sum(squared), [1, PRE_NORM_T_TILE])
-            sq_sum[0:1, 0:PRE_NORM_T_TILE] = pl.add(sq_sum, partial)
-        rms_arg = pl.add(pl.mul(sq_sum, 1.0 / D), NORM_EPS)
-        inverse = pl.rsqrt(rms_arg, high_precision=True)
-        inverse = pl.reshape(inverse, [PRE_NORM_T_TILE, 1])
-        for d0 in pl.pipeline(0, D, PRE_NORM_D_TILE, stage=2):
-            cache_row = d0 // PRE_NORM_D_TILE * PRE_NORM_T_TILE
-            value = pl.cast(collapsed[cache_row : cache_row + PRE_NORM_T_TILE, 0:PRE_NORM_D_TILE], target_type=pl.FP32)
-            gamma = pl.cast(norm_weight[d0 : d0 + PRE_NORM_D_TILE], target_type=pl.FP32)
-            gamma = pl.reshape(gamma, [1, PRE_NORM_D_TILE])
-            scaled = pl.row_expand_mul(value, inverse)
-            normalized = pl.col_expand_mul(scaled, gamma)
-            result = pl.cast(normalized, target_type=pl.BF16, mode="rint")
-            result = pl.set_validshape(result, valid_rows, PRE_NORM_D_TILE)
-            output[t0 : t0 + PRE_NORM_T_TILE, d0 : d0 + PRE_NORM_D_TILE] = result
-    return ready
+    ready = pl.system.task_dummy(deps=[])
+    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
+    for i in pl.range(TASK_TILE):
+        completed[i] = ready
+    for row in pl.parallel(tokens):
+        source = pl.slice(x_flat, [1, HC_DIM], [row, 0])
+        pre = pl.slice(pre_mix, [1, HC_MULT], [row, 0])
+        target = pl.slice(output, [1, D], [row, 0])
+        previous = completed[row % TASK_TILE]
+        with pl.spmd(1, name_hint="dsl_hc_collapse_norm", deps=[previous]) as done:
+            collapse_norm_row(source, pre, norm_weight, target)
+        completed[row % TASK_TILE] = done
+    joined = pl.system.task_dummy(deps=[completed])
+    return joined
 
 
 @pl.jit.inline
@@ -283,41 +242,6 @@ def zero_bf16_padding(x: pl.Tensor, valid_rows: pl.Scalar[pl.INT32]):
                 x[row : row + 1, 0:D] = pl.full([1, D], dtype=pl.BF16, value=0.0)
 
 
-@pl.jit.inline(auto_scope=False)
-def hc_post_block(
-    sublayer: pl.Tensor,
-    residual_flat: pl.Tensor,
-    post_mix: pl.Tensor,
-    residual_mix_flat: pl.Tensor,
-    output_flat: pl.Tensor,
-    block: pl.Scalar[pl.INDEX],
-    stream_tile: pl.constexpr,
-):
-    """Mix one hidden-width tile for one or four output streams."""
-    pair_block = block // (D // D_TILE)
-    t = pair_block // (HC_MULT // stream_tile)
-    out_base = (pair_block % (HC_MULT // stream_tile)) * stream_tile
-    d0 = (block % (D // D_TILE)) * D_TILE
-    x_tile = pl.cast(sublayer[t : t + 1, d0 : d0 + D_TILE], pl.FP32)
-    residual0 = residual_flat[t : t + 1, d0 : d0 + D_TILE]
-    residual1 = residual_flat[t : t + 1, D + d0 : D + d0 + D_TILE]
-    residual2 = residual_flat[t : t + 1, 2 * D + d0 : 2 * D + d0 + D_TILE]
-    residual3 = residual_flat[t : t + 1, 3 * D + d0 : 3 * D + d0 + D_TILE]
-    for out_offset in pl.unroll(stream_tile):
-        out_h = out_base + out_offset
-        value = pl.mul(x_tile, pl.read(post_mix, [t, out_h]))
-        term0 = pl.mul(residual0, pl.read(residual_mix_flat, [t, out_h]))
-        value = pl.add(value, term0)
-        term1 = pl.mul(residual1, pl.read(residual_mix_flat, [t, HC_MULT + out_h]))
-        value = pl.add(value, term1)
-        term2 = pl.mul(residual2, pl.read(residual_mix_flat, [t, 2 * HC_MULT + out_h]))
-        value = pl.add(value, term2)
-        term3 = pl.mul(residual3, pl.read(residual_mix_flat, [t, 3 * HC_MULT + out_h]))
-        value = pl.add(value, term3)
-        output_flat[t : t + 1, out_h * D + d0 : out_h * D + d0 + D_TILE] = value
-    return output_flat
-
-
 @pl.jit.inline
 def hc_post(
     sublayer: pl.Tensor,
@@ -327,24 +251,25 @@ def hc_post(
     output: pl.Tensor,
     deps: pl.Array[2, pl.TASK_ID],
 ):
-    """Mix all four residual streams after the supplied producer dependencies."""
-    t_dim = pl.tensor.dim(sublayer, 0)
-    residual_flat = pl.reshape(residual, [t_dim, HC_DIM])
-    residual_mix_flat = pl.reshape(residual_mix, [t_dim, HC_MULT * HC_MULT])
-    output_flat = pl.reshape(output, [t_dim, HC_DIM])
-    total_work = t_dim * (D // D_TILE)
-    full_work = total_work // POST_WORKER_TILE * POST_WORKER_TILE
-    tail_work = (total_work - full_work) * HC_MULT
-    workers = pl.min(total_work * HC_MULT, POST_WORKER_TILE)
-    with pl.spmd(workers, name_hint="hc_post", deps=[deps]):
-        worker = pl.tile.get_block_idx()
-        for block in pl.pipeline(worker, full_work, POST_WORKER_TILE, stage=1):
-            hc_post_block(sublayer, residual_flat, post_mix, residual_mix_flat, output_flat, block, HC_MULT)
-        for tail in pl.range(worker, tail_work, POST_WORKER_TILE):
-            tail_chunk = full_work + tail // HC_MULT
-            tail_stream = (tail_chunk // (D // D_TILE)) * HC_MULT + tail % HC_MULT
-            tail_block = tail_stream * (D // D_TILE) + tail_chunk % (D // D_TILE)
-            hc_post_block(sublayer, residual_flat, post_mix, residual_mix_flat, output_flat, tail_block, 1)
+    """在给定生产者依赖完成后，调度 DSL 残差展开。"""
+    tokens = pl.tensor.dim(sublayer, 0)
+    residual_flat = pl.reshape(residual, [tokens, HC_DIM])
+    mix_flat = pl.reshape(residual_mix, [tokens, HC_MULT * HC_MULT])
+    output_flat = pl.reshape(output, [tokens, HC_DIM])
+    ready = pl.system.task_dummy(deps=[deps])
+    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
+    for i in pl.range(TASK_TILE):
+        completed[i] = ready
+    for row in pl.parallel(tokens):
+        hidden = pl.slice(sublayer, [1, D], [row, 0])
+        skip = pl.slice(residual_flat, [1, HC_DIM], [row, 0])
+        post = pl.slice(post_mix, [1, HC_MULT], [row, 0])
+        mix = pl.slice(mix_flat, [1, HC_MULT * HC_MULT], [row, 0])
+        target = pl.slice(output_flat, [1, HC_DIM], [row, 0])
+        previous = completed[row % TASK_TILE]
+        with pl.spmd(1, name_hint="dsl_hc_post", deps=[previous]) as done:
+            expand_row(hidden, skip, post, mix, target)
+        completed[row % TASK_TILE] = done
     return output
 
 
@@ -466,6 +391,31 @@ def golden_l2_hc_post(tensors):
 def golden_l2_hc_head(tensors):
     """Fill the expected collapsed stream output."""
     tensors["output"][:] = golden_hc_collapse(tensors["x_hc"], tensors["pre_mix"]).to(torch.bfloat16)
+
+
+def golden_l2_hc_head_norm(tensors):
+    """使用独立的 CPU RMS 统计量，归一化已舍入为 BF16 的合并结果。"""
+    collapsed = golden_hc_collapse(tensors["x_hc"], tensors["pre_mix"]).bfloat16().float()
+    inverse = torch.rsqrt(collapsed.square().mean(dim=-1, keepdim=True) + NORM_EPS)
+    normalized = collapsed * inverse * tensors["norm_weight"].float()
+    tensors["output"].copy_(normalized.bfloat16())
+
+
+def compare_hc_post_order(actual, expected, *, inputs, **kwargs):
+    """同时校验模型参考结果和严格按顺序执行的 FP32 累加结果。"""
+    from golden import ratio_allclose
+
+    compare = ratio_allclose(atol=1e-6, rtol=1e-5)
+    passed, detail = compare(actual, expected, inputs=inputs, **kwargs)
+    if not passed:
+        return passed, detail
+    ordered = inputs["sublayer"].float().unsqueeze(1) * inputs["post_mix"].unsqueeze(-1)
+    for in_h in range(HC_MULT):
+        residual = inputs["residual"][:, in_h:in_h + 1, :]
+        factor = inputs["residual_mix"][:, in_h, :].unsqueeze(-1)
+        ordered = ordered + residual * factor
+    exact = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
+    return exact(actual, ordered, inputs=inputs, **kwargs)
 
 
 HC_INPUT_NAMES = ("x_hc", "pre_mix", "hc_attn_fn", "hc_attn_scale", "hc_attn_base", "attn_norm_weight")
@@ -633,34 +583,79 @@ def build_l2_hc_head_specs(batch: int = 33, sequence: int = 1):
     ]
 
 
+@pl.jit
+def l2_hc_head_norm(
+    x_hc: pl.Tensor[[T_DYN, HC_MULT, D], pl.FP32],
+    pre_mix: pl.Tensor[[T_DYN, HC_MULT], pl.FP32],
+    norm_weight: pl.Tensor[[D], pl.BF16],
+    output: pl.Out[pl.Tensor[[T_DYN, D], pl.BF16]],
+):
+    """校验与 decode 注意力相同的融合合并/RMSNorm 实现。"""
+    x_hc.bind_dynamic(0, T_DYN)
+    pre_mix.bind_dynamic(0, T_DYN)
+    output.bind_dynamic(0, T_DYN)
+    hc_head_norm(x_hc, pre_mix, norm_weight, output)
+    return output
+
+
+def build_l2_hc_head_norm_specs(batch: int = 33, sequence: int = 1):
+    """构造带权 FP32 数据流，包含范数为零及接近零的行。"""
+    from golden import TensorSpec
+
+    tokens = batch * sequence
+    generator = torch.Generator().manual_seed(11)
+
+    def init_x_hc():
+        value = torch.randn(tokens, HC_MULT, D, generator=generator)
+        if tokens > 1:
+            value[0].zero_()
+            value[1].mul_(1e-7)
+        return value
+
+    def init_pre_mix():
+        return torch.rand(tokens, HC_MULT, generator=generator)
+
+    def init_norm_weight():
+        return (torch.randn(D, generator=generator) * 0.1 + 1).bfloat16()
+
+    return [
+        TensorSpec("x_hc", [tokens, HC_MULT, D], torch.float32, init_value=init_x_hc),
+        TensorSpec("pre_mix", [tokens, HC_MULT], torch.float32, init_value=init_pre_mix),
+        TensorSpec("norm_weight", [D], torch.bfloat16, init_value=init_norm_weight),
+        TensorSpec("output", [tokens, D], torch.bfloat16),
+    ]
+
+
 if __name__ == "__main__":
     import argparse
 
     from golden import ratio_allclose, run
 
-    parser = argparse.ArgumentParser(description="DeepSeek V4.1 HC pre, post, and head validation")
+    parser = argparse.ArgumentParser(description="DeepSeek V4.1 HC coefficients, collapse, RMSNorm and post")
     parser.add_argument("-p", "--platform", dest="backend_type", choices=["a5"], default="a5")
     parser.add_argument("--sim", dest="execution_mode", action="store_true")
     parser.add_argument("-d", "--device", type=int, default=0)
     parser.add_argument("--batch", type=int, default=33)
     parser.add_argument("--sequence", type=int, default=1)
-    parser.add_argument("--op", choices=["pre", "post", "head", "all"], default="all")
+    parser.add_argument("--op", choices=["pre", "post", "head", "head-norm", "boundary", "all"], default="all")
     parser.add_argument("--compile-only", action="store_true")
     parser.add_argument("--save-data", action="store_true")
     parser.add_argument("--golden-data")
     parser.add_argument("--runtime-dir")
     parser.add_argument("--enable-chip-swimlane", type=int, choices=[1, 2, 3, 4], default=0)
     args = parser.parse_args()
-    if args.op == "all" and (args.golden_data or args.runtime_dir):
+    if args.op in ("all", "boundary") and (args.golden_data or args.runtime_dir):
         parser.error("replay requires selecting one --op")
     cases = [
         ("pre", l2_hc_pre, build_l2_hc_pre_specs, golden_l2_hc_pre),
         ("post", l2_hc_post, build_l2_hc_post_specs, golden_l2_hc_post),
         ("head", l2_hc_head, build_l2_hc_head_specs, golden_l2_hc_head),
+        ("head-norm", l2_hc_head_norm, build_l2_hc_head_norm_specs, golden_l2_hc_head_norm),
     ]
     failures = []
     for name, fn, build_specs, golden_fn in cases:
-        if args.op != "all" and args.op != name:
+        selected = ("head-norm", "post") if args.op == "boundary" else (args.op,)
+        if args.op != "all" and name not in selected:
             continue
         print(f"[HC] {name}", flush=True)
         if name == "pre":
@@ -671,7 +666,9 @@ if __name__ == "__main__":
             }
             compare_fn["output"] = ratio_allclose(atol=1e-4, rtol=1.0 / 128)
         elif name == "post":
-            compare_fn = {"output": ratio_allclose(atol=1e-6, rtol=1e-5)}
+            compare_fn = {"output": compare_hc_post_order}
+        elif name == "head-norm":
+            compare_fn = {"output": ratio_allclose(atol=1e-6, rtol=1.0 / 128, max_error_ratio=0.0)}
         else:
             compare_fn = {"output": ratio_allclose(atol=1e-4, rtol=1.0 / 128)}
         config = {"backend_type": args.backend_type, "execution_mode": args.execution_mode}

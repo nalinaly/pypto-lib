@@ -23,3 +23,8 @@ and a standalone CPU numerical example. It does not change the model kernels.
 2026-11-03-swa-attention/ records the subsequent SWA MIX device-leaf
 integration: core/composed validation logs, frozen core data, generated
 device and orchestration code, and compiler diagnostic reproductions.
+
+2026-11-04-mhc-boundary/ records shared mHC collapse/RMSNorm and FP32
+residual expansion in DSL, including standalone numerical fixtures,
+composed validation logs, generated kernels, and the corrected initial
+output-slice offset diagnostic.

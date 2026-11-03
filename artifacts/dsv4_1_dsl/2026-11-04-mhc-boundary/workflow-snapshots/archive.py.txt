@@ -1,0 +1,99 @@
+"""Archive mHC collapse/RMSNorm and residual expansion validation."""
+
+import gzip
+import json
+from pathlib import Path
+import re
+
+
+workspace = Path(__file__).resolve().parents[2]
+work = workspace / "artifacts/dsv41-mhc-boundary-dsl"
+repo = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+dest = repo / "artifacts/dsv4_1_dsl/2026-11-04-mhc-boundary"
+dest.mkdir(parents=True, exist_ok=True)
+records = []
+
+
+def normalize(value):
+    value = value.replace(str(workspace), "${WORKSPACE}")
+    value = value.replace(str(workspace.parent), "${USER_ROOT}")
+    return "\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n"
+
+
+def copy(source, target, *, compressed=False, binary=False):
+    raw = source.read_bytes()
+    output = gzip.compress(raw, compresslevel=6, mtime=0) if compressed else raw
+    if not compressed and not binary:
+        output = normalize(raw.decode()).encode()
+    target = dest / target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(output)
+    records.append({
+        "source": str(source.relative_to(workspace)), "path": str(target.relative_to(dest)),
+        "source_bytes": len(raw),
+        "encoding": "gzip" if compressed else ("binary" if binary else "normalized UTF-8"),
+    })
+
+
+for source in sorted(work.glob("*.log")):
+    if source.name != "archive-result.log":
+        copy(source, Path("validation") / (source.name + ".txt"))
+for source in sorted([*work.glob("*.py"), *work.glob("*.sh")]):
+    copy(source, Path("workflow-snapshots") / (source.name + ".txt"))
+for name in ("progress.txt", "validation-summary.json"):
+    copy(work / name, name)
+
+builds = {
+    "post-1": "_jit_l2_hc_post_20261104_004131_wwh7mu3f",
+    "norm-1": "_jit_l2_hc_head_norm_20261104_004138_y5_wktt5",
+    "post-17": "_jit_l2_hc_post_20261104_004041_4ki7481v",
+    "norm-17": "_jit_l2_hc_head_norm_20261104_004046_rzswjhd2",
+    "post-72": "_jit_l2_hc_post_20261104_004149_jjvlbdu2",
+    "norm-72": "_jit_l2_hc_head_norm_20261104_004154_vbbnm4yx",
+    "composed-swa": "_jit_l3_decode_swa_20261104_004138_787nf19v/next_levels/l2_decode_swa",
+    "failed-post-offset": "_jit_l2_hc_post_20261104_003940_yijvrq37",
+}
+for label, build_name in builds.items():
+    build = repo / "build_output" / build_name
+    if label not in ("composed-swa", "failed-post-offset"):
+        for source in sorted((build / "data").rglob("*.pt")):
+            target = Path("fixtures") / label / (str(source.relative_to(build / "data")) + ".gz")
+            copy(source, target, compressed=True)
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        if (build / name).exists():
+            copy(build / name, Path("generated") / label / (name + ".txt"))
+    for source in sorted((build / "orchestration").glob("*.cpp")):
+        copy(source, Path("generated") / label / source.name)
+    for source in sorted((build / "cache").glob("incore_*.bin")):
+        copy(source, Path("generated") / label / source.name, binary=True)
+    config = (build / "kernel_config.py").read_text()
+    for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+/entry.cpp)\'', config):
+        for filename in ("entry.cpp", "device_callable.hpp", "manifest.json"):
+            copy(Path(entry).with_name(filename), Path("generated") / label / name / filename)
+
+for name in ("hc.py", "hc_dsl.py"):
+    copy(repo / "models/deepseek_v4_1_flash" / name, Path("model-snapshot") / (name + ".txt"))
+
+manifest = {
+    "branch": "nalinaly/pypto-lib:dsv4.1-dsl",
+    "model_base": "f1339fb",
+    "companion_patches": "../2026-11-03-o-proj/companion-patches",
+    "model_sources": ["hc.py", "hc_dsl.py"],
+    "records": records,
+    "stored_files": [
+        {"path": str(p.relative_to(dest)), "bytes": p.stat().st_size}
+        for p in sorted(dest.rglob("*")) if p.is_file() and p.name != "artifact-manifest.json"
+    ],
+    "notes": [
+        "All six standalone stage inputs and CPU goldens are frozen, for 1, 17 and 72 physical rows.",
+        "Stored data/out tensors are CPU goldens; validation logs record comparisons with actual device outputs.",
+        "Initial post failure used an element offset where cb.tile_slice expects a tile index. Corrected before passing runs.",
+        "The failed-post-offset generated code is diagnostic only; use post-1/post-17/post-72 for the corrected implementation.",
+        "SWA and layer runs did not request save_data; their deterministic specs remain in the model sources.",
+        "Original composed-model goldens and thresholds are retained, including the layer's 1.5% attention-output outlier budget.",
+        "No PyPTO or CANNBotDSL framework changes in this step. The preceding output-projection archive has companion patches.",
+        "Native ELF files and installed toolchains are excluded; runtime device text images are included."
+    ],
+}
+(dest / "artifact-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+print("Archived", len(records), "sources;", sum(r["bytes"] for r in manifest["stored_files"]), "stored bytes")

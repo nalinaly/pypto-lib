@@ -1,0 +1,66 @@
+{
+  "scope": [
+    "hc_head_norm",
+    "hc_post"
+  ],
+  "branch": "nalinaly/pypto-lib:dsv4.1-dsl",
+  "framework_changes": false,
+  "checks": [
+    {
+      "case": "compile boundary batch17",
+      "status": "PASS",
+      "log": "compile-17.log"
+    },
+    {
+      "case": "initial boundary batch17",
+      "status": "FAIL (corrected)",
+      "task": "task_20261104_003938_142949731972",
+      "log": "boundary-17.log",
+      "cause": "Model code passed an element offset instead of a tile index to cb.tile_slice; corrected output-stream coordinate."
+    },
+    {
+      "case": "boundary batch17 corrected",
+      "status": "PASS",
+      "task": "task_20261104_004038_145051327836",
+      "log": "boundary-17-fixed.log"
+    },
+    {
+      "case": "boundary batch1 and batch72",
+      "status": "PASS",
+      "task": "task_20261104_004128_147139314463",
+      "logs": [
+        "boundary-1.log",
+        "boundary-72.log"
+      ]
+    },
+    {
+      "case": "SWA 72 tokens",
+      "status": "PASS",
+      "task": "task_20261104_004128_147145819468",
+      "log": "swa-72.log",
+      "run_seconds": 40.07
+    },
+    {
+      "case": "layer0 EP2",
+      "status": "PASS",
+      "task": "task_20261104_004220_148508322278",
+      "devices": [
+        0,
+        5
+      ],
+      "log": "layer0-ep2.log",
+      "run_seconds": 151.64,
+      "validated_outputs": 16
+    }
+  ],
+  "acceptance": {
+    "post": "Original golden tolerance retained; additionally zero tolerance and zero allowed outliers against sequential FP32 accumulation.",
+    "head_norm": "CPU collapse rounds to BF16 before RMSNorm; atol=1e-6, rtol=1/128, no allowed outliers.",
+    "composed": "Original goldens and thresholds, including the layer attention-output 1.5% outlier budget."
+  },
+  "timing_note": "Run times include compilation/validation; no performance claims or A/B benchmark.",
+  "repository_checks": {
+    "pre_commit_all_files": "PASS",
+    "log": "pre-commit.log"
+  }
+}
