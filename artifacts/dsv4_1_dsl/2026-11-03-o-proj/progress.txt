@@ -1,0 +1,11 @@
+O-projection DSL integration, base bc45eeb, branch nalinaly/pypto-lib:dsv4.1-dsl.
+Scope: A5 TP1 inverse RoPE/OCP MXFP8 quant, WoA, requant, WoB. Preserve all existing rounding, packed scales and NZ weights. Existing C++ stays for other TP configurations until migrated.
+Toolchain change planned: Python E8M0 dtype spelling in CANNBotDSL interop; model uses explicit ND storage views for packed MX scale bytes. No numerical policy changes.
+User explicitly selected migration of the cb.kernel adapter to PyPTO. Implemented pypto/jit/cannbotdsl.py; CANNBotDSL interop/pypto.py now only lazily forwards compatibility names. E8M0 conversion is owned by PyPTO.
+First RoPE NPU check task task_20261103_181254_28175385362 failed. Exported source shape was a static 16-row capacity, so deriving active rows from source.shape read inactive rows. Changed to explicit typed active_rows plus the unrebound work index; added VST/VLD ordering at VF producer boundaries. Quantizer policy unchanged.
+RoPE byte-exact A5 PASS: task_20261103_183053_325370121083, payload and E8M0 codes both match. Fused RoPE producer and quantizer into one VF; explicit runtime active count prevents treating slice capacity as valid row count. No change to quantization policy.
+PyPTO now infers shaped tensor.view metadata, preserving explicit ND storage views for packed E8M0 scales. Regression added at the foreign-call boundary. No C++ source changes.
+MX stage A5 PASS with nonuniform E8M0 scale codes and zero numerical tolerance: task_20261103_184119_346822212617, 17x256 output.
+Whole o_proj fast A5 PASS: task_20261103_184616_354646519283. All cases PASS: task_20261103_184706_35578289892, active 0/12/17 and HC post 72/17/0/81, unchanged comparators. Explicit padded M80 output views carry valid_shape; the leaf receives the runtime valid rows separately.
+Composed 72-token SWA PASS: task_20261103_184706_355790622272. PyPTO unit tests 129 passed; paired AIV/AIC/MIX static/dynamic compile integration 17 passed.
+Layer0 EP2 A5 PASS: task_20261103_184834_35832528157, devices 1,2, all existing comparators pass; RUN PASS 164.44s. Generated weights, not a whole-model checkpoint.

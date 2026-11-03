@@ -1,0 +1,49 @@
+.................                                                        [100%]
+=============================== warnings summary ===============================
+test/integration/test_pypto_direct.py::test_direct_compile[scalar-single-False]
+test/integration/test_pypto_direct.py::test_direct_compile[vector-single-False]
+test/integration/test_pypto_direct.py::test_direct_compile[cube-single-False]
+test/integration/test_pypto_direct.py::test_direct_compile[mixed-single-False]
+  <jit:single>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+test/integration/test_pypto_direct.py::test_direct_compile[scalar-chain-False]
+test/integration/test_pypto_direct.py::test_direct_compile[vector-chain-False]
+test/integration/test_pypto_direct.py::test_direct_compile[cube-chain-False]
+test/integration/test_pypto_direct.py::test_direct_compile[mixed-chain-False]
+  <jit:chain>:11: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+test/integration/test_pypto_direct.py::test_direct_compile[scalar-loop-False]
+test/integration/test_pypto_direct.py::test_direct_compile[vector-loop-False]
+test/integration/test_pypto_direct.py::test_direct_compile[cube-loop-False]
+test/integration/test_pypto_direct.py::test_direct_compile[mixed-loop-False]
+  <jit:loop>:11: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+test/integration/test_pypto_direct.py::test_direct_compile[mixed-single-False]
+  <jit:single>:8: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+test/integration/test_pypto_direct.py::test_direct_compile[mixed-chain-False]
+  <jit:chain>:14: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+test/integration/test_pypto_direct.py::test_direct_compile[mixed-loop-False]
+  <jit:loop>:14: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+test/integration/test_pypto_direct.py::test_direct_compile[scalar-single-True]
+test/integration/test_pypto_direct.py::test_direct_compile[cube-single-True]
+test/integration/test_pypto_direct.py::test_direct_compile[mixed-single-True]
+  <jit:single>:7: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+test/integration/test_pypto_direct.py::test_direct_compile[mixed-single-True]
+  <jit:single>:10: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+test/integration/test_pypto_direct.py::test_view_and_inplace_compile
+  <jit:_view_program>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+test/integration/test_pypto_direct.py::test_view_and_inplace_compile
+  <jit:_inplace_program>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+17 passed, 16 deselected, 21 warnings in 78.15s (0:01:18)
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.

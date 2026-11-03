@@ -1,0 +1,136 @@
+{
+  "date": "2026-11-03",
+  "scope": "A5 TP1 o_proj DSL; PyPTO-owned adapter with E8M0 support",
+  "npu_validation": [
+    {
+      "log": "rope-stage-npu-3.log",
+      "task": "task_20261103_183053_325370121083",
+      "scope": "17 active rows; all FP8 payload/E8M0 bytes exact",
+      "status": "PASS",
+      "exit_code": 0,
+      "devices": [
+        3
+      ],
+      "pass_lines": [
+        "[RUN]   'payload' PASS  shape=(640, 4096) dtype=torch.float8_e4m3fn (compare_payload_bytes)",
+        "[RUN]   'scales' PASS  shape=(8, 10240) dtype=torch.float8_e8m0fnu (compare_payload_bytes)",
+        "[RUN] PASS (5.49s)"
+      ]
+    },
+    {
+      "log": "mx-stage-npu.log",
+      "task": "task_20261103_184119_346822212617",
+      "scope": "17x256 projection; varying E8M0 codes; rtol=atol=0",
+      "status": "PASS",
+      "exit_code": 0,
+      "devices": [
+        0
+      ],
+      "pass_lines": [
+        "[RUN]   'output' PASS  shape=(17, 256) dtype=torch.bfloat16",
+        "[RUN] PASS (4.23s)"
+      ]
+    },
+    {
+      "log": "o-proj-fast-npu.log",
+      "task": "task_20261103_184616_354646519283",
+      "scope": "o_proj 12 active rows",
+      "status": "PASS",
+      "exit_code": 0,
+      "devices": [
+        1
+      ],
+      "pass_lines": [
+        "[RUN]   'output' PASS  shape=(16, 5120) dtype=torch.bfloat16 (compare)",
+        "[RUN] PASS (12.99s)"
+      ]
+    },
+    {
+      "log": "o-proj-all-npu.log",
+      "task": "task_20261103_184706_35578289892",
+      "scope": "o_proj 0/12/17; HC post 72/17/0/81",
+      "status": "PASS",
+      "exit_code": 0,
+      "devices": [
+        1
+      ],
+      "pass_lines": [
+        "[RUN]   'output' PASS  shape=(16, 5120) dtype=torch.bfloat16 (compare)",
+        "[RUN] PASS (12.56s)",
+        "[RUN]   'output' PASS  shape=(16, 5120) dtype=torch.bfloat16 (compare)",
+        "[RUN] PASS (4.18s)",
+        "[RUN]   'output' PASS  shape=(32, 5120) dtype=torch.bfloat16 (compare)",
+        "[RUN] PASS (3.89s)",
+        "[RUN]   'sublayer' PASS  shape=(72, 5120) dtype=torch.bfloat16 (ratio_allclose(atol=0.01, rtol=0.0078125, max_error_ratio=0.005, valid_rows=72, valid_axis=0, zero_tail=True, ignore_nan=False))",
+        "[RUN]   'output' PASS  shape=(72, 4, 5120) dtype=torch.float32 (compare_o_proj_hc_post)",
+        "[RUN] PASS (13.36s)",
+        "[RUN]   'sublayer' PASS  shape=(32, 5120) dtype=torch.bfloat16 (ratio_allclose(atol=0.01, rtol=0.0078125, max_error_ratio=0.005, valid_rows=17, valid_axis=0, zero_tail=True, ignore_nan=False))",
+        "[RUN]   'output' PASS  shape=(32, 4, 5120) dtype=torch.float32 (compare_o_proj_hc_post)",
+        "[RUN] PASS (3.92s)",
+        "[RUN]   'sublayer' PASS  shape=(16, 5120) dtype=torch.bfloat16 (ratio_allclose(atol=0.01, rtol=0.0078125, max_error_ratio=0.005, valid_rows=0, valid_axis=0, zero_tail=True, ignore_nan=False))",
+        "[RUN]   'output' PASS  shape=(16, 4, 5120) dtype=torch.float32 (compare_o_proj_hc_post)",
+        "[RUN] PASS (3.79s)",
+        "[RUN]   'sublayer' PASS  shape=(96, 5120) dtype=torch.bfloat16 (ratio_allclose(atol=0.01, rtol=0.0078125, max_error_ratio=0.005, valid_rows=81, valid_axis=0, zero_tail=True, ignore_nan=False))",
+        "[RUN]   'output' PASS  shape=(96, 4, 5120) dtype=torch.float32 (compare_o_proj_hc_post)",
+        "[RUN] PASS (4.24s)"
+      ]
+    },
+    {
+      "log": "swa-72-npu.log",
+      "task": "task_20261103_184706_355790622272",
+      "scope": "complete 72-token SWA subgraph",
+      "status": "PASS",
+      "exit_code": 0,
+      "devices": [
+        2
+      ],
+      "pass_lines": [
+        "[RUN]   'window_cache' PASS  shape=(37, 128, 1, 512) dtype=torch.float8_e4m3fn (mapped_pool_ratio_allclose(mapping=window_slots, shape=(72,), block_size=128, leading_rank_axis=False, atol=0.001953125, rtol=0.125, max_error_ratio=0.01))",
+        "[RUN]   'window_cache_scale' PASS  shape=(37, 128, 1, 16) dtype=torch.bfloat16 (mapped_pool_ratio_allclose(mapping=window_slots, shape=(72,), block_size=128, leading_rank_axis=False, atol=0.0, rtol=0.0, max_error_ratio=0.0))",
+        "[RUN]   'attention_output' PASS  shape=(72, 5120) dtype=torch.bfloat16 (ratio_allclose(atol=0.01, rtol=0.0078125, max_error_ratio=0.005, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'attention_hidden' PASS  shape=(72, 4, 5120) dtype=torch.float32 (ratio_allclose(atol=0.01, rtol=0.0078125, max_error_ratio=0.005, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'attention_pre_mix' PASS  shape=(72, 4) dtype=torch.float32 (ratio_allclose(atol=0.0001, rtol=0.0001, max_error_ratio=0.005, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN] PASS (42.03s)"
+      ]
+    },
+    {
+      "log": "layer0-ep2-npu.log",
+      "task": "task_20261103_184834_35832528157",
+      "scope": "complete layer0 EP2, 72 tokens/rank, generated weights",
+      "status": "PASS",
+      "exit_code": 0,
+      "devices": [
+        1,
+        2
+      ],
+      "pass_lines": [
+        "[RUN]   'window_cache' PASS  shape=(2, 17, 128, 1, 512) dtype=torch.float8_e4m3fn (mapped_pool_ratio_allclose(mapping=window_slots, shape=(2, 72), block_size=128, leading_rank_axis=True, atol=0.001953125, rtol=0.125, max_error_ratio=0.01))",
+        "[RUN]   'window_cache_scale' PASS  shape=(2, 17, 128, 1, 16) dtype=torch.bfloat16 (mapped_pool_ratio_allclose(mapping=window_slots, shape=(2, 72), block_size=128, leading_rank_axis=True, atol=0.0, rtol=0.02, max_error_ratio=0.01))",
+        "[RUN]   'compressed_cache' PASS  shape=(2, 1, 128, 1, 256) dtype=torch.uint8 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'compressed_cache_scale' PASS  shape=(2, 1, 128, 1, 32) dtype=torch.bfloat16 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'index_cache' PASS  shape=(2, 1, 128, 1, 64) dtype=torch.uint8 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'index_cache_scale' PASS  shape=(2, 1, 128, 1, 4) dtype=torch.float8_e8m0fnu (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'state_cache' PASS  shape=(2, 1, 4, 1024) dtype=torch.float32 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'topk_indices' PASS  shape=(2, 72, 512) dtype=torch.int32 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'pool_block_ids' PASS  shape=(2, 72, 32) dtype=torch.int32 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'pool_block_counts' PASS  shape=(2, 72) dtype=torch.int32 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'attention_output' PASS  shape=(2, 80, 5120) dtype=torch.bfloat16 (compare_active)",
+        "[RUN]   'attention_hidden' PASS  shape=(2, 80, 4, 5120) dtype=torch.float32 (compare_active)",
+        "[RUN]   'attention_pre_mix' PASS  shape=(2, 80, 4) dtype=torch.float32 (ratio_allclose(atol=0.0001, rtol=0.0001, max_error_ratio=0.005, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'next_pre_mix' PASS  shape=(2, 80, 4) dtype=torch.float32 (compare)",
+        "[RUN]   'x_mixed' PASS  shape=(2, 80, 5120) dtype=torch.bfloat16 (compare_active)",
+        "[RUN]   'x_next' PASS  shape=(2, 80, 4, 5120) dtype=torch.float32 (compare)",
+        "[RUN] PASS (164.44s)"
+      ]
+    }
+  ],
+  "compiler_regressions": {
+    "pypto-adapter-tests-final.log": "129 passed, 8 deprecation warnings",
+    "adapter-direct-compile.log": "17 passed, 16 NPU tests deselected; AIV/AIC/MIX static/dynamic compile",
+    "pypto-build.log": "current-worktree build passed",
+    "mx-native.log": "AIC native CCE compile passed",
+    "rope-native.log": "AIV native CCE compile passed"
+  },
+  "framework_changes": "Local companion worktrees; cumulative patches archived in this model branch",
+  "performance": "No A/B performance claim; timings are single correctness harness runs"
+}

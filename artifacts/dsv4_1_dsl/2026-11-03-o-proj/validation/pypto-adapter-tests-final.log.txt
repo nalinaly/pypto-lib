@@ -1,0 +1,29 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [ 55%]
+.........................................................                [100%]
+=============================== warnings summary ===============================
+tests/ut/jit/test_extern_kernel.py::test_foreign_call_infers_outputs_and_emits_task[mixed]
+tests/ut/jit/test_extern_kernel.py::test_mixed_extern_can_dispatch_both_aiv_lanes
+tests/ut/jit/test_extern_kernel.py::test_mixed_extern_include_dirs_reach_both_kernel_descriptors
+  <string>:8: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_extern_kernel.py::test_single_core_extern_include_dirs_reach_kernel_descriptor
+tests/ut/jit/test_extern_kernel.py::test_mixed_extern_include_dirs_reach_both_kernel_descriptors
+  <string>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_jit_compile_extraction.py::TestCompileForwardsRunConfig::test_compile_extracts_config_kwarg
+  ${WORKSPACE}/issue75-env/pypto-pr/tests/ut/jit/test_jit_compile_extraction.py:255: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    compiled = add_kernel.compile(a, b, c, config=RunConfig(platform="a2a3sim"))
+
+tests/ut/jit/test_jit_compile_extraction.py::TestConstexprThroughDeps::test_two_callers_of_one_dep_each_get_a_function
+  ${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/specializer.py:1916: DeprecationWarning: @pl.jit.inline helper 'left' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['o']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_jit_compile_extraction.py::TestConstexprThroughDeps::test_two_callers_of_one_dep_each_get_a_function
+  ${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/specializer.py:1916: DeprecationWarning: @pl.jit.inline helper 'right' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['o']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+129 passed, 8 warnings in 17.36s

@@ -1,0 +1,84 @@
+[RUN] compile ...
+[RUN] compile done (0.07s)
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.
+Traceback (most recent call last):
+  File "${WORKSPACE}/artifacts/dsv41-semantic-review/run_case.py", line 21, in <module>
+    runpy.run_path(str(entry), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/o_proj_dsl.py", line 375, in <module>
+    result = run(
+             ^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1565, in _run_pipeline
+    compiled = compile_step(cfg, compile_state)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1741, in _compile
+    return fn.compile(*dummy_args, config=cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1360, in compile
+    compiled, _ordered_args, _run_config = self._resolve_compiled(args, kwargs, allow_signature_mode=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1096, in _resolve_compiled
+    prepared_contexts = self._build_contexts(
+                        ^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1800, in _build_contexts
+    apply_external_spec(contexts[-1], dep._external_builder(contexts[-1]))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 192, in <lambda>
+    return JITFunction(kernel.fn, func_type="extern", external_builder=lambda ctx: _build(kernel, ctx))
+                                                                                   ^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 165, in _build
+    exported = cb.export_device(kernel, *arguments, arch="dav-3510")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/aot/device_export.py", line 90, in export_device
+    device, debug, _ = _materialize_device_function(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/kernel_materialize.py", line 361, in _materialize_device_function
+    _build_device_entry(fn, call_plan, ir_builder, kernel_func, state, symbol_name, materialized_block_dim)
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/kernel_materialize.py", line 331, in _build_device_entry
+    _trace_device_entry(fn, call_plan, ir_builder, entry_block)
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/kernel_materialize.py", line 286, in _trace_device_entry
+    result = ir_builder(*ir_args, **ir_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/o_proj_dsl.py", line 212, in project_o_b
+    _mx_project(payload, weight, activation_scale, weight_scale, output, column, valid_rows)
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/call_context.py", line 67, in dispatch_call
+    return target(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/lang/jit.py", line 64, in __call__
+    return self._invoke(None, self._surface, args, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/lang/jit.py", line 78, in _invoke
+    return ir_builder(*call_args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/o_proj_dsl.py", line 195, in _mx_project
+    cb.mem_copy(output[0:valid_rows, :], valid)
+                ~~~~~~^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/runtime/expressions.py", line 434, in dynamic_getitem
+    return container[key]
+           ~~~~~~~~~^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/tensor.py", line 366, in __getitem__
+    return _tensor_getitem(self, coord)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/tensor.py", line 1636, in _tensor_getitem
+    intent = _classify_tensor_index_intent(coord, api_name="Tensor.__getitem__")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/tensor.py", line 1377, in _classify_tensor_index_intent
+    return visit(index, f"{api_name} key")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/tensor.py", line 1354, in visit
+    child_intent = visit(child, f"{where}[{child_index}]")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/tensor.py", line 1364, in visit
+    raise TypeError(
+TypeError: Tensor.__getitem__ key[1]: fully open Tensor slice ':' is not supported; use None to keep an axis or shape subtree

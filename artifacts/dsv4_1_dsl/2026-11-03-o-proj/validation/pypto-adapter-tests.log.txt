@@ -1,0 +1,133 @@
+bringing up nodes...
+bringing up nodes...
+
+..F.............................                                         [100%]
+=================================== FAILURES ===================================
+_____________ test_e8m0_export_preserves_byte_storage_and_effects ______________
+[gw0] linux -- Python 3.12.15 ${WORKSPACE}/issue75-env/pypto-pr/.venv/bin/python
+
+module = <cannbotdsl._mlir._mlir_libs._mlir.ir.Module object at 0xffff8e6cf4f0>
+
+    @_timer("transform:run_ir_passes")
+    def _run_cannir_passes(module: ir.Module) -> None:
+        """Run CANNIR/MLIR passes on the module using the MLIR Python PassManager."""
+        # The pipeline can be overridden through CANNBOTDSL_CANNIR_PIPELINE; for
+        # example, its value can be ``builtin.module(canonicalize,cse)``.
+        from cannbotdsl.core.utils.env import env
+
+        _env = env()
+        print_mlir = _env.print_mlir
+        pipeline = _env.cannir_pipeline
+        ir.Context.current.enable_multithreading(False)
+
+        # Logged before parsing so caplog-based tests can inspect the pre-pass
+        # module when pipeline parsing fails.
+        if _LOG.isEnabledFor(logging.DEBUG):
+            _LOG.debug("Original module before passes:\n%s", str(module))
+
+        pmgr = None
+        try:
+            pmgr = pm.PassManager.parse(pipeline)
+            if print_mlir:
+                pmgr.enable_ir_printing()
+        except Exception as e:
+            raise RuntimeError(f"Failed to parse pass pipeline '{pipeline}': {e}") from e
+
+        try:
+>           pmgr.run(module.operation)
+E           cannbotdsl._mlir._mlir_libs._site_initialize.<locals>.MLIRError: Failure while executing pass pipeline:
+E           error: unknown: [GM2UB-E-TYPE] GM and UB require the same supported storage dtype
+E            note: unknown: see current operation: %25 = "cannir.mem_copy"(%14, %arg0, %6, %6) <{atomic_add = false, operandSegmentSizes = array<i32: 1, 1, 1, 1, 0, 0, 0, 0>}> {cannir.requires_gm2ub_plan} : (!cannir.tensor<<ub, !ascdtype.fp8_e8m0>, <<(1, 32)>, <(32, 1)>>, <<(1, 32)>, <(32, 1)>>, identity>, !cannir.tensor<<gm, !ascdtype.fp8_e8m0>, <<(1, 32)>, <(-1, 1)>>, <<(1, 32)>, <(-1, 1)>>, identity>, i32, i32) -> !cannir.tensor<<ub, !ascdtype.fp8_e8m0>, <<(1, 32)>, <(32, 1)>>, <<(1, 32)>, <(32, 1)>>, identity>
+E            note: unknown: introduced by cannir.make_tensor
+
+${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/passes.py:54: MLIRError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-qinchuanyu/pytest-58/popen-gw0/test_e8m0_export_preserves_byt0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff8fbeeb70>
+
+    @pytest.mark.skipif(not os.environ.get("ASCEND_HOME_PATH"), reason="CANN include discovery requires its environment")
+    def test_e8m0_export_preserves_byte_storage_and_effects(tmp_path, monkeypatch):
+        cb = pytest.importorskip("cannbotdsl")
+
+        @cb.kernel
+        def copy_scales(source: cb.Tensor, output: cb.Tensor):
+            staging = cb.Buffer(cb.MemLoc.UB, cb.dtypes.float8_e8m0, cb.make_layout((1, 32)))
+            cb.mem_copy(staging, source)
+            cb.mem_copy(output, staging)
+
+        meta = SimpleNamespace(shape=(1, 32), dtype=pl.FP8E8M0, layout=None)
+        context = SimpleNamespace(
+            param_names=("source", "output"), tensor_meta={"source": meta, "output": meta},
+            scalar_dtypes={}, constexpr_values={},
+        )
+        monkeypatch.setenv("CANNBOTDSL_PYPTO_CACHE_DIR", str(tmp_path))
+>       spec = adapter._build(copy_scales, context)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+${WORKSPACE}/issue75-env/pypto-pr/tests/ut/jit/test_cannbotdsl_adapter.py:53:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py:165: in _build
+    exported = cb.export_device(kernel, *arguments, arch="dav-3510")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/aot/device_export.py:105: in export_device
+    _run_cannir_passes(module)
+${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/utils/timer.py:45: in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+module = <cannbotdsl._mlir._mlir_libs._mlir.ir.Module object at 0xffff8e6cf4f0>
+
+    @_timer("transform:run_ir_passes")
+    def _run_cannir_passes(module: ir.Module) -> None:
+        """Run CANNIR/MLIR passes on the module using the MLIR Python PassManager."""
+        # The pipeline can be overridden through CANNBOTDSL_CANNIR_PIPELINE; for
+        # example, its value can be ``builtin.module(canonicalize,cse)``.
+        from cannbotdsl.core.utils.env import env
+
+        _env = env()
+        print_mlir = _env.print_mlir
+        pipeline = _env.cannir_pipeline
+        ir.Context.current.enable_multithreading(False)
+
+        # Logged before parsing so caplog-based tests can inspect the pre-pass
+        # module when pipeline parsing fails.
+        if _LOG.isEnabledFor(logging.DEBUG):
+            _LOG.debug("Original module before passes:\n%s", str(module))
+
+        pmgr = None
+        try:
+            pmgr = pm.PassManager.parse(pipeline)
+            if print_mlir:
+                pmgr.enable_ir_printing()
+        except Exception as e:
+            raise RuntimeError(f"Failed to parse pass pipeline '{pipeline}': {e}") from e
+
+        try:
+            pmgr.run(module.operation)
+        except Exception as e:
+            if _LOG.isEnabledFor(logging.DEBUG):
+                _LOG.debug("Module before failed pass run:\n%s", str(module))
+>           raise RuntimeError(f"Failed to run pass pipeline '{pipeline}': {e}") from e
+E           RuntimeError: Failed to run pass pipeline 'builtin.module(func.func(cannir-prepare-tensor-memory),cannir-simplify-scalar-ranges,cse,cannir-prepare-launch-contracts,func.func(cannir-normalize-ring-buffer-state),cse,func.func(cannir-expand-view-boundaries,cannir-infer-layout,cannir-resolve-view-queries,cannir-plan-gm2ub-dma,cannir-plan-gm2l1-dma),cse,cannir-prepare-launch-contracts,func.func(cannir-normalize-tensor-views),func.func(cannir-normalize-reinterpret),func.func(cannir-plan-onchip-memory),cse,cannir-simplify-layout,func.func(cannir-plan-copy-instructions,cannir-plan-compute-access),func.func(cannir-validate-formatted-gm-uses),cannir-form-vf-regions,func.func(cannir-normalize-reinterpret),func.func(cannir-lower-ub-copy),cannir-prepare-launch-contracts,func.func(cannir-expand-buffer-accesses),func.func(canonicalize),func.func(cannir-refresh-vf-effects),cannir-buffer-sync{optimize-read-sharing=true},convert-cannir-to-asc,asccube-plan-state,split-mix-kernel,cannir-legalize-two-address,convert-cannir-host-ops,cannir-verify-target-buffer-sync)': Failure while executing pass pipeline:
+E           error: unknown: [GM2UB-E-TYPE] GM and UB require the same supported storage dtype
+E            note: unknown: see current operation: %25 = "cannir.mem_copy"(%14, %arg0, %6, %6) <{atomic_add = false, operandSegmentSizes = array<i32: 1, 1, 1, 1, 0, 0, 0, 0>}> {cannir.requires_gm2ub_plan} : (!cannir.tensor<<ub, !ascdtype.fp8_e8m0>, <<(1, 32)>, <(32, 1)>>, <<(1, 32)>, <(32, 1)>>, identity>, !cannir.tensor<<gm, !ascdtype.fp8_e8m0>, <<(1, 32)>, <(-1, 1)>>, <<(1, 32)>, <(-1, 1)>>, identity>, i32, i32) -> !cannir.tensor<<ub, !ascdtype.fp8_e8m0>, <<(1, 32)>, <(32, 1)>>, <<(1, 32)>, <(32, 1)>>, identity>
+E            note: unknown: introduced by cannir.make_tensor
+
+${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/passes.py:58: RuntimeError
+=============================== warnings summary ===============================
+tests/ut/jit/test_extern_kernel.py::test_mixed_extern_can_dispatch_both_aiv_lanes
+tests/ut/jit/test_extern_kernel.py::test_foreign_call_infers_outputs_and_emits_task[mixed]
+tests/ut/jit/test_extern_kernel.py::test_mixed_extern_include_dirs_reach_both_kernel_descriptors
+  <string>:8: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_extern_kernel.py::test_single_core_extern_include_dirs_reach_kernel_descriptor
+tests/ut/jit/test_extern_kernel.py::test_mixed_extern_include_dirs_reach_both_kernel_descriptors
+  <string>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/ut/jit/test_cannbotdsl_adapter.py::test_e8m0_export_preserves_byte_storage_and_effects
+1 failed, 31 passed, 5 warnings in 5.04s

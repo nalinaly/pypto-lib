@@ -1,0 +1,19 @@
+[RUN] compile ...
+[RUN] compile done (0.23s)
+Error: Cannot reassign 'tile' with a different type: was pl.Tensor[[rows, 128], pl.BF16], got pl.Tensor[[17, 128], pl.BF16]
+  --> ${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/o_proj_dsl.py:323:13
+    |
+321 |         tile = pl.slice(output, [rows, CUBE_TILE], [0, column * CUBE_TILE])
+322 |         with pl.spmd(1, name_hint="dsl_mx_projection"):
+323 |             project_o_b(payload, weight, activation_scale, weight_scale, tile, column, rows)
+    |             ^^^^^^^^^^^
+324 |     return output
+325 |
+    |
+   = help: Use a different variable name for tensors with different shapes or dtypes
+
+note: run with `PTO_BACKTRACE=1` environment variable to display a backtrace.
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.

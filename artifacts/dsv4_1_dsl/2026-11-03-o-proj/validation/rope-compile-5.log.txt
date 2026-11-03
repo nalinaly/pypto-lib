@@ -1,0 +1,74 @@
+[RUN] compile ...
+Failed to generate orchestration 'rope_quant_validation': Misplaced builtin op 'system.task_dummy' in Orchestration function (should be inside InCore block) [${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/o_proj_dsl.py:140:5]
+Check failed: false at ${WORKSPACE}/issue75-env/pypto-pr/src/codegen/orchestration/orchestration_stmt_codegen.cpp:481
+
+C++ Traceback (most recent call last):
+ File "./src/codegen/orchestration/orchestration_codegen.cpp", line 563
+ File "./include/pypto/ir/transforms/base/functor.h", line 231
+ File "./src/codegen/orchestration/orchestration_control_flow.cpp", line 531
+ File "./include/pypto/ir/transforms/base/functor.h", line 235
+ File "./src/codegen/orchestration/orchestration_stmt_codegen.cpp", line 455
+ File "./include/pypto/ir/transforms/base/functor.h", line 236
+ File "./src/codegen/orchestration/orchestration_stmt_codegen.cpp", line 481
+
+[RUN] compile done (0.79s)
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.
+Traceback (most recent call last):
+  File "${WORKSPACE}/artifacts/dsv41-semantic-review/run_case.py", line 21, in <module>
+    runpy.run_path(str(entry), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/o_proj_dsl.py", line 212, in <module>
+    result = run(
+             ^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1565, in _run_pipeline
+    compiled = compile_step(cfg, compile_state)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1741, in _compile
+    return fn.compile(*dummy_args, config=cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1360, in compile
+    compiled, _ordered_args, _run_config = self._resolve_compiled(args, kwargs, allow_signature_mode=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1183, in _resolve_compiled
+    compiled = self._cache[key] = build()
+                                  ^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1119, in build
+    return self._compile(
+           ^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1585, in _compile
+    return ir_compile(parsed, skip_ptoas=skip_ptoas, **ir_compile_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/ir/compile.py", line 445, in compile
+    result = _compile_to_files(
+             ^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/ir/compile.py", line 658, in _compile_to_files
+    files = generate(
+            ^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/backend/pto_backend.py", line 1923, in generate
+    return _generate_single_chip(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/backend/pto_backend.py", line 2411, in _generate_single_chip
+    raise RuntimeError(report)
+RuntimeError: 1 function(s) failed to compile:
+
+  Function               | Error
+  -----------------------+--------------------------------------------------------------
+  rope_quant_validation  | Misplaced builtin op 'system.task_dummy' in Orchestration
+                         | function (should be inside InCore block)
+                         | [${WORKSPACE}/pypto-a5-dev/pypto-
+                         | lib-
+                         | dsv41-dsl/models/deepseek_v4_1_flash/o_proj_dsl.py:140:5]
+  -----------------------+--------------------------------------------------------------
+
+  Full details: ${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_rope_quant_validation_20261103_180846_ijwkeoec/report/codegen_errors.txt

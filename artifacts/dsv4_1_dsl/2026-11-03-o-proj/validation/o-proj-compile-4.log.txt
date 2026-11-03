@@ -1,0 +1,20 @@
+[O_PROJ] fast: active=12
+[RUN] compile ...
+[RUN] compile done (1.66s)
+Error: Unsupported function call: output_projection(payload, wo_b, activation_scale_backing, wo_b_scale, output_group, capacity)
+  --> ${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/o_proj.py:167:13
+    |
+165 |         capacity = pl.tensor.dim(output_group, 0)
+166 |         if TP_SIZE == 1:
+167 |             output_group = output_projection(payload, wo_b, activation_scale_backing, wo_b_scale, output_group, capacity)
+    |             ^^^^^^^^^^^^
+168 |         else:
+169 |             with pl.spmd(D // O_B_N_TILE, name_hint="proj_o_b"):
+    |
+   = help: Use pl.* operations, pl.yield_(), self.method() for cross-function calls, or call an external @pl.function / @pl.inline by name
+
+note: run with `PTO_BACKTRACE=1` environment variable to display a backtrace.
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.

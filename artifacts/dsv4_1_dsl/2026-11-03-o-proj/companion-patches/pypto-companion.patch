@@ -1,0 +1,545 @@
+diff --git a/docs/en/dev/language/04-external-kernels.md b/docs/en/dev/language/04-external-kernels.md
+index 221d57ab..28d5ef24 100644
+--- a/docs/en/dev/language/04-external-kernels.md
++++ b/docs/en/dev/language/04-external-kernels.md
+@@ -234,10 +234,23 @@ void: using its call as a value is rejected. All call sites of one producer in
+ one program must have the same inferred tensor signature. Foreign calls are
+ supported from chip orchestration and inline orchestration helpers.
+
++Unrebound induction variables of `pl.range` and `pl.parallel` with ordinary
++range bounds are inferred as `pl.INDEX` at foreign calls. A producer can use
++them as explicit row or page identifiers without reading hardware launch IDs.
++
+ Builders run before cache lookup; source content, local includes and access/core
+ metadata participate in both cache identities. Generated source is reused within
+ the request. Producers may use content-addressed storage; no captured tensors,
+ addresses or mutable per-request source paths are stored on the JIT dependency.
++The CANNBotDSL adapter lives in `pypto.jit.cannbotdsl`. PyPTO owns conversion of
++tensor/scalar metadata, calls to the producer's public `export_device`, runtime
++ABI wrapper generation, and external task configuration. The producer's legacy
++`cannbotdsl.interop.pypto` entry only forwards to this adapter. CANNBotDSL is an
++optional dependency and is imported only when this adapter is used.
++
++The adapter maps PyPTO FP8E8M0 directly to CANNBotDSL's `float8_e8m0` storage
++type. Packed MX scale layouts require an explicit equal-size ND storage view;
++this changes metadata only and preserves the scale bytes without re-encoding.
+ The CANNBotDSL integration currently supports A5/TMR, ND tensors with a contiguous
+ innermost axis, explicit runtime scalars, AIV/AIC/MIX and basic dynamic shapes.
+ The CANN 9.3.0 SDK has a missing CPU-debug-only include which can make the optional
+diff --git a/docs/zh/dev/language/04-external-kernels.md b/docs/zh/dev/language/04-external-kernels.md
+index 22262837..20b39729 100644
+--- a/docs/zh/dev/language/04-external-kernels.md
++++ b/docs/zh/dev/language/04-external-kernels.md
+@@ -212,9 +212,22 @@ Tensor 读写方向和可选的 backend/runtime 要求。生成的完整源码
+ 不能将调用用作值。一个 program 内，同一生产者各调用点必须具有相同的 Tensor 签名。
+ 支持从芯片 orchestration 及其 inline helper 调用。
+
++普通范围边界的 `pl.range`、`pl.parallel` 循环变量，在循环体内未被重新赋值时，
++会在外部调用处推导为 `pl.INDEX`。生产者可以直接接收这些行号或页号，
++无需读取硬件启动时的 block ID。
++
+ 构建器在查缓存前运行；源码、局部 include 和读写/core 元数据参与两层缓存身份，
+ 本次请求内复用生成结果。生产者可以采用按内容寻址的存储；JIT 依赖对象不保存调用者的
+-Tensor、地址或本次请求的可变源码路径。CANNBotDSL 接入目前支持 A5/TMR、最内层连续的
++Tensor、地址或本次请求的可变源码路径。
++
++CANNBotDSL 适配器位于 `pypto.jit.cannbotdsl`。Tensor/Scalar 元数据转换、调用生产者的
++通用 `export_device`、runtime ABI 包装生成以及外部任务配置均由 PyPTO 负责。
++生产者原有的 `cannbotdsl.interop.pypto` 入口仅兼容转发到此适配器。
++CANNBotDSL 是可选依赖，仅在使用此适配器时导入。
++
++适配器将 PyPTO FP8E8M0 直接映射到 CANNBotDSL 的 `float8_e8m0` 存储类型。
++打包的 MX scale 布局需使用显式、等大小的 ND 存储视图；此操作只改元数据，保留原始
++scale 字节，不重新编码。CANNBotDSL 接入目前支持 A5/TMR、最内层连续的
+ ND Tensor、显式 runtime Scalar、AIV/AIC/MIX 和基本动态形状。
+ CANN 9.3.0 缺少 CPU-debug 条件头文件，可能使可选的持久缓存保守跳过；
+ 默认的进程内缓存仍可使用。
+diff --git a/python/pypto/jit/_tensor_meta.py b/python/pypto/jit/_tensor_meta.py
+index 9ba99c1a..7ffa3c5b 100644
+--- a/python/pypto/jit/_tensor_meta.py
++++ b/python/pypto/jit/_tensor_meta.py
+@@ -1207,6 +1207,35 @@ def _drop_dims_is_noop(drop_dims_node: ast.expr | None, scope: _StaticScope) ->
+     )
+
+
++def _shaped_view_meta(
++    call: ast.Call,
++    target: str | None,
++    local: Mapping[str, TensorMeta],
++    scope: _StaticScope,
++    resolve_shape: Callable[..., tuple[ShapeDim, ...] | None],
++) -> TensorMeta | None:
++    # A shaped view preserves storage dtype and explicitly selects its
++    # layout. In particular, MX scale backing can cross a foreign boundary
++    # as ND bytes without a numerical conversion. IR still validates the
++    # storage size and whether this layout transition is supported.
++    src = _tensor_or_input_operand(call)
++    if not isinstance(src, ast.Name) or src.id not in local:
++        return None
++    src_meta = local[src.id]
++    shape_node = _call_operand(call, 1, "shape")
++    if shape_node is None:
++        return None
++    result_name = f"{target}_l{call.lineno}_c{call.col_offset}" if target is not None else None
++    shape = resolve_shape(shape_node, result_name, dimension_arithmetic=True)
++    layout_node = scope.fold(_call_operand(call, None, "layout"))
++    layout = (src_meta.layout or _ir.TensorLayout.ND) if layout_node is None else scope.value(layout_node)
++    if shape is None or (layout is not None and not isinstance(layout, _ir.TensorLayout)):
++        return None
++    if layout_node is not None and layout is None:
++        return None
++    return TensorMeta(shape=shape, dtype=src_meta.dtype, layout=layout)
++
++
+ def extract_local_tensor_metas(
+     func: Any,
+     seed_meta: dict[str, TensorMeta] | None = None,
+@@ -1514,6 +1543,9 @@ def extract_local_tensor_metas(
+         # Keep it explicit so a dependency's annotation cannot overwrite it.
+         return TensorMeta(shape=shape, dtype=src_meta.dtype, layout=_ir.TensorLayout.ND)
+
++    def _view_meta(call: ast.Call, target: str | None = None) -> TensorMeta | None:
++        return _shaped_view_meta(call, target, local, scope, _resolve_shape)
++
+     def _slice_meta(call: ast.Call, target: str | None = None) -> TensorMeta | None:
+         # pl.slice(input, shape, offset, ...) / pl.tensor.slice(tensor, shape,
+         # offset, ...) — shape/offset/drop_dims/etc. share the same names in
+@@ -1566,6 +1598,7 @@ def extract_local_tensor_metas(
+         "slice": _slice_meta,
+         "window": _window_meta,
+         "reshape": _reshape_meta,
++        "view": _view_meta,
+     }
+
+     # 3-segment spellings this walker also understands, keyed by the FULL
+@@ -1620,6 +1653,44 @@ def extract_local_tensor_metas(
+     return local if visible_only or stop_at_dep is not None or stop_at_call is not None else collected
+
+
++def _external_loop_index_dtypes(func: Any, call_name: str, call_node: ast.Call | None) -> dict[str, DataType]:
++    """Type unrebound induction variables at a foreign call inside an ordinary range loop."""
++    body = _ast_analysis.get_func_def(func)
++    if call_node is None:
++        call_node = next(
++            (
++                node
++                for node in ast.walk(body)
++                if isinstance(node, ast.Call)
++                and isinstance(node.func, ast.Name)
++                and node.func.id == call_name
++            ),
++            None,
++        )
++    if call_node is None:
++        return {}
++    indices = {}
++    for loop in ast.walk(body):
++        if not isinstance(loop, ast.For) or not isinstance(loop.target, ast.Name):
++            continue
++        if not isinstance(loop.iter, ast.Call):
++            continue
++        if _flatten_dotted_call(loop.iter.func) not in (("pl", "parallel"), ("pl", "range")):
++            continue
++        # Explicitly typed bound constructors can select a different induction dtype.
++        bounds = [
++            *loop.iter.args,
++            *(kw.value for kw in loop.iter.keywords if kw.arg in ("start", "stop", "step")),
++        ]
++        if any(isinstance(node, ast.Call) for bound in bounds for node in ast.walk(bound)):
++            continue
++        body_nodes = (node for stmt in loop.body for node in ast.walk(stmt))
++        if call_node not in body_nodes or loop.target.id in _body_binding_names(loop.body):
++            continue
++        indices[loop.target.id] = DataType.INDEX
++    return indices
++
++
+ def resolve_dep_call_metadata(
+     dep: "JITFunction",
+     caller_func: Any,
+@@ -1667,6 +1738,7 @@ def resolve_dep_call_metadata(
+     dep with that static extent.
+     """
+     dep_param_names = dep._param_names()
++    call_name = dep_call_name or dep.__name__
+     if dep._external_builder is not None:
+         from pypto.language.typing.scalar import Scalar  # noqa: PLC0415
+
+@@ -1678,7 +1750,7 @@ def resolve_dep_call_metadata(
+             dtype = ann.dtype if isinstance(ann, Scalar) else ann
+             if isinstance(dtype, DataType):
+                 caller_scalar_dtypes.setdefault(name, dtype)
+-    call_name = dep_call_name or dep.__name__
++        caller_scalar_dtypes.update(_external_loop_index_dtypes(caller_func, call_name, call_node))
+     call_args = (
+         _call_binding.call_arg_refs(call_node)
+         if call_node is not None
+diff --git a/python/pypto/jit/foreign.py b/python/pypto/jit/foreign.py
+index 893cb5c9..b942bb09 100644
+--- a/python/pypto/jit/foreign.py
++++ b/python/pypto/jit/foreign.py
+@@ -11,8 +11,9 @@
+
+ A callable's ``__pypto_jit__()`` hook returns a stable ``JITFunction`` with an
+ ``external_builder``. The builder receives a specialization context and returns
+-this descriptor. PyPTO owns argument binding, task dependencies and compilation;
+-the producer owns device source generation and the runtime ABI wrapper.
++this descriptor. PyPTO owns argument binding, task dependencies and compilation.
++Producers supply device code; provider adapters such as ``jit.cannbotdsl`` may
++also be maintained in PyPTO to own dtype conversion and runtime ABI wrappers.
+ """
+
+ from dataclasses import dataclass
+@@ -49,6 +50,14 @@ def apply_external_spec(ctx: SpecializeContext, spec: object) -> None:
+         raise ValueError(f"External kernel {ctx.func_name!r}: invalid core type {spec.core_type!r}")
+     if spec.dual_aiv_dispatch and spec.core_type != "mixed":
+         raise ValueError("dual_aiv_dispatch requires a mixed external kernel")
++    unknown = [
++        name for name in ctx.param_names if name not in ctx.tensor_meta and name not in ctx.scalar_dtypes
++    ]
++    if unknown:
++        raise ValueError(
++            f"External kernel {ctx.func_name!r}: cannot infer parameters {unknown}; "
++            "pass tensors or explicitly typed runtime scalars"
++        )
+     if set(spec.parameter_access) != set(ctx.tensor_meta) or any(
+         access not in ("read", "write", "read_write") for access in spec.parameter_access.values()
+     ):
+diff --git a/tests/ut/jit/test_extern_kernel.py b/tests/ut/jit/test_extern_kernel.py
+index 08a128f2..4f8e3216 100644
+--- a/tests/ut/jit/test_extern_kernel.py
++++ b/tests/ut/jit/test_extern_kernel.py
+@@ -526,6 +526,58 @@ def test_foreign_scalar_argument_inherits_caller_dtype(tmp_path):
+     _generate_external_config(entry, (torch.empty(1, 32), 2.5), tmp_path)
+
+
++def test_foreign_mx_scale_storage_view_preserves_dtype_and_nd_layout(tmp_path):
++    def foreign_body(scale, out):
++        pass
++
++    leaf = _ForeignKernel(foreign_body, _write_kernel(tmp_path), {"scale": "read", "out": "write"})
++
++    @pl.jit
++    def entry(scale: pl.Tensor[[8, 16], pl.FP8E8M0, pl.MX_B_NN], out: pl.Out[pl.Tensor]):
++        backing = pl.tensor.view(scale, [1, 128], layout=pl.ND)
++        leaf(backing, out)
++        return out
++
++    args = (torch.empty(8, 16, dtype=torch.float8_e8m0fnu), torch.empty(1, 128))
++    source = _specialize(entry, *args)
++    assert "scale: pl.Tensor[[1, 128], pl.FP8E8M0]" in source
++    _generate_external_config(entry, args, tmp_path)
++
++
++def test_foreign_scalar_argument_inherits_loop_index_dtype(tmp_path):
++    def foreign_body(out, page):
++        pass
++
++    leaf = _ForeignKernel(foreign_body, _write_kernel(tmp_path), {"out": "write"})
++
++    @pl.jit
++    def entry(out: pl.Out[pl.Tensor]) -> pl.Tensor:
++        for page in pl.parallel(2):
++            leaf(out, page)
++        return out
++
++    source = _specialize(entry, torch.empty(1, 32))
++    assert "page: pl.Scalar[pl.INDEX]" in source
++    _generate_external_config(entry, (torch.empty(1, 32),), tmp_path)
++
++
++def test_foreign_rebound_loop_index_does_not_keep_index_dtype(tmp_path):
++    def foreign_body(out, page):
++        pass
++
++    leaf = _ForeignKernel(foreign_body, _write_kernel(tmp_path), {"out": "write"})
++
++    @pl.jit
++    def entry(out: pl.Out[pl.Tensor], scale: pl.Scalar[pl.FP32]) -> pl.Tensor:
++        for page in pl.parallel(2):
++            page = scale
++            leaf(out, page)
++        return out
++
++    with pytest.raises(ValueError, match="page"):
++        _specialize(entry, torch.empty(1, 32), 0.5)
++
++
+ def test_foreign_different_call_shapes_are_rejected(tmp_path):
+     def foreign_body(out):
+         pass
+diff --git a/python/pypto/jit/cannbotdsl.py b/python/pypto/jit/cannbotdsl.py
+new file mode 100644
+index 00000000..29db8f67
+--- /dev/null
++++ b/python/pypto/jit/cannbotdsl.py
+@@ -0,0 +1,198 @@
++# Copyright (c) PyPTO Contributors.
++# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
++# CANN Open Software License Agreement Version 2.0 (the "License").
++# Please refer to the License for details. You may not use this file except in compliance with the License.
++# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
++# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
++# See LICENSE in the root of the software repository for the full text of the License.
++# -----------------------------------------------------------------------------------------------------------
++
++# Copyright (c) 2026 Huawei Technologies Co., Ltd.
++
++"""PyPTO-owned A5 adapter for CANNBotDSL device-callable kernels.
++
++CANNBotDSL supplies TensorSpec and export_device. This adapter owns PyPTO
++metadata conversion, runtime tensor ABI wrapping, and external task setup.
++CANNBotDSL remains optional and is imported only when the adapter is used.
++"""
++
++import hashlib
++import importlib
++import inspect
++import json
++import os
++import tempfile
++from pathlib import Path
++from typing import TYPE_CHECKING, Any
++
++from .decorator import JITFunction
++from .foreign import ExternalKernelSpec
++from .specializer import DynDim
++
++if TYPE_CHECKING:
++    from cannbotdsl.aot.device_export import DeviceExport
++
++    from .specializer import SpecializeContext
++
++
++def write_wrapper(exported: "DeviceExport", directory: str | Path) -> Path:
++    """Adapt the versioned device ABI to PyPTO TMR tensor descriptors."""
++    manifest = exported.manifest
++    if hashlib.sha256(exported.source.encode()).hexdigest() != manifest["source_sha256"]:
++        raise ValueError("Source and device ABI manifest do not match")
++    directory = exported.write(directory)
++    lines = [
++        '#include "device_callable.hpp"',
++        '#include "tensormap_and_ringbuffer/tensor.h"',
++        'extern "C" __aicore__ void kernel_entry(__gm__ int64_t* args) {',
++    ]
++    arguments = []
++    for parameter in manifest["parameters"]:
++        index = parameter["logical_index"]
++        local = f"arg{index}"
++        cpp_type = parameter["cpp_type"]
++        if parameter["kind"] == "tensor":
++            if parameter["layout_map"] != 0:
++                raise ValueError("PyPTO integration supports identity Tensor layouts only")
++            element = parameter["element_cpp_type"]
++            lines += [
++                f"    auto* t{index} = reinterpret_cast<__gm__ simpler::tmr::Tensor*>(args[{index}]);",
++                f"    {cpp_type} {local}{{}};",
++                f"    {local}.ptr = reinterpret_cast<__gm__ {element}*>(t{index}->buffer.addr)"
++                f" + t{index}->start_offset;",
++            ]
++            for field in parameter["dynamic_fields"]:
++                if field["field"] not in ("shape", "stride"):
++                    raise ValueError("PyPTO integration does not supply physical layout fields")
++                member = field["field"]
++                lines.append(
++                    f"    {local}.{member}[{field['slot']}] = t{index}->{member}s[{field['dimension']}];"
++                )
++        else:
++            # PyPTO transports scalar bits in one int64 slot. Bit copying also
++            # preserves FP32/FP64 values (a numeric cast would corrupt them).
++            lines.append(f"    {cpp_type} {local} = *reinterpret_cast<__gm__ {cpp_type}*>(&args[{index}]);")
++        arguments.append(local)
++    lines += [f"    {manifest['symbol']}({', '.join(arguments)});", "}", ""]
++    path = Path(directory) / "entry.cpp"
++    path.write_text("\n".join(lines), encoding="utf-8")
++    return path
++
++
++def include_directories() -> tuple[str, ...]:
++    cb = importlib.import_module("cannbotdsl")
++
++    root = os.environ.get("ASCEND_HOME_PATH")
++    if not root:
++        raise RuntimeError("PyPTO DSL integration requires the CANN environment (ASCEND_HOME_PATH)")
++    asc = Path(root) / "aarch64-linux" / "asc"
++    return (str(asc), str(asc / "include"), str(Path(cb.__file__).parent / "include"))
++
++
++def _materialize(exported: "DeviceExport") -> Path:
++    # Publish complete, immutable sources; another compiler can retain this path.
++    digest = hashlib.sha256(
++        (
++            exported.source + json.dumps(exported.manifest, sort_keys=True) + Path(__file__).read_text()
++        ).encode()
++    ).hexdigest()
++    root = Path(os.environ.get("CANNBOTDSL_PYPTO_CACHE_DIR", Path.home() / ".cache/cannbotdsl/pypto"))
++    root.mkdir(parents=True, exist_ok=True)
++    target = root / digest
++    if not target.is_dir():
++        with tempfile.TemporaryDirectory(dir=root) as staging:
++            staged = Path(staging) / "kernel"
++            write_wrapper(exported, staged)
++            try:
++                staged.rename(target)
++            except OSError:
++                if not target.is_dir():
++                    raise
++    return target / "entry.cpp"
++
++
++def _dtype(dtype: Any) -> Any:
++    cb = importlib.import_module("cannbotdsl")
++
++    names = {
++        "FP16": "float16",
++        "BF16": "bfloat16",
++        "BFLOAT16": "bfloat16",
++        "FP32": "float32",
++        "FP64": "float64",
++        "FP8E4M3FN": "float8_e4m3fn",
++        "FP8_E4M3FN": "float8_e4m3fn",
++        "FP8E8M0": "float8_e8m0",
++        "FP8_E8M0": "float8_e8m0",
++        "INT8": "int8",
++        "INT16": "int16",
++        "INT32": "int32",
++        "INT64": "int64",
++        "INDEX": "int64",
++        "UINT8": "uint8",
++        "UINT16": "uint16",
++        "UINT32": "uint32",
++        "UINT64": "uint64",
++        "BOOL": "bool",
++    }
++    name = names.get(str(dtype).upper())
++    if name is None or not hasattr(cb.dtypes, name):
++        raise TypeError(f"PyPTO DSL integration does not support dtype {dtype}")
++    return getattr(cb.dtypes, name)
++
++
++def _build(kernel: Any, ctx: "SpecializeContext") -> "ExternalKernelSpec":
++    cb = importlib.import_module("cannbotdsl")
++
++    if ctx.constexpr_values:
++        raise TypeError("PyPTO DSL integration currently accepts tensor and runtime scalar parameters only")
++    dims = {}
++    arguments = []
++    for name in ctx.param_names:
++        if name in ctx.tensor_meta:
++            meta = ctx.tensor_meta[name]
++            if meta.layout is not None and meta.layout.name != "ND":
++                raise ValueError(f"PyPTO DSL parameter {name!r} requires ND layout, got {meta.layout}")
++            shape = []
++            for dim in meta.shape:
++                if isinstance(dim, DynDim):
++                    shape.append(dims.setdefault(dim.name, cb.Dim(dim.name)))
++                else:
++                    shape.append(dim)
++            # ND views retain their parent leading strides. Only the innermost
++            # axis is contiguous; taking all strides from the shape would
++            # silently misaddress a sliced PyPTO tensor.
++            stride = tuple(cb.Dim(f"__pypto_{name}_stride_{i}") for i in range(len(shape) - 1)) + (1,)
++            arguments.append(cb.TensorSpec(tuple(shape), _dtype(meta.dtype), stride=stride))
++        elif name in ctx.scalar_dtypes:
++            arguments.append(_dtype(ctx.scalar_dtypes[name]))
++        else:
++            raise TypeError(
++                f"Cannot infer PyPTO DSL parameter {name!r}; pass a tensor or typed runtime scalar"
++            )
++    exported = cb.export_device(kernel, *arguments, arch="dav-3510")
++    manifest = exported.manifest
++    return ExternalKernelSpec(
++        source=str(_materialize(exported)),
++        core_type=manifest["core_type"],
++        parameter_access={
++            p["name"]: "read" if p["access"] == "none" else p["access"]
++            for p in manifest["parameters"]
++            if p["kind"] == "tensor"
++        },
++        include_dirs=include_directories(),
++        dual_aiv_dispatch=manifest["core_type"] == "mixed",
++        backend="Ascend950",
++        runtime="tensormap_and_ringbuffer",
++    )
++
++
++def bind_kernel(kernel: Any) -> "JITFunction":
++    """Return a stable lazy JIT dependency without tracing the DSL body yet."""
++    for param in inspect.signature(kernel.fn).parameters.values():
++        if (
++            param.kind not in (param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD)
++            or param.default is not param.empty
++        ):
++            raise TypeError("PyPTO DSL kernels require explicit positional parameters without defaults")
++    return JITFunction(kernel.fn, func_type="extern", external_builder=lambda ctx: _build(kernel, ctx))
+diff --git a/tests/ut/jit/test_cannbotdsl_adapter.py b/tests/ut/jit/test_cannbotdsl_adapter.py
+new file mode 100644
+index 00000000..febd3998
+--- /dev/null
++++ b/tests/ut/jit/test_cannbotdsl_adapter.py
+@@ -0,0 +1,65 @@
++# Copyright (c) PyPTO Contributors.
++# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
++# CANN Open Software License Agreement Version 2.0 (the "License").
++# Please refer to the License for details. You may not use this file except in compliance with the License.
++# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
++# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
++# See LICENSE in the root of the software repository for the full text of the License.
++# -----------------------------------------------------------------------------------------------------------
++
++"""Optional CANNBotDSL adapter ownership and E8M0 ABI coverage."""
++
++import importlib
++import json
++import os
++from pathlib import Path
++from types import SimpleNamespace
++from unittest.mock import patch
++
++import pypto.language as pl
++import pytest
++from pypto.jit import cannbotdsl as adapter
++
++
++def test_import_without_cannbotdsl():
++    with patch.dict("sys.modules", {"cannbotdsl": None}):
++        importlib.reload(adapter)
++
++
++def test_e8m0_aliases_and_compatibility_forwarder():
++    cb = pytest.importorskip("cannbotdsl")
++    for dtype in (pl.FP8E8M0, "FP8E8M0", "FP8_E8M0"):
++        assert adapter._dtype(dtype) == cb.dtypes.float8_e8m0
++    legacy = importlib.import_module("cannbotdsl.interop.pypto")
++    assert legacy.bind_kernel is adapter.bind_kernel
++
++
++@pytest.mark.skipif(
++    not os.environ.get("ASCEND_HOME_PATH"), reason="CANN include discovery requires its environment"
++)
++def test_e8m0_export_preserves_byte_storage_and_effects(tmp_path, monkeypatch):
++    cb = pytest.importorskip("cannbotdsl")
++
++    @cb.kernel
++    def copy_scales(source: cb.Tensor, output: cb.Tensor):
++        # Copy scale bits as bytes; E8M0 remains the device entry's ABI dtype.
++        staging = cb.Buffer(cb.MemLoc.UB, cb.dtypes.uint8, cb.make_layout((1, 32)))
++        cb.mem_copy(staging, source.view(dtype=cb.dtypes.uint8))
++        cb.mem_copy(output.view(dtype=cb.dtypes.uint8), staging)
++
++    meta = SimpleNamespace(shape=(1, 32), dtype=pl.FP8E8M0, layout=None)
++    context = SimpleNamespace(
++        param_names=("source", "output"),
++        tensor_meta={"source": meta, "output": meta},
++        scalar_dtypes={},
++        constexpr_values={},
++    )
++    monkeypatch.setenv("CANNBOTDSL_PYPTO_CACHE_DIR", str(tmp_path))
++    spec = adapter._build(copy_scales, context)
++    assert spec.parameter_access == {"source": "read", "output": "write"}
++    assert spec.core_type == "aiv"
++    source = Path(spec.source)
++    manifest = json.loads(source.with_name("manifest.json").read_text())
++    assert [p["dtype"] for p in manifest["parameters"]] == ["f8e8m0", "f8e8m0"]
++    assert all(p["element_cpp_type"] == "fp8_e8m0_t" for p in manifest["parameters"])
++    assert "reinterpret_cast<__gm__ fp8_e8m0_t*>" in source.read_text()

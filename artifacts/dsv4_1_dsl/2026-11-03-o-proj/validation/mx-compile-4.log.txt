@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "${WORKSPACE}/artifacts/dsv41-semantic-review/run_case.py", line 21, in <module>
+    runpy.run_path(str(entry), run_name="__main__")
+  File "<frozen runpy>", line 286, in run_path
+  File "<frozen runpy>", line 254, in _get_code_from_file
+FileNotFoundError: [Errno 2] No such file or directory: '${WORKSPACE}/models/deepseek_v4_1_flash/o_proj_dsl.py'

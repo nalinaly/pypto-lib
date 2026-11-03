@@ -1,0 +1,16 @@
+bringing up nodes...
+bringing up nodes...
+
+................................                                         [100%]
+=============================== warnings summary ===============================
+tests/ut/jit/test_extern_kernel.py::test_mixed_extern_can_dispatch_both_aiv_lanes
+tests/ut/jit/test_extern_kernel.py::test_foreign_call_infers_outputs_and_emits_task[mixed]
+tests/ut/jit/test_extern_kernel.py::test_mixed_extern_include_dirs_reach_both_kernel_descriptors
+  <string>:8: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_extern_kernel.py::test_single_core_extern_include_dirs_reach_kernel_descriptor
+tests/ut/jit/test_extern_kernel.py::test_mixed_extern_include_dirs_reach_both_kernel_descriptors
+  <string>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+32 passed, 5 warnings in 5.13s

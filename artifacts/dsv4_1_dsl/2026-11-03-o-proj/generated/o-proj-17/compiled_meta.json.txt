@@ -1,0 +1,197 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "attended",
+      "direction": "In",
+      "shape": [
+        -1,
+        32768
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "wo_a",
+      "direction": "In",
+      "shape": [
+        8,
+        4096,
+        1024
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "wo_a_scale",
+      "direction": "In",
+      "shape": [
+        8,
+        128,
+        1024
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "wo_b",
+      "direction": "In",
+      "shape": [
+        8192,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "wo_b_scale",
+      "direction": "In",
+      "shape": [
+        256,
+        5120
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "MX_B_NN"
+    },
+    {
+      "name": "rope_cos",
+      "direction": "In",
+      "shape": [
+        -1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "rope_sin",
+      "direction": "In",
+      "shape": [
+        -1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "output",
+      "direction": "InOut",
+      "shape": [
+        -1,
+        5120
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "attended",
+      "direction": "In",
+      "shape": [
+        -1,
+        32768
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "wo_a",
+      "direction": "In",
+      "shape": [
+        8,
+        4096,
+        1024
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "wo_a_scale",
+      "direction": "In",
+      "shape": [
+        8,
+        128,
+        1024
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "wo_b",
+      "direction": "In",
+      "shape": [
+        8192,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "wo_b_scale",
+      "direction": "In",
+      "shape": [
+        1,
+        320,
+        128,
+        16,
+        2
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "MX_B_NN"
+    },
+    {
+      "name": "rope_cos",
+      "direction": "In",
+      "shape": [
+        -1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "rope_sin",
+      "direction": "In",
+      "shape": [
+        -1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "output",
+      "direction": "InOut",
+      "shape": [
+        -1,
+        5120
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "num_return_types": 1,
+  "return_aliases": [
+    7
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

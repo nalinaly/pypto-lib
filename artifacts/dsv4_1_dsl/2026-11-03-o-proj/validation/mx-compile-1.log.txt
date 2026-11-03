@@ -1,0 +1,24 @@
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.
+Traceback (most recent call last):
+  File "${WORKSPACE}/artifacts/dsv41-semantic-review/run_case.py", line 21, in <module>
+    runpy.run_path(str(entry), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/o_proj_dsl.py", line 376, in <module>
+    specs=build_rope_specs(args.active) if args.stage == "rope" else build_mx_specs(args.active),
+                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/o_proj_dsl.py", line 345, in build_mx_specs
+    ScalarSpec("rows", pl.INDEX, rows),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 8, in __init__
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/spec.py", line 284, in __post_init__
+    if self.dtype not in SUPPORTED_SCALAR_DTYPES:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: __eq__(): incompatible function arguments. The following argument types are supported:
+    1. __eq__(self, other: pypto.pypto_core.DataType) -> bool
+
+Invoked with types: pypto.pypto_core.DataType, dtype

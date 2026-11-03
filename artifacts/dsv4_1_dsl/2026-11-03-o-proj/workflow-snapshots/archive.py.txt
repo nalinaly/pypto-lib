@@ -1,0 +1,115 @@
+"""Archive output-projection validation and cumulative companion patches."""
+
+import gzip
+import hashlib
+import json
+from pathlib import Path
+import re
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+work = workspace / "artifacts/dsv41-o-proj-dsl"
+repo = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+dest = repo / "artifacts/dsv4_1_dsl/2026-11-03-o-proj"
+dest.mkdir(parents=True, exist_ok=True)
+records = []
+
+
+def normalize(value):
+    value = value.replace(str(workspace), "${WORKSPACE}")
+    value = value.replace(str(workspace.parent), "${USER_ROOT}")
+    return "\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n"
+
+
+def copy(source, target, *, compressed=False, binary=False):
+    raw = source.read_bytes()
+    output = gzip.compress(raw, compresslevel=6, mtime=0) if compressed else raw
+    if not compressed and not binary:
+        output = normalize(raw.decode()).encode()
+    target = dest / target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(output)
+    records.append({
+        "source": str(source.relative_to(workspace)), "path": str(target.relative_to(dest)),
+        "source_bytes": len(raw), "source_sha256": hashlib.sha256(raw).hexdigest(),
+        "encoding": "gzip" if compressed else ("binary" if binary else "normalized UTF-8"),
+    })
+
+
+for source in sorted(work.glob("*.log")):
+    if source.name != "archive-result.log":
+        copy(source, Path("validation") / (source.name + ".txt"))
+for source in sorted(work.glob("*.py")):
+    copy(source, Path("workflow-snapshots") / (source.name + ".txt"))
+for name in ("progress.txt", "validation-summary.json"):
+    copy(work / name, name)
+
+builds = {
+    "rope-17": "_jit_rope_quant_validation_20261103_183056_x0dj0m32",
+    "mx-17": "_jit_mx_projection_validation_20261103_184122_7ach_g6o",
+    "o-proj-17": "_jit_o_proj_validation_20261103_184711_h333_oow",
+}
+for label, build_name in builds.items():
+    build = repo / "build_output" / build_name
+    for source in sorted((build / "data").rglob("*.pt")):
+        target = Path("fixtures") / label / (str(source.relative_to(build / "data")) + ".gz")
+        copy(source, target, compressed=True)
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        copy(build / name, Path("generated") / label / (name + ".txt"))
+    for source in sorted((build / "orchestration").glob("*.cpp")):
+        copy(source, Path("generated") / label / source.name)
+    for source in sorted((build / "cache").glob("incore_*.bin")):
+        copy(source, Path("generated") / label / source.name, binary=True)
+    config = (build / "kernel_config.py").read_text()
+    for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+/entry.cpp)\'', config):
+        for filename in ("entry.cpp", "device_callable.hpp", "manifest.json"):
+            copy(Path(entry).with_name(filename), Path("generated") / label / name / filename)
+
+for label, relative, new_files in (
+    ("pypto", "issue75-env/pypto-pr", [
+        "python/pypto/jit/cannbotdsl.py", "tests/ut/jit/test_cannbotdsl_adapter.py",
+    ]),
+    ("cannbotdsl", "cannbot-dsl-dev", []),
+):
+    root = workspace / relative
+    diff = subprocess.run(["git", "diff", "--binary", "HEAD"], cwd=root, check=True, capture_output=True).stdout
+    for name in new_files:
+        added = subprocess.run(["git", "diff", "--no-index", "--binary", "/dev/null", name], cwd=root, capture_output=True)
+        if added.returncode not in (0, 1):
+            raise RuntimeError(added.stderr.decode())
+        diff += added.stdout
+    patch = work / f"{label}-companion.patch"
+    patch.write_bytes(diff)
+    subprocess.run(["git", "apply", "--check", "--reverse", str(patch)], cwd=root, check=True)
+    if str(workspace).encode() in diff:
+        raise RuntimeError(f"Machine-specific path in {label} patch")
+    copy(patch, Path("companion-patches") / patch.name)
+    subprocess.run(["git", "apply", "--check", "--reverse", str(dest / "companion-patches" / patch.name)],
+                   cwd=root, check=True)
+
+manifest = {
+    "branch": "nalinaly/pypto-lib:dsv4.1-dsl",
+    "model_base": "bc45eeb04fd1f3f9a8f49ba9cb3a4b0b379881b0",
+    "pypto_base": "ae6f6d76d32c2506fa1764a254a5f46a251431e9",
+    "cannbotdsl_base": "33c2e5f4af7541f64722284668a856a2e8fe9cec",
+    "model_source_sha256": {
+        name: hashlib.sha256((repo / "models/deepseek_v4_1_flash" / name).read_bytes()).hexdigest()
+        for name in ("o_proj.py", "o_proj_dsl.py")
+    },
+    "records": records,
+    "stored_files": [
+        {"path": str(p.relative_to(dest)), "bytes": p.stat().st_size, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
+        for p in sorted(dest.rglob("*")) if p.is_file() and p.name != "artifact-manifest.json"
+    ],
+    "notes": [
+        "Stage data and the final 17-active standalone o_proj data are frozen in full, including generated weights.",
+        "The all-case run reuses build directories; earlier active-count data was overwritten by subsequent cases.",
+        "Stored data/out tensors are CPU goldens, not captured device outputs. Device comparison results are in logs.",
+        "HC-post, SWA and layer fixtures remain reproducible from model sources; their logs, not duplicate weights, are archived.",
+        "Companion patches include earlier local fixes and apply to the recorded bases; do not stack them on earlier archived patches.",
+        "Native ELF files, installed libraries and toolchains are excluded. Runtime raw device text images are included.",
+    ],
+}
+(dest / "artifact-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+print("Archived", len(records), "sources;", sum(r["bytes"] for r in manifest["stored_files"]), "stored bytes")

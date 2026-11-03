@@ -13,6 +13,7 @@
 from pathlib import Path
 
 from gemm import MX_M_TILE
+from o_proj_dsl import grouped_projection, output_projection, quantize_projection, rope_quant
 
 import torch
 
@@ -33,7 +34,7 @@ from config import (
 )
 
 
-# model config
+# 模型配置
 LOCAL_H = M.num_attention_heads // TP_SIZE
 LOCAL_O_GROUPS = M.o_groups // TP_SIZE
 LOCAL_O_WIDTH = M.o_groups // TP_SIZE * M.o_lora_rank
@@ -46,7 +47,7 @@ HC_MULT = M.hc_mult
 HC_DIM = M.hc_dim
 
 
-# tiling
+# 分块参数
 O_A_N_TILE = 256
 O_B_N_TILE = 160
 K_TILE = 256
@@ -123,40 +124,52 @@ def o_proj(
         row_tiles = padded_rows // MX_M_TILE
         payload_all = pl.create_tensor([LOCAL_O_GROUPS * 80, O_GROUP_IN], dtype=pl.FP8E4M3FN)
         scales_all = pl.create_tensor([LOCAL_O_GROUPS, 80 * (O_GROUP_IN // 32)], dtype=pl.FP8E8M0)
-        quant_workers = pl.max(1, pl.min(64, 2 * pl.system.available_cluster_count()))
-        with pl.spmd(quant_workers, name_hint="rope_quant_o_vf"):
-            payload_all, scales_all = _rope_quant_o_vf(
-                attended_group, cosine_group, sine_group, payload_all, scales_all,
-                active_rows, LOCAL_O_GROUPS,
-            )
+        if TP_SIZE == 1:
+            rope_quant(attended_group, cosine_group, sine_group, payload_all, scales_all, active_rows)
+        else:
+            quant_workers = pl.max(1, pl.min(64, 2 * pl.system.available_cluster_count()))
+            with pl.spmd(quant_workers, name_hint="rope_quant_o_vf"):
+                payload_all, scales_all = _rope_quant_o_vf(
+                    attended_group, cosine_group, sine_group, payload_all, scales_all,
+                    active_rows, LOCAL_O_GROUPS,
+                )
         # O-A projection.
         projected = pl.create_tensor([80, LOCAL_O_WIDTH], dtype=pl.BF16)
-        oa_workers = pl.min(LOCAL_O_GROUPS * (O_LORA // O_A_N_TILE), pl.system.available_cluster_count())
-        oa_workers = pl.max(1, oa_workers)
         # Both projection grids write disjoint columns and may execute in waves.
-        with pl.spmd(oa_workers, name_hint="proj_o_a"):
-            projected = _o_proj_a(payload_all, wo_a, scales_all, wo_a_scale, projected, LOCAL_O_WIDTH)
+        if TP_SIZE == 1:
+            grouped_projection(payload_all, wo_a, scales_all, wo_a_scale, projected)
+        else:
+            oa_workers = pl.min(LOCAL_O_GROUPS * (O_LORA // O_A_N_TILE), pl.system.available_cluster_count())
+            oa_workers = pl.max(1, oa_workers)
+            with pl.spmd(oa_workers, name_hint="proj_o_a"):
+                projected = _o_proj_a(payload_all, wo_a, scales_all, wo_a_scale, projected, LOCAL_O_WIDTH)
         # Quantize the O-A result for O-B.
         payload = pl.create_tensor([80, LOCAL_O_WIDTH], dtype=pl.FP8E4M3FN)
         activation_scale_backing = pl.create_tensor([1, 80 * (LOCAL_O_WIDTH // 32)], dtype=pl.FP8E8M0)
-        output_blocks = row_tiles * (LOCAL_O_WIDTH // K_TILE)
-        output_workers = pl.min(pl.min(output_blocks, 64), 2 * pl.system.available_cluster_count())
-        for worker in pl.spmd(output_workers, name_hint="quant_o_a"):
-            for work in pl.range(worker, output_blocks, output_workers):
-                t0 = work // (LOCAL_O_WIDTH // K_TILE) * MX_M_TILE
-                k0 = work % (LOCAL_O_WIDTH // K_TILE) * K_TILE
-                rows = pl.max(pl.min(MX_M_TILE, active_rows - t0), 0)
-                output_quantized, output_packed_scale = quantize_bf16_to_mxfp8(projected, t0, k0, rows, MX_M_TILE)
-                payload = pl.store(output_quantized, [t0, k0], payload)
-                scale_offset = t0 * (LOCAL_O_WIDTH // 32) + k0 // K_TILE * MX_M_TILE * (K_TILE // 32)
-                output_packed_flat = pl.reshape(output_packed_scale, [1, MX_M_TILE * (K_TILE // 32)])
-                activation_scale_backing = pl.store(output_packed_flat, [0, scale_offset], activation_scale_backing)
+        if TP_SIZE == 1:
+            quantize_projection(projected, payload, activation_scale_backing, active_rows)
+        else:
+            output_blocks = row_tiles * (LOCAL_O_WIDTH // K_TILE)
+            output_workers = pl.min(pl.min(output_blocks, 64), 2 * pl.system.available_cluster_count())
+            for worker in pl.spmd(output_workers, name_hint="quant_o_a"):
+                for work in pl.range(worker, output_blocks, output_workers):
+                    t0 = work // (LOCAL_O_WIDTH // K_TILE) * MX_M_TILE
+                    k0 = work % (LOCAL_O_WIDTH // K_TILE) * K_TILE
+                    rows = pl.max(pl.min(MX_M_TILE, active_rows - t0), 0)
+                    output_quantized, output_packed_scale = quantize_bf16_to_mxfp8(projected, t0, k0, rows, MX_M_TILE)
+                    payload = pl.store(output_quantized, [t0, k0], payload)
+                    scale_offset = t0 * (LOCAL_O_WIDTH // 32) + k0 // K_TILE * MX_M_TILE * (K_TILE // 32)
+                    output_packed_flat = pl.reshape(output_packed_scale, [1, MX_M_TILE * (K_TILE // 32)])
+                    activation_scale_backing = pl.store(output_packed_flat, [0, scale_offset], activation_scale_backing)
         # O-B projection.
         capacity = pl.tensor.dim(output_group, 0)
-        with pl.spmd(D // O_B_N_TILE, name_hint="proj_o_b"):
-            output_group = _o_proj_b(
-                payload, wo_b, activation_scale_backing, wo_b_scale, output_group, capacity, LOCAL_O_WIDTH,
-            )
+        if TP_SIZE == 1:
+            output_projection(payload, wo_b, activation_scale_backing, wo_b_scale, output_group, capacity)
+        else:
+            with pl.spmd(D // O_B_N_TILE, name_hint="proj_o_b"):
+                output_group = _o_proj_b(
+                    payload, wo_b, activation_scale_backing, wo_b_scale, output_group, capacity, LOCAL_O_WIDTH,
+                )
     return output
 
 

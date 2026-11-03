@@ -102,6 +102,40 @@ indices, irregular/repeated indices, and inactive output sentinels. The
 existing core and composed Attention error thresholds are unchanged. Use the
 layer-0 command above to validate composition with EP MoE.
 
+## Output projection in DSL
+
+For TP1, [`o_proj_dsl.py`](../../../models/deepseek_v4_1_flash/o_proj_dsl.py)
+implements inverse RoPE with OCP MXFP8 quantization, grouped WoA, BF16
+requantization, and WoB. PyPTO/simpler schedules head/row AIV tasks and
+M80/N128 AIC projection tiles. The other TP configurations retain the
+existing implementation until their local head/group dimensions are migrated
+and validated.
+
+The leaves consume the existing NZ weight bytes and paired E8M0 scale
+packing directly. Inverse RoPE rounds to BF16 before quantization; WoA
+rounds to BF16 before requantization; WoB stores BF16. Explicit runtime
+valid-row counts protect partial output tiles and zero inactive rows.
+The existing numerical thresholds remain unchanged.
+
+The companion PyPTO adapter owns dtype conversion (including E8M0), device
+export invocation, runtime ABI wrappers and external task configuration.
+PyPTO JIT also propagates shaped `tensor.view` metadata so packed MX scales
+can cross the DSL boundary as an explicit ND storage view. CANNBotDSL
+retains generic device export and a compatibility forwarder.
+
+With an allocated A5 device in `TASK_DEVICE`, run:
+
+```bash
+python models/deepseek_v4_1_flash/o_proj_dsl.py --stage rope --active 17 -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/o_proj_dsl.py --stage mx --active 17 -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/o_proj.py --case all -d "$TASK_DEVICE"
+```
+
+The stage checks compare FP8/E8M0 bytes exactly and test MX projection with
+nonuniform scales at zero tolerance. The composed checks cover empty and
+tail inputs, 72-token output, and a second 80-row chunk with FP32 HC post.
+The SWA and layer-0 entries above exercise the same projection implementation.
+
 ## DSL development branch and evidence
 
 Continue DSL implementation and evidence collection on
@@ -112,3 +146,6 @@ source, and companion toolchain patches. Preserve earlier captures when adding
 new runs under `artifacts/dsv4_1_dsl/`.
 The [SWA Attention archive](../../../artifacts/dsv4_1_dsl/2026-11-03-swa-attention/README.txt)
 contains the subsequent MIX leaf's validation and generated device code.
+The [output projection archive](../../../artifacts/dsv4_1_dsl/2026-11-03-o-proj/README.txt)
+contains its staged validation, generated kernels and cumulative companion
+patches, including the adapter migration to PyPTO.
