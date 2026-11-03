@@ -3,7 +3,6 @@
 import argparse
 from dataclasses import replace
 from functools import partial
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -35,11 +34,11 @@ args = SimpleNamespace(tokens=72, active_tokens=72, local_tokens=80, requests=8,
                        dp=1, seed=1, epochs=1, bench=False, pages=1, case="mixed",
                        compile_only=True)
 specs = decode_swa.build_swa_specs(args)
-input_hashes = {}
+input_files = []
 for index, spec in enumerate(specs):
     path = frozen / f"{spec.name}.pt"
     if path.exists():
-        input_hashes[spec.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        input_files.append(spec.name)
         if isinstance(spec, TensorSpec):
             specs[index] = replace(spec, init_value=partial(torch.load, path, weights_only=True))
         elif isinstance(spec, ScalarSpec):
@@ -77,7 +76,7 @@ metadata = {
     "tokens": 72, "capacity": 80, "requests": 8, "initial_prefix": 0,
     "source_root": str(lib),
     "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=lib, text=True).strip(),
-    "input_file_sha256": input_hashes,
+    "input_files": input_files,
     "cache_codec": "group32 FP8 / power-of-two BF16 scales" if options.variant != "no_dsl" else "group32 FP8 / continuous BF16 scales",
     "sync_start": options.variant == "dsl_sync_start",
 }

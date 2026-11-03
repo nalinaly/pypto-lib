@@ -86,9 +86,8 @@ Start in generated/current/:
   window_kv_page.aiv.bin -- the 2072-byte device text image used by the capture.
 
 The device header and text image are identical before/after sync_start; the
-flag changes orchestration. The text SHA256 is
-982d4b4ae10a720b411757976cf3890a7275e272c7ae619d4090cbe4ac7fec97.
-The generated header explicitly selects PRECISION_0ULP_FTZ_TRUE for division.
+flag changes orchestration. The generated header explicitly selects
+PRECISION_0ULP_FTZ_TRUE for division.
 The export route did not persist a per-stage MLIR dump and does not emit a PTO
 file for this external DSL leaf. Historical exports are in generated/jit-cache/.
 
@@ -104,7 +103,7 @@ precision/args_dump/: initial diagnostic manifest and losslessly compressed
   runtime dump viewer. The original binary is about 99 MB and includes repeated
   snapshots; XZ preserves every byte with a larger deduplication dictionary.
 
-Raw and compressed hashes are listed in artifact-manifest.json. Extract into
+File paths, sizes and encodings are listed in artifact-manifest.json. Extract into
 an ignored build_output directory, for example from the repository root:
 
   python - <<'PY'

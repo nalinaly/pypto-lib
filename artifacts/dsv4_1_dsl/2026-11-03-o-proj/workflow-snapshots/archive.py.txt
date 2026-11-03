@@ -1,7 +1,6 @@
 """Archive output-projection validation and cumulative companion patches."""
 
 import gzip
-import hashlib
 import json
 from pathlib import Path
 import re
@@ -32,7 +31,7 @@ def copy(source, target, *, compressed=False, binary=False):
     target.write_bytes(output)
     records.append({
         "source": str(source.relative_to(workspace)), "path": str(target.relative_to(dest)),
-        "source_bytes": len(raw), "source_sha256": hashlib.sha256(raw).hexdigest(),
+        "source_bytes": len(raw),
         "encoding": "gzip" if compressed else ("binary" if binary else "normalized UTF-8"),
     })
 
@@ -93,13 +92,10 @@ manifest = {
     "model_base": "bc45eeb04fd1f3f9a8f49ba9cb3a4b0b379881b0",
     "pypto_base": "ae6f6d76d32c2506fa1764a254a5f46a251431e9",
     "cannbotdsl_base": "33c2e5f4af7541f64722284668a856a2e8fe9cec",
-    "model_source_sha256": {
-        name: hashlib.sha256((repo / "models/deepseek_v4_1_flash" / name).read_bytes()).hexdigest()
-        for name in ("o_proj.py", "o_proj_dsl.py")
-    },
+    "model_sources": [name for name in ('o_proj.py', 'o_proj_dsl.py')],
     "records": records,
     "stored_files": [
-        {"path": str(p.relative_to(dest)), "bytes": p.stat().st_size, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
+        {"path": str(p.relative_to(dest)), "bytes": p.stat().st_size}
         for p in sorted(dest.rglob("*")) if p.is_file() and p.name != "artifact-manifest.json"
     ],
     "notes": [

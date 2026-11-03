@@ -76,7 +76,7 @@ configs, orchestration source and available runtime incore_*.bin text
 images. The composed SWA configuration shows the shared quantizer and both
 new projections. ELF files and installed toolchains are excluded. Text
 workspace paths are normalized to ${WORKSPACE}. artifact-manifest.json
-records original and stored hashes, including frozen data and model source.
+lists source paths, stored file sizes and model-source files.
 
 The paired framework requirements are unchanged from the preceding archive.
 Use ../2026-11-03-o-proj/companion-patches against its recorded PyPTO and

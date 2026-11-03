@@ -1,7 +1,6 @@
 """Archive QA/KV DSL validation and the upstream window-cache fix reference."""
 
 import gzip
-import hashlib
 import json
 from pathlib import Path
 import re
@@ -31,7 +30,7 @@ def copy(source, target, *, compressed=False, binary=False):
     target.write_bytes(output)
     records.append({
         "source": str(source.relative_to(workspace)), "path": str(target.relative_to(dest)),
-        "source_bytes": len(raw), "source_sha256": hashlib.sha256(raw).hexdigest(),
+        "source_bytes": len(raw),
         "encoding": "gzip" if compressed else ("binary" if binary else "normalized UTF-8"),
     })
 
@@ -73,14 +72,10 @@ manifest = {
     "model_base": "9ca192f3b7eab89d06addd87c44376e195ccf75a",
     "cache_fix_reference": "e04d7b670d6c99db227b8a514fd7a799f5711cba",
     "companion_patches": "../2026-11-03-o-proj/companion-patches",
-    "model_source_sha256": {
-        name: hashlib.sha256((repo / "models/deepseek_v4_1_flash" / name).read_bytes()).hexdigest()
-        for name in ("mxfp8_dsl.py", "qkv_proj_dsl.py", "qkv_proj_rope.py", "o_proj.py",
-                     "o_proj_dsl.py", "quant.py", "window_kv_dsl.py", "decode_layer.py")
-    },
+    "model_sources": [name for name in ('mxfp8_dsl.py', 'qkv_proj_dsl.py', 'qkv_proj_rope.py', 'o_proj.py', 'o_proj_dsl.py', 'quant.py', 'window_kv_dsl.py', 'decode_layer.py')],
     "records": records,
     "stored_files": [
-        {"path": str(p.relative_to(dest)), "bytes": p.stat().st_size, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
+        {"path": str(p.relative_to(dest)), "bytes": p.stat().st_size}
         for p in sorted(dest.rglob("*")) if p.is_file() and p.name != "artifact-manifest.json"
     ],
     "notes": [

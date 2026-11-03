@@ -88,7 +88,7 @@ device outputs. HC-post/SWA/layer inputs are reproducible from model specs;
 their duplicate weights are not stored in this archive.
 
 Decompress .pt.gz files into an ignored build_output directory before loading
-with Torch. artifact-manifest.json records original and stored hashes.
+with Torch. artifact-manifest.json records source paths and stored file sizes.
 Machine-specific workspace paths in text are replaced with ${WORKSPACE}.
 The full installed environment, ELF files and shared libraries are excluded.
 

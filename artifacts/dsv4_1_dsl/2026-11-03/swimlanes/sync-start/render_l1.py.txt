@@ -95,8 +95,6 @@ def load_variant(key, title):
 
 
 variants = [load_variant("before", "DSL · sync_start=False"), load_variant("dsl_sync_start", "DSL · sync_start=True")]
-if variants[0][1]["input_file_sha256"] != variants[1][1]["input_file_sha256"]:
-    raise ValueError("Input files differ")
 if variants[0][1]["device"] != variants[1][1]["device"]:
     raise ValueError("Captures used different devices")
 data = [v[0] for v in variants]

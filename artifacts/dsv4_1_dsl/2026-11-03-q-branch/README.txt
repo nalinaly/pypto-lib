@@ -71,7 +71,7 @@ wrappers, kernel configs, orchestration source and available runtime
 incore_*.bin device text images. The composed SWA manifest identifies the
 three new task types. ELF files, shared libraries and installed toolchains
 are excluded. Text paths use ${WORKSPACE}; artifact-manifest.json records
-original/stored hashes and the corresponding model-source hashes.
+source paths, stored file sizes and the model-source file list.
 
 Full SWA and layer runs did not request save_data; their deterministic
 generated-weight specifications remain in the model. All device execution

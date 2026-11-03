@@ -1,7 +1,6 @@
 """Archive DSL source-generation and validation evidence for the branch."""
 from concurrent.futures import ThreadPoolExecutor
 import gzip
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -27,7 +26,7 @@ def normalized(text):
 
 def record(source, target, encoding="copy"):
     records.append(dict(source=normalized(str(source)), path=str(target.relative_to(D)),
-                        bytes=target.stat().st_size, sha256=hashlib.sha256(target.read_bytes()).hexdigest(),
+                        bytes=target.stat().st_size,
                         encoding=encoding))
 
 def copy(source, target, is_text=True):
@@ -110,8 +109,8 @@ def compress_one(item):
     if target.stat().st_size >= 95 * 1024 * 1024:
         raise ValueError(f"Oversized compressed member: {target}")
     return dict(source=normalized(str(source)), path=str(target.relative_to(D)),
-                raw_bytes=source.stat().st_size, raw_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
-                bytes=target.stat().st_size, sha256=hashlib.sha256(target.read_bytes()).hexdigest(), encoding="gzip")
+                raw_bytes=source.stat().st_size,
+                bytes=target.stat().st_size, encoding="gzip")
 with ThreadPoolExecutor(max_workers=2) as pool:
     records.extend(pool.map(compress_one, compress))
 

@@ -67,8 +67,8 @@ Their deterministic construction remains in sparse_attention.make_swa_case.
 data/out files are CPU golden outputs, not captured device output tensors.
 
 Each .pt.gz is a lossless gzip of the harness's original .pt file. Decompress
-to an ignored build_output directory before loading with Torch. Original
-and archived hashes are in artifact-manifest.json. Full SWA and layer runs
+to an ignored build_output directory before loading with Torch. Source paths
+and stored file sizes are listed in artifact-manifest.json. Full SWA and layer runs
 did not request save_data; their generated-weight specs remain reproducible
 through the public validation entries and the pinned environment.
 

@@ -9,6 +9,9 @@ data on this branch. The model implementation lives in
 models/deepseek_v4_1_flash/. Store evidence in a dated directory here, preserving
 previous captures rather than replacing their data with later runs.
 
+Evidence inventories contain file paths, sizes, encodings and version metadata.
+Do not add supplemental file hashes or hash-verification steps to this workflow.
+
 2026-11-03/ contains the first window-KV integration, numerical investigation,
 passing validation logs, L1 traces, generated device source, and frozen tensors.
 Start with that directory's README.txt and artifact-manifest.json.
