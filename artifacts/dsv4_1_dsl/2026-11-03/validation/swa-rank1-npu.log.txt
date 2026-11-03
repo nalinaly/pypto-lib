@@ -1,0 +1,70 @@
+[npu-lock] 获取设备 5 的锁 (无超时)...
+[npu-lock] 已获取设备 5 的锁 (pid=2492012)
+[FIXTURE] tokens=72 requests=8 lengths=[9, 9, 9, 9, 9, 9, 9, 9] prefixes=[0, 0, 0, 0, 0, 0, 0, 0]
+[FIXTURE] tokens=72 requests=8 lengths=[9, 9, 9, 9, 9, 9, 9, 9] prefixes=[0, 0, 0, 0, 0, 0, 0, 0]
+[RUN] compile ...
+2026-11-03 14:29:57.937 I | [perf_hint] 1 hint across 1 site; see ${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_142957_x9kigqi6/report/perf_hints.log
+2026-11-03 14:29:58.060 I | [perf_hint] 2 hints across 2 sites; see ${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_142957_x9kigqi6/report/perf_hints.log
+[RUN] compile done (5.20s)
+[RUN] generate inputs ...
+[RUN] generate inputs done (0.10s)
+[RUN] compute golden ...
+[RUN] compute golden done (0.66s)
+[RUN] runtime ...
+[mono_ns=5194830606840][T0xffff9f7b6020][TIMING] emit_host_span: [STRACE] v=1 pid=2539093 tid=2539093 inv=0 hid=0 depth=0 name=chip.prewarm.build ts=5194808258930 dur=22336820
+[mono_ns=5194835894290][T0xffff9f7b6020][TIMING] log_callable_image: Callable image: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 upload_bytes=1125272 children=19
+[mono_ns=5194835915660][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=0 code_begin=0x12004befa560 code_end_exclusive=0x12004befc4a0 code_bytes=8000 code_fnv1a64=0xe465d82a878dbb6e
+[mono_ns=5194835918950][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=1 code_begin=0x12004befc560 code_end_exclusive=0x12004befc780 code_bytes=544 code_fnv1a64=0xd6dfa32f5e6cfa61
+[mono_ns=5194835928050][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=2 code_begin=0x12004befc860 code_end_exclusive=0x12004befd8c0 code_bytes=4192 code_fnv1a64=0x8a13799c11e0a61f
+[mono_ns=5194835932290][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=3 code_begin=0x12004befd9a0 code_end_exclusive=0x12004befdf98 code_bytes=1528 code_fnv1a64=0x80039b66fe6635d3
+[mono_ns=5194835956090][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=4 code_begin=0x12004befe060 code_end_exclusive=0x12004bf012c0 code_bytes=12896 code_fnv1a64=0x1ad69317e9191df8
+[mono_ns=5194835988560][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=5 code_begin=0x12004bf013a0 code_end_exclusive=0x12004bf05978 code_bytes=17880 code_fnv1a64=0x2b209afa22cef553
+[mono_ns=5194835991850][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=6 code_begin=0x12004bf05a60 code_end_exclusive=0x12004bf05ec0 code_bytes=1120 code_fnv1a64=0x7f3db7985c9eac06
+[mono_ns=5194835996020][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=7 code_begin=0x12004bf05fa0 code_end_exclusive=0x12004bf065a8 code_bytes=1544 code_fnv1a64=0xa4e66fb527fe21f6
+[mono_ns=5194836017050][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=8 code_begin=0x12004bf066a0 code_end_exclusive=0x12004bf06cb0 code_bytes=1552 code_fnv1a64=0xc5b3956f9134db59
+[mono_ns=5194836020770][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=9 code_begin=0x12004bf06da0 code_end_exclusive=0x12004bf072e8 code_bytes=1352 code_fnv1a64=0xa0037f0af0468439
+[mono_ns=5194836054240][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=10 code_begin=0x12004bf073e0 code_end_exclusive=0x12004bf0bb10 code_bytes=18224 code_fnv1a64=0xb0ca124b96ea7c4b
+[mono_ns=5194836060600][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=11 code_begin=0x12004bf0bbe0 code_end_exclusive=0x12004bf0c678 code_bytes=2712 code_fnv1a64=0xb300cb531180e3f7
+[mono_ns=5194836065730][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=12 code_begin=0x12004bf0c760 code_end_exclusive=0x12004bf0cf30 code_bytes=2000 code_fnv1a64=0x954cfb5ec84f547f
+[mono_ns=5194836071720][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=13 code_begin=0x12004bf0d020 code_end_exclusive=0x12004bf0d9d8 code_bytes=2488 code_fnv1a64=0x26eb68cae56d9621
+[mono_ns=5194836076420][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=14 code_begin=0x12004bf0daa0 code_end_exclusive=0x12004bf0e1b8 code_bytes=1816 code_fnv1a64=0xf972cf099ab1ff82
+[mono_ns=5194836080870][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=15 code_begin=0x12004bf0e2a0 code_end_exclusive=0x12004bf0e980 code_bytes=1760 code_fnv1a64=0x2585db823b8da336
+[mono_ns=5194836089160][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=16 code_begin=0x12004bf0ea60 code_end_exclusive=0x12004bf0fac0 code_bytes=4192 code_fnv1a64=0xdd49afa65795cc3a
+[mono_ns=5194836101750][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=17 code_begin=0x12004bf0fba0 code_end_exclusive=0x12004bf115b8 code_bytes=6680 code_fnv1a64=0x1649bbefe5ff4f83
+[mono_ns=5194836112470][T0xffff9f7b6020][TIMING] log_callable_image: Callable code: device=5 runner=0xaaaaf55de040 chip_hash=0xdef7de3d1f9007d7 chip_dev=0x12004be00000 func_id=18 code_begin=0x12004bf116a0 code_end_exclusive=0x12004bf12af8 code_bytes=5208 code_fnv1a64=0xf10f29264f601fa3
+[mono_ns=5194836119980][T0xffff9f7b6020][TIMING] record_device_orch_callable: [device_runner_base.cpp:2432] Callable registration: device=5 runner=0xaaaaf55de040 cid=0 chip_hash=0xdef7de3d1f9007d7 aicore_image_hash=0x925f7b27b05cf62a orch_hash=0x9d601074db00f80b orch_bytes=1007584
+[chip_process pid=2539093 dev=5] ready
+[mono_ns=5194854822000][T0xffff9f7b6020][TIMING] emit_host_span: [STRACE] v=1 pid=2492091 tid=2492091 inv=1 hid=d1b384ff83cac702 depth=0 name=node.submit ts=5194854754220 dur=63610 run_id=1 task_slot=0 group_index=0 group_size=1 worker_id=0 role=facade
+[mono_ns=5194854847250][T0xffff9f7b6020][TIMING] emit_host_span: [STRACE] v=1 pid=2492091 tid=2492091 inv=1 hid=0 depth=0 name=node.graph_build ts=5194850627500 dur=4211460 run_id=1 role=facade
+[mono_ns=5194855103050][T0xffff70daf180][TIMING] emit_host_span: [STRACE] v=1 pid=2492091 tid=2540351 inv=1 hid=d1b384ff83cac702 depth=0 name=node.frame_submit ts=5194855084380 dur=13450 run_id=1 task_slot=0 group_index=0 worker_id=0 dispatch_id=1 endpoint_kind=local_mailbox prepare_only=0 role=worker
+[mono_ns=5194855112020][T0xffff70daf180][TIMING] emit_host_span: [STRACE] v=1 pid=2492091 tid=2540351 inv=1 hid=d1b384ff83cac702 depth=0 name=node.dispatch ts=5194855060860 dur=47150 run_id=1 task_slot=0 group_index=0 worker_id=0 dispatch_id=1 endpoint_kind=local_mailbox prepare_only=0 role=scheduler slot_id=0 generation=1
+[mono_ns=5194855118110][T0xffff70daf180][TIMING] emit_host_span: [STRACE] v=1 pid=2492091 tid=2540351 inv=0 hid=0 depth=0 name=node.scheduler_loop ts=5194855011350 dur=102950 role=scheduler drained=0 dispatched=1 drain_ns=2670 spins=2
+[mono_ns=5196142390620][T0xffff70daf180][TIMING] emit_host_span: [STRACE] v=1 pid=2492091 tid=2540351 inv=1 hid=d1b384ff83cac702 depth=0 name=node.complete ts=5196142377330 dur=9120 run_id=1 task_slot=0 group_index=0 worker_id=0 dispatch_id=1 endpoint_kind=local_mailbox prepare_only=0 role=worker outcome=0
+[mono_ns=5196142413670][T0xffff70daf180][TIMING] emit_host_span: [STRACE] v=1 pid=2492091 tid=2540351 inv=0 hid=0 depth=0 name=node.scheduler_loop ts=5196142358800 dur=51050 role=scheduler drained=1 dispatched=0 drain_ns=50960 spins=572231
+[mono_ns=5196142981980][T0xffff9f7b6020][TIMING] emit_host_span: [STRACE] v=1 pid=2492091 tid=2492091 inv=1 hid=0 depth=0 name=node.post_fence_retirement ts=5196142404330 dur=573520 run_id=1 slot_id=0 generation=1 role=facade
+[RUN] runtime done (36.41s)
+[RUN] validate ...
+[RUN]   'window_cache' PASS  shape=(17, 128, 1, 512) dtype=torch.float8_e4m3fn (mapped_pool_ratio_allclose(mapping=window_slots, shape=(72,), block_size=128, leading_rank_axis=False, atol=0.001953125, rtol=0.125, max_error_ratio=0.01))
+[RUN]   'window_cache_scale' PASS  shape=(17, 128, 1, 16) dtype=torch.bfloat16 (mapped_pool_ratio_allclose(mapping=window_slots, shape=(72,), block_size=128, leading_rank_axis=False, atol=0, rtol=0, max_error_ratio=0))
+[RUN]   'attention_output' FAIL  shape=(80, 5120) dtype=torch.bfloat16 (ratio_allclose(atol=0.01, rtol=0.0078125, max_error_ratio=0.015, valid_rows=72, valid_axis=0, zero_tail=False, ignore_nan=False))
+[RUN]   'attention_hidden' PASS  shape=(80, 4, 5120) dtype=torch.float32 (ratio_allclose(atol=0.01, rtol=0.0078125, max_error_ratio=0.015, valid_rows=72, valid_axis=0, zero_tail=False, ignore_nan=False))
+[RUN]   'attention_pre_mix' PASS  shape=(80, 4) dtype=torch.float32 (ratio_allclose(atol=0.0001, rtol=0.0001, max_error_ratio=0.005, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))
+[RUN] validate done (0.61s)
+[ARTIFACT] ${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_142957_x9kigqi6
+Output(s) does not match golden: ['attention_output']
+  'attention_output' FAIL (ratio_allclose(atol=0.01, rtol=0.0078125, max_error_ratio=0.015, valid_rows=72, valid_axis=0, zero_tail=False, ignore_nan=False))  shape=(80, 5120) dtype=torch.bfloat16
+    ratio_allclose fail: error_count=6753/368640 (ratio=1.8319%, allowed<=1.5000%, threshold=5530 pts)
+    atol=0.01 rtol=0.0078125
+    max abs diff=0.0429688 at (38, 2526) (tol=0.0123956)
+    first 10 mismatches:
+    [5541] actual=0.091796875, expected=0.081054688, diff=0.01074, tol=0.01063
+    [5714] actual=0.62890625, expected=0.64453125, diff=0.01562, tol=0.01504
+    [6058] actual=0.0050964355, expected=-0.0056152344, diff=0.01071, tol=0.01004
+    [6090] actual=-0.10693359, expected=-0.094238281, diff=0.0127, tol=0.01074
+    [6888] actual=0.4765625, expected=0.46289062, diff=0.01367, tol=0.01362
+    [6987] actual=0.048339844, expected=0.037841797, diff=0.0105, tol=0.0103
+    [7040] actual=0.044189453, expected=0.056884766, diff=0.0127, tol=0.01044
+    [7694] actual=-0.19140625, expected=-0.1796875, diff=0.01172, tol=0.0114
+    [7739] actual=0.4921875, expected=0.4765625, diff=0.01562, tol=0.01372
+    [7876] actual=0.11767578, expected=0.10595703, diff=0.01172, tol=0.01083
+[npu-lock] 已释放设备 5 的锁

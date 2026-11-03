@@ -1,0 +1,54 @@
+import torch
+from simpler.task_interface import CallConfig, CommBufferSpec, DataType, TaskArgs, TensorArgType
+from pypto.runtime.tensor_arg import make_tensor_arg
+from pypto.runtime.distributed_runner import add_chip_tensor_arg, _submit_chip
+
+def _alloc_intermediates(tensors, world_size=1):
+    pass
+
+def l3_decode_swa(orch, _args, config, *, tensors, callables, sub_ids, _keep, world_size, _domain_provider=None):
+    num_tokens__ssa_v0 = tensors["num_tokens__ssa_v0"]
+    LOCAL_T_DYN = tensors["x_hc__ssa_v0"].shape[0]
+    V41_LOCAL_T_DYN = tensors["incoming_pre_mix__ssa_v0"].shape[0]
+    T_DYN = tensors["rope_cos__ssa_v0"].shape[0]
+    V41_T_DYN = tensors["rope_sin__ssa_v0"].shape[0]
+    ORI_BLOCKS_DYN = tensors["window_cache__ssa_v0"].shape[0]
+    V41_ORI_BLOCKS_DYN = tensors["window_cache_scale__ssa_v0"].shape[0]
+    tensors["wq_a_scale_r__ssa_v0"] = tensors["wq_a_scale__ssa_v0"]
+    tensors["wq_b_scale_r__ssa_v0"] = tensors["wq_b_scale__ssa_v0"]
+    tensors["wkv_scale_r__ssa_v0"] = tensors["wkv_scale__ssa_v0"]
+    tensors["wo_b_scale_r__ssa_v0"] = tensors["wo_b_scale__ssa_v0"]
+    _ta_0 = TaskArgs()
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["x_hc__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 0)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["incoming_pre_mix__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 1)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["hc_attn_fn__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 2)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["hc_attn_scale__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 3)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["hc_attn_base__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 4)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["attn_norm_weight__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 5)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wq_a__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 6)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wq_a_scale_r__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 7)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["q_norm_weight__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 8)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wq_b__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 9)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wq_b_scale_r__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 10)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wkv__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 11)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wkv_scale_r__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 12)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["kv_norm_weight__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 13)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["attn_sink__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 14)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wo_a__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 15)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wo_a_scale__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 16)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wo_b__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 17)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wo_b_scale_r__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 18)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["rope_cos__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 19)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["rope_sin__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 20)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["window_slots__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 21)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["window_indices__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_swa", 22)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["window_cache__ssa_v0"], TensorArgType.INOUT, callables, "l2_decode_swa", 23)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["window_cache_scale__ssa_v0"], TensorArgType.INOUT, callables, "l2_decode_swa", 24)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["attention_output__ssa_v0"], TensorArgType.INOUT, callables, "l2_decode_swa", 25)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["attention_hidden__ssa_v0"], TensorArgType.OUTPUT_EXISTING, callables, "l2_decode_swa", 26)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["attention_pre_mix__ssa_v0"], TensorArgType.OUTPUT_EXISTING, callables, "l2_decode_swa", 27)
+    _ta_0.add_scalar(num_tokens__ssa_v0)
+    _keep.append(_ta_0)
+    _submit_chip(orch, callables["l2_decode_swa"], _ta_0, config, 0)
+
+l3_decode_swa._pypto_distributed_entry = True

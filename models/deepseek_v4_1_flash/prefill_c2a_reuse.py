@@ -35,11 +35,11 @@ from sparse_attention import (
     prefill_attend_sparse,
 )
 from gemm import golden_gemm_bf16_via_mxfp8_to_bf16_sequential
-from quant import quantize_mxfp8_cache
+from window_kv_dsl import quantize_window_kv
 from rmsnorm import golden_rms_norm, rms_norm_tiled
 
 
-# model config
+# 模型配置
 LOCAL_H = M.num_attention_heads // TP_SIZE
 LOCAL_O_GROUPS = M.o_groups // TP_SIZE
 LOCAL_O_WIDTH = M.o_groups // TP_SIZE * M.o_lora_rank
@@ -464,7 +464,7 @@ def golden_reference_c2a_reuse(inputs: dict, *, fp32_output=False) -> dict:
 
     window_cache = t["window_cache"].clone()
     window_cache_scale = t["window_cache_scale"].clone()
-    window_payload, window_scales = quantize_mxfp8_cache(kv)
+    window_payload, window_scales = quantize_window_kv(kv)
     window_slots = t["window_slots"].long()
     window_valid = window_slots >= 0
     window_rows = window_slots[window_valid]

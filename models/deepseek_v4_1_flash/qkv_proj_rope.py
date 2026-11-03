@@ -22,9 +22,10 @@ from gemm import (
 )
 from quant import QUANT_SCALE_TILE, quantize_bf16_to_mxfp8
 from rmsnorm import golden_rms_norm
+from window_kv_dsl import window_publish as window_publish
 
 
-# model config
+# 模型配置
 LOCAL_H = M.num_attention_heads // TP_SIZE
 D = M.hidden_size
 HEAD_DIM = M.head_dim
@@ -32,12 +33,11 @@ ROPE_DIM = M.qk_rope_head_dim
 Q_LORA = M.q_lora_rank
 EPS = M.rms_norm_eps
 
-# tiling
+# 分块参数
 Q_A_N_TILE = 64
 Q_B_N_TILE = 256
 KV_N_TILE = 64
 PROJ_M_TILE = 80
-WINDOW_PUBLISH_WORKER_TILE = 12
 
 
 @pl.jit.extern(core_type="aic", source=Path(__file__).parent / "kernels" / "proj_q_a.cpp",
@@ -251,22 +251,6 @@ def q_proj_rope(
     return query_latent, query, qb_payload, qb_scales
 
 
-@pl.jit.extern(core_type="aiv", source=Path(__file__).parent / "kernels" / "window_norm_rope_publish.cpp",
-               include_dirs=(pto_isa_include_dir(),))
-def _norm_rope_publish(
-    source: pl.Tensor,
-    weight: pl.Tensor,
-    cosine: pl.Tensor,
-    sine: pl.Tensor,
-    slots: pl.Tensor,
-    cache: pl.InOut[pl.Tensor],
-    scales: pl.InOut[pl.Tensor],
-    num_tokens: pl.Scalar[pl.INT32],
-) -> pl.Tensor:
-    """Normalize and rotate BF16 rows, then quantize and publish group-32 FP8 cache pages."""
-    ...
-
-
 @pl.jit.inline(auto_scope=False)
 def kv_proj(
     payload: pl.Tensor,
@@ -287,25 +271,6 @@ def kv_proj(
                 group_payload, wkv, group_scales, wkv_scale, kv_projection, group_rows, group_start,
             )
     return kv_projection
-
-
-@pl.jit.inline(auto_scope=False)
-def window_publish(
-    kv_projection: pl.Tensor,
-    kv_norm_weight: pl.Tensor,
-    rope_cos: pl.Tensor,
-    rope_sin: pl.Tensor,
-    slots: pl.Tensor,
-    cache: pl.Tensor,
-    cache_scale: pl.Tensor,
-    num_tokens: pl.Scalar[pl.INT32],
-    cache_ready: pl.Scalar[pl.TASK_ID],
-):
-    """Fuse RMSNorm, RoPE, group-32 FP8 quantization, and window cache publication."""
-    workers = pl.max(1, pl.min(num_tokens, WINDOW_PUBLISH_WORKER_TILE))
-    with pl.spmd(workers, name_hint="norm_rope_pub_win", deps=[cache_ready]) as published:
-        cache = _norm_rope_publish(kv_projection, kv_norm_weight, rope_cos, rope_sin, slots, cache, cache_scale, num_tokens)
-    return published
 
 
 def golden_rope_interleave(

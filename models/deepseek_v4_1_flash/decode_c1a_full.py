@@ -24,7 +24,7 @@ from config import (
 )
 from compressor import c1a_compressor_project, c1a_compressor_publish
 
-# model config
+# 模型配置
 LOCAL_H = M.num_attention_heads
 LOCAL_O_GROUPS = M.o_groups
 LOCAL_O_WIDTH = M.o_groups * M.o_lora_rank
@@ -350,9 +350,10 @@ def golden_c1a(tensors, mode="full"):
     )
     from sparse_attention import golden_selected_attention
     from quant import (
-        quantize_mxfp4_cache, quantize_mxfp8_cache, dequantize_mxfp4_cache, dequantize_mxfp8_cache,
+        quantize_mxfp4_cache, dequantize_mxfp4_cache, dequantize_mxfp8_cache,
     )
     from utils import _publish_quantized_cache
+    from window_kv_dsl import quantize_window_kv
 
     from hc import golden_mhc_mixes, golden_hc_collapse, golden_hc_post
     from rmsnorm import golden_rms_norm
@@ -370,7 +371,7 @@ def golden_c1a(tensors, mode="full"):
         a["wkv"], a["wkv_scale"], a["kv_norm_weight"], a["rope_cos"], a["rope_sin"], sequential_query=True,
     )
     window, window_scale = _publish_quantized_cache(
-        a["window_cache"], a["window_cache_scale"], kv, a["window_slots"], quantize_mxfp8_cache,
+        a["window_cache"], a["window_cache_scale"], kv, a["window_slots"], quantize_window_kv,
     )
     compressed = a["compressed_cache"].view(torch.uint8).clone()
     compressed_scale = a["compressed_cache_scale"].clone()

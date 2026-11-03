@@ -1,0 +1,87 @@
+"""Capture the existing SWA composition on fixed inputs with L1 task timing."""
+
+import argparse
+from dataclasses import replace
+from functools import partial
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+from types import SimpleNamespace
+
+lib = Path(os.environ["PYPTO_LIB_ROOT"])
+sys.path.insert(0, str(lib / "models/deepseek_v4_1_flash"))
+import torch
+import decode_swa
+from golden import ScalarSpec, TensorSpec, mapped_pool_ratio_allclose, ratio_allclose, run
+from pypto.ir import DistributedConfig
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--variant", choices=["dsl", "no_dsl", "dsl_sync_start"], required=True)
+parser.add_argument("-d", "--device", type=int, required=True)
+parser.add_argument("--archive", type=Path)
+parser.add_argument("--golden-data")
+options = parser.parse_args()
+workspace = Path(os.environ["DSV41_WORKSPACE"])
+archive = options.archive or workspace / "artifacts/dsv41-semantic-review/swa-l1-compare"
+archive.mkdir(exist_ok=True)
+frozen = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_142957_x9kigqi6/data/in"
+
+# Shape construction skips random weight generation; every input comes from
+# the already validated, frozen single-layer rank-1 Attention fixture.
+args = SimpleNamespace(tokens=72, active_tokens=72, local_tokens=80, requests=8,
+                       dp=1, seed=1, epochs=1, bench=False, pages=1, case="mixed",
+                       compile_only=True)
+specs = decode_swa.build_swa_specs(args)
+input_hashes = {}
+for index, spec in enumerate(specs):
+    path = frozen / f"{spec.name}.pt"
+    if path.exists():
+        input_hashes[spec.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        if isinstance(spec, TensorSpec):
+            specs[index] = replace(spec, init_value=partial(torch.load, path, weights_only=True))
+        elif isinstance(spec, ScalarSpec):
+            specs[index] = replace(spec, value=torch.load(path, weights_only=True))
+    elif spec.name not in {"attention_hidden", "attention_pre_mix"}:
+        raise ValueError(f"Missing frozen input {spec.name}")
+
+# Each implementation has its own reference because their cache codecs differ.
+# All comparison thresholds are the unchanged, passing layer-integration gates.
+result = run(
+    fn=decode_swa.l3_decode_swa,
+    specs=specs,
+    golden_fn=decode_swa.golden_swa,
+    golden_data=options.golden_data,
+    save_data=True,
+    compare_fn={
+        "attention_output": ratio_allclose(atol=1e-2, rtol=1 / 128, max_error_ratio=0.015, valid_rows=72),
+        "attention_hidden": ratio_allclose(atol=1e-2, rtol=1 / 128, max_error_ratio=0.015, valid_rows=72),
+        "attention_pre_mix": ratio_allclose(atol=1e-4, rtol=1e-4),
+        "window_cache": mapped_pool_ratio_allclose(
+            "window_slots", pool_name="window cache", mapping_shape=(72,), block_size=128,
+            atol=2**-9, rtol=2**-3, max_error_ratio=0.01,
+        ),
+        "window_cache_scale": mapped_pool_ratio_allclose(
+            "window_slots", pool_name="window cache scale", mapping_shape=(72,), block_size=128,
+            atol=0, rtol=0, max_error_ratio=0,
+        ),
+    },
+    config=dict(backend_type="a5", execution_mode=False, enable_chip_swimlane=1,
+                distributed_config=DistributedConfig(device_ids=[options.device], num_sub_workers=0)),
+)
+metadata = {
+    "variant": options.variant, "passed": result.passed, "error": result.error,
+    "work_dir": str(result.work_dir), "device": options.device, "capture_level": 1,
+    "tokens": 72, "capacity": 80, "requests": 8, "initial_prefix": 0,
+    "source_root": str(lib),
+    "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=lib, text=True).strip(),
+    "input_file_sha256": input_hashes,
+    "cache_codec": "group32 FP8 / power-of-two BF16 scales" if options.variant != "no_dsl" else "group32 FP8 / continuous BF16 scales",
+    "sync_start": options.variant == "dsl_sync_start",
+}
+(archive / f"{options.variant}.json").write_text(json.dumps(metadata, indent=2))
+print(f"[CAPTURE] {options.variant}: {result.work_dir}", flush=True)
+if not result.passed:
+    raise SystemExit(result.error or 1)

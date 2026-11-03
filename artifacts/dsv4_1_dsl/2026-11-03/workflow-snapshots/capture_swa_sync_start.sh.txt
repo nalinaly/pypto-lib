@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -eo pipefail
+source ${WORKSPACE}/artifacts/dsv41-semantic-review/env.sh
+set -u
+unset PYPTO_BENCH
+archive="$DSV41_WORKSPACE/artifacts/dsv41-semantic-review/swa-l1-sync-start"
+golden="$PYPTO_LIB_ROOT/build_output/_jit_l3_decode_swa_20261103_151536_zmmdasp_/data"
+mkdir -p "$archive"
+cd "$PYPTO_LIB_ROOT"
+exec python "$DSV41_WORKSPACE/artifacts/dsv41-semantic-review/run_case.py" \
+    "$DSV41_WORKSPACE/artifacts/dsv41-semantic-review/capture_swa_l1.py" \
+    --variant dsl_sync_start --archive "$archive" --golden-data "$golden" \
+    -d "${TASK_DEVICE:?Run through task-submit}" > "$archive/dsl_sync_start.log" 2>&1

@@ -1,0 +1,104 @@
+"""Locate numerical divergence using the frozen Attention fixture and device dumps."""
+
+import json
+import os
+from pathlib import Path
+import sys
+from unittest.mock import patch
+
+sys.path.insert(0, str(Path(os.environ["PYPTO_LIB_ROOT"]) / "models/deepseek_v4_1_flash"))
+import torch
+import sparse_attention as sa
+from hc import golden_hc_collapse
+from rmsnorm import golden_rms_norm
+from gemm import golden_gemm_bf16_via_mxfp8_to_bf16_sequential as gemm
+from qkv_proj_rope import golden_rope_tail
+from quant import unpack_fp8_nz
+from window_kv_dsl import golden_window_kv
+
+artifact = Path(os.environ["DSV41_WORKSPACE"]) / "artifacts/dsv41-semantic-review/swa-rank1"
+work = Path((artifact / "work_dir.txt").read_text())
+actual = torch.load(artifact / "actual.pt", weights_only=True)
+t = {p.stem: torch.load(p, weights_only=True) for p in (work / "data/in").glob("*.pt")}
+expected = {p.stem: torch.load(p, weights_only=True) for p in (work / "data/out").glob("*.pt")}
+manifest_path = next(work.rglob("args_dump.json"))
+manifest = json.loads(manifest_path.read_text())
+print("DFX:", {k: v for k, v in manifest.items() if k not in ("args", "run_dir")})
+records = manifest["args"]
+
+
+def dumped(shape, occurrence=-1):
+    rows = [r for r in records if r["stage"] == "after_completion" and r["shape"] == shape]
+    row = rows[occurrence]
+    with (manifest_path.parent / manifest["bin_file"]).open("rb") as stream:
+        stream.seek(row["bin_offset"])
+        raw = bytearray(stream.read(row["bin_size"]))
+    return torch.frombuffer(raw, dtype=torch.bfloat16).reshape(shape)
+
+
+def compare(name, a, b):
+    a, b = a.float(), b.float()
+    d = (a - b).abs()
+    bad = d > 0.01 + b.abs() / 128
+    print(name, "unequal", (a != b).sum().item(), "/", a.numel(),
+          "max_abs", d.max().item(), "rel_l2", (d.norm() / b.norm()).item(),
+          "layer_budget_bad_pct", bad.float().mean().item() * 100, flush=True)
+
+
+x_device = dumped([80, 5120])[:72]
+kv_device = dumped([80, 512])[:72]
+q_device = dumped([80, 32768])[:72].unflatten(-1, (64, 512))
+x_gold = golden_rms_norm(golden_hc_collapse(t["x_hc"], t["incoming_pre_mix"]).bfloat16()[:72], t["attn_norm_weight"])
+compare("x_norm", x_device, x_gold)
+kv_gold = gemm(x_gold, unpack_fp8_nz(t["wkv"]), t["wkv_scale"])
+kv_conditioned = gemm(x_device, unpack_fp8_nz(t["wkv"]), t["wkv_scale"])
+compare("kv_projection", kv_device, kv_gold)
+compare("kv_projection_from_actual_x", kv_device, kv_conditioned)
+
+writer = dict(source=kv_device, weight=t["kv_norm_weight"], cosine=t["rope_cos"], sine=t["rope_sin"],
+              slots=t["window_slots"], cache=t["window_cache"].clone(), scales=t["window_cache_scale"].clone(), num_tokens=72)
+golden_window_kv(writer)
+print("DSL_from_actual_projection: payload_byte_differences",
+      (writer["cache"].view(torch.uint8) != actual["window_cache"].view(torch.uint8)).sum().item(),
+      "scale_differences", (writer["scales"] != actual["window_cache_scale"]).sum().item(), flush=True)
+compare("cache_to_end_to_end_golden", actual["window_cache"], expected["window_cache"])
+
+qa = gemm(x_device, unpack_fp8_nz(t["wq_a"]), t["wq_a_scale"])
+qr = golden_rms_norm(qa, t["q_norm_weight"])
+q = gemm(qr, unpack_fp8_nz(t["wq_b"]), t["wq_b_scale"])
+q = golden_rope_tail(q.unflatten(-1, (64, 512)), t["rope_cos"], t["rope_sin"])
+compare("query_from_actual_x", q_device, q)
+
+inputs = {name: x_gold if name == "x" else t[name] for name in sa.SWA_INPUT_NAMES}
+slots = t["window_slots"].long()
+payload = actual["window_cache"].reshape(-1, 512)[slots]
+scales = actual["window_cache_scale"].reshape(-1, 16)[slots]
+rope_calls = 0
+
+
+def conditioned_rope(value, *args, **kwargs):
+    global rope_calls
+    rope_calls += 1
+    return q_device if rope_calls == 1 else golden_rope_tail(value, *args, **kwargs)
+
+
+with patch.object(sa, "golden_rope_tail", conditioned_rope), patch.object(sa, "quantize_window_kv", return_value=(payload, scales)):
+    output, _, _ = sa.swa_official_reference(inputs)
+compare("attention_output_from_actual_Q_and_cache", actual["attention_output"][:72], output.bfloat16())
+compare("attention_output_original", actual["attention_output"][:72], expected["attention_output"][:72])
+rope_calls = 0
+with patch.object(sa, "golden_rope_tail", conditioned_rope):
+    output, _, _ = sa.swa_official_reference(inputs)
+compare("attention_output_from_actual_Q_only", actual["attention_output"][:72], output.bfloat16())
+with patch.object(sa, "quantize_window_kv", return_value=(payload, scales)):
+    output, _, _ = sa.swa_official_reference(inputs)
+compare("attention_output_from_actual_cache_only", actual["attention_output"][:72], output.bfloat16())
+for name, reference in (("conditioned", writer["cache"]), ("end_to_end", expected["window_cache"])):
+    mismatch = (reference.view(torch.uint8) != actual["window_cache"].view(torch.uint8)).nonzero()
+    for pos in mismatch[:10]:
+        idx = tuple(pos.tolist())
+        physical = idx[0] * 128 + idx[1]
+        tokens = (slots == physical).nonzero().flatten().tolist()
+        print("cache_mismatch", name, idx, "tokens", tokens, "expected", reference.float()[idx].item(),
+              "actual", actual["window_cache"].float()[idx].item(),
+              "scale", actual["window_cache_scale"][idx[:-1] + (idx[-1] // 32,)].item(), flush=True)

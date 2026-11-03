@@ -1,0 +1,210 @@
+"""Render verified A5 L1 task records as PNG/SVG and an offline canvas viewer."""
+
+from collections import Counter, defaultdict
+import html
+import json
+import math
+from pathlib import Path
+import shutil
+
+import matplotlib
+matplotlib.use("Agg")
+from matplotlib import font_manager
+import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
+
+ROOT = Path(__file__).resolve().parent
+CATEGORIES = {
+    "kv": ("KV 写入", "#d62f64"),
+    "qkv": ("Q/KV 投影", "#327dc2"),
+    "norm": ("Q 归一化 / 量化", "#24a6a4"),
+    "attention": ("SWA Attention", "#8056c5"),
+    "output": ("输出投影", "#df9132"),
+    "hc": ("mHC / 输入归一化", "#439f73"),
+    "padding": ("填充", "#aab3bf"),
+}
+
+
+def category(name):
+    if "window_kv_page" in name or "norm_rope_publish" in name:
+        return "kv"
+    if "_gather_sparse_vf" in name:
+        return "attention"
+    if "_proj_q_" in name or "_proj_kv" in name:
+        return "qkv"
+    if "q_norm_quant" in name or "qkv_input_quant" in name:
+        return "norm"
+    if "_o_proj" in name or "_rope_quant_o" in name or "quant_o_a" in name:
+        return "output"
+    if "zero_padding" in name:
+        return "padding"
+    return "hc"
+
+
+def load_variant(key, title):
+    meta = json.loads((ROOT / f"{key}.json").read_text())
+    if not meta["passed"]:
+        raise ValueError(f"Cannot present unvalidated capture: {key}")
+    directory = Path(meta["work_dir"]) / "dfx_outputs/rank0/d0"
+    raw = json.loads((directory / "chip_swimlane_records.json").read_text())
+    if raw["chip_swimlane_level"] != 1:
+        raise ValueError("Expected L1 AICore timing")
+    merged_path, = directory.glob("merged_swimlane_*.json")
+    trace = json.loads(merged_path.read_text())
+    names = {(e.get("pid"), e.get("tid")): e["args"]["name"]
+             for e in trace["traceEvents"] if e.get("ph") == "M" and e["name"] == "thread_name"}
+    raw_events = [e for e in trace["traceEvents"] if e.get("ph") == "X"]
+    if len(raw_events) != len(raw["aicore_tasks"]):
+        raise ValueError("Incomplete L1 conversion")
+    zero = min(e["ts"] for e in raw_events)
+    events = []
+    for e in raw_events:
+        lane = names[(e["pid"], e["tid"])]
+        if not lane.startswith(("AIC_", "AIV_")) or e["dur"] < 0:
+            raise ValueError(f"Invalid AICore event: {e}")
+        family = e["name"].split("(")[0]
+        events.append(dict(lane=lane, start=e["ts"] - zero, duration=e["dur"],
+                           name=e["name"], family=family, category=category(family),
+                           task=str(e["args"]["taskId"]), hint=e["args"].get("event-hint", "")))
+    lanes = sorted(set(names.values()), key=lambda x: (x.startswith("AIV"), int(x.split("_")[1])))
+    by_lane = defaultdict(list)
+    for event in events:
+        by_lane[event["lane"]].append(event)
+    for lane, values in by_lane.items():
+        end = -math.inf
+        for event in sorted(values, key=lambda x: x["start"]):
+            if event["start"] < end - 0.001:
+                raise ValueError(f"Overlapping physical-core records on {lane}")
+            end = event["start"] + event["duration"]
+    kv = [e for e in events if e["category"] == "kv"]
+    observed = max(e["start"] + e["duration"] for e in events)
+    kv_start = min(e["start"] for e in kv)
+    kv_end = max(e["start"] + e["duration"] for e in kv)
+    summary = dict(key=key, title=title, device=meta["device"], passed=True, level=1,
+                   lanes=lanes, events=events, observed_us=observed,
+                   execution_count=len(events), task_count=len({e["task"] for e in events}),
+                   kv_executions=len(kv), kv_tasks=len({e["task"] for e in kv}),
+                   kv_start_us=kv_start, kv_end_us=kv_end, kv_span_us=kv_end-kv_start,
+                   families=dict(Counter(e["family"] for e in events)), codec=meta["cache_codec"])
+    raw_out = ROOT / "raw" / key
+    raw_out.mkdir(parents=True, exist_ok=True)
+    for filename in ("chip_swimlane_records.json", "deps.json", "name_map.json"):
+        shutil.copy2(directory / filename, raw_out / filename)
+    shutil.copy2(merged_path, ROOT / f"{key}-l1.perfetto.json")
+    return summary, meta
+
+
+variants = [load_variant("dsl", "使用 DSL"), load_variant("no_dsl", "不使用 DSL · 原 C++ 实现")]
+if variants[0][1]["input_file_sha256"] != variants[1][1]["input_file_sha256"]:
+    raise ValueError("Input files differ")
+if variants[0][1]["device"] != variants[1][1]["device"]:
+    raise ValueError("Captures used different devices")
+data = [v[0] for v in variants]
+full_end = math.ceil(max(v["observed_us"] for v in data) / 50) * 50
+kv_window = (min(v["kv_start_us"] for v in data) - 15, max(v["kv_end_us"] for v in data) + 15)
+
+font_manager.fontManager.addfont("/usr/share/fonts/google-droid-fonts/DroidSansFallback.ttf")
+plt.rcParams.update({"font.family": ["DejaVu Sans", "Droid Sans Fallback"],
+                     "axes.unicode_minus": False, "font.size": 10,
+                     "figure.facecolor": "#f6f8fc", "axes.facecolor": "white"})
+
+
+def plot_lanes(ax, variant, limits, focus=False, compact=False):
+    lanes = [x for x in variant["lanes"] if not focus or x.startswith("AIV_")]
+    positions = {lane: i for i, lane in enumerate(lanes)}
+    for index, lane in enumerate(lanes):
+        if index % 4 == 0:
+            ax.axhspan(index - .5, index + 3.5, color="#f5f7fa", zorder=0)
+    for event in variant["events"]:
+        if event["lane"] not in positions:
+            continue
+        x, dur = event["start"], event["duration"]
+        if x + dur < limits[0] or x > limits[1]:
+            continue
+        color = CATEGORIES[event["category"]][1]
+        alpha = .95 if not focus or event["category"] == "kv" else .16
+        ax.broken_barh([(x, dur)], (positions[event["lane"]] - .36, .72),
+                       facecolors=color, edgecolors="none", alpha=alpha, zorder=3)
+    if not focus:
+        ax.axhline(31.5, color="#64748b", linewidth=1)
+        ax.axvspan(variant["kv_start_us"], variant["kv_end_us"], color=CATEGORIES["kv"][1], alpha=.045)
+    tick_step = 8 if compact else 4
+    ticks = list(range(0, len(lanes), tick_step))
+    ax.set_yticks(ticks, [lanes[i].replace("_", " ") for i in ticks], fontsize=8)
+    ax.set_ylim(len(lanes) - .5, -.5)
+    ax.set_xlim(*limits)
+    ax.grid(axis="x", alpha=.17, zorder=0)
+    ax.set_xlabel("相对首个 AICore 任务的时间 / μs")
+    ax.tick_params(axis="both", length=0, pad=7)
+    for spine in ax.spines.values():
+        spine.set_color("#dce1ea")
+
+
+legend = [Patch(color=color, label=label) for label, color in CATEGORIES.values()]
+for variant in data:
+    fig, axes = plt.subplots(1, 2, figsize=(17, 9), gridspec_kw={"width_ratios": [3, 1.6]})
+    fig.subplots_adjust(left=.065, right=.985, top=.84, bottom=.12, wspace=.18)
+    plot_lanes(axes[0], variant, (0, full_end))
+    plot_lanes(axes[1], variant, kv_window, focus=True)
+    axes[0].set_title("SWA Attention 完整子图 · 32 AIC + 64 AIV", loc="left", pad=14)
+    axes[1].set_title("KV 写入局部 · 仅 AIV", loc="left", pad=14)
+    fig.suptitle(variant["title"] + "  |  L1 泳道图", x=.065, ha="left", y=.965, fontsize=20, fontweight="bold")
+    subtitle = (f"A5 设备 {variant['device']} · 72 有效 token / 80 容量 · 8 请求 · 相同冻结输入 · 数值校验 PASS\n"
+                f"单次观测跨度 {variant['observed_us']:.2f} μs · KV 写入 {variant['kv_tasks']} 个任务 / "
+                f"{variant['kv_executions']} 次物理执行 · KV 区间 {variant['kv_span_us']:.2f} μs")
+    fig.text(.065, .893, subtitle, color="#475569", fontsize=10, linespacing=1.7)
+    fig.legend(handles=legend, loc="lower center", bbox_to_anchor=(.51, .035), ncol=7, frameon=False, fontsize=9)
+    fig.text(.065, .018, "每版各一次 L1 计时采样；量化和派发方式存在差异，时间差包含这些因素。", fontsize=9, color="#64748b")
+    fig.savefig(ROOT / f"{variant['key']}-l1.png", dpi=165)
+    fig.savefig(ROOT / f"{variant['key']}-l1.svg")
+    plt.close(fig)
+
+fig, axes = plt.subplots(2, 1, figsize=(17, 12), sharex=True)
+fig.subplots_adjust(left=.065, right=.985, top=.90, bottom=.09, hspace=.28)
+for ax, variant in zip(axes, data):
+    plot_lanes(ax, variant, (0, full_end), compact=True)
+    ax.set_title(f"{variant['title']}   |   单次跨度 {variant['observed_us']:.2f} μs   |   KV {variant['kv_tasks']} 任务 / {variant['kv_executions']} 物理执行", loc="left", pad=10, fontsize=13)
+fig.suptitle("SWA Attention · DSL / 原 C++ 实现 · L1 对照", x=.065, ha="left", y=.965, fontsize=20, fontweight="bold")
+fig.text(.065, .932, "同一 A5 设备 · 同一组 72-token 冻结输入 · 统一时间刻度 · 两版数值校验均 PASS", color="#475569")
+fig.legend(handles=legend, loc="lower center", bbox_to_anchor=(.5, .025), ncol=7, frameon=False)
+fig.savefig(ROOT / "comparison-l1.png", dpi=150)
+plt.close(fig)
+
+payload = json.dumps({"variants": data, "categories": CATEGORIES, "fullEnd": full_end, "kvWindow": kv_window}, ensure_ascii=False).replace("</", "<\\/")
+document = r'''<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SWA Attention · DSL / 原 C++ 实现 · L1 泳道图</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#152339;font:14px system-ui,-apple-system,"Noto Sans CJK SC",sans-serif}main{max-width:1880px;margin:auto;padding:30px}h1{font-size:28px;letter-spacing:-.6px;margin:0 0 10px}.intro{color:#536276;line-height:1.8}.tag{display:inline-block;background:#dcf4e9;color:#146744;padding:3px 9px;border-radius:20px;font-size:12px}.toolbar{position:sticky;top:0;z-index:4;background:#f5f7fbf5;padding:16px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center}button,input,select{font:inherit;border:1px solid #cdd6e3;border-radius:6px;background:white;padding:8px 12px}button{cursor:pointer}button:hover{border-color:#327dc2;color:#2366a4}input{width:220px}.hint{color:#718096;margin-left:auto;font-size:12px}.legend{display:flex;flex-wrap:wrap;gap:18px;margin:0 0 18px}.dot{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{background:white;border:1px solid #dae1eb;border-radius:12px;overflow:hidden}.head{padding:18px 20px;border-bottom:1px solid #e7ecf3}.head h2{margin:0 0 10px;font-size:20px}.stats{display:flex;gap:24px;flex-wrap:wrap}.stats strong{display:block;font-size:22px;font-weight:650;margin:4px 0}.stats small{color:#6a7789}.links{margin-top:12px;display:flex;gap:16px}.links a{color:#2872b4;text-decoration:none;font-size:12px}.viewport{overflow:auto;height:680px;position:relative}canvas{display:block;touch-action:none}.note{padding:15px 20px;color:#64748b;border-top:1px solid #e7ecf3;line-height:1.6;font-size:12px}.foot{margin-top:20px;line-height:1.9;color:#536276}.tooltip{display:none;position:fixed;pointer-events:none;background:#12233af5;color:white;padding:12px 14px;border-radius:7px;z-index:9;max-width:540px;font:12px ui-monospace,monospace;line-height:1.7;white-space:pre-wrap;box-shadow:0 5px 30px #0003}.range{font-variant-numeric:tabular-nums;color:#536276;font-size:12px}@media(max-width:1000px){.grid{grid-template-columns:1fr}main{padding:18px}.viewport{height:570px}.hint{margin-left:0}}
+</style><main><h1>SWA Attention · L1 泳道图</h1>
+<div class="intro">使用 DSL 与原 C++ window writer 的实际 A5 采样。72 有效 token / 80 容量，8 请求，初始历史长度为 0；两版使用同一张卡和完全相同的 27 个冻结输入文件。<span class="tag">两版数值校验 PASS</span></div>
+<div class="toolbar"><button id="reset">全程</button><button id="kv">聚焦 KV 写入</button><button id="zin">放大 ＋</button><button id="zout">缩小 －</button><button id="left">←</button><button id="right">→</button><select id="lane"><option value="all">全部 AIC / AIV</option><option value="AIC">只看 AIC</option><option value="AIV">只看 AIV</option></select><input id="search" placeholder="搜索 kernel 或 task id"><span class="range" id="range"></span><span class="hint">两图同步缩放 · Ctrl + 滚轮缩放 · 拖动平移 · 悬停查看任务</span></div>
+<div class="legend" id="legend"></div><div class="grid" id="panels"></div>
+<div class="foot"><b>如何读图：</b>每行是一条物理 AIC / AIV 泳道，每个色块来自 L1 的实际任务起止记录；红色为本次替换的 KV 写入。两图使用相同时间刻度，各自以首个 AICore 任务为零点。<br>
+DSL 版：17 个按物理页派发的 AIV 任务，power-of-two BF16 scale，精确 FP32 除法。原实现：1 个 SPMD 任务 / 12 个 AIV block，连续 BF16 scale。时间差包含量化和派发方式的差异。<br>
+每版各一次 L1 计时采样；图/依赖采集与计时采集分开。显示的跨度为首个 AICore 任务至最后一个任务结束，不是完整模型耗时或重复采样后的性能结论。</div></main><div class="tooltip" id="tooltip"></div>
+<script id="capture-data" type="application/json">__DATA__</script><script>
+const D=JSON.parse(document.getElementById('capture-data').textContent),pal=D.categories;
+let view=[0,D.fullEnd],laneType='all',query='',drag=null;const layouts=[];const tip=document.getElementById('tooltip');
+for(const [k,[label,color]]of Object.entries(pal)){const x=document.createElement('span');x.innerHTML=`<i class="dot" style="background:${color}"></i>${label}`;document.getElementById('legend').append(x)}
+for(const v of D.variants){const p=document.createElement('section');p.className='panel';p.innerHTML=`<div class="head"><h2>${v.title}</h2><div class="stats"><div><small>本次 AICore 观测跨度</small><strong>${v.observed_us.toFixed(2)} μs</strong></div><div><small>KV 写入区间</small><strong>${v.kv_span_us.toFixed(2)} μs</strong></div><div><small>KV 任务 / 物理执行</small><strong>${v.kv_tasks} / ${v.kv_executions}</strong></div></div><div class="links"><a href="${v.key}-l1.perfetto.json" download>下载 Perfetto JSON</a><a href="${v.key}-l1.png" target="_blank">高清 PNG</a><a href="${v.key}-l1.svg" target="_blank">SVG</a></div></div><div class="viewport"><canvas></canvas></div><div class="note">L1 · A5 设备 ${v.device} · ${v.execution_count} 次物理执行 · ${v.codec}</div>`;document.getElementById('panels').append(p);const canvas=p.querySelector('canvas');const state={v,canvas,port:p.querySelector('.viewport'),boxes:[]};layouts.push(state);
+canvas.addEventListener('wheel',e=>{if(!e.ctrlKey)return;e.preventDefault();const r=canvas.getBoundingClientRect(),f=Math.max(0,Math.min(1,(e.clientX-r.left-82)/(r.width-100)));zoom(e.deltaY>0?1.3:1/1.3,f)},{passive:false});
+canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,view:[...view],width:canvas.clientWidth-100};canvas.setPointerCapture(e.pointerId);tip.style.display='none'});
+canvas.addEventListener('pointerup',()=>{drag=null});canvas.addEventListener('pointerleave',()=>{tip.style.display='none'});
+canvas.addEventListener('pointermove',e=>{if(drag){const delta=(drag.x-e.clientX)/drag.width*(drag.view[1]-drag.view[0]);setView(drag.view[0]+delta,drag.view[1]+delta);return}const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;const b=state.boxes.find(b=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h);if(!b){tip.style.display='none';return}const t=b.e;tip.textContent=`${t.name}\n${t.lane} · ${pal[t.category][0]}\n开始 ${t.start.toFixed(3)} μs  结束 ${(t.start+t.duration).toFixed(3)} μs\n时长 ${t.duration.toFixed(3)} μs\n${t.hint}`;tip.style.display='block';tip.style.left=Math.min(e.clientX+15,innerWidth-tip.offsetWidth-12)+'px';tip.style.top=Math.min(e.clientY+15,innerHeight-tip.offsetHeight-12)+'px'});
+new ResizeObserver(drawAll).observe(state.port)}
+function setView(a,b){const span=Math.min(D.fullEnd,Math.max(2,b-a));a=Math.max(0,Math.min(D.fullEnd-span,a));view=[a,a+span];drawAll()}
+function zoom(f,center=.5){const old=view[1]-view[0],size=Math.min(D.fullEnd,Math.max(2,old*f));setView(view[0]+(old-size)*center,view[0]+(old-size)*center+size)}
+function drawAll(){document.getElementById('range').textContent=`${view[0].toFixed(1)} — ${view[1].toFixed(1)} μs`;for(const s of layouts)draw(s)}
+function draw(s){const lanes=s.v.lanes.filter(x=>laneType==='all'||x.startsWith(laneType+'_')),step=14,top=40,left=82,w=s.port.clientWidth,h=top+lanes.length*step+26,dpr=devicePixelRatio||1;s.canvas.width=w*dpr;s.canvas.height=h*dpr;s.canvas.style.width=w+'px';s.canvas.style.height=h+'px';const c=s.canvas.getContext('2d');c.scale(dpr,dpr);c.fillStyle='white';c.fillRect(0,0,w,h);c.font='10px system-ui';const toX=t=>left+(t-view[0])/(view[1]-view[0])*(w-left-18);for(let i=0;i<lanes.length;i++){c.fillStyle=i%8<4?'#f4f7fb':'#ffffff';c.fillRect(left,top+i*step,w-left-18,step);c.fillStyle='#68778a';c.textAlign='right';c.fillText(lanes[i].replace('_',' '),left-10,top+i*step+11);if(i&&lanes[i].startsWith('AIV')&&lanes[i-1].startsWith('AIC')){c.strokeStyle='#8190a4';c.beginPath();c.moveTo(0,top+i*step);c.lineTo(w,top+i*step);c.stroke()}}for(let i=0;i<=6;i++){const x=left+i/6*(w-left-18);c.strokeStyle='#dfe6ee';c.beginPath();c.moveTo(x,top-4);c.lineTo(x,h-20);c.stroke();c.fillStyle='#536276';c.textAlign='center';c.fillText((view[0]+i/6*(view[1]-view[0])).toFixed(1),x,23)}const positions=new Map(lanes.map((x,i)=>[x,i]));s.boxes=[];c.save();c.beginPath();c.rect(left,top,w-left-18,h-top);c.clip();for(const e of s.v.events){const row=positions.get(e.lane);if(row===undefined||e.start+e.duration<view[0]||e.start>view[1])continue;const matches=!query||e.name.toLowerCase().includes(query)||e.task.includes(query);c.globalAlpha=matches?1:.10;c.fillStyle=pal[e.category][1];const x=toX(e.start),width=Math.max(.5,toX(e.start+e.duration)-x),y=top+row*step+2;c.fillRect(x,y,width,step-4);if(matches)s.boxes.push({x:Math.max(left,x),y,w:Math.min(w-18,x+width)-Math.max(left,x),h:step-4,e});if(matches&&width>90){c.fillStyle='white';c.font='9px ui-monospace,monospace';c.textAlign='left';const short=e.family.replace(/_spmd$/,'').replace(/^_/,'');c.fillText(short.slice(0,Math.floor(width/5.5)-1),x+3,y+8)}}c.restore();c.globalAlpha=1}
+document.getElementById('reset').onclick=()=>setView(0,D.fullEnd);document.getElementById('kv').onclick=()=>{laneType='AIV';document.getElementById('lane').value='AIV';setView(...D.kvWindow)};document.getElementById('zin').onclick=()=>zoom(.65);document.getElementById('zout').onclick=()=>zoom(1.5);document.getElementById('left').onclick=()=>{const d=(view[1]-view[0])*.25;setView(view[0]-d,view[1]-d)};document.getElementById('right').onclick=()=>{const d=(view[1]-view[0])*.25;setView(view[0]+d,view[1]+d)};document.getElementById('lane').onchange=e=>{laneType=e.target.value;drawAll()};document.getElementById('search').oninput=e=>{query=e.target.value.toLowerCase();drawAll()};drawAll();
+</script></html>'''
+(ROOT / "index.html").write_text(document.replace("__DATA__", payload))
+(ROOT / "summary.json").write_text(json.dumps({
+    "scope": "SWA Attention only", "capture_level": 1, "same_input_file_count": 27,
+    "same_device": data[0]["device"], "samples_per_variant": 1,
+    "variants": [{k: v for k, v in item.items() if k not in ("events", "lanes")} for item in data],
+    "comparison_limits": "Cache quantization and task partitioning differ; this is a single L1 trace pair, not a speedup benchmark.",
+}, ensure_ascii=False, indent=2))
+print(json.dumps({"outputs": ["index.html", "comparison-l1.png", "dsl-l1.png", "no_dsl-l1.png"],
+                  "variants": [{"key": v["key"], "span_us": v["observed_us"], "records": len(v["events"])} for v in data]}, ensure_ascii=False))

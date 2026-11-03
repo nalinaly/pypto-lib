@@ -1,0 +1,15 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.15, pytest-9.2.0, pluggy-1.7.0
+rootdir: ${WORKSPACE}/cannbot-dsl-dev
+configfile: pyproject.toml
+plugins: xdist-3.8.0
+collected 2 items
+
+test/integration/test_pypto_direct.py .                                  [ 50%]
+test/cannbotdsl/test_device_export.py .                                  [100%]
+
+============================== 2 passed in 1.91s ===============================
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.

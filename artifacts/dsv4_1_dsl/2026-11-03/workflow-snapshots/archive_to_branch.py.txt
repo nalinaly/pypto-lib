@@ -1,0 +1,127 @@
+"""Archive DSL source-generation and validation evidence for the branch."""
+from concurrent.futures import ThreadPoolExecutor
+import gzip
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import zipfile
+
+W = Path(__file__).resolve().parents[2]
+S = W / "artifacts/dsv41-semantic-review"
+R = W / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+D = R / "artifacts/dsv4_1_dsl/2026-11-03"
+D.mkdir(parents=True, exist_ok=True)
+records = []
+
+def normalized(text):
+    text = text.replace(str(W), "${WORKSPACE}")
+    text = text.replace("${USER_ROOT}", "${USER_ROOT}")
+    text = text.replace("${USER_HOME}", "${USER_HOME}")
+    text = re.sub(r"/home/[A-Za-z0-9_.-]+/", "${USER_HOME}/", text)
+    text = re.sub(r"/data/disk2/pyptouser/[A-Za-z0-9_.-]+/", "${USER_ROOT}/", text)
+    return text
+
+def record(source, target, encoding="copy"):
+    records.append(dict(source=normalized(str(source)), path=str(target.relative_to(D)),
+                        bytes=target.stat().st_size, sha256=hashlib.sha256(target.read_bytes()).hexdigest(),
+                        encoding=encoding))
+
+def copy(source, target, is_text=True):
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if is_text:
+        target.write_text(normalized(source.read_text()))
+    else:
+        shutil.copy2(source, target)
+    record(source, target, "path-normalized-text" if is_text else "copy")
+
+for f in S.glob("*.log"):
+    copy(f, D / "validation" / (f.name + ".txt"))
+copy(S / "progress.txt", D / "history/progress.txt")
+copy(S / "rsqrt-github-issue-body.txt", D / "issues/rsqrt-3257.txt")
+for f in sorted(S.iterdir()):
+    if f.suffix in (".py", ".sh"):
+        copy(f, D / "workflow-snapshots" / (f.name + ".txt"))
+
+for src_name, dest_name in (("swa-l1-compare", "dsl-vs-cpp"), ("swa-l1-sync-start", "sync-start")):
+    src = S / src_name
+    dst = D / "swimlanes" / dest_name
+    for f in sorted(src.rglob("*")):
+        if not f.is_file() or "mpl-cache" in f.parts or f.suffix == ".zip" or f.name == "viewer-check.js":
+            continue
+        rel = f.relative_to(src)
+        if f.suffix in (".py", ".log"):
+            rel = rel.with_name(rel.name + ".txt")
+        copy(f, dst / rel, is_text=f.suffix not in (".png",))
+    with zipfile.ZipFile(dst / "swimlanes.zip", "w", compression=zipfile.ZIP_DEFLATED) as z:
+        for f in sorted(dst.rglob("*")):
+            if f.is_file() and f.suffix != ".zip":
+                z.write(f, str(f.relative_to(dst)))
+
+for f in sorted((S / "jit-cache").rglob("*")):
+    if f.is_file():
+        copy(f, D / "generated/jit-cache" / f.relative_to(S / "jit-cache"))
+for f in sorted((S / "leaf").rglob("*")):
+    if f.is_file() and f.suffix in (".cpp", ".hpp", ".json", ".mlir", ".asc"):
+        copy(f, D / "generated/initial-leaf" / f.relative_to(S / "leaf"))
+
+B = R / "build_output/_jit_l3_decode_swa_20261103_153536_jkodavy3"
+C = B / "next_levels/l2_decode_swa"
+copy(C / "kernel_config.py", D / "generated/sync-start/kernel_config.py.txt")
+copy(C / "orchestration/l2_decode_swa.cpp", D / "generated/sync-start/l2_decode_swa.cpp")
+copy(B / "orchestration/host_orch.py", D / "generated/sync-start/host_orch.py.txt")
+copy(C / "cache/incore_8_aiv_entry_1ab6e956a72ae3028f43.bin", D / "generated/sync-start/window_kv_page.aiv.bin", False)
+
+patches = D / "toolchain-patches"
+patches.mkdir(exist_ok=True)
+base_versions = {}
+for name, repo in (("cannbotdsl", W / "cannbot-dsl-dev"), ("pypto", W / "issue75-env/pypto-pr")):
+    patch = subprocess.check_output(["git", "diff", "--binary", "HEAD"], cwd=repo, text=True)
+    (patches / f"{name}.patch").write_text(normalized(patch))
+    base_versions[name] = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+(patches / "base-commits.json").write_text(json.dumps(base_versions, indent=2) + "\n")
+
+# These are frozen model tensors, not a Python installation or a toolchain build.
+# Individual gzip members keep every Git object below the hosting size limit.
+compress = []
+fixture = R / "build_output/_jit_l3_decode_swa_20261103_142957_x9kigqi6"
+for f in sorted((fixture / "data").rglob("*.pt")):
+    compress.append((f, D / "fixtures/swa-rank1" / f.relative_to(fixture / "data").with_suffix(".pt.gz")))
+cpp = W / "pypto-a5-dev/pypto-lib-dsv41-no-dsl/build_output/_jit_l3_decode_swa_20261103_151632_y0edewwk/data/out"
+for f in sorted(cpp.glob("*.pt")):
+    compress.append((f, D / "fixtures/swa-cpp/out" / (f.name + ".gz")))
+for f in sorted((S / "swa-rank1").glob("*.pt")):
+    compress.append((f, D / "precision" / (f.name + ".gz")))
+for f in sorted((S / "swa-rank1").glob("*.txt")):
+    copy(f, D / "precision" / f.name)
+args_dir = fixture / "dfx_outputs/rank0/d0/args_dump"
+copy(args_dir / "args_dump.json", D / "precision/args_dump/args_dump.json")
+compress.append((args_dir / "args.bin", D / "precision/args_dump/args.bin.gz"))
+
+def compress_one(item):
+    source, target = item
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with source.open("rb") as inp, target.open("wb") as raw:
+        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, compresslevel=6, mtime=0) as out:
+            shutil.copyfileobj(inp, out, length=1024 * 1024)
+    if target.stat().st_size >= 95 * 1024 * 1024:
+        raise ValueError(f"Oversized compressed member: {target}")
+    return dict(source=normalized(str(source)), path=str(target.relative_to(D)),
+                raw_bytes=source.stat().st_size, raw_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                bytes=target.stat().st_size, sha256=hashlib.sha256(target.read_bytes()).hexdigest(), encoding="gzip")
+with ThreadPoolExecutor(max_workers=2) as pool:
+    records.extend(pool.map(compress_one, compress))
+
+index = {
+    "branch": "nalinaly/pypto-lib:dsv4.1-dsl",
+    "model_base": "745258a19da2d6000704693cd80e1cfcaa021a43",
+    "toolchain": {**base_versions, "simpler": "6b6b88f2353cca12cfafe809750b50b59931b0d1", "ptoas": "0.70", "pto_isa": "217bb98952a8f9004b95fe938da97d8d5f68f702", "python": "3.12.15", "cann_version_info": "9.2.0", "cann_install_directory_label": "cann-9.3.0", "target": "A5 / dav-3510"},
+    "normalization": "Machine-local home/workspace prefixes are replaced by explicit placeholders; binary tensor bytes and device text bytes are preserved.",
+    "excluded_installation_state": ["Python virtual environments", "installed/staged CANNBotDSL packages", "font caches", "shared-library dependency builds"],
+    "records": records,
+}
+(D / "artifact-manifest.json").write_text(json.dumps(index, indent=2) + "\n")
+print(json.dumps({"archive": str(D), "records": len(records), "gzip_members": len(compress), "stored_bytes": sum(f.stat().st_size for f in D.rglob("*") if f.is_file())}))

@@ -11,3 +11,69 @@
 | Performance target | 72-token decode. Apply optimizations to the existing shared implementation and adapt all affected callers. |
 | Deferred performance work | Prefill and decode with other token counts. Their performance need not be preserved or optimized at this stage; reconsider performance-driven branches or file splits when these become active optimization targets. |
 | Compatibility requirements | Preserve correctness and interface contracts for already supported paths, including prefill and other token counts. Update affected callers to use the revised implementation. The optimized C++ routed FFN requires A5 device execution: the pinned CPU simulator does not model its intra-block events, shared L1 access, or dual-AIV Fixpipe transfers. Simulation requests fail explicitly; they do not select a different numerical implementation. |
+
+## Window KV validation
+
+The shared window-cache publisher uses
+[`window_kv_dsl.py`](../../../models/deepseek_v4_1_flash/window_kv_dsl.py).
+It requires CANNBotDSL device-callable export and the matching PyPTO
+foreign-kernel JIT integration, including BF16, FP8 E4M3FN and INDEX argument
+support. These capabilities are required even when running CPU goldens that
+import the model. See the dependency setup in
+[Installation and Environment](../../get-started/installation.md).
+
+The publisher consumes BF16 KV projections, accumulates RMSNorm in FP32,
+rounds to BF16, applies adjacent-pair RoPE, rounds to BF16 again, and stores
+E4M3FN values with one BF16 scale per 32 elements. The scale is
+`2 ** ceil(log2(max(amax, 1e-4) / 448))`; FP8 conversion uses nearest-even
+rounding. Payload and scales retain the model's separate paged buffers.
+Previous cache rows are interpreted using their stored scales.
+RMS reciprocal and FP8 normalization use precise FP32 division: a one-ULP
+reciprocal error near a BF16 tie can otherwise change an FP8 cache value.
+
+PyPTO schedules one AIV task per physical page. Each DSL task processes its
+matching slots in token order: the last active token wins a repeated slot,
+negative/out-of-range slots are skipped, and unselected rows retain their
+input bytes. A bounded completion array joins the tasks and carries explicit
+dependencies from prior consumers.
+Each page is a one-block SPMD task with `sync_start=True`; this flag does not
+introduce a collective start barrier across the separate page tasks.
+
+From the repository root, with the selected environment active and an
+allocated A5 device in `TASK_DEVICE`:
+
+```bash
+export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
+python models/deepseek_v4_1_flash/window_kv_dsl.py -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/window_kv_dsl.py --replay --tokens 72 --num-tokens 71 --pages 13 -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/window_kv_dsl.py --num-tokens 0 -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/window_kv_dsl.py --tokens 1 --pages 1 -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/decode_swa.py -d "$TASK_DEVICE"
+```
+
+The replay case consumes a full cache snapshot after each of two updates
+before allowing the next overwrite. Payload comparisons are byte-exact;
+scale comparisons use zero tolerance. The composed SWA entry retains its
+existing numerical tolerances and requires 72 query tokens. `--compile-only`
+checks code generation without executing on a device.
+
+For a complete SWA decode layer, allocate two A5 devices and pass their
+comma-separated IDs through `TASK_DEVICE`:
+
+```bash
+python models/deepseek_v4_1_flash/decode_layer.py --ep 2 --layer-id 0 -d "$TASK_DEVICE"
+```
+
+This composes the DSL publisher with the existing Attention and EP MoE and
+checks 72 active tokens per rank using the layer entry's existing comparators.
+It validates one decode layer with generated weights; it is not a whole-model
+checkpoint validation.
+
+## DSL development branch and evidence
+
+Continue DSL implementation and evidence collection on
+[`nalinaly/pypto-lib:dsv4.1-dsl`](https://github.com/nalinaly/pypto-lib/tree/dsv4.1-dsl).
+The [dated evidence archive](../../../artifacts/dsv4_1_dsl/2026-11-03/README.txt)
+contains validation logs, frozen numerical data, L1 swimlanes, generated device
+source, and companion toolchain patches. Preserve earlier captures when adding
+new runs under `artifacts/dsv4_1_dsl/`.

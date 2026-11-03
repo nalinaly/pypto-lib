@@ -1,0 +1,17 @@
+DFX: {'bin_format': {'type': 'logical_contiguous', 'byte_order': 'little_endian'}, 'dump_args_level': 1, 'total_args': 116, 'before_dispatch': 112, 'after_completion': 4, 'input_args': 32, 'output_args': 3, 'inout_args': 81, 'truncated_args': 0, 'dropped_records': 0, 'dropped_records_complete': True, 'bin_file': 'args.bin'}
+x_norm unequal 0 / 368640 max_abs 0.0 rel_l2 0.0 layer_budget_bad_pct 0.0
+kv_projection unequal 7 / 36864 max_abs 0.0078125 rel_l2 4.559257286018692e-05 layer_budget_bad_pct 0.0
+kv_projection_from_actual_x unequal 7 / 36864 max_abs 0.0078125 rel_l2 4.559257286018692e-05 layer_budget_bad_pct 0.0
+DSL_from_actual_projection: payload_byte_differences 1 scale_differences 0
+cache_to_end_to_end_golden unequal 1 / 1114112 max_abs 4.0 rel_l2 1.9604638509918004e-05 layer_budget_bad_pct 8.975758305496129e-05
+query_from_actual_x unequal 6245 / 2359296 max_abs 0.015625 rel_l2 0.0001473238953622058 layer_budget_bad_pct 0.0
+attention_output_from_actual_Q_and_cache unequal 1872 / 368640 max_abs 0.0078125 rel_l2 0.0002171553496737033 layer_budget_bad_pct 0.0
+attention_output_original unequal 92152 / 368640 max_abs 0.04296875 rel_l2 0.006748885847628117 layer_budget_bad_pct 1.831868477165699
+attention_output_from_actual_Q_only unequal 43103 / 368640 max_abs 0.044921875 rel_l2 0.0060109361074864864 layer_budget_bad_pct 1.5340168960392475
+attention_output_from_actual_cache_only unequal 56336 / 368640 max_abs 0.0419921875 rel_l2 0.003164965193718672 layer_budget_bad_pct 0.2986653707921505
+cache_mismatch conditioned (14, 0, 0, 218) tokens [36] expected -44.0 actual -48.0 scale 0.0078125
+cache_mismatch end_to_end (14, 0, 0, 218) tokens [36] expected -44.0 actual -48.0 scale 0.0078125
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.

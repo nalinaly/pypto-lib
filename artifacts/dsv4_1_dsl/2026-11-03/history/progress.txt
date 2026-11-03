@@ -1,0 +1,350 @@
+DSV4.1 decode semantic review — 2026-11-03
+
+Scope confirmed by user: A5; decode first, single layer before whole model;
+mixed PyPTO/C++/DSL implementation permitted. Quantization/cache differences
+must be presented individually for user review. No model implementation yet.
+
+Pinned sources:
+- cann-recipes-infer master fe91511d4bfdc76f58cd0820ea623f7dd88af433.
+  git pull --ff-only --depth=1 origin master reported Already up to date.
+  Sparse checkout expanded to models/deepseek_v4_1, ops/ascendc, relevant skills.
+- cannbot-dsl master da23f1fe8c93e5d9831632315fc8d28c6a28c754.
+- pypto-lib-dsv41-review detached 745258a19da2d6000704693cd80e1cfcaa021a43.
+  Original pypto-lib dirty checkout at 26ef3e8 was preserved.
+
+Critical findings from recipe model calls AND AscendC implementation:
+1. Window KV: models/deepseek_v4_1/models/modeling_deepseek.py:1054 uses
+   separate Linear, RMSNorm, interleave RoPE, then update_win_kv:1155.
+   Writer is custom.kv_compress_epilog_v2, mxfp8_bf16, group 32,
+   round_scale=True. The attribute reaches ACLNN and graph converter unchanged.
+   op_kernel/kv_compress_epilog_v2_quant_fp8.h:269 builds
+   2^ceil(log2(max(amax,1e-4)/448)), stores scale as BF16.
+   PyPTO quant.py:192 and kernels/window_norm_rope_publish.cpp instead use
+   BF16(max(amax,1e-4)/448), then quantize using that rounded scale.
+   DSL samples/attn_prologue uses fixed scale=1 and a 512-byte payload only.
+   amax=1 scales: PyPTO 0.002227783203125; recipe 0.00390625; DSL 1.
+   Setting recipe round_scale=False is not exact PyPTO equivalence either:
+   its baseline divides by FP32 scale before storing scale as BF16.
+
+2. Compressed attention KV: compressor.py:39/100 writes mxfp4_bf16,
+   group16, round_scale=True, x_scale=1. Recipe g16 quantizer extracts the
+   BF16 maximum exponent and subtracts 0x0100; ordinary normal input gives
+   shared power-of-two scale 2^(floor(log2(amax))-2), with separate extreme
+   and zero handling. amax=1 gives scale 0.25. PyPTO uses
+   BF16(max(amax/6,2^-9)), giving 0.1669921875 for amax=1.
+   The recipe g16 Process path does not branch on roundScale.
+   Files: kv_compress_epilog_v2_quant_fp4_g16.h:114 and layout_2d.h:202.
+
+3. Cache formats match at the logical codec/width level, not quantizer level:
+   window 512 FP8 bytes +16 BF16 scales =544 B;
+   compressed 256 packed FP4 bytes +32 BF16 scales =320 B;
+   index 64 packed FP4 bytes +4 E8M0 scales =68 B per token.
+   Recipe attention uses packed rows; QLI index cache keeps payload/scales
+   separate; QSLI packs eight index tokens into a 544-byte record. Source
+   layer currently publishes split QLI and combined QSLI caches separately.
+   PyPTO commonly uses split attention payload/scale buffers and physical
+   selected-row IDs. Recipe passes logical sparse IDs plus page tables to FA.
+
+4. Recipe RoPE calls use interleave (adjacent real/imag), matching PyPTO's
+   basis. DSL attention prologue produces INTERLEAVE_HALF; adapt before
+   group quantization. Other DSL sample prologues use adjacent interleave.
+
+5. Recipe indexer QW passes softmax_scale = head_dim^-0.5 * n_heads^-0.5,
+   matching PyPTO's 1/sqrt(128*32) at the high-level formula. DSL sample QW
+   requires an explicit softmax_scale (no default); README example scale
+   alone is not evidence of a mandatory semantic mismatch.
+
+6. Recipe mixes its own AscendC writer/HC/gate kernels with torch_npu and
+   cann_ops_transformer.ops.ds41 operators. It does not prove that all eight
+   DSL guide samples are used unchanged in its whole-model path.
+   Current compute_win_cache is not the fused DSL attn_prologue call.
+   EP decode uses dispatch/GMM/combine; MegaMoE is used only in prefill.
+   External ds41 kernel internals were not available in this checkout;
+   exact QLI tie/candidate policy cannot be concluded from caller alone.
+   ops/ascendc/docs/custom-npu_quant_lightning_indexer.md describes an older
+   A3 INT8 interface, not the V4.1 ds41 MXFP4 interface.
+
+Earlier DSL/PyPTO comparison still relevant:
+- Eight DSL samples cover Engram gate and attention/index subgraphs, not
+  the complete model (HC, compressor state, MoE, source/reuse layer policy).
+- PyPTO candidate pool always includes newest visible block; DSL QLI tests
+  require retaining partial tail only. PyPTO stable ties/logical ordering
+  are stronger than the sample's TopK test contract.
+- BF16 rounding boundaries differ in DSL attention prologue vs PyPTO.
+- Existing device export bridge is in cannbot-dsl-dev, not samples repo;
+  multi-core sample launch IDs/global barriers cannot simply be nested in
+  a simpler leaf task. Need explicit work ownership/workspace/dependencies.
+
+Validation: static source inspection plus CPU arithmetic examples only.
+No NPU differential validation, no model/kernel source modifications.
+
+Decision update — user accepts all three window quantization alternatives
+and delegates the choice to fit DSL intra-core programming + simpler scheduling.
+
+Select the recipes AscendC window KV quantizer for the first implementation:
+- FP8 E4M3FN, group32, BF16 power-of-two scale, 544-byte logical packed row.
+- scale = 2^ceil(log2(max(amax,1e-4)/448)); match the reference's operation
+  order and FP8 rounding, including zero and boundary cases, in validation.
+- All three alternatives can run within one core; quantization does not
+  itself determine the scheduler. This choice favors a concrete model-level
+  reference and the existing DSL attention consumer's packed cache ABI.
+- The numerical reference for this writer must use the selected codec;
+  existing PyPTO quantizer bytes are not the acceptance oracle after this change.
+
+Implementation boundary to preserve:
+- PyPTO expresses task graph, tensor regions, cache slot ownership and access
+  dependencies. simpler dispatches tasks and enforces completion/visibility.
+- DSL leaf gets explicit tensor views, row/tile identifiers, valid extents,
+  and workspace; performs intra-core computation and returns after stores.
+- A window postprocessing task owns whole 512-element KV rows, performs
+  RMSNorm/RoPE/quantization/cache publication; no cross-core scale reduction.
+- Use adjacent-pair RoPE before quantization. Projection/norm rounding is
+  an explicit arithmetic boundary, not an incidental consequence of fusion.
+- Duplicate slot writes, ring wrap and padding require explicit ownership;
+  a task completion dependency covers payload and scale publication together.
+- MIX is one AIC + two AIV participants; local Channels stay within that
+  cohort. Move sample-level global barriers and launch block-ID work
+  distribution into PyPTO/simpler task dependencies and explicit work IDs.
+- Initial ABI can carry BF16 queries and UINT8 packed KV with inline BF16
+  scale bytes. Current interop dtype whitelist lacks FP8/FP4/E8M0 and requires
+  ND identity layouts; typed FP8 and NZ weight integration remains a concrete
+  bridge adaptation item, not an already demonstrated capability.
+- Existing DSL MQSMLA consumes these 544-byte original and 320-byte compressed
+  rows, but its full sample still has its own metadata/work distribution and
+  must be refactored into device-callable leaves before simpler scheduling.
+
+Development sequence:
+1. Export and call a row-local DSL window writer from PyPTO; compare payload,
+   scale, untouched slots, zero/rounding boundary rows and successive decode steps.
+2. Complete a window-only decode layer (layer0); integrate projection,
+   attention and output DSL leaves incrementally, retaining permitted existing
+   HC/MoE components. Validate an entire layer, not only the quantizer.
+3. Add full/reuse C2A and C1A/candidate/reindex paths and Engram; then whole model.
+   Compressed/index quantizer edge behavior and TopK tie/candidate contracts
+   still need individual inspection; window choice is not a blanket semantic change.
+4. Prioritize stable decoding and persistent cache correctness over formal
+   performance A/B or maximum fusion in this first version.
+
+Implementation update — user explicitly approved starting development.
+- Created pypto-a5-dev/pypto-lib-dsv41-dsl, branch feat/dsv41-dsl-window-kv,
+  based on 745258a. Original dirty pypto-lib and pypto worktrees preserved.
+- Added models/deepseek_v4_1_flash/window_kv_dsl.py: cb.kernel AIV leaf,
+  page ownership with ordered duplicate writes, PyPTO scheduling, CPU golden,
+  standalone validation and a two-step writer/consumer replay validation.
+- Shared qkv_proj_rope.window_publish now re-exports the new implementation;
+  the obsolete kernels/window_norm_rope_publish.cpp is removed.
+- Updated current-token window quantization in affected decode/prefill goldens.
+  Existing quantize_mxfp8_cache remains valid for old cache fixture contents.
+- First integration preserves separate FP8 payload and BF16 scale buffers,
+  matching existing PyPTO consumers. No packed-cache migration required yet.
+- Page tasks use with pl.spmd(1), an explicit page scalar and a fixed 12-entry
+  completion array. Reusing an array slot chains page tasks; task_dummy joins
+  all work. Regular pl.at cannot wrap an external device function call.
+
+Environment now used:
+- issue75-env/pypto-pr ae6f6d76 (paired PR with direct foreign-kernel calls),
+  native pypto_core built in that checkout; Python 3.12.15.
+- Installed that checkout's pinned simpler 6b6b88f2353c into its own venv;
+  PTOAS v0.70, PTO ISA 217bb98952a8f9004b95fe938da97d8d5f68f702.
+- Torch 2.12.0+cpu and other Python dependencies are read from issue75-env/pypto
+  venv through explicit PYTHONPATH. No torch_npu compute is used.
+- artifacts/dsv41-semantic-review/env.sh sets this environment. run_case.sh
+  and run_case.py invoke existing entries and cap native compilation workers.
+- NPU execution always through task-submit. Multiline --run was ineffective;
+  use one command invoking a script. Device smoke genuinely passed after
+  pinned runtime installation; initial exit-only smoke was not counted.
+
+Framework changes, currently local:
+- cannbot-dsl-dev/python/cannbotdsl/interop/pypto.py: recognize bfloat16,
+  INDEX and FP8 E4M3 dtype names. Model uses typed FP8 buffers throughout.
+- cannbot-dsl-dev/python/cannbotdsl/ops/reg/store.py: FP32 interleaved stores
+  use bitwise UINT32 overload because this CANN SDK lacks float overload.
+- Tests added in test/integration/test_pypto_direct.py and
+  test/cannbotdsl/test_device_export.py; both regression tests pass.
+- issue75-env/pypto-pr/python/pypto/jit/_tensor_meta.py: infer INDEX for
+  unrebound pl.parallel/pl.range loop variables at foreign calls. Added
+  regression in tests/ut/jit/test_extern_kernel.py; 28 tests passed.
+- Native DSL rebuild attempt mixed an incompatible pybind11 into the release
+  build and failed; no C++ change was needed. The working package was staged
+  with the canonical stage_package helper using existing native binaries from
+  the same cannbot-dsl-dev build/device-export, plus current Python sources,
+  then installed through CANNBOT_PREBUILT_DIR into pypto-pr's venv.
+  All framework tests and actual A5 writer run below use that installed package.
+
+Verified so far:
+- AIV leaf export without launch IDs/global barriers.
+- CPU scale examples: zero group scale 2^-22; amax 1/1.75 gives 2^-8;
+  amax 1.7578125 gives 2^-7; slot ownership goldens at 0/1/5/8 active tokens.
+- Complete window_kv_program code generation passed.
+- Actual A5 writer passed exact rtol=0, atol=0 comparisons for payload and scale
+  on 8 tokens / 3 pages, including duplicates, -1, out-of-range and untouched rows.
+  Log: window-npu.log; task_20261103_123242_13239185575, device 3.
+- Replay program code generation passed; added bytewise payload comparator.
+- Full default 72-token decode_swa code generation passed (swa-compile.log).
+  This entry requires 72 tokens; a two-token CLI attempt was rejected as expected.
+- Ruff passes all modified model files after explicit re-export naming.
+
+In progress as of this update:
+- NPU boundary/replay job (exec session 64265): window-boundaries-npu.log;
+  72-capacity/71-active two-step replay with 13 pages, then zero-active and
+  one-token zero-row cases. Thirteen pages exercises completion-array reuse.
+- NPU default 72-token SWA integration (new exec session; see swa-npu.log).
+- Still need: inspect those results, run/fix complete layer0 if feasible,
+  add concise setup/contract documentation, tighten relevant regression tests,
+  final diff review and status. No commits/pushes have been made.
+
+Latest validation update:
+- User requests Chinese replies from now on; this overrides local intermediate
+  English guidance. User asked why .cpp changed, then explicitly said continue.
+  Explained: remove replaced KV C++; the only additional C++ edit is an
+  existing MoE temporary layout/buffer-size correction for layer validation.
+- Byte-exact replay/boundary suite PASS: 72 capacity /71 active /13 pages,
+  two writes with a consumer snapshot between them; zero-active and single
+  zero-row cases also PASS. Logs: window-boundaries-npu.log.
+- Full 72-token SWA Attention PASS on A5, including cache, exact scales,
+  attention output, HC hidden and next pre-mix, using existing tolerances.
+  The first SWA run found a missed old-quantizer call in swa_official_reference;
+  it and dspark_context_kv goldens now use the explicitly selected window codec.
+- PyPTO tests/ut/jit/test_extern_kernel.py: 29 passed. Also added a clear
+  ValueError for missing foreign-parameter metadata in jit/foreign.py.
+- CANNBotDSL device-export/direct-call CPU/compile regressions: 24 passed,
+  16 NPU-only tests deselected. Ruff and diff whitespace checks pass.
+- Added operator setup/numerical-contract/validation instructions to the
+  existing model index; paired PyPTO external-call docs updated in EN/ZH.
+- First full layer0 attempt failed compiling existing expert_routed.cpp:
+  TCVT FP4->FP8 rejects CompactMode::RowPlusOne at pinned PTO ISA 217bb989.
+  This was a model-side unsupported layout use. Changed NZ temporary to
+  CompactMode::Normal and UB_NZ_BYTES to VEC_K_TILE*N_TILE (two lines).
+  Tensor semantics and typed TINSERT into L1 remain the same.
+- expert_routed.py --case bounds --experts-per-rank 4 PASSED on A5 after
+  this correction (expert-npu.log); output shape 640x5120.
+- Complete layer0 rerun is now submitted (see layer0-npu.log), EP=2.
+  Native compilation is capped at two workers; the complete fixture generates
+  all expert weights and compiles all branch kernels, so this takes minutes.
+
+Layer0 validation recovery (2026-11-03):
+- task_20261103_125352_174579718942 was interrupted by a taskqueue daemon
+  restart (queue log explicitly says daemon stopped/restarted, exit 137).
+  It had not reached numerical validation; this is not a reported NPU failure.
+- Replacement task_20261103_141048_126699520494 was still pending and was
+  cancelled to correct the queue's default 300-second execution limit.
+- Current task: task_20261103_141409_157781722852, auto two devices,
+  --max-time 1800, decode_layer.py --ep 2 --layer-id 0. Submission is detached
+  from the client wait, so closing a tool session will not cancel this task.
+- All eight devices were occupied at submission. No completed result yet.
+- The new submission ran from fwic rather than a Git checkout. The local env
+  helper sourced PyPTO's load-env.sh from that directory; its git rev-parse
+  returned 128 under set -e, before entering the model. Fixed env.sh to source
+  the resource-limit loader from PYPTO_ROOT and then restore the caller cwd.
+- Confirmed the exact queue runner without allocating cards:
+  task_20261103_141849_185831216520, --cpu-golden, exit 0. All six decode golden
+  branches and the layer 0 -> 2 golden chain passed. Model lint and diff checks
+  also passed. This CPU check does not establish A5 whole-layer correctness.
+- Current A5 task after the environment fix: task_20261103_141909_187059819341,
+  devices 0,1; log snapshot: layer0-npu-rerun.log. Full-layer fixture preparation
+  is running normally. No code or numerical thresholds changed for the rerun.
+
+Precision fix (2026-11-03):
+- Full layer task_20261103_141909_187059819341 executed successfully but failed
+  rank 1 attention_output precision: 6753/368640 = 1.8319% outliers, limit 1.5%.
+  Cache/scales and every other checked output passed. No tolerance was relaxed.
+- Reduced to the same one-card Attention fixture: seed 1 weights with seed 0
+  shared mHC boundary inputs, 72 active / 80 capacity, 8 requests, zero prefix.
+  task_20261103_142610_230137469 reproduced the exact same 6753 mismatches.
+  Inputs/goldens are frozen under build_output/_jit_l3_decode_swa_20261103_142957_x9kigqi6/data.
+  Local diagnostics: isolate_swa_rank1.py, analyze_swa_rank1.py, swa-rank1-analysis.log.
+- x_norm matched exactly. The DSL writer differed by one payload byte at
+  token 36, physical page 14 row 0 channel 218: -48 instead of -44, scale 2^-7.
+  Using actual cache values in the diagnostic reference reduced downstream
+  Attention error from 1.8319% to 0.2987%; no comparator was changed.
+- The default register vdiv permits 1 ULP error. Correct reciprocal is
+  0.9742823243141174; the next float produces normalized -0.3583984375 at a
+  BF16 tie, then FP8 -48. Correct FP32 gives -0.3583984076976776 and FP8 -44;
+  float64 reference is -0.3583983830052442. Enabled precision_mode=True for
+  reciprocal and quantization division in the DSL leaf, keeping the codec.
+- Frozen-input one-card rerun task_20261103_143446_286560319833 PASSED all
+  checks, same saved golden and 1.5% gate. Log: swa-rank1-precise-div-npu.log.
+- Temporary dump_tag instrumentation was removed from decode_swa.py; it has
+  no lasting changes. Now revalidate standalone boundaries and full layer.
+- Precise-division frozen-fixture result: zero payload-byte differences;
+  attention_output outliers 1101/368640 = 0.2987%, below unchanged 1.5%.
+- Post-fix boundary/replay suite task_20261103_143633_295903211477 PASSED all
+  three cases with byte-exact payload and zero-tolerance scales. Log:
+  window-boundaries-precise-div-npu.log.
+- Final full-layer task_20261103_143633_29592707787 is pending two A5 devices;
+  log snapshot will be layer0-precise-div-npu.log. Model lint/diff checks pass.
+
+Final first-slice validation:
+- task_20261103_143633_29592707787, A5 devices 6,7, EP=2, layer 0, 72 active
+  tokens per rank: [RUN] PASS (174.81s). Every output comparison passed,
+  including attention_output, cache/scales, mHC boundaries and the existing
+  MoE-conditioned x_next comparator. No acceptance threshold changed.
+  Log: layer0-precise-div-npu.log. This is generated-weight single-layer
+  validation, not full-network checkpoint accuracy.
+- Added the two-device layer command to the existing model index.
+- User asked whether PyPTO-lib has comparable precision choices. Initial
+  source-level answer identified high_precision=True and scratch-tile forms.
+  Deeper generated-code inspection found a separate selector mismatch:
+  `pl.rsqrt(..., high_precision=True)` emits `TRSQRT(dst, src, tmp)`, but at
+  pinned A5 ISA 217bb989 both overloads default to DEFAULT and the tmp
+  overload forwards that selector. Corrected the user-facing explanation.
+- Minimal compile-only reproduction confirmed the selector mismatch. Log:
+  a5-rsqrt-precision-compile.log. Recorded it (not fixed in this task) in
+  primary pypto-lib/KNOWN_PYPTO_ISSUES.md with self-contained reproduction
+  pypto-lib/KNOWN_PYPTO_ISSUES/a5-rsqrt-precision.py. This is independent of
+  the validated DSL precision_mode fix. No upstream messages/issues sent.
+
+User-authorized issue filing:
+- Re-ran the standalone rsqrt compile reproduction and checked runtime,
+  PTOAS and PTO-ISA against the selected PyPTO pins; all match.
+- Checked related issues/PRs and public source at the exact commits.
+- Filed Chinese issue https://github.com/hw-native-sys/pypto/issues/3257
+  with complete standalone source, reproducible environment, public source
+  permalinks, expected/actual algorithm selection and regression suggestions.
+- Mirrored the link into primary pypto-lib/KNOWN_PYPTO_ISSUES.md. Issue body
+  snapshot: rsqrt-github-issue-body.txt. No compiler fix or PR included.
+
+SWA L1 comparison requested by user:
+- User explicitly selected only the newly integrated SWA Attention subgraph,
+  not the complete layer. Captured level 1 AICore start/end records only.
+- Created clean baseline worktree pypto-lib-dsv41-no-dsl at 745258a19da2d600...
+  with the original C++ window writer. Production source was not changed.
+- Both variants ran sequentially on the same A5 device 2 with identical 27
+  frozen input files: 72 active / 80 capacity, 8 requests, zero prefix,
+  17 physical cache pages. Both passed their own unchanged numerical gates.
+- Current DSL uses power-of-two BF16 scales and precise division; baseline
+  uses its original continuous BF16 scale. Figures disclose this semantic
+  difference and do not present this single trace pair as a speedup result.
+- DSL: 610 physical executions, 37 observed task IDs; KV is 17 page tasks;
+  observed AICore span 716.427 us, KV first-start/last-end window 38.671 us.
+- Baseline: 605 physical executions, 21 observed task IDs; KV is one SPMD
+  task with 12 AIV blocks; span 709.107 us, KV window 13.011 us.
+- Artifacts: swa-l1-compare/index.html (offline synchronized zoom/pan viewer),
+  dsl-l1.png, no_dsl-l1.png, comparison-l1.png, corresponding SVGs,
+  two Perfetto JSONs, raw records/deps/name maps, summary.json and zip bundle.
+- Checked L1 level, conversion record counts, non-overlap on each physical
+  core, identical input hashes and device, rendered PNG readability, and JS
+  syntax. Both model logs have RUN PASS. Outer queue wrapper exited 2 after
+  both completed due a header edit while running; documented separately in
+  queue-result.json; current script passes bash -n. No extra captures run.
+
+User-requested sync_start capture:
+- Added sync_start=True to window_publish's existing pl.spmd(1) call. No
+  repartitioning: each page still owns one separate single-block AIV task.
+  Explained that the flag applies within one task, not across the 17 tasks.
+- Reusing the previous passing DSL capture's frozen data/in and data/out
+  (_jit_l3_decode_swa_20261103_151536_zmmdasp_/data). L1 only, same device 2.
+- Queue task task_20261103_153255_11199803444; new archive swa-l1-sync-start.
+  Previous DSL and no-DSL captures remain unchanged. Capture driver accepts
+  a separate archive and golden_data to avoid overwriting those results.
+- Completed successfully, queue exit 0 and [RUN] PASS (49.13s). Both input
+  and output golden cache hits confirmed; 27 replay files are byte-identical
+  to the prior input snapshot. Generated orchestration contains block_num=1
+  and set_require_sync_start(true) for the window_kv_page call.
+- L1 has 610 physical executions and 17 KV page tasks, unchanged counts.
+  Single-capture span 732.432 us; KV first-start/last-end interval 48.249 us
+  (prior sample 716.427 us / 38.671 us). No speedup/regression conclusion from
+  one sample. sync_start is retained as explicitly requested by the user.
+- New figure: swa-l1-sync-start/dsl_sync_start-l1.png; before/after viewer:
+  swa-l1-sync-start/index.html, plus raw traces, SVGs and zip. Record counts,
+  per-core non-overlap, JS syntax and image readability verified.

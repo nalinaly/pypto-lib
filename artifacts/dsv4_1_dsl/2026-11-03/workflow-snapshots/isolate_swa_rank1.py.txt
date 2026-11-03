@@ -1,0 +1,64 @@
+"""Reproduce full-layer rank 1 attention with the existing operator and goldens."""
+
+import argparse
+import os
+from pathlib import Path
+import sys
+from types import SimpleNamespace
+
+sys.path.insert(0, str(Path(os.environ["PYPTO_LIB_ROOT"]) / "models/deepseek_v4_1_flash"))
+
+import torch
+import decode_swa
+from golden import mapped_pool_ratio_allclose, ratio_allclose, run
+import golden.runner as runner
+from pypto.ir import DistributedConfig
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--device", type=int, required=True)
+parser.add_argument("--golden-data")
+options = parser.parse_args()
+args = SimpleNamespace(tokens=72, active_tokens=72, local_tokens=80, requests=8,
+                       dp=1, seed=1, epochs=1, bench=False, pages=1, case="mixed")
+rank_one = decode_swa.build_swa_specs(args)
+args.seed = 0
+rank_zero = {spec.name: spec for spec in decode_swa.build_swa_specs(args)}
+boundaries = {"x_hc", "incoming_pre_mix", "hc_attn_fn", "hc_attn_scale", "hc_attn_base", "attn_norm_weight"}
+specs = [rank_zero[spec.name] if spec.name in boundaries else spec for spec in rank_one]
+artifact = Path(os.environ["DSV41_WORKSPACE"]) / "artifacts/dsv41-semantic-review/swa-rank1"
+artifact.mkdir(exist_ok=True)
+original_validate = runner.validate_golden
+
+
+def capture_outputs(outputs, golden, **kwargs):
+    torch.save(outputs, artifact / "actual.pt")
+    return original_validate(outputs, golden, **kwargs)
+
+
+runner.validate_golden = capture_outputs
+result = run(
+    fn=decode_swa.l3_decode_swa,
+    specs=specs,
+    golden_fn=decode_swa.golden_swa,
+    golden_data=options.golden_data,
+    save_data=True,
+    compare_fn={
+        "attention_output": ratio_allclose(atol=1e-2, rtol=1 / 128, max_error_ratio=0.015, valid_rows=72),
+        "attention_hidden": ratio_allclose(atol=1e-2, rtol=1 / 128, max_error_ratio=0.015, valid_rows=72),
+        "attention_pre_mix": ratio_allclose(atol=1e-4, rtol=1e-4),
+        "window_cache": mapped_pool_ratio_allclose(
+            "window_slots", pool_name="window cache", mapping_shape=(72,), block_size=128,
+            atol=2**-9, rtol=2**-3, max_error_ratio=0.01,
+        ),
+        "window_cache_scale": mapped_pool_ratio_allclose(
+            "window_slots", pool_name="window cache scale", mapping_shape=(72,), block_size=128,
+            atol=0, rtol=0, max_error_ratio=0,
+        ),
+    },
+    config=dict(backend_type="a5", execution_mode=False,
+                distributed_config=DistributedConfig(device_ids=[options.device], num_sub_workers=0)),
+)
+(artifact / "work_dir.txt").write_text(str(result.work_dir))
+print(f"[ARTIFACT] {result.work_dir}", flush=True)
+if not result.passed:
+    raise SystemExit(result.error or 1)

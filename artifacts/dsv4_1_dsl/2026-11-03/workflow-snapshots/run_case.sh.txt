@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+source ${WORKSPACE}/artifacts/dsv41-semantic-review/env.sh
+cd "$PYPTO_LIB_ROOT"
+exec python "$DSV41_WORKSPACE/artifacts/dsv41-semantic-review/run_case.py" "$@" -d "${TASK_DEVICE:?Run this script through task-submit --device auto}"

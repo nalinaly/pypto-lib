@@ -1,0 +1,98 @@
+## 背景
+
+在 PyPTO-lib 的 DeepSeek V4.1 接入工作中核对 RMSNorm 精度路径时，发现 Tensor 接口 `pl.rsqrt(x, high_precision=True)` 虽然插入了临时 tile，但最终生成的 A5 C++ 仍选择默认 `TRSQRT` 算法。显式传入 scratch 的 `pl.tile.rsqrt(x, tmp=...)` 也经过同一条 codegen 路径。
+
+本 issue 聚焦 **高精度请求没有落实到 A5 算法选择**。下面是独立的编译复现，不依赖模型、权重、CANNBotDSL 或 NPU 执行；暂不将其他算子的数值误差归因于本问题。
+
+## 组件与复现环境
+
+组件：Codegen / Backend（需要核对 PyPTO → PTOAS → PTO-ISA 的精度选择约定）。
+
+| 项目 | 版本 / 配置 |
+|---|---|
+| 主机 | Linux aarch64 |
+| Python | 3.12.15 |
+| 目标 NPU | A5 / `BackendType.Ascend950` |
+| PyPTO commit | `ae6f6d76d32c2506fa1764a254a5f46a251431e9` |
+| simpler | `6b6b88f2353cca12cfafe809750b50b59931b0d1`，与 PyPTO 的 runtime gitlink 一致 |
+| PTOAS | `0.70`，与 `toolchain/versions.env` 一致 |
+| PTO-ISA | `217bb98952a8f9004b95fe938da97d8d5f68f702`，与 `runtime/pto_isa.pin` 一致 |
+| CANN | `version.info` 为 `9.2.0`；安装目录标签为 `cann-9.3.0` |
+| 发现问题的 PyPTO-lib 基线 | `745258a19da2d6000704693cd80e1cfcaa021a43`；独立复现不需要此仓库 |
+
+复现 checkout 中另有 foreign-kernel 接入相关本地修改，但本用例不调用 foreign kernel；下文引用的 rsqrt API、lowering/codegen 文件未作本地修改，其代码可在上述公开 commit 中核对。
+
+## 最小复现
+
+在已配置上述 PyPTO/PTOAS 的环境中，将下面完整脚本保存为 `repro_rsqrt_precision.py`，运行：
+
+```bash
+python repro_rsqrt_precision.py
+```
+
+脚本调用 `compile()`，仅检查生成代码，不执行设备任务。
+
+<details>
+<summary>完整复现脚本</summary>
+
+```python
+"""Compile-only reproduction of the A5 rsqrt algorithm-selection mismatch."""
+from pathlib import Path
+import pypto.language as pl
+from pypto.backend import BackendType
+from pypto.runtime import ExecutionMode, RunConfig
+
+@pl.jit
+def requested_high_precision(x: pl.Tensor[[1, 64], pl.FP32], out: pl.Out[pl.Tensor[[1, 64], pl.FP32]]):
+    with pl.at(level=pl.Level.CORE_GROUP):
+        result = pl.rsqrt(x, high_precision=True)
+        out[:, :] = result
+    return out
+
+compiled = requested_high_precision.compile(config=RunConfig(backend_type=BackendType.Ascend950, execution_mode=ExecutionMode.ONBOARD))
+print("output_dir:", compiled.output_dir)
+for source in Path(compiled.output_dir).rglob("*.cpp"):
+    for line in source.read_text().splitlines():
+        if "TRSQRT(" in line or "TRSQRT<" in line:
+            print(source.name + ": " + line.strip())
+```
+
+</details>
+
+## 实际行为
+
+编译成功，生成代码包含以下调用（因编译目录内有多份源码，同一行可能打印两次）：
+
+```text
+requested_high_precision_incore_0.cpp: TRSQRT(v32, v24, v30);
+```
+
+第三个参数是 scratch tile，但调用中没有显式的 `RsqrtAlgorithm::HIGH_PRECISION`。
+
+沿固定版本的实现链路可以确认：
+
+1. PyPTO 的 [rsqrt codegen](https://github.com/hw-native-sys/pypto/blob/ae6f6d76d32c2506fa1764a254a5f46a251431e9/src/backend/common/pto_ops_elementwise.cpp#L1162-L1176) 只根据参数数量生成 `pto.trsqrt` 的一个或两个输入，没有额外选择 A5 高精度算法。
+2. PTO-ISA 的 [TRSQRT 公共接口](https://github.com/hw-native-sys/pto-isa/blob/217bb98952a8f9004b95fe938da97d8d5f68f702/include/pto/common/pto_instr.hpp#L2370-L2388) 中，带 scratch 的重载也默认使用 `PrecisionType = RsqrtAlgorithm::DEFAULT`。
+3. [A5 的 scratch 重载](https://github.com/hw-native-sys/pto-isa/blob/217bb98952a8f9004b95fe938da97d8d5f68f702/include/pto/npu/a5/TRsqrt.hpp#L205-L209) 没有使用 `tmp`，直接转发为 `TRSQRT_IMPL<PrecisionType>(dst, src)`。
+4. [A5 算法分支](https://github.com/hw-native-sys/pto-isa/blob/217bb98952a8f9004b95fe938da97d8d5f68f702/include/pto/npu/a5/TRsqrt.hpp#L42-L51) 只有在 selector 为 `HIGH_PRECISION` 时才使用高精度 sqrt 和 IEEE754 divide；`DEFAULT` 走普通 `vsqrt` / `vdiv`。
+
+因此，在这组已对齐 pin 的版本上，仅分配并传入 scratch 并不能让 A5 执行请求的高精度算法。
+
+## 预期行为
+
+- A5 上的 `pl.rsqrt(x, high_precision=True)` 应实际选择高精度实现，例如最终发出 `TRSQRT<RsqrtAlgorithm::HIGH_PRECISION>(...)`，或其他等价且可验证的实现。
+- Tile 层文档声明的 `pl.tile.rsqrt(x, tmp=...)` 高精度语义也应与最终算法一致。
+- 若当前目标无法兑现此语义，应明确报错或告警，避免成功编译后静默退回默认算法。
+
+这里尚未断言应仅修改某一个仓库：修复可以位于 PyPTO/PTOAS 的 selector 传递，也可以是 ISA 的兼容约定，但需要保证用户接口到 A5 实现的语义一致。
+
+## 建议的回归检查
+
+1. 覆盖 Tensor `high_precision=True` 和 Tile `tmp=...` 两种入口，检查 **PTOAS 生成的 C++ 及其实际选择的算法**，不能只检查是否多了 scratch operand。
+2. 增加能区分默认算法与高精度算法的 FP32 舍入边界输入，使用 ULP 或严格参考值检查；宽松的 allclose 门限不足以验证选项是否生效。
+3. 保留默认精度路径的行为，并分别检查 A5 与 A2/A3 的约定。
+
+## 相关讨论
+
+- #1000、#1070：引入 rsqrt 高精度 / scratch 接口。
+- #2884：其他 high_precision 算子的目标平台告警；该 PR 明确排除了 rsqrt。本问题是 A5 scratch 调用与实际算法 selector 的落差。

@@ -27,6 +27,7 @@ from utils import _publish_quantized_cache
 from quant import dequantize_mxfp4_cache, dequantize_mxfp8_cache, quantize_mxfp8_upward_reference, quantize_grouped_mxfp8_weight, pack_mx_b_scale, quantize_mxfp4_cache, quantize_mxfp8_cache
 from gemm import golden_gemm_bf16_via_mxfp8_to_bf16_sequential
 from utils import packed_query_lengths, window_metadata
+from window_kv_dsl import quantize_window_kv
 
 from pathlib import Path
 
@@ -37,7 +38,7 @@ from config import (
     FLASH as M, CMP_BLOCKS_DYN, MAX_BATCH_PER_DP, ORI_BLOCKS_DYN, T_DYN, TP_SIZE,
 )
 
-# Dynamic shape variables.
+# 动态形状变量。
 SELECTED_ROWS = pl.dynamic("SPARSE_SELECTED_ROWS")
 BF16_HEADS = pl.dynamic("SPARSE_BF16_HEADS")
 BF16_PAGES_W = pl.dynamic("SPARSE_BF16_PAGES_W")
@@ -64,7 +65,7 @@ SWA_GROUPS = HEAD_DIM // 32
 SWA_SCALE_BYTES = SWA_GROUPS * 2
 SWA_PACKED_ROW_BYTES = HEAD_DIM + SWA_SCALE_BYTES
 
-# Tiling.
+# 分块参数。
 CUBE_HEADS = max(16, LOCAL_H)
 HEAD_TILE = min(32, CUBE_HEADS)
 QUERY_HEAD_TILE = min(16, LOCAL_H)
@@ -916,7 +917,7 @@ def swa_official_reference(tensors, *, shared_cache=False, key_tile=128):
     projected_kv = golden_gemm_bf16_via_mxfp8_to_bf16_sequential(t["x"], kv_weight, t["wkv_scale"])
     kv = golden_rms_norm(projected_kv, t["kv_norm_weight"])
     kv = golden_rope_tail(kv, t["rope_cos"], t["rope_sin"])
-    payload, scales = quantize_mxfp8_cache(kv)
+    payload, scales = quantize_window_kv(kv)
     cache = t["window_cache"].clone()
     cache_scale = t["window_cache_scale"].clone()
     slots = t["window_slots"].long()
@@ -2241,7 +2242,7 @@ def golden_swa_attention(
         window_cache_scale,
         window_kv,
         window_slots,
-        quantize_mxfp8_cache,
+        quantize_window_kv,
     )
     quantized_window = dequantize_mxfp8_cache(window_payload, updated_window_scale).to(query.dtype)
     window_stats = golden_paged_sparse_attention_stats(query, quantized_window, window_indices)
@@ -2340,7 +2341,7 @@ def golden_compressed_attention(
         window_cache_scale,
         window_kv,
         window_slots,
-        quantize_mxfp8_cache,
+        quantize_window_kv,
     )
     quantized_window = dequantize_mxfp8_cache(window_payload, updated_window_scale).to(query.dtype)
     compressed_payload = compressed_cache

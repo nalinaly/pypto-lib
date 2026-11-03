@@ -14,7 +14,7 @@ import torch
 from config import DSPARK_QUERY_WIDTH, FLASH, ORI_BLOCKS_DYN, T_DYN
 from qkv_proj_rope import golden_rope_interleave, quantize_projection_input, kv_proj, window_publish
 from gemm import golden_mxfp8_linear_grouped_sum
-from quant import quantize_mxfp8_cache
+from window_kv_dsl import quantize_window_kv
 from rmsnorm import golden_rms_norm
 
 
@@ -58,7 +58,7 @@ def golden_context_kv_cache(
             (projected[..., :-rope_dim], golden_rope_interleave(projected[..., -rope_dim:], cos, sin)),
             dim=-1,
         )
-        payload, scale = quantize_mxfp8_cache(kv[active])
+        payload, scale = quantize_window_kv(kv[active])
         updated_cache.reshape(-1, cache.shape[-1])[rows] = payload
         updated_scale.reshape(-1, cache_scale.shape[-1])[rows] = scale
     return updated_cache, updated_scale

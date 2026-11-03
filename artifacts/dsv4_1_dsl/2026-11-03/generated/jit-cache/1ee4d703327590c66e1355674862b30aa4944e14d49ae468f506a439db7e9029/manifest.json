@@ -1,0 +1,208 @@
+{
+  "arch": "dav-3510",
+  "calling_convention": "device_function",
+  "completion": {
+    "ddr_barrier": true,
+    "local_pipelines_drained": true,
+    "scalar_gm_flushed": true,
+    "wait_for_all_participants": false
+  },
+  "contract": {
+    "dimensions": [
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_out_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_x_stride_0"
+      }
+    ],
+    "host_abi_version": 9,
+    "parameters": [
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 2
+            },
+            {
+              "kind": "constant",
+              "value": 32
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_x_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "x",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 2
+            },
+            {
+              "kind": "constant",
+              "value": 32
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_out_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "out",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "element": "f32",
+          "kind": "scalar"
+        },
+        "has_runtime_default": false,
+        "name": "amount",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      }
+    ],
+    "schema_version": 6
+  },
+  "core_type": "aiv",
+  "loading": {
+    "host_runtime": false,
+    "text_only": "requires_binary_validation"
+  },
+  "parameters": [
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_2d_Device_ss_ds",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 0,
+      "name": "x",
+      "shape": [
+        2,
+        32
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "write",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_2d_Device_ss_ds",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 1,
+      "name": "out",
+      "shape": [
+        2,
+        32
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "alignment": 4,
+      "bits": 32,
+      "cpp_type": "float",
+      "kind": "scalar",
+      "logical_index": 2,
+      "name": "amount",
+      "scalar_kind": "float",
+      "size": 4
+    }
+  ],
+  "participants": {
+    "aic": 0,
+    "aiv": 1
+  },
+  "resources": {
+    "allocations": [],
+    "exclusive_local_memory": true,
+    "exclusive_sync_resources": true,
+    "implicit_workspace_bytes": 0,
+    "subblock_id": "physical_aiv_lane"
+  },
+  "schema_version": 1,
+  "source_sha256": "5a06548b5c92c55bf11bcb2b85ae0246121b52796d3065744cd184f66dd9ee5d",
+  "state": {
+    "clobbered": [
+      "DMA",
+      "padding",
+      "quantization",
+      "mask",
+      "local_memory",
+      "sync_resources"
+    ],
+    "entry": "asc_init_and_default_dma_state_atomic_none",
+    "exit_atomic": "none",
+    "preserved": [
+      "CTRL"
+    ]
+  },
+  "symbol": "kernel__add_scalar_2d"
+}

@@ -31,7 +31,7 @@ constexpr uint32_t L0_SCALE_K_TILE = L0_K_TILE / 32;
 constexpr uint32_t VEC_K_TILE = K_TILE / 2;
 constexpr uint32_t PACKED_COLS = N_TILE / 2;
 constexpr uint32_t UB_SOURCE_BYTES = VEC_K_TILE * PACKED_COLS;
-constexpr uint32_t UB_NZ_BYTES = ((VEC_K_TILE + 15) / 16 * 16 + 1) * N_TILE;
+constexpr uint32_t UB_NZ_BYTES = VEC_K_TILE * N_TILE;
 constexpr uint32_t L0_PINGPONG_BYTES = 32 * 1024;
 constexpr uint32_t L1_BASE = 2 * M_TILE * A_STAGE_K + 2 * (M_TILE + N_TILE) * SCALE_STAGE_Q;
 constexpr uint32_t L1_SLOT_BYTES = K_TILE * N_TILE;
@@ -91,7 +91,7 @@ AICORE inline void produceWeight(__gm__ uint8_t* weight, int64_t k, int64_t n,
     using Packed = Tile<TileType::Vec, float4_e2m1x2_t, VEC_K_TILE, N_TILE>;
     using Raw = Tile<TileType::Vec, uint8_t, VEC_K_TILE, PACKED_COLS>;
     using NZ = Tile<TileType::Vec, float8_e4m3_t, VEC_K_TILE, N_TILE, BLayout::ColMajor,
-                    VEC_K_TILE, N_TILE, SLayout::RowMajor, 512, PadValue::Null, CompactMode::RowPlusOne>;
+                    VEC_K_TILE, N_TILE, SLayout::RowMajor, 512, PadValue::Null, CompactMode::Normal>;
     static_assert(NZ::StorageBytes == UB_NZ_BYTES);
     using GlobalPacked = GlobalTensor<uint8_t, Shape<1, 1, 1, VEC_K_TILE, PACKED_COLS>,
                                       pto::Stride<1, 1, 1, PACKED_ROW_BYTES, 1>>;

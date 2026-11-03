@@ -1,0 +1,21 @@
+Obtaining file://${WORKSPACE}/issue75-env/pypto-pr/runtime
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: simpler
+  Building editable for simpler (pyproject.toml): started
+  Building editable for simpler (pyproject.toml): still running...
+  Building editable for simpler (pyproject.toml): finished with status 'done'
+  Created wheel for simpler: filename=simpler-0.1.0-cp312-cp312-linux_aarch64.whl size=103982635 sha256=f68516681b764446150b63b90fab5c3832d8228d03d71f1ace2acd79fd1d4501
+  Stored in directory: /tmp/pip-ephem-wheel-cache-trglzq39/wheels/4a/40/bc/acf4f274195e594c3b2948ce0972b6deefb92105d946c0d458
+Successfully built simpler
+Installing collected packages: simpler
+  Attempting uninstall: simpler
+    Found existing installation: simpler 0.1.0
+    Not uninstalling simpler at ${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages, outside environment ${WORKSPACE}/issue75-env/pypto-pr/.venv
+    Can't uninstall 'simpler'. No files were found to uninstall.
+Successfully installed simpler-0.1.0
+
+[notice] A new release of pip is available: 25.0.1 -> 26.2.2
+[notice] To update, run: pip install --upgrade pip

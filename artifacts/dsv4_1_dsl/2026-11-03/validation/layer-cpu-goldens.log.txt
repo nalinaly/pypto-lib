@@ -1,0 +1,11 @@
+[GOLDEN] PASS decode_layer layer=0 output=(2, 4, 64) next_pre_mix=(2, 4)
+[GOLDEN] PASS decode_layer layer=2 output=(2, 4, 64) next_pre_mix=(2, 4)
+[GOLDEN] PASS decode_layer layer=3 output=(2, 4, 64) next_pre_mix=(2, 4)
+[GOLDEN] PASS decode_layer layer=20 output=(2, 4, 64) next_pre_mix=(2, 4)
+[GOLDEN] PASS decode_layer layer=24 output=(2, 4, 64) next_pre_mix=(2, 4)
+[GOLDEN] PASS decode_layer layer=21 output=(2, 4, 64) next_pre_mix=(2, 4)
+[GOLDEN] PASS decode_layer chain layers=(0,2) TP=1 output=(2, 4, 64) tokens=2
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.

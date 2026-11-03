@@ -46,6 +46,7 @@ from rope_tables import ROPE_ROWS_DYN, materialize_rope_rows, precompute_rope_ta
 from qkv_proj_rope import golden_rope_tail, quantize_projection_input, q_proj_rope, kv_proj, window_publish
 from quant import dequantize_mxfp4_cache, quantize_mxfp8_upward_reference, pack_mx_b_scale, quantize_grouped_mxfp8_weight, quantize_mxfp4_cache, quantize_mxfp8_cache
 from gemm import golden_gemm_bf16_via_mxfp8_to_bf16_sequential
+from window_kv_dsl import quantize_window_kv
 from hc import HC_INPUT_NAMES, make_hc_inputs
 from utils import paged_slots, token_shards, window_metadata
 from sparse_attention import (
@@ -54,7 +55,7 @@ from sparse_attention import (
 )
 from prefill_indexer import prefill_indexer, publish_c2a_index_key
 
-# model config
+# 模型配置
 LOCAL_H = M.num_attention_heads // TP_SIZE
 LOCAL_O_GROUPS = M.o_groups // TP_SIZE
 LOCAL_O_WIDTH = M.o_groups // TP_SIZE * M.o_lora_rank
@@ -384,7 +385,7 @@ def golden_reference_c2a(inputs: dict, *, fp32_output=False) -> dict:
     # b. Sliding-window cache: MXFP8, group 32, BF16 scales; addressed rows only.
     window_cache = t["window_cache"].clone()
     window_cache_scale = t["window_cache_scale"].clone()
-    window_payload, window_scales = quantize_mxfp8_cache(kv)
+    window_payload, window_scales = quantize_window_kv(kv)
     window_slots = t["window_slots"].long()
     window_valid = window_slots >= 0
     window_rows = window_slots[window_valid]

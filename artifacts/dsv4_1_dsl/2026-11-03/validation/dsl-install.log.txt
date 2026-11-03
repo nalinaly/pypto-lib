@@ -1,0 +1,777 @@
+Processing ${WORKSPACE}/cannbot-dsl-dev
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: cannbot-dsl
+  Building wheel for cannbot-dsl (pyproject.toml): started
+  Building wheel for cannbot-dsl (pyproject.toml): still running...
+  Building wheel for cannbot-dsl (pyproject.toml): still running...
+  Building wheel for cannbot-dsl (pyproject.toml): still running...
+  Building wheel for cannbot-dsl (pyproject.toml): still running...
+  Building wheel for cannbot-dsl (pyproject.toml): still running...
+  Building wheel for cannbot-dsl (pyproject.toml): still running...
+  Building wheel for cannbot-dsl (pyproject.toml): still running...
+  Building wheel for cannbot-dsl (pyproject.toml): still running...
+  Building wheel for cannbot-dsl (pyproject.toml): still running...
+  Building wheel for cannbot-dsl (pyproject.toml): still running...
+  Building wheel for cannbot-dsl (pyproject.toml): finished with status 'error'
+  error: subprocess-exited-with-error
+
+  × Building wheel for cannbot-dsl (pyproject.toml) did not run successfully.
+  │ exit code: 1
+  ╰─> [747 lines of output]
+      ${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/config/_apply_pyprojecttoml.py:82: SetuptoolsDeprecationWarning: `project.license` as a TOML table is deprecated
+      !!
+
+              ********************************************************************************
+              Please use a simple string containing a SPDX expression for `project.license`. You can also use `project.license-files`. (Both options available on setuptools>=77.0.0).
+
+              This deprecation is overdue, please update your project and remove deprecated
+              calls to avoid build errors in the future.
+
+              See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+              ********************************************************************************
+
+      !!
+        corresp(dist, value, root_dir)
+      ${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/config/_apply_pyprojecttoml.py:55: SetuptoolsDeprecationWarning: 'tool.setuptools.license-files' is deprecated in favor of 'project.license-files' (available on setuptools>=77.0.0).
+      !!
+
+              ********************************************************************************
+
+              This deprecation is overdue, please update your project and remove deprecated
+              calls to avoid build errors in the future.
+
+              See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license-files for details.
+              ********************************************************************************
+
+      !!
+        _apply_tool_table(dist, config, filename)
+      running bdist_wheel
+      running build
+      running build_py
+      -- Found Python: ${WORKSPACE}/issue75-env/dsl-venv/bin/python (found suitable version "3.12.15", minimum required is "3.10") found components: Interpreter Development.Module
+      -- Found pybind11: ${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/pybind11/include (found version "3.1.0")
+      -- Building with -fPIC
+      -- Configuring done (0.6s)
+      -- Generating done (0.1s)
+      -- Build files have been written to: ${WORKSPACE}/cannbot-dsl-dev/build/wheel-release-33c2e5f4
+      [local-build-limit] cmake --build: 2 workers
+      [1/199] Building AscDataTypeDialect.h.inc...
+      [2/199] Building AscDataTypeDialect.cpp.inc...
+      [3/199] Building AscScalarDialect.cpp.inc...
+      [4/199] Building AscScalarDialect.h.inc...
+      [5/199] Building CANNIRDialect.cpp.inc...
+      [6/199] Building CANNIRDialect.h.inc...
+      [7/199] Building AscEnums.cpp.inc...
+      [8/199] Building AscEnums.h.inc...
+      [9/199] Building AscDataTypes.cpp.inc...
+      [10/199] Building AscDataTypes.h.inc...
+      [11/199] Building AscVecDialect.h.inc...
+      [12/199] Building AscVecDialect.cpp.inc...
+      [13/199] Building AscScalarTypes.h.inc...
+      [14/199] Building AscScalarTypes.cpp.inc...
+      [15/199] Building CANNIREnums.cpp.inc...
+      [16/199] Building CANNIREnums.h.inc...
+      [17/199] Building AscInterfaces.cpp.inc...
+      [18/199] Building AscInterfaces.h.inc...
+      [19/199] Building AscVecTypes.cpp.inc...
+      [20/199] Building AscVecTypes.h.inc...
+      [21/199] Building AscScalarOps.cpp.inc...
+      [22/199] Building AscScalarOps.h.inc...
+      [23/199] Building AscSimtDialect.cpp.inc...
+      [24/199] Building AscSimtDialect.h.inc...
+      [25/199] Building CANNIRTypes.cpp.inc...
+      [26/199] Building CANNIRTypes.h.inc...
+      [27/199] Building CXX object lib/AscDataType/IR/CMakeFiles/obj.AscDataType.dir/AscDataTypeDialect.cpp.o
+      [28/199] Building CXX object lib/AscEnum/IR/CMakeFiles/obj.AscEnums.dir/AscEnums.cpp.o
+      [29/199] Building AscVecOps.cpp.inc...
+      [30/199] Building AscVecOps.h.inc...
+      [31/199] Building AscCubeDialect.cpp.inc...
+      [32/199] Building AscCubeDialect.h.inc...
+      [33/199] Building AscSimtOps.cpp.inc...
+      [34/199] Building AscSimtOps.h.inc...
+      [35/199] Building CANNIRInterfaces.cpp.inc...
+      [36/199] Building CANNIRInterfaces.h.inc...
+      [37/199] Linking CXX static library lib/AscEnum/IR/libAscEnums.a
+      [38/199] Building CXX object lib/AscInterfaces/IR/CMakeFiles/obj.AscInterfaces.dir/AscInterfaces.cpp.o
+      [39/199] Building CXX object lib/AscDataType/IR/CMakeFiles/obj.AscDataType.dir/AscDataTypes.cpp.o
+      [40/199] Linking CXX static library lib/AscDataType/IR/libAscDataType.a
+      [41/199] Building CXX object lib/AscScalar/IR/CMakeFiles/obj.AscScalar.dir/AscScalarOps.cpp.o
+      [42/199] Building CXX object lib/AscScalar/IR/CMakeFiles/obj.AscScalar.dir/AscScalarDialect.cpp.o
+      [43/199] Building Passes.h.inc...
+      [44/199] Building AscCubeOps.cpp.inc...
+      [45/199] Building AscCubeOps.h.inc...
+      [46/199] Building AscSimtTypes.cpp.inc...
+      [47/199] Building AscSimtTypes.h.inc...
+      [48/199] Building CANNIROps.cpp.inc...
+      [49/199] Building CANNIROps.h.inc...
+      [50/199] Linking CXX static library lib/AscInterfaces/IR/libAscInterfaces.a
+      [51/199] Building CXX object lib/AscScalar/IR/CMakeFiles/obj.AscScalar.dir/AscScalarTypes.cpp.o
+      [52/199] Building CXX object lib/AscVec/IR/CMakeFiles/obj.AscVec.dir/AscVecTypes.cpp.o
+      [53/199] Building CXX object lib/AscVec/IR/CMakeFiles/obj.AscVec.dir/AscVecDialect.cpp.o
+      [54/199] Linking CXX static library lib/AscScalar/IR/libAscScalar.a
+      [55/199] Building Passes.h.inc...
+      [56/199] Building CXX object lib/AscVec/Transforms/CMakeFiles/obj.AscVecTransforms.dir/LegalizeTwoAddress.cpp.o
+      [57/199] Building CXX object lib/AscVec/IR/CMakeFiles/obj.AscVec.dir/AscVecOps.cpp.o
+      [58/199] Linking CXX static library lib/AscVec/IR/libAscVec.a
+      [59/199] Building CXX object lib/AscCube/IR/CMakeFiles/obj.AscCube.dir/AscCubeDialect.cpp.o
+      [60/199] Building CXX object lib/AscCube/IR/CMakeFiles/obj.AscCube.dir/AscCubeOps.cpp.o
+      [61/199] Building CXX object lib/AscSimt/IR/CMakeFiles/obj.AscSimt.dir/AscSimtDialect.cpp.o
+      [62/199] Building CXX object lib/AscSimt/IR/CMakeFiles/obj.AscSimt.dir/AscSimtTypes.cpp.o
+      [63/199] Building CXX object lib/AscSimt/IR/CMakeFiles/obj.AscSimt.dir/AscSimtOps.cpp.o
+      [64/199] Building CXX object lib/CANNIR/IR/CMakeFiles/obj.CANNIR.dir/CANNIREnums.cpp.o
+      [65/199] Building CXX object lib/CANNIR/IR/CMakeFiles/obj.CANNIR.dir/CANNIRInterfaces.cpp.o
+      [66/199] Building CXX object lib/CANNIR/IR/CMakeFiles/obj.CANNIR.dir/CopyPlanInterfaces.cpp.o
+      [67/199] Building CXX object lib/CANNIR/IR/CMakeFiles/obj.CANNIR.dir/CANNIRTypes.cpp.o
+      [68/199] Building CXX object lib/CANNIR/IR/CMakeFiles/obj.CANNIR.dir/CANNIRDialect.cpp.o
+      [69/199] Building CXX object lib/CANNIR/IR/CMakeFiles/obj.CANNIR.dir/TensorViewOps.cpp.o
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/TensorViewOps.cpp: In function ‘llvm::LogicalResult mlir::cannir::verifyTensorViewOperation(TensorViewSemanticsInterface)’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/TensorViewOps.cpp:246:32: warning: comparison of integer expressions of different signedness: ‘int64_t’ {aka ‘long int’} and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+        246 |     if (!shape || shape.size() != expected.size() || op.getViewControls().size() != expected.size() + 1)
+            |                   ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/TensorViewOps.cpp:286:30: warning: comparison of integer expressions of different signedness: ‘int64_t’ {aka ‘long int’} and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+        286 |     if (!dims || dims.size() != expected.size())
+            |                  ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/TensorViewOps.cpp:355:32: warning: comparison of integer expressions of different signedness: ‘int64_t’ {aka ‘long int’} and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+        355 |     if (!shape || shape.size() < expected.size() || !op.getViewControls().empty())
+            |                   ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/TensorViewOps.cpp:367:32: warning: comparison of integer expressions of different signedness: ‘int64_t’ {aka ‘long int’} and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+        367 |     if (!block || block.size() != rank || !step || !counts || counts.empty() || counts.size() > 2 ||
+            |                   ~~~~~~~~~~~~~^~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/TensorViewOps.cpp:368:21: warning: comparison of integer expressions of different signedness: ‘int64_t’ {aka ‘long int’} and ‘long unsigned int’ [-Wsign-compare]
+        368 |         step.size() != counts.size() * rank || !op.getViewControls().empty())
+            |         ~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/TensorViewOps.cpp:374:28: warning: comparison of integer expressions of different signedness: ‘size_t’ {aka ‘long unsigned int’} and ‘int64_t’ {aka ‘long int’} [-Wsign-compare]
+        374 |       for (size_t j = 0; j < counts.size(); ++j) {
+            |                          ~~^~~~~~~~~~~~~~~
+      [70/199] Building CXX object lib/CANNIR/IR/CMakeFiles/obj.CANNIR.dir/ViewAliasUtils.cpp.o
+      [71/199] Building CXX object lib/CANNIR/IR/CMakeFiles/obj.CANNIR.dir/TensorMemory.cpp.o
+      [72/199] Building CXX object lib/CANNIR/IR/CMakeFiles/obj.CANNIR.dir/__/Analysis/TensorViewSemantics.cpp.o
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Analysis/TensorViewSemantics.cpp: In function ‘llvm::FailureOr<mlir::cannir::LogicalPadding> mlir::cannir::queryLogicalPadding(mlir::Value)’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Analysis/TensorViewSemantics.cpp:688:25: warning: comparison of integer expressions of different signedness: ‘size_t’ {aka ‘long unsigned int’} and ‘int64_t’ {aka ‘long int’} [-Wsign-compare]
+        688 |     if (controls.size() != 2 * pairs.getInt() + !result.replicate) return failure();
+            |         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Analysis/TensorViewSemantics.cpp: In function ‘llvm::FailureOr<mlir::cannir::ResolvedTensorLayout> mlir::cannir::resolveTensorLayout(mlir::Value)’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Analysis/TensorViewSemantics.cpp:1043:32: warning: comparison of integer expressions of different signedness: ‘int64_t’ {aka ‘long int’} and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+       1043 |     if (!steps || steps.size() != rank * repeatRank) return failure();
+            |                   ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+      [73/199] Linking CXX static library lib/AscVec/Transforms/libAscVecTransforms.a
+      [74/199] Linking CXX static library lib/AscCube/IR/libAscCube.a
+      [75/199] Linking CXX static library lib/AscSimt/IR/libAscSimt.a
+      [76/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/ControlFlow/ExecutionContexts.cpp.o
+      [77/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/ControlFlow/ControlFlowFacts.cpp.o
+      [78/199] Building CXX object lib/CANNIR/IR/CMakeFiles/obj.CANNIR.dir/CANNIROps.cpp.o
+      In file included from ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/GM2UBIR.h:5,
+                       from ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp:16:
+      ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/OrdinaryDMAIR.h: In function ‘llvm::LogicalResult mlir::cannir::dma::verifyPlan(mlir::Operation*, mlir::ValueRange, mlir::Type, mlir::Value, Storage)’:
+      ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/OrdinaryDMAIR.h:192:24: warning: expected ‘template’ keyword before dependent template name [-Wmissing-template-keyword]
+        192 |   if (cache && (cache->hi < 0 || cache->lo > (vectorLoad ? 6 : 4) || !(cache->residues & cacheModes)))
+            |                        ^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp: In member function ‘llvm::LogicalResult mlir::cannir::AllocTensorMemoryOp::verify()’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp:329:32: warning: comparison of integer expressions of different signedness: ‘uint64_t’ {aka ‘long unsigned int’} and ‘int64_t’ {aka ‘long int’} [-Wsign-compare]
+        329 |       uint64_t(getAlignment()) < getTensorStorageAlignment(getRes().getType().getMemloc()))
+            |       ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp: In function ‘llvm::LogicalResult verifyMemCopyLayoutCompatibility(mlir::Operation*, const mlir::cannir::CopyExecution&, mlir::cannir::TensorType, mlir::cannir::TensorType, mlir::cannir::FormatTransform)’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp:503:10: warning: enumeration value ‘Auto’ not handled in switch [-Wswitch]
+        503 |   switch (transform) {
+            |          ^
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp: In static member function ‘static llvm::LogicalResult mlir::cannir::ReshapeViewOp::inferReturnTypes(mlir::MLIRContext*, std::optional<mlir::Location>, mlir::ValueRange, mlir::DictionaryAttr, mlir::OpaqueProperties, mlir::RegionRange, llvm::SmallVectorImpl<mlir::Type>&)’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp:4218:25: warning: comparison of integer expressions of different signedness: ‘size_t’ {aka ‘long unsigned int’} and ‘int64_t’ {aka ‘long int’} [-Wsign-compare]
+       4218 |     if (expected.size() != newShape.size())
+            |         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp: In member function ‘llvm::LogicalResult mlir::cannir::StrideOp::verify()’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp:5338:18: warning: comparison of unsigned expression in ‘< 0’ is always false [-Wtype-limits]
+       5338 |   if (getIndex() < 0 || getIndex() >= static_cast<int64_t>(leaves.size()))
+            |       ~~~~~~~~~~~^~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp:5338:36: warning: comparison of integer expressions of different signedness: ‘uint64_t’ {aka ‘long unsigned int’} and ‘int64_t’ {aka ‘long int’} [-Wsign-compare]
+       5338 |   if (getIndex() < 0 || getIndex() >= static_cast<int64_t>(leaves.size()))
+            |                         ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp: In member function ‘llvm::LogicalResult mlir::cannir::PhysicalPitchOp::verify()’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp:5346:18: warning: comparison of unsigned expression in ‘< 0’ is always false [-Wtype-limits]
+       5346 |   if (getIndex() < 0 || getIndex() >= static_cast<int64_t>(leaves.size()))
+            |       ~~~~~~~~~~~^~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp:5346:36: warning: comparison of integer expressions of different signedness: ‘uint64_t’ {aka ‘long unsigned int’} and ‘int64_t’ {aka ‘long int’} [-Wsign-compare]
+       5346 |   if (getIndex() < 0 || getIndex() >= static_cast<int64_t>(leaves.size()))
+            |                         ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp: In member function ‘llvm::LogicalResult mlir::cannir::DmaGM2L1Op::verify()’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp:6147:46: warning: comparison of integer expressions of different signedness: ‘long int’ and ‘uint64_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+       6147 |       (declaredCapacity && *declaredCapacity > uint64_t(kL1CapacityBytes - rootAddress)))
+            |                            ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp:6152:48: warning: comparison of integer expressions of different signedness: ‘uint64_t’ {aka ‘long unsigned int’} and ‘long int’ [-Wsign-compare]
+       6152 |   if (declaredCapacity && uint64_t(viewOffset) > *declaredCapacity)
+            |                           ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp: At global scope:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/IR/CANNIROps.cpp:4783:13: warning: ‘bool isRawSoftmaxCastPair(mlir::Type, mlir::Type)’ defined but not used [-Wunused-function]
+       4783 | static bool isRawSoftmaxCastPair(Type src, Type dst) {
+            |             ^~~~~~~~~~~~~~~~~~~~
+      [79/199] Linking CXX static library lib/CANNIR/IR/libCANNIR.a
+      [80/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/ControlFlow/IRControlAdapter.cpp.o
+      [81/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/ControlFlow/ControlValueFacts.cpp.o
+      [82/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/ArrayContracts.cpp.o
+      [83/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/PlanOnChipMemory.cpp.o
+      [84/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/PlanGM2L1DMA.cpp.o
+      In file included from ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/GM2L1IR.h:5,
+                       from ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/PlanGM2L1DMA.cpp:5:
+      ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/OrdinaryDMAIR.h: In function ‘llvm::LogicalResult mlir::cannir::dma::verifyPlan(mlir::Operation*, mlir::ValueRange, mlir::Type, mlir::Value, Storage)’:
+      ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/OrdinaryDMAIR.h:192:24: warning: expected ‘template’ keyword before dependent template name [-Wmissing-template-keyword]
+        192 |   if (cache && (cache->hi < 0 || cache->lo > (vectorLoad ? 6 : 4) || !(cache->residues & cacheModes)))
+            |                        ^~
+      In file included from ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/PlanGM2L1DMA.cpp:6:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/OrdinaryDMA/PlanViewGraph.h: In instantiation of ‘std::optional<mlir::cannir::dma::View> mlir::cannir::dma::ViewParser<Traits>::parse(mlir::Value, bool) [with Traits = mlir::cannir::{anonymous}::L1PlanTraits]’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/OrdinaryDMA/PlanViewGraph.h:527:60:   required from ‘llvm::LogicalResult mlir::cannir::dma::planCopy(mlir::cannir::MemCopyOp, std::optional<View>, std::optional<View>) [with Traits = mlir::cannir::{anonymous}::L1PlanTraits]’
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/PlanGM2L1DMA.cpp:80:45:   required from here
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/OrdinaryDMA/PlanViewGraph.h:327:55: warning: comparison of integer expressions of different signedness: ‘int’ and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+        327 |           if (parent->padAxis >= 0 && parent->padAxis != axis)
+            |                                       ~~~~~~~~~~~~~~~~^~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/OrdinaryDMA/PlanViewGraph.h:345:30: warning: comparison of integer expressions of different signedness: ‘size_t’ {aka ‘long unsigned int’} and ‘int64_t’ {aka ‘long int’} [-Wsign-compare]
+        345 |         for (size_t i = 0; i < shape.size(); ++i) {
+            |                            ~~^~~~~~~~~~~~~~
+      [85/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/PlanGM2UBDMA.cpp.o
+      In file included from ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/GM2UBIR.h:5,
+                       from ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/PlanGM2UBDMA.cpp:5:
+      ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/OrdinaryDMAIR.h: In function ‘llvm::LogicalResult mlir::cannir::dma::verifyPlan(mlir::Operation*, mlir::ValueRange, mlir::Type, mlir::Value, Storage)’:
+      ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/OrdinaryDMAIR.h:192:24: warning: expected ‘template’ keyword before dependent template name [-Wmissing-template-keyword]
+        192 |   if (cache && (cache->hi < 0 || cache->lo > (vectorLoad ? 6 : 4) || !(cache->residues & cacheModes)))
+            |                        ^~
+      In file included from ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/PlanGM2UBDMA.cpp:6:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/OrdinaryDMA/PlanViewGraph.h: In instantiation of ‘std::optional<mlir::cannir::dma::View> mlir::cannir::dma::ViewParser<Traits>::parse(mlir::Value, bool) [with Traits = mlir::cannir::{anonymous}::UBPlanTraits]’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/PlanGM2UBDMA.cpp:64:24:   required from here
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/OrdinaryDMA/PlanViewGraph.h:327:55: warning: comparison of integer expressions of different signedness: ‘int’ and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+        327 |           if (parent->padAxis >= 0 && parent->padAxis != axis)
+            |                                       ~~~~~~~~~~~~~~~~^~~~~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/OrdinaryDMA/PlanViewGraph.h:345:30: warning: comparison of integer expressions of different signedness: ‘size_t’ {aka ‘long unsigned int’} and ‘int64_t’ {aka ‘long int’} [-Wsign-compare]
+        345 |         for (size_t i = 0; i < shape.size(); ++i) {
+            |                            ~~^~~~~~~~~~~~~~
+      [86/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/PlanComputeAccess.cpp.o
+      [87/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/PlanCopyInstructions.cpp.o
+      In file included from ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/PlanCopyInstructions.cpp:5:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/L1L0CopyPlanner.h: In function ‘llvm::FailureOr<mlir::cannir::copyplan::formatted::CubeLoadPlan> mlir::cannir::copyplan::formatted::buildCubeLoadPlan(mlir::Operation*, mlir::Value, mlir::Value, bool, bool, mlir::Location, mlir::PatternRewriter&, int64_t)’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/L1L0CopyPlanner.h:342:8: warning: variable ‘isDynamicStride’ set but not used [-Wunused-but-set-variable]
+        342 |   auto isDynamicStride = [](int64_t stride) {
+            |        ^~~~~~~~~~~~~~~
+      [88/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/NormalizeRingBufferState.cpp.o
+      [89/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/BufferSync.cpp.o
+      [90/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/ResourceIds.cpp.o
+      [91/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/AllocateBufferIds.cpp.o
+      [92/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/NormalizeReinterpret.cpp.o
+      [93/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/AllocateSyncIds.cpp.o
+      [94/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/NormalizeTensorViews.cpp.o
+      [95/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/SimplifyLayoutPass.cpp.o
+      [96/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/InferLayout.cpp.o
+      [97/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/SimplifyScalarRanges.cpp.o
+      [98/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/ResolveViewQueries.cpp.o
+      [99/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/ExpandViewBoundaries.cpp.o
+      [100/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/CopyLowering.cpp.o
+      [101/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/ValidateFormattedGMUses.cpp.o
+      [102/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/FormVfRegions.cpp.o
+      [103/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/UBCopySupport.cpp.o
+      [104/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/LowerUBCopy.cpp.o
+      [105/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/ExpandBufferAccesses.cpp.o
+      [106/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/VerifyBufferSync.cpp.o
+      [107/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/Program.cpp.o
+      [108/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/Dependence.cpp.o
+      [109/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/ResourceLifetime.cpp.o
+      [110/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/Ownership.cpp.o
+      [111/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/TargetVerification.cpp.o
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/Sync/TargetVerification.cpp: In member function ‘bool mlir::cannir::{anonymous}::ValueEquivalence::compare(mlir::Value, mlir::Value, bool)’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/Sync/TargetVerification.cpp:332:10: warning: variable ‘choice’ set but not used [-Wunused-but-set-variable]
+        332 |     auto choice = [](OpResult result) -> std::optional<Choice> {
+            |          ^~~~~~
+      [112/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/CrossCorePlan.cpp.o
+      [113/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/AutoBufferSync.cpp.o
+      [114/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/Synchronize.cpp.o
+      [115/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/CrossCoreVerification.cpp.o
+      [116/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Facts/CorePlacement.cpp.o
+      [117/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/OwnershipPlan.cpp.o
+      [118/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/CheckPlan.cpp.o
+      [119/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/Emit.cpp.o
+      [120/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Sync/Planning.cpp.o
+      [121/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Facts/ScalarGeometry.cpp.o
+      [122/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Facts/ValueFacts.cpp.o
+      [123/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/PrepareLaunchContracts.cpp.o
+      [124/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/Facts/ModuleContracts.cpp.o
+      [125/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/SyncPass/IntraBlockSync.cpp.o
+      [126/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/CANNIRToAsc.cpp.o
+      [127/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/CANNIRToAsc/Access.cpp.o
+      [128/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/CANNIRToAsc/Support.cpp.o
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/CANNIRToAsc/Support.cpp:768:13: warning: ‘bool mlir::cannir::detail::{anonymous}::isDynamicShapeExtent(int64_t)’ defined but not used [-Wunused-function]
+        768 | static bool isDynamicShapeExtent(int64_t extent) {
+            |             ^~~~~~~~~~~~~~~~~~~~
+      [129/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/CANNIRToAsc/EffectVerification.cpp.o
+      [130/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/CANNIRToAsc/simd.cpp.o
+      In file included from ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/GM2UBIR.h:5,
+                       from ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/CANNIRToAsc/simd.cpp:16:
+      ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/OrdinaryDMAIR.h: In function ‘llvm::LogicalResult mlir::cannir::dma::verifyPlan(mlir::Operation*, mlir::ValueRange, mlir::Type, mlir::Value, Storage)’:
+      ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/OrdinaryDMAIR.h:192:24: warning: expected ‘template’ keyword before dependent template name [-Wmissing-template-keyword]
+        192 |   if (cache && (cache->hi < 0 || cache->lo > (vectorLoad ? 6 : 4) || !(cache->residues & cacheModes)))
+            |                        ^~
+      [131/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/CANNIRToAsc/Cube.cpp.o
+      In file included from ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/GM2L1IR.h:5,
+                       from ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/CANNIRToAsc/Cube.cpp:16:
+      ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/OrdinaryDMAIR.h: In function ‘llvm::LogicalResult mlir::cannir::dma::verifyPlan(mlir::Operation*, mlir::ValueRange, mlir::Type, mlir::Value, Storage)’:
+      ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/OrdinaryDMAIR.h:192:24: warning: expected ‘template’ keyword before dependent template name [-Wmissing-template-keyword]
+        192 |   if (cache && (cache->hi < 0 || cache->lo > (vectorLoad ? 6 : 4) || !(cache->residues & cacheModes)))
+            |                        ^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/CANNIRToAsc/Cube.cpp: In member function ‘virtual llvm::LogicalResult mlir::cannir::detail::LowerConvFmapGM2L1::matchAndRewrite(mlir::cannir::ConvFmapGM2L1Op, mlir::PatternRewriter&) const’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/CANNIRToAsc/Cube.cpp:845:12: warning: variable ‘copy’ set but not used [-Wunused-but-set-variable]
+        845 |       auto copy = rewriter.create<asccube::CopyGM2L1Op>(
+            |            ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/CANNIRToAsc/Cube.cpp: In member function ‘virtual llvm::LogicalResult mlir::cannir::detail::LowerConvStoreGM::matchAndRewrite(mlir::cannir::ConvStoreGMOp, mlir::PatternRewriter&) const’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Transforms/CANNIRToAsc/Cube.cpp:965:12: warning: variable ‘copy’ set but not used [-Wunused-but-set-variable]
+        965 |       auto copy = rewriter.create<asccube::CopyL0C2GMOp>(
+            |            ^~~~
+      [132/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/CANNIRToAsc/TensorControl.cpp.o
+      [133/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/CANNIRToAsc/Control.cpp.o
+      [134/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/PlanCubeState.cpp.o
+      [135/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/CANNIRHostOps.cpp.o
+      [136/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/CANNIRToAsc/vf.cpp.o
+      [137/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/LegalizeTwoAddress.cpp.o
+      [138/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/InsertDebugAscSync.cpp.o
+      [139/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/ChipCapability.cpp.o
+      [140/199] Building CXX object lib/CANNIR/Transforms/CMakeFiles/obj.CANNIRTransforms.dir/SplitMixKernel.cpp.o
+      [141/199] Linking CXX static library lib/CANNIR/Transforms/libCANNIRTransforms.a
+      [142/199] Building CXX object lib/CANNIR-c/CMakeFiles/obj.CANNIRCAPI.dir/Dialects.cpp.o
+      [143/199] Building CXX object lib/CANNIR-c/CMakeFiles/obj.CANNIRCAPI.dir/Registration.cpp.o
+      [144/199] Building CXX object lib/CANNIR-c/CMakeFiles/obj.CANNIRCAPI.dir/Translation.cpp.o
+      [145/199] Building CXX object lib/CANNIR-c/CMakeFiles/obj.CANNIRCAPI.dir/Analysis.cpp.o
+      [146/199] Building CXX object lib/Bindings/Python/CMakeFiles/CANNBOTDSLHostRuntime.dir/HostRuntimeExtension.cpp.o
+      [147/199] Building CXX object lib/Bindings/Python/CMakeFiles/CANNBOTDSLHostRuntime.dir/HostRuntimeTensorList.cpp.o
+      [148/199] Building CXX object lib/Bindings/Python/CMakeFiles/CANNBOTDSLHostRuntime.dir/HostRuntimeProfiler.cpp.o
+      [149/199] Building CXX object lib/CANNIR/Translate/CMakeFiles/obj.CANNIRTranslate.dir/TranslateToAscendC.cpp.o
+      In file included from ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/GM2UBIR.h:5,
+                       from ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:27:
+      ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/OrdinaryDMAIR.h: In function ‘llvm::LogicalResult mlir::cannir::dma::verifyPlan(mlir::Operation*, mlir::ValueRange, mlir::Type, mlir::Value, Storage)’:
+      ${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/Support/OrdinaryDMAIR.h:192:24: warning: expected ‘template’ keyword before dependent template name [-Wmissing-template-keyword]
+        192 |   if (cache && (cache->hi < 0 || cache->lo > (vectorLoad ? 6 : 4) || !(cache->residues & cacheModes)))
+            |                        ^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp: In member function ‘llvm::LogicalResult {anonymous}::AscendCEmitter::emitOp(mlir::Operation*)’:
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5213:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5213 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5218:5: note: in expansion of macro ‘EMIT_SIMT_BINARY’
+       5218 |     EMIT_SIMT_BINARY(PowOp, "powf", "hpow", "pow")
+            |     ^~~~~~~~~~~~~~~~
+      In file included from ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/AttributeSupport.h:18,
+                       from ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Attributes.h:12,
+                       from ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/OperationSupport.h:17,
+                       from ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Dialect.h:17,
+                       from ${WORKSPACE}/cannbot-dsl-dev/include/AscDataType/IR/AscDataTypeDialect.h:12,
+                       from ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:11:
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5213:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5213 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5219:5: note: in expansion of macro ‘EMIT_SIMT_BINARY’
+       5219 |     EMIT_SIMT_BINARY(Atan2Op, "atan2f", "hatan2", "atan2")
+            |     ^~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5213:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5213 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5220:5: note: in expansion of macro ‘EMIT_SIMT_BINARY’
+       5220 |     EMIT_SIMT_BINARY(FminOp, "fminf", "hfmin", "fmin")
+            |     ^~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5213:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5213 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5221:5: note: in expansion of macro ‘EMIT_SIMT_BINARY’
+       5221 |     EMIT_SIMT_BINARY(FmaxOp, "fmaxf", "hfmax", "fmax")
+            |     ^~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5213:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5213 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5222:5: note: in expansion of macro ‘EMIT_SIMT_BINARY’
+       5222 |     EMIT_SIMT_BINARY(FmodOp, "fmodf", "hfmod", "fmod")
+            |     ^~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5425:56: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5425 |         if (simt.getResult().getType().isa<Float32Type>())
+            |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5520:55: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5520 |       if (!simt.getResult().getType().isa<Float32Type>()) {
+            |            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5594:55: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5594 |       if (!simt.getResult().getType().isa<Float32Type>() && function == "fmaf") function = "__hfma";
+            |            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5713:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5713 |     EMIT_SIMT_UNARY(SqrtOp, "sqrtf", "hsqrt", "sqrt")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5714:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5714 |     EMIT_SIMT_UNARY(RsqrtOp, "rsqrtf", "hrsqrt", "rsqrt")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5715:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5715 |     EMIT_SIMT_UNARY(ExpOp, "expf", "hexp", "exp")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5716:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5716 |     EMIT_SIMT_UNARY(LogOp, "logf", "hlog", "log")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5717:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5717 |     EMIT_SIMT_UNARY(AbsOp, "fabsf", "__habs", "abs")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5718:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5718 |     EMIT_SIMT_UNARY(SinOp, "sinf", "hsin", "sin")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5719:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5719 |     EMIT_SIMT_UNARY(CosOp, "cosf", "hcos", "cos")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5720:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5720 |     EMIT_SIMT_UNARY(TanOp, "tanf", "htan", "tan")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5721:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5721 |     EMIT_SIMT_UNARY(TanhOp, "tanhf", "htanh", "tanh")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5722:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5722 |     EMIT_SIMT_UNARY(FloorOp, "floorf", "hfloor", "floor")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5723:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5723 |     EMIT_SIMT_UNARY(CeilOp, "ceilf", "hceil", "ceil")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5724:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5724 |     EMIT_SIMT_UNARY(TruncOp, "truncf", "htrunc", "trunc")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5725:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5725 |     EMIT_SIMT_UNARY(Exp2Op, "exp2f", "hexp2", "exp2")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5726:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5726 |     EMIT_SIMT_UNARY(Exp10Op, "exp10f", "hexp10", "exp10")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5727:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5727 |     EMIT_SIMT_UNARY(Log2Op, "log2f", "hlog2", "log2")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5707:66: warning: ‘bool mlir::Type::isa() const [with Tys = {mlir::Float32Type}]’ is deprecated: Use mlir::isa<U>() instead [-Wdeprecated-declarations]
+       5707 |     const char* api = simt.getResult().getType().isa<Float32Type>() ? API : HAPI;    \
+            |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      ${WORKSPACE}/cannbot-dsl-dev/lib/CANNIR/Translate/TranslateToAscendC.cpp:5728:5: note: in expansion of macro ‘EMIT_SIMT_UNARY’
+       5728 |     EMIT_SIMT_UNARY(Log10Op, "log10f", "hlog10", "log10")
+            |     ^~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir/IR/Types.h:326:6: note: declared here
+        326 | bool Type::isa() const {
+            |      ^~~~
+      [150/199] Linking CXX static library lib/CANNIR/Translate/libCANNIRTranslate.a
+      [151/199] Linking CXX shared library python_packages/cannbotdsl/_mlir/_mlir_libs/libCANNBOTDSLPythonCAPI.so
+      [152/199] Building CXX object lib/Bindings/Python/CMakeFiles/CANNBOTDSLWheel.extension._cannir_runtime.dso.dir/CANNIRRuntimeExtension.cpp.o
+      [153/199] Building CXX object lib/Bindings/Python/CMakeFiles/CANNBOTDSLWheel.extension._cannir.dso.dir/CANNIRPythonExtension.cpp.o
+      [154/199] Building CXX object lib/Bindings/Python/CMakeFiles/CANNBOTDSLWheel.extension._mlir.dso.dir${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/MainModule.cpp.o
+      [155/199] Building CXX object lib/Bindings/Python/CMakeFiles/CANNBOTDSLWheel.extension._mlir.dso.dir${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAffine.cpp.o
+      [156/199] Building CXX object lib/Bindings/Python/CMakeFiles/CANNBOTDSLWheel.extension._mlir.dso.dir${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRCore.cpp.o
+      FAILED: [code=1] lib/Bindings/Python/CMakeFiles/CANNBOTDSLWheel.extension._mlir.dso.dir${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRCore.cpp.o
+      /usr/lib64/ccache/c++ -DBSPUB_NPU_DATA_TYPE -DCANNBOTDSLWheel_extension__mlir_dso_EXPORTS -DMLIR_PYTHON_PACKAGE_PREFIX=cannbotdsl._mlir. -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -I${WORKSPACE}/issue75-env/third_party/llvm-19/llvm/include -I${WORKSPACE}/issue75-env/third_party/lib_cache/cannbot-llvm-19.1.7/12eac5a5d677df2f0dac829034f9588837885c841c4bf15fec3f2b68c8a6b780/build/include -I${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include -I${WORKSPACE}/issue75-env/third_party/lib_cache/cannbot-llvm-19.1.7/12eac5a5d677df2f0dac829034f9588837885c841c4bf15fec3f2b68c8a6b780/build/tools/mlir/include -I${WORKSPACE}/cannbot-dsl-dev/include -I${WORKSPACE}/cannbot-dsl-dev/build/wheel-release-33c2e5f4/include -I${WORKSPACE}/cannbot-dsl-dev/include/CANNIR/IR -I${WORKSPACE}/cannbot-dsl-dev/include/AscVec/IR -I${WORKSPACE}/cannbot-dsl-dev/include/AscCube/IR -I${WORKSPACE}/cannbot-dsl-dev/include/AscScalar/IR -I${WORKSPACE}/cannbot-dsl-dev/include/AscSimt/IR -isystem ${USER_HOME}/miniconda3/include/python3.12 -isystem ${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/pybind11/include -D_GLIBCXX_USE_CXX11_ABI=1 -DBSPUB_NPU_DATA_TYPE -fPIC -fno-semantic-interposition -fvisibility-inlines-hidden -Werror=date-time -fno-lifetime-dse -Wall -Wextra -Wno-unused-parameter -Wwrite-strings -Wcast-qual -Wno-missing-field-initializers -Wimplicit-fallthrough -Wno-nonnull -Wno-class-memaccess -Wno-redundant-move -Wno-pessimizing-move -Wno-noexcept-type -Wdelete-non-virtual-dtor -Wsuggest-override -Wno-comment -Wno-misleading-indentation -Wctad-maybe-unsupported -fdiagnostics-color -ffunction-sections -fdata-sections -O3 -DNDEBUG -std=c++17 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden   -DBSPUB_NPU_DATA_TYPE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -ffile-prefix-map=${WORKSPACE}/cannbot-dsl-dev=. -ffile-prefix-map=${WORKSPACE}/cannbot-dsl-dev/build/wheel-release-33c2e5f4=. -fdebug-prefix-map=${WORKSPACE}/cannbot-dsl-dev=. -fdebug-prefix-map=${WORKSPACE}/cannbot-dsl-dev/build/wheel-release-33c2e5f4=. -ffile-prefix-map=${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/pybind11/include=/python-headers -fdebug-prefix-map=${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/pybind11/include=/python-headers -ffile-prefix-map=${USER_HOME}/miniconda3/include/python3.12=/python-headers -fdebug-prefix-map=${USER_HOME}/miniconda3/include/python3.12=/python-headers -ffile-prefix-map=${WORKSPACE}/issue75-env/third_party/llvm-19/llvm/include=/llvm-sdk -fdebug-prefix-map=${WORKSPACE}/issue75-env/third_party/llvm-19/llvm/include=/llvm-sdk -ffile-prefix-map=${WORKSPACE}/issue75-env/third_party/lib_cache/cannbot-llvm-19.1.7/12eac5a5d677df2f0dac829034f9588837885c841c4bf15fec3f2b68c8a6b780/build/include=/llvm-sdk -fdebug-prefix-map=${WORKSPACE}/issue75-env/third_party/lib_cache/cannbot-llvm-19.1.7/12eac5a5d677df2f0dac829034f9588837885c841c4bf15fec3f2b68c8a6b780/build/include=/llvm-sdk -ffile-prefix-map=${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include=/llvm-sdk -fdebug-prefix-map=${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include=/llvm-sdk -ffile-prefix-map=${WORKSPACE}/issue75-env/third_party/lib_cache/cannbot-llvm-19.1.7/12eac5a5d677df2f0dac829034f9588837885c841c4bf15fec3f2b68c8a6b780/build/tools/mlir/include=/llvm-sdk -fdebug-prefix-map=${WORKSPACE}/issue75-env/third_party/lib_cache/cannbot-llvm-19.1.7/12eac5a5d677df2f0dac829034f9588837885c841c4bf15fec3f2b68c8a6b780/build/tools/mlir/include=/llvm-sdk -ffile-prefix-map=${WORKSPACE}/issue75-env/third_party/lib_cache/cannbot-llvm-19.1.7/12eac5a5d677df2f0dac829034f9588837885c841c4bf15fec3f2b68c8a6b780/build=/llvm-sdk -fdebug-prefix-map=${WORKSPACE}/issue75-env/third_party/lib_cache/cannbot-llvm-19.1.7/12eac5a5d677df2f0dac829034f9588837885c841c4bf15fec3f2b68c8a6b780/build=/llvm-sdk -ffile-prefix-map=${WORKSPACE}/issue75-env/third_party/llvm-19=/llvm-sdk -fdebug-prefix-map=${WORKSPACE}/issue75-env/third_party/llvm-19=/llvm-sdk -frtti -fexceptions -MD -MT lib/Bindings/Python/CMakeFiles/CANNBOTDSLWheel.extension._mlir.dso.dir${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRCore.cpp.o -MF lib/Bindings/Python/CMakeFiles/CANNBOTDSLWheel.extension._mlir.dso.dir${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRCore.cpp.o.d -o lib/Bindings/Python/CMakeFiles/CANNBOTDSLWheel.extension._mlir.dso.dir${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRCore.cpp.o -c ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRCore.cpp
+      In file included from ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/PybindUtils.h:17,
+                       from ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/Globals.h:12,
+                       from ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:17,
+                       from ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRCore.cpp:9:
+      ${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/pybind11/include/pybind11/pybind11.h: In instantiation of ‘pybind11::class_<type_, options>& pybind11::class_<type_, options>::def_property_static(const char*, const pybind11::cpp_function&, const pybind11::cpp_function&, const Extra& ...) [with Extra = {pybind11::is_method, pybind11::return_value_policy, pybind11::keep_alive<0, 1>, char [63]}; type_ = mlir::python::PyNamedAttribute; options = {}]’:
+      ${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/pybind11/include/pybind11/pybind11.h:2672:35:   required from ‘pybind11::class_<type_, options>& pybind11::class_<type_, options>::def_property(const char*, const pybind11::cpp_function&, const pybind11::cpp_function&, const Extra& ...) [with Extra = {pybind11::return_value_policy, pybind11::keep_alive<0, 1>, char [63]}; type_ = mlir::python::PyNamedAttribute; options = {}]’
+      ${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/pybind11/include/pybind11/pybind11.h:2651:28:   required from ‘pybind11::class_<type_, options>& pybind11::class_<type_, options>::def_property(const char*, const Getter&, const Setter&, const Extra& ...) [with Getter = pybind11::cpp_function; Setter = std::nullptr_t; Extra = {pybind11::return_value_policy, pybind11::keep_alive<0, 1>, char [63]}; type_ = mlir::python::PyNamedAttribute; options = {}]’
+      ${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/pybind11/include/pybind11/pybind11.h:2628:28:   required from ‘pybind11::class_<type_, options>& pybind11::class_<type_, options>::def_property_readonly(const char*, const pybind11::cpp_function&, const Extra& ...) [with Extra = {pybind11::return_value_policy, pybind11::keep_alive<0, 1>, char [63]}; type_ = mlir::python::PyNamedAttribute; options = {}]’
+      ${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/pybind11/include/pybind11/pybind11.h:2618:37:   required from ‘pybind11::class_<type_, options>& pybind11::class_<type_, options>::def_property_readonly(const char*, const Getter&, const Extra& ...) [with Getter = mlir::python::populateIRCore(pybind11::module&)::<lambda(mlir::python::PyNamedAttribute&)>; Extra = {pybind11::keep_alive<0, 1>, char [63]}; type_ = mlir::python::PyNamedAttribute; options = {}]’
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRCore.cpp:3516:29:   required from here
+      ${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/pybind11/include/pybind11/pybind11.h:2696:25: error: static assertion failed: def_property family does not currently support keep_alive. Use a py::cpp_function instead.
+       2696 |         static_assert(0 == detail::constexpr_sum(detail::is_keep_alive<Extra>::value...),
+            |                       ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/pybind11/include/pybind11/pybind11.h:2696:25: note: the comparison reduces to ‘(0 == 1)’
+      [157/199] Building CXX object lib/Bindings/Python/CMakeFiles/CANNBOTDSLWheel.extension._mlir.dso.dir${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAttributes.cpp.o
+      In file included from ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAttributes.cpp:13:
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h: In instantiation of ‘static void mlir::python::PyConcreteAttribute<DerivedTy, BaseTy>::bind(pybind11::module&) [with DerivedTy = {anonymous}::PyAffineMapAttribute; BaseTy = mlir::python::PyAttribute; pybind11::module = pybind11::module_]’:
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAttributes.cpp:1428:29:   required from here
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1094:26: warning: the address of ‘MlirTypeID mlirAffineMapAttrGetTypeID()’ will never be NULL [-Waddress]
+       1094 |           if (DerivedTy::getTypeIdFunction)
+            |                          ^~~~~~~~~~~~~~~~~
+      In file included from ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAttributes.cpp:20:
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:49:31: note: ‘MlirTypeID mlirAffineMapAttrGetTypeID()’ declared here
+         49 | MLIR_CAPI_EXPORTED MlirTypeID mlirAffineMapAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1112:20: warning: the address of ‘MlirTypeID mlirAffineMapAttrGetTypeID()’ will never be NULL [-Waddress]
+       1112 |     if (DerivedTy::getTypeIdFunction) {
+            |                    ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:49:31: note: ‘MlirTypeID mlirAffineMapAttrGetTypeID()’ declared here
+         49 | MLIR_CAPI_EXPORTED MlirTypeID mlirAffineMapAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h: In instantiation of ‘static void mlir::python::PyConcreteAttribute<DerivedTy, BaseTy>::bind(pybind11::module&) [with DerivedTy = {anonymous}::PyArrayAttribute; BaseTy = mlir::python::PyAttribute; pybind11::module = pybind11::module_]’:
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAttributes.cpp:1448:25:   required from here
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1094:26: warning: the address of ‘MlirTypeID mlirArrayAttrGetTypeID()’ will never be NULL [-Waddress]
+       1094 |           if (DerivedTy::getTypeIdFunction)
+            |                          ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:71:31: note: ‘MlirTypeID mlirArrayAttrGetTypeID()’ declared here
+         71 | MLIR_CAPI_EXPORTED MlirTypeID mlirArrayAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1112:20: warning: the address of ‘MlirTypeID mlirArrayAttrGetTypeID()’ will never be NULL [-Waddress]
+       1112 |     if (DerivedTy::getTypeIdFunction) {
+            |                    ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:71:31: note: ‘MlirTypeID mlirArrayAttrGetTypeID()’ declared here
+         71 | MLIR_CAPI_EXPORTED MlirTypeID mlirArrayAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h: In instantiation of ‘static void mlir::python::PyConcreteAttribute<DerivedTy, BaseTy>::bind(pybind11::module&) [with DerivedTy = {anonymous}::PyDictAttribute; BaseTy = mlir::python::PyAttribute; pybind11::module = pybind11::module_]’:
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAttributes.cpp:1459:24:   required from here
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1094:26: warning: the address of ‘MlirTypeID mlirDictionaryAttrGetTypeID()’ will never be NULL [-Waddress]
+       1094 |           if (DerivedTy::getTypeIdFunction)
+            |                          ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:99:31: note: ‘MlirTypeID mlirDictionaryAttrGetTypeID()’ declared here
+         99 | MLIR_CAPI_EXPORTED MlirTypeID mlirDictionaryAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1112:20: warning: the address of ‘MlirTypeID mlirDictionaryAttrGetTypeID()’ will never be NULL [-Waddress]
+       1112 |     if (DerivedTy::getTypeIdFunction) {
+            |                    ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:99:31: note: ‘MlirTypeID mlirDictionaryAttrGetTypeID()’ declared here
+         99 | MLIR_CAPI_EXPORTED MlirTypeID mlirDictionaryAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h: In instantiation of ‘static void mlir::python::PyConcreteAttribute<DerivedTy, BaseTy>::bind(pybind11::module&) [with DerivedTy = {anonymous}::PyOpaqueAttribute; BaseTy = mlir::python::PyAttribute; pybind11::module = pybind11::module_]’:
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAttributes.cpp:1466:26:   required from here
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1094:26: warning: the address of ‘MlirTypeID mlirOpaqueAttrGetTypeID()’ will never be NULL [-Waddress]
+       1094 |           if (DerivedTy::getTypeIdFunction)
+            |                          ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:207:31: note: ‘MlirTypeID mlirOpaqueAttrGetTypeID()’ declared here
+        207 | MLIR_CAPI_EXPORTED MlirTypeID mlirOpaqueAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1112:20: warning: the address of ‘MlirTypeID mlirOpaqueAttrGetTypeID()’ will never be NULL [-Waddress]
+       1112 |     if (DerivedTy::getTypeIdFunction) {
+            |                    ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:207:31: note: ‘MlirTypeID mlirOpaqueAttrGetTypeID()’ declared here
+        207 | MLIR_CAPI_EXPORTED MlirTypeID mlirOpaqueAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h: In instantiation of ‘static void mlir::python::PyConcreteAttribute<DerivedTy, BaseTy>::bind(pybind11::module&) [with DerivedTy = {anonymous}::PyFloatAttribute; BaseTy = mlir::python::PyAttribute; pybind11::module = pybind11::module_]’:
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAttributes.cpp:1467:25:   required from here
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1094:26: warning: the address of ‘MlirTypeID mlirFloatAttrGetTypeID()’ will never be NULL [-Waddress]
+       1094 |           if (DerivedTy::getTypeIdFunction)
+            |                          ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:128:31: note: ‘MlirTypeID mlirFloatAttrGetTypeID()’ declared here
+        128 | MLIR_CAPI_EXPORTED MlirTypeID mlirFloatAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1112:20: warning: the address of ‘MlirTypeID mlirFloatAttrGetTypeID()’ will never be NULL [-Waddress]
+       1112 |     if (DerivedTy::getTypeIdFunction) {
+            |                    ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:128:31: note: ‘MlirTypeID mlirFloatAttrGetTypeID()’ declared here
+        128 | MLIR_CAPI_EXPORTED MlirTypeID mlirFloatAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h: In instantiation of ‘static void mlir::python::PyConcreteAttribute<DerivedTy, BaseTy>::bind(pybind11::module&) [with DerivedTy = {anonymous}::PyStringAttribute; BaseTy = mlir::python::PyAttribute; pybind11::module = pybind11::module_]’:
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAttributes.cpp:1469:26:   required from here
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1094:26: warning: the address of ‘MlirTypeID mlirStringAttrGetTypeID()’ will never be NULL [-Waddress]
+       1094 |           if (DerivedTy::getTypeIdFunction)
+            |                          ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:231:31: note: ‘MlirTypeID mlirStringAttrGetTypeID()’ declared here
+        231 | MLIR_CAPI_EXPORTED MlirTypeID mlirStringAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1112:20: warning: the address of ‘MlirTypeID mlirStringAttrGetTypeID()’ will never be NULL [-Waddress]
+       1112 |     if (DerivedTy::getTypeIdFunction) {
+            |                    ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:231:31: note: ‘MlirTypeID mlirStringAttrGetTypeID()’ declared here
+        231 | MLIR_CAPI_EXPORTED MlirTypeID mlirStringAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h: In instantiation of ‘static void mlir::python::PyConcreteAttribute<DerivedTy, BaseTy>::bind(pybind11::module&) [with DerivedTy = {anonymous}::PyTypeAttribute; BaseTy = mlir::python::PyAttribute; pybind11::module = pybind11::module_]’:
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAttributes.cpp:1470:24:   required from here
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1094:26: warning: the address of ‘MlirTypeID mlirTypeAttrGetTypeID()’ will never be NULL [-Waddress]
+       1094 |           if (DerivedTy::getTypeIdFunction)
+            |                          ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:305:31: note: ‘MlirTypeID mlirTypeAttrGetTypeID()’ declared here
+        305 | MLIR_CAPI_EXPORTED MlirTypeID mlirTypeAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1112:20: warning: the address of ‘MlirTypeID mlirTypeAttrGetTypeID()’ will never be NULL [-Waddress]
+       1112 |     if (DerivedTy::getTypeIdFunction) {
+            |                    ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:305:31: note: ‘MlirTypeID mlirTypeAttrGetTypeID()’ declared here
+        305 | MLIR_CAPI_EXPORTED MlirTypeID mlirTypeAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h: In instantiation of ‘static void mlir::python::PyConcreteAttribute<DerivedTy, BaseTy>::bind(pybind11::module&) [with DerivedTy = {anonymous}::PyUnitAttribute; BaseTy = mlir::python::PyAttribute; pybind11::module = pybind11::module_]’:
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAttributes.cpp:1474:24:   required from here
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1094:26: warning: the address of ‘MlirTypeID mlirUnitAttrGetTypeID()’ will never be NULL [-Waddress]
+       1094 |           if (DerivedTy::getTypeIdFunction)
+            |                          ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:318:31: note: ‘MlirTypeID mlirUnitAttrGetTypeID()’ declared here
+        318 | MLIR_CAPI_EXPORTED MlirTypeID mlirUnitAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1112:20: warning: the address of ‘MlirTypeID mlirUnitAttrGetTypeID()’ will never be NULL [-Waddress]
+       1112 |     if (DerivedTy::getTypeIdFunction) {
+            |                    ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:318:31: note: ‘MlirTypeID mlirUnitAttrGetTypeID()’ declared here
+        318 | MLIR_CAPI_EXPORTED MlirTypeID mlirUnitAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h: In instantiation of ‘static void mlir::python::PyConcreteAttribute<DerivedTy, BaseTy>::bind(pybind11::module&) [with DerivedTy = {anonymous}::PyStridedLayoutAttribute; BaseTy = mlir::python::PyAttribute; pybind11::module = pybind11::module_]’:
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRAttributes.cpp:1476:33:   required from here
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1094:26: warning: the address of ‘MlirTypeID mlirStridedLayoutAttrGetTypeID()’ will never be NULL [-Waddress]
+       1094 |           if (DerivedTy::getTypeIdFunction)
+            |                          ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:701:31: note: ‘MlirTypeID mlirStridedLayoutAttrGetTypeID()’ declared here
+        701 | MLIR_CAPI_EXPORTED MlirTypeID mlirStridedLayoutAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/lib/Bindings/Python/IRModule.h:1112:20: warning: the address of ‘MlirTypeID mlirStridedLayoutAttrGetTypeID()’ will never be NULL [-Waddress]
+       1112 |     if (DerivedTy::getTypeIdFunction) {
+            |                    ^~~~~~~~~~~~~~~~~
+      ${WORKSPACE}/issue75-env/third_party/llvm-19/mlir/include/mlir-c/BuiltinAttributes.h:701:31: note: ‘MlirTypeID mlirStridedLayoutAttrGetTypeID()’ declared here
+        701 | MLIR_CAPI_EXPORTED MlirTypeID mlirStridedLayoutAttrGetTypeID(void);
+            |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ninja: build stopped: subcommand failed.
+      Traceback (most recent call last):
+        File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 389, in <module>
+          main()
+        File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 373, in main
+          json_out["return_val"] = hook(**hook_input["kwargs"])
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 280, in build_wheel
+          return _build_backend().build_wheel(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/build_meta.py", line 438, in build_wheel
+          return _build(['bdist_wheel', '--dist-info-dir', str(metadata_directory)])
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/build_meta.py", line 426, in _build
+          return self._build_with_temp_dir(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/build_meta.py", line 407, in _build_with_temp_dir
+          self.run_setup()
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/build_meta.py", line 320, in run_setup
+          exec(code, locals())
+        File "<string>", line 1, in <module>
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/__init__.py", line 117, in setup
+          return distutils.core.setup(**attrs)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/_distutils/core.py", line 186, in setup
+          return run_commands(dist)
+                 ^^^^^^^^^^^^^^^^^^
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/_distutils/core.py", line 202, in run_commands
+          dist.run_commands()
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1002, in run_commands
+          self.run_command(cmd)
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/dist.py", line 1104, in run_command
+          super().run_command(command)
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1021, in run_command
+          cmd_obj.run()
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/command/bdist_wheel.py", line 370, in run
+          self.run_command("build")
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/_distutils/cmd.py", line 357, in run_command
+          self.distribution.run_command(command)
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/dist.py", line 1104, in run_command
+          super().run_command(command)
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1021, in run_command
+          cmd_obj.run()
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/_distutils/command/build.py", line 135, in run
+          self.run_command(cmd_name)
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/_distutils/cmd.py", line 357, in run_command
+          self.distribution.run_command(command)
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/dist.py", line 1104, in run_command
+          super().run_command(command)
+        File "${WORKSPACE}/issue75-env/pypto/.venv/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1021, in run_command
+          cmd_obj.run()
+        File "${WORKSPACE}/cannbot-dsl-dev/tools/wheel/setuptools_backend.py", line 153, in run
+          subprocess.run(["cmake", "--build", str(directory), "--config", mode], check=True)
+        File "${USER_HOME}/miniconda3/lib/python3.12/subprocess.py", line 571, in run
+          raise CalledProcessError(retcode, process.args,
+      subprocess.CalledProcessError: Command '['cmake', '--build', '${WORKSPACE}/cannbot-dsl-dev/build/wheel-release-33c2e5f4', '--config', 'Release']' returned non-zero exit status 1.
+      [end of output]
+
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+  ERROR: Failed building wheel for cannbot-dsl
+Failed to build cannbot-dsl
+
+[notice] A new release of pip is available: 25.0.1 -> 26.2.2
+[notice] To update, run: python -m pip install --upgrade pip
+ERROR: Failed to build one or more wheels

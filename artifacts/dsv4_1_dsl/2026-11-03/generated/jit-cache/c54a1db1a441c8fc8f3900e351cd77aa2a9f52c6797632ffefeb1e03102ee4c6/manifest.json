@@ -1,0 +1,299 @@
+{
+  "arch": "dav-3510",
+  "calling_convention": "device_function",
+  "completion": {
+    "ddr_barrier": true,
+    "local_pipelines_drained": true,
+    "scalar_gm_flushed": true,
+    "wait_for_all_participants": false
+  },
+  "contract": {
+    "dimensions": [
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_a_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_b_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_out_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "rows"
+      }
+    ],
+    "host_abi_version": 9,
+    "parameters": [
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f16",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "dimension",
+              "name": "rows"
+            },
+            {
+              "kind": "constant",
+              "value": 64
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_a_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "a",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f16",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 64
+            },
+            {
+              "kind": "constant",
+              "value": 64
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_b_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "b",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "dimension",
+              "name": "rows"
+            },
+            {
+              "kind": "constant",
+              "value": 64
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_out_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "out",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      }
+    ],
+    "schema_version": 6
+  },
+  "core_type": "aic",
+  "loading": {
+    "host_runtime": false,
+    "text_only": "requires_binary_validation"
+  },
+  "parameters": [
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_half_2d_Device_ds_ds",
+      "dtype": "f16",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "shape",
+          "slot": 0
+        },
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "half",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 0,
+      "name": "a",
+      "shape": [
+        -1,
+        64
+      ],
+      "size": 24,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_half_2d_Device_ss_ds",
+      "dtype": "f16",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "half",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 1,
+      "name": "b",
+      "shape": [
+        64,
+        64
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "write",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_2d_Device_ds_ds",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "shape",
+          "slot": 0
+        },
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 2,
+      "name": "out",
+      "shape": [
+        -1,
+        64
+      ],
+      "size": 24,
+      "stride": [
+        -1,
+        1
+      ]
+    }
+  ],
+  "participants": {
+    "aic": 1,
+    "aiv": 0
+  },
+  "resources": {
+    "allocations": [
+      {
+        "byte_offset": 0,
+        "bytes": 16384,
+        "core": "aic",
+        "memory_space": 5
+      },
+      {
+        "byte_offset": 0,
+        "bytes": 8192,
+        "core": "aic",
+        "memory_space": 3
+      },
+      {
+        "byte_offset": 0,
+        "bytes": 8192,
+        "core": "aic",
+        "memory_space": 4
+      },
+      {
+        "byte_offset": 8192,
+        "bytes": 8192,
+        "core": "aic",
+        "memory_space": 2
+      },
+      {
+        "byte_offset": 0,
+        "bytes": 8192,
+        "core": "aic",
+        "memory_space": 2
+      }
+    ],
+    "exclusive_local_memory": true,
+    "exclusive_sync_resources": true,
+    "implicit_workspace_bytes": 0,
+    "subblock_id": "physical_aiv_lane"
+  },
+  "schema_version": 1,
+  "source_sha256": "4bc636b502ef852ddbd94fbe79543c187d92e82d8f856dd99a59694e630edb23",
+  "state": {
+    "clobbered": [
+      "DMA",
+      "padding",
+      "quantization",
+      "mask",
+      "local_memory",
+      "sync_resources"
+    ],
+    "entry": "asc_init_and_default_dma_state_atomic_none",
+    "exit_atomic": "none",
+    "preserved": [
+      "CTRL"
+    ]
+  },
+  "symbol": "kernel_cube_matmul"
+}

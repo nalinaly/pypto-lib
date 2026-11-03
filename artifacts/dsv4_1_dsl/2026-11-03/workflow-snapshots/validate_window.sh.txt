@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+runner=${WORKSPACE}/artifacts/dsv41-semantic-review/run_case.sh
+bash "$runner" models/deepseek_v4_1_flash/window_kv_dsl.py --replay --tokens 72 --num-tokens 71 --pages 13 --seed 3
+bash "$runner" models/deepseek_v4_1_flash/window_kv_dsl.py --num-tokens 0
+bash "$runner" models/deepseek_v4_1_flash/window_kv_dsl.py --tokens 1 --pages 1

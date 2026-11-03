@@ -24,7 +24,7 @@ from sparse_attention import attend_packed
 from decode_indexer import decode_c2a_indexer
 from o_proj import o_proj
 
-# model config
+# 模型配置
 LOCAL_H = M.num_attention_heads
 LOCAL_O_GROUPS = M.o_groups
 LOCAL_O_WIDTH = M.o_groups * M.o_lora_rank
@@ -356,7 +356,8 @@ def golden_c2a(tensors, mode="full"):
     from sparse_attention import golden_selected_attention, KEY_TILE, PACKED_KEY_TILE
     from o_proj import golden_o_proj
     from functools import partial
-    from quant import quantize_mxfp8_cache, quantize_mxfp4_cache, dequantize_mxfp4_cache, unpack_bf16_nz
+    from quant import quantize_mxfp4_cache, dequantize_mxfp4_cache, unpack_bf16_nz
+    from window_kv_dsl import quantize_window_kv
     from utils import _publish_quantized_cache
 
     t = dict(tensors)
@@ -381,7 +382,7 @@ def golden_c2a(tensors, mode="full"):
 
     # Sliding-window cache publication.
     window_cache, window_cache_scale = _publish_quantized_cache(
-        t["window_cache"], t["window_cache_scale"], kv, t["window_slots"], quantize_mxfp8_cache,
+        t["window_cache"], t["window_cache_scale"], kv, t["window_slots"], quantize_window_kv,
     )
 
     if mode == "full":

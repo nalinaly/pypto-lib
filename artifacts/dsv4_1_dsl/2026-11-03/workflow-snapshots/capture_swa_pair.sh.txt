@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -eo pipefail
+source ${WORKSPACE}/artifacts/dsv41-semantic-review/env.sh
+set -u
+unset PYPTO_BENCH
+archive="$DSV41_WORKSPACE/artifacts/dsv41-semantic-review/swa-l1-compare"
+mkdir -p "$archive"
+for variant in dsl no_dsl; do
+    if [[ "$variant" == dsl ]]; then
+        export PYPTO_LIB_ROOT="$DSV41_WORKSPACE/pypto-a5-dev/pypto-lib-dsv41-dsl"
+    else
+        export PYPTO_LIB_ROOT="$DSV41_WORKSPACE/pypto-a5-dev/pypto-lib-dsv41-no-dsl"
+    fi
+    export PYTHONPATH="$PYPTO_LIB_ROOT:$PYTHONPATH"
+    cd "$PYPTO_LIB_ROOT"
+    python "$DSV41_WORKSPACE/artifacts/dsv41-semantic-review/run_case.py" \
+        "$DSV41_WORKSPACE/artifacts/dsv41-semantic-review/capture_swa_l1.py" \
+        --variant "$variant" -d "${TASK_DEVICE:?Run through task-submit}" \
+        > "$archive/$variant.log" 2>&1
+done
