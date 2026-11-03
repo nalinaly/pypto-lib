@@ -16,3 +16,7 @@ Start with that directory's README.txt and artifact-manifest.json.
 2026-11-03-ascendc-kv-scale/ records upstream pypto-lib issue #1666 about
 window KV scale selection versus recipes AscendC, including source revisions
 and a standalone CPU numerical example. It does not change the model kernels.
+
+2026-11-03-swa-attention/ records the subsequent SWA MIX device-leaf
+integration: core/composed validation logs, frozen core data, generated
+device and orchestration code, and compiler diagnostic reproductions.

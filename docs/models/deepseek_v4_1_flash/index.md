@@ -69,6 +69,39 @@ checks 72 active tokens per rank using the layer entry's existing comparators.
 It validates one decode layer with generated weights; it is not a whole-model
 checkpoint validation.
 
+## SWA Attention in DSL
+
+The split-cache SWA entry uses
+[`swa_dsl.py`](../../../models/deepseek_v4_1_flash/swa_dsl.py) when the local
+head count is 64 (TP1). One mixed task consumes one Query's complete 128-entry
+window, with one AIC and two AIV participants. PyPTO/simpler owns Query task
+dispatch, the bounded completion pool, and cache dependencies. The leaf has
+no cross-task Softmax reduction or launch-wide barrier.
+
+The leaf reads the existing separate FP8 E4M3 payload and group-32 BF16 scale
+buffers using physical cache indices. It dequantizes to BF16, computes QK in
+FP32, masks invalid columns, rounds unnormalized probabilities to BF16 for
+PV, and applies the sink contribution during final FP32 normalization before
+storing BF16 output. It consumes the stored scale values without selecting a
+new quantizer. Inactive output rows retain their caller-provided contents.
+
+The packed544 entry, other TP configurations, and compressed-KV Attention
+retain their existing implementations during this staged migration. Extending
+the DSL reader to compressed KV requires a separate FP4 contract review.
+
+Run the existing standalone numerical checks with the selected environment
+active and an allocated A5 device in `TASK_DEVICE`:
+
+```bash
+python models/deepseek_v4_1_flash/sparse_attention.py --mode swa --swa-case all -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/decode_swa.py -d "$TASK_DEVICE"
+```
+
+The core cases cover zero active Queries, masked windows, cross-page and wrap
+indices, irregular/repeated indices, and inactive output sentinels. The
+existing core and composed Attention error thresholds are unchanged. Use the
+layer-0 command above to validate composition with EP MoE.
+
 ## DSL development branch and evidence
 
 Continue DSL implementation and evidence collection on
@@ -77,3 +110,5 @@ The [dated evidence archive](../../../artifacts/dsv4_1_dsl/2026-11-03/README.txt
 contains validation logs, frozen numerical data, L1 swimlanes, generated device
 source, and companion toolchain patches. Preserve earlier captures when adding
 new runs under `artifacts/dsv4_1_dsl/`.
+The [SWA Attention archive](../../../artifacts/dsv4_1_dsl/2026-11-03-swa-attention/README.txt)
+contains the subsequent MIX leaf's validation and generated device code.

@@ -28,6 +28,7 @@ from quant import dequantize_mxfp4_cache, dequantize_mxfp8_cache, quantize_mxfp8
 from gemm import golden_gemm_bf16_via_mxfp8_to_bf16_sequential
 from utils import packed_query_lengths, window_metadata
 from window_kv_dsl import quantize_window_kv
+from swa_dsl import swa_attention_dsl
 
 from pathlib import Path
 
@@ -751,9 +752,9 @@ def swa_attention_partial(
     """Return conservative attention completion for subsequent cache-update ordering."""
     if LOCAL_H == 64:
         ready = pl.system.task_dummy(deps=[])
-        cache_consumed = gather_sparse_attention(
-            query, indices, cache, scales, indices, cache, scales,
-            sink, output, num_tokens, ready, compressed_keys=0,
+        cache_consumed = swa_attention_dsl(
+            query, cache, scales, indices, sink,
+            output, num_tokens, ready,
         )
     else:
         # Conservatively keep later cache updates after full mixed attention while
@@ -2098,7 +2099,7 @@ def swa_core_reference(inputs):
 
 def make_swa_case(case, packed=False):
     """Create masked, prefix, wrap and irregular rows for one dispatch route."""
-    cases = {"gather": 3, "plain": 33, "runs": 129}
+    cases = {"empty": 0, "gather": 3, "plain": 33, "runs": 129}
     if case not in cases:
         raise ValueError(f"Unknown SWA case: {case}")
     active = cases[case]
@@ -2174,7 +2175,7 @@ def validate_swa_core(args):
 
     from golden import run
 
-    cases = ("gather", "plain", "runs") if args.swa_case == "all" else (args.swa_case,)
+    cases = ("empty", "gather", "plain", "runs") if args.swa_case == "all" else (args.swa_case,)
     layouts = (False,) if args.mode == "swa" else (True,)
     if args.mode in ("all", "swa-both"):
         layouts = (False, True)
@@ -2508,7 +2509,7 @@ if __name__ == "__main__":
     parser.add_argument("--rows", type=int, help=rows_help)
     mode_choices = ["gather", "packed", "bf16", "both", "c2a", "swa", "swa-packed", "swa-both", "all"]
     parser.add_argument("--mode", default="all", choices=mode_choices)
-    parser.add_argument("--swa-case", default="all", choices=["gather", "plain", "runs", "all"])
+    parser.add_argument("--swa-case", default="all", choices=["empty", "gather", "plain", "runs", "all"])
     parser.add_argument("--compile-only", action="store_true")
     parser.add_argument("--fixture", type=Path)
     parser.add_argument("--runtime-dir", type=str)

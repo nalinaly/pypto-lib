@@ -1,0 +1,19 @@
+SWA DSL integration started 2026-11-03
+Branch nalinaly/pypto-lib:dsv4.1-dsl; base ebdc0af.
+Scope: A5 TP1, 64 heads, 512 features, 128 window entries.
+One Query per MIX task; PyPTO/simpler owns query dispatch and dependencies.
+Preserve split FP8 payload/BF16 scales and physical indices, including holes.
+Preserve dequant BF16, unnormalized BF16 probabilities for PV, and final sink normalization.
+Retain existing compressed-KV/other-TP implementations as staged consumers.
+First kernel uses depth-one RingBuffers, 16-row gather, 128-wide Cube tiles.
+Validation: existing SWA core cases, 72-token SWA subgraph, full layer 0 EP2.
+No tolerance changes and no performance optimization required for acceptance.
+
+Compiler bring-up: split nested PyPTO slices/reshapes for metadata inference; use distinct VF mask names to avoid invalid loop-carried mask state. Minimal bad export exits 139; renamed control passes. Logged the compiler limitation locally. Native compilation also caught own-code FP8 unpack reinterpret and VF capture errors; corrected by reinterpreting raw bytes as FP8 and hoisting cache extent outside VF. First allocated task exited 1 during CCE compilation, before numerical execution.
+
+A5 core gather case PASS on device 6; task task_20261103_170749_26383031013, exit 0. Active=3, allocated=4, 64 heads: all-masked, cross-page prefix and wrap rows, inactive output sentinel. Existing comparator unchanged. Work dir: build_output/_jit_l2_sparse_attention_swa_20261103_170846_a4xvzhs8. Both native roles compile. Added empty-active case to the existing validation entry.
+
+Core cases: task task_20261103_171009_36825611936 exit 0, all four cases PASS (0, 3, 33, 129 active Queries). Existing core comparator unchanged. Shared compiled work dir _jit_l2_sparse_attention_swa_20261103_171015_i0a10k_z; save_data is overwritten by later cases, so its final data is the 129-active fixture.
+72-token SWA: task task_20261103_171009_36825914745 passed every comparator and RUN PASS (39.31s), no relaxed thresholds. No --save-data was requested, so no new full-SWA frozen fixture is claimed.
+
+Full layer 0 EP2 task task_20261103_171233_45772714226 completed with exit 0 and RUN PASS (174.79s); devices [4, 5]. All layer comparators passed. This is generated-weight single-layer validation, not real-checkpoint whole-network accuracy. Source and thresholds unchanged after the passing standalone and SWA tests.

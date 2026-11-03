@@ -1,0 +1,156 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "query",
+      "direction": "In",
+      "shape": [
+        -1,
+        32768
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "cache",
+      "direction": "In",
+      "shape": [
+        -1,
+        128,
+        1,
+        512
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "scales",
+      "direction": "In",
+      "shape": [
+        -1,
+        128,
+        1,
+        16
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "indices",
+      "direction": "In",
+      "shape": [
+        -1,
+        128
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "sink",
+      "direction": "In",
+      "shape": [
+        64
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "output",
+      "direction": "InOut",
+      "shape": [
+        -1,
+        32768
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "query",
+      "direction": "In",
+      "shape": [
+        -1,
+        32768
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "cache",
+      "direction": "In",
+      "shape": [
+        -1,
+        128,
+        1,
+        512
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "scales",
+      "direction": "In",
+      "shape": [
+        -1,
+        128,
+        1,
+        16
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "indices",
+      "direction": "In",
+      "shape": [
+        -1,
+        128
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "sink",
+      "direction": "In",
+      "shape": [
+        64
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "output",
+      "direction": "InOut",
+      "shape": [
+        -1,
+        32768
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "num_return_types": 1,
+  "return_aliases": [
+    5
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

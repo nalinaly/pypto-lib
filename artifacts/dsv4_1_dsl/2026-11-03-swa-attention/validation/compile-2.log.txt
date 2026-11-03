@@ -1,0 +1,886 @@
+[RUN] compile ...
+[RUN] compile done (0.38s)
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.
+Traceback (most recent call last):
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/passes.py", line 54, in _run_cannir_passes
+    pmgr.run(module.operation)
+cannbotdsl._mlir._mlir_libs._site_initialize.<locals>.MLIRError: Failure while executing pass pipeline:
+error: unknown: 'scf.for' op 0-th init and 0-th region iter_arg have different type: 'i32' != '!ascvec.mask'
+ note: unknown: see current operation:
+  %398:9 = "scf.for"(%23, %18, %21, %1166, %23, %23, %23, %23, %23, %23, %23, %23) ({
+  ^bb0(%arg6: i64, %arg7: !ascvec.mask, %arg8: i64, %arg9: i64, %arg10: i64, %arg11: i64, %arg12: i64, %arg13: i64, %arg14: i64, %arg15: i64):
+    %399 = "cannir.extract_pointer"(%50, %50, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, i64) -> !cannir.ptr<l0a, bf16>
+    %400 = "cannir.make_tensor"(%399, %125) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %401 = "cannir.tensor_select"(%23, %52) {cannir.buffer.selection = distinct[0]<>} : (i64, !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %402 = "cannir.extract_pointer"(%401, %400, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0a, bf16>
+    %403 = "cannir.make_tensor"(%402, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %404 = "cannir.select_buffer_logical_id"(%23, %51) : (i64, !cannir.buffer_logical_id) -> !cannir.buffer_logical_id
+    %405 = "cannir.bind_buffer_logical_id"(%403, %404) {cannir.buffer.logical} : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.buffer_logical_id) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %406 = "cannir.extract_pointer"(%405) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0a, bf16>
+    %407 = "cannir.make_tensor"(%406, %42) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<(64, 128)>, <(128, 1)>>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %408 = "cannir.extract_pointer"(%407) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0a, bf16>
+    %409 = "cannir.make_tensor"(%408, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %410 = "cannir.extract_pointer"(%409) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0a, bf16>
+    %411 = "cannir.make_tensor"(%410, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %412 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %413 = "cannir.extract_pointer"(%411, %400, %412) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0a, bf16>
+    %414 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %415 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %416 = "cannir.make_layout"(%414, %415) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %417 = "cannir.make_tensor"(%413, %416) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %418 = "cannir.bind_buffer_logical_id"(%417, %51, %405) {cannir.buffer.logical} : (!cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %419 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %420 = "cannir.extract_pointer"(%397, %323, %419) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l1, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l1, bf16>
+    %421 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %422 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %423 = "cannir.make_layout"(%421, %422) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %424 = "cannir.make_tensor"(%420, %423) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l1, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %425 = "cannir.bind_buffer_logical_id"(%424, %46, %395) {cannir.buffer.logical} : (!cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l1, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %426 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %427 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %428 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %429 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %430 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %431 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %432 = "arith.constant"() <{value = 64 : index}> : () -> index
+    %433 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %434 = "arith.constant"() <{value = 64 : index}> : () -> index
+    %435 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %436 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %437 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %438 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %439 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %440 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %441 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %442 = "arith.index_cast"(%441) : (i64) -> index
+    %443 = "arith.muli"(%438, %442) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %444 = "arith.muli"(%439, %440) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %445 = "arith.addi"(%443, %444) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %446 = "arith.addi"(%429, %445) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %447 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %448 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %449 = "arith.constant"() <{value = 15 : index}> : () -> index
+    %450 = "arith.addi"(%432, %449) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %451 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %452 = "arith.divui"(%450, %451) : (index, index) -> index
+    %453 = "arith.index_cast"(%452) : (index) -> i64
+    %454 = "arith.constant"() <{value = 15 : index}> : () -> index
+    %455 = "arith.addi"(%433, %454) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %456 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %457 = "arith.divui"(%455, %456) : (index, index) -> index
+    %458 = "arith.index_cast"(%457) : (index) -> i64
+    %459 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %460 = "arith.index_cast"(%459) : (i64) -> index
+    %461 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %462 = "arith.divui"(%460, %461) : (index, index) -> index
+    %463 = "arith.index_cast"(%462) : (index) -> i64
+    %464 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %465 = "arith.index_cast"(%464) : (i64) -> index
+    %466 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %467 = "arith.divui"(%465, %466) : (index, index) -> index
+    %468 = "arith.index_cast"(%467) : (index) -> i64
+    %469 = "arith.index_cast"(%446) : (index) -> i64
+    %470 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    "cannir.dma_l1l0_plan"(%418, %425, %469, %470, %447, %448, %453, %458, %463, %468) <{mx_scale = false, transpose = false, transpose_repeat = false}> : (!cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64, i64, i64, i64, i64, i64, i64, i64) -> ()
+    %471 = "cannir.make_tile"() : () -> !cannir.tile<(128, 128)>
+    %472 = "cannir.make_coord"(%arg6) : (i64) -> !cannir.coord<(0, -1)>
+    %473 = "cannir.tile_slice"(%212, %471, %472) : (!cannir.tensor<<l1, bf16>, <<(128, 512)>, <(512, 1)>>, <<(32, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.tile<(128, 128)>, !cannir.coord<(0, -1)>) -> !cannir.tensor<<l1, bf16>, <<(128, -1)>, <(512, 1)>>, <<(-1, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %474 = "cannir.extract_pointer"(%57, %57, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, i64) -> !cannir.ptr<l0b, bf16>
+    %475 = "cannir.make_tensor"(%474, %125) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %476 = "cannir.tensor_select"(%23, %59) {cannir.buffer.selection = distinct[1]<>} : (i64, !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %477 = "cannir.make_shape"() : () -> !cannir.shape<(8, 8, 16, 16)>
+    %478 = "cannir.make_layout"(%477, %193) : (!cannir.shape<(8, 8, 16, 16)>, !cannir.stride<(2048, 256, 16, 1)>) -> !cannir.layout<<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>
+    %479 = "cannir.extract_pointer"(%476, %475, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0b, bf16>
+    %480 = "cannir.make_tensor"(%479, %54, %478) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<(128, 128)>, <(128, 1)>>, !cannir.layout<<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %481 = "cannir.select_buffer_logical_id"(%23, %58) : (i64, !cannir.buffer_logical_id) -> !cannir.buffer_logical_id
+    %482 = "cannir.bind_buffer_logical_id"(%480, %481) {cannir.buffer.logical} : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.buffer_logical_id) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %483 = "cannir.extract_pointer"(%482) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0b, bf16>
+    %484 = "cannir.make_tensor"(%483, %54) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<(128, 128)>, <(128, 1)>>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %485 = "cannir.permute_view"(%473) <{dims = array<i64: 1, 0>}> : (!cannir.tensor<<l1, bf16>, <<(128, -1)>, <(512, 1)>>, <<(-1, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l1, bf16>, <<(-1, 128)>, <(1, 512)>>, <<(-1, 8, 16, 16)>, <(2048, 256, 16, 1)>>, dn2nz>
+    %486 = "cannir.extract_pointer"(%484) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0b, bf16>
+    %487 = "cannir.make_tensor"(%486, %54, %478) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<(128, 128)>, <(128, 1)>>, !cannir.layout<<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %488 = "cannir.extract_pointer"(%487) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0b, bf16>
+    %489 = "cannir.make_tensor"(%488, %54, %478) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<(128, 128)>, <(128, 1)>>, !cannir.layout<<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %490 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %491 = "cannir.extract_pointer"(%489, %475, %490) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0b, bf16>
+    %492 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %493 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %494 = "cannir.make_layout"(%492, %493) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %495 = "cannir.make_tensor"(%491, %494) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %496 = "cannir.bind_buffer_logical_id"(%495, %58, %482) {cannir.buffer.logical} : (!cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %497 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %498 = "cannir.extract_pointer"(%485, %190, %497) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l1, bf16>, <<(-1, 128)>, <(1, 512)>>, <<(-1, 8, 16, 16)>, <(2048, 256, 16, 1)>>, dn2nz>, !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l1, bf16>
+    %499 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %500 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %501 = "cannir.make_layout"(%499, %500) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %502 = "cannir.make_tensor"(%498, %501) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l1, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %503 = "cannir.bind_buffer_logical_id"(%502, %38, %210) {cannir.buffer.logical} : (!cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l1, bf16>, <<(128, 512)>, <(512, 1)>>, <<(32, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %504 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %505 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %506 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %507 = "arith.muli"(%arg6, %506) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %508 = "arith.index_cast"(%507) : (i64) -> index
+    %509 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %510 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %511 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %512 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %513 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %514 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %515 = "arith.constant"() <{value = 512 : index}> : () -> index
+    %516 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %517 = "arith.constant"() <{value = 8 : i64}> : () -> i64
+    %518 = "arith.muli"(%arg6, %517) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %519 = "arith.index_cast"(%518) : (i64) -> index
+    %520 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %521 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %522 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %523 = "arith.constant"() <{value = 2048 : i64}> : () -> i64
+    %524 = "arith.index_cast"(%523) : (i64) -> index
+    %525 = "arith.muli"(%520, %524) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %526 = "arith.muli"(%521, %522) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %527 = "arith.addi"(%525, %526) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %528 = "arith.addi"(%509, %527) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %529 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %530 = "arith.index_cast"(%519) : (index) -> i64
+    %531 = "arith.constant"() <{value = 15 : index}> : () -> index
+    %532 = "arith.addi"(%513, %531) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %533 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %534 = "arith.divui"(%532, %533) : (index, index) -> index
+    %535 = "arith.index_cast"(%534) : (index) -> i64
+    %536 = "arith.constant"() <{value = 15 : index}> : () -> index
+    %537 = "arith.addi"(%512, %536) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %538 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %539 = "arith.divui"(%537, %538) : (index, index) -> index
+    %540 = "arith.index_cast"(%539) : (index) -> i64
+    %541 = "arith.constant"() <{value = 2048 : i64}> : () -> i64
+    %542 = "arith.index_cast"(%541) : (i64) -> index
+    %543 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %544 = "arith.divui"(%542, %543) : (index, index) -> index
+    %545 = "arith.index_cast"(%544) : (index) -> i64
+    %546 = "arith.constant"() <{value = 2048 : i64}> : () -> i64
+    %547 = "arith.index_cast"(%546) : (i64) -> index
+    %548 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %549 = "arith.divui"(%547, %548) : (index, index) -> index
+    %550 = "arith.index_cast"(%549) : (index) -> i64
+    %551 = "arith.index_cast"(%528) : (index) -> i64
+    %552 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    "cannir.dma_l1l0_plan"(%496, %503, %551, %552, %529, %530, %535, %540, %545, %550) <{mx_scale = false, transpose = true, transpose_repeat = false}> : (!cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64, i64, i64, i64, i64, i64, i64, i64) -> ()
+    %553 = "cannir.tensor_select"(%23, %64) {cannir.buffer.selection = distinct[2]<>} : (i64, !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %554 = "cannir.extract_pointer"(%553, %214, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0c, f32>
+    %555 = "cannir.make_tensor"(%554, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %556 = "cannir.bind_buffer_logical_id"(%555, %220) {cannir.buffer.logical} : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.buffer_logical_id) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %557 = "cannir.extract_pointer"(%556) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0c, f32>
+    %558 = "cannir.make_tensor"(%557, %42) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<(64, 128)>, <(128, 1)>>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %559 = "cannir.tensor_select"(%23, %52) {cannir.buffer.selection = distinct[3]<>} : (i64, !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %560 = "cannir.extract_pointer"(%559, %400, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0a, bf16>
+    %561 = "cannir.make_tensor"(%560, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %562 = "cannir.bind_buffer_logical_id"(%561, %404) {cannir.buffer.logical} : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.buffer_logical_id) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %563 = "cannir.extract_pointer"(%562) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0a, bf16>
+    %564 = "cannir.make_tensor"(%563, %42) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<(64, 128)>, <(128, 1)>>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %565 = "cannir.tensor_select"(%23, %59) {cannir.buffer.selection = distinct[4]<>} : (i64, !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %566 = "cannir.extract_pointer"(%565, %475, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0b, bf16>
+    %567 = "cannir.make_tensor"(%566, %54, %478) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<(128, 128)>, <(128, 1)>>, !cannir.layout<<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %568 = "cannir.bind_buffer_logical_id"(%567, %481) {cannir.buffer.logical} : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.buffer_logical_id) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %569 = "cannir.extract_pointer"(%568) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0b, bf16>
+    %570 = "cannir.make_tensor"(%569, %54) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<(128, 128)>, <(128, 1)>>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %571 = "cannir.extract_pointer"(%558) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0c, f32>
+    %572 = "cannir.make_tensor"(%571, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %573 = "cannir.make_shape"() : () -> !cannir.shape<(64, 128)>
+    %574 = "cannir.make_stride"() : () -> !cannir.stride<(128, 1)>
+    %575 = "cannir.make_layout"(%573, %574) : (!cannir.shape<(64, 128)>, !cannir.stride<(128, 1)>) -> !cannir.layout<<(64, 128)>, <(128, 1)>>
+    %576 = "cannir.make_shape"() : () -> !cannir.shape<(8, 4, 16, 16)>
+    %577 = "cannir.make_stride"() : () -> !cannir.stride<(1024, 256, 16, 1)>
+    %578 = "cannir.make_layout"(%576, %577) : (!cannir.shape<(8, 4, 16, 16)>, !cannir.stride<(1024, 256, 16, 1)>) -> !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>
+    %579 = "cannir.extract_pointer"(%572) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0c, f32>
+    %580 = "cannir.make_tensor"(%579, %575, %578) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %581 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %582 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %583 = "arith.constant"() <{value = 256 : i64}> : () -> i64
+    %584 = "arith.constant"() <{value = 256 : i64}> : () -> i64
+    %585 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %586 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %587 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %588 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %589 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %590 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %591 = "arith.constant"() <{value = 256 : i64}> : () -> i64
+    %592 = "arith.constant"() <{value = 256 : i64}> : () -> i64
+    %593 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %594 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %595 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %596 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %597 = "arith.constant"() <{value = 2048 : i64}> : () -> i64
+    %598 = "arith.constant"() <{value = 2048 : i64}> : () -> i64
+    %599 = "arith.constant"() <{value = 256 : i64}> : () -> i64
+    %600 = "arith.constant"() <{value = 256 : i64}> : () -> i64
+    %601 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %602 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %603 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %604 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %605 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %606 = "cannir.extract_pointer"(%580, %214, %605) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0c, f32>
+    %607 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %608 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %609 = "cannir.make_layout"(%607, %608) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %610 = "cannir.make_tensor"(%606, %609) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %611 = "cannir.bind_buffer_logical_id"(%610, %63, %556) {cannir.buffer.logical} : (!cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %612 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %613 = "cannir.extract_pointer"(%564, %400, %612) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0a, bf16>
+    %614 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %615 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %616 = "cannir.make_layout"(%614, %615) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %617 = "cannir.make_tensor"(%613, %616) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %618 = "cannir.bind_buffer_logical_id"(%617, %51, %562) {cannir.buffer.logical} : (!cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %619 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %620 = "cannir.extract_pointer"(%570, %475, %619) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0b, bf16>
+    %621 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %622 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %623 = "cannir.make_layout"(%621, %622) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %624 = "cannir.make_tensor"(%620, %623) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %625 = "cannir.bind_buffer_logical_id"(%624, %58, %568) {cannir.buffer.logical} : (!cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %626 = "arith.constant"() <{value = 64 : i64}> : () -> i64
+    %627 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %628 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %629 = "arith.constant"() <{value = 64 : i64}> : () -> i64
+    %630 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %631 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %632 = "arith.constant"() <{value = 0 : i32}> : () -> i32
+    "cannir.mmad_plan"(%611, %618, %625, %629, %630, %631, %632) <{disable_gemv = true, init = true, mx_mode = false, operandSegmentSizes = array<i32: 1, 1, 1, 0, 3, 1>}> : (!cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64, i64, i64, i32) -> ()
+    %633 = "cannir.extract_pointer"(%74, %74, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, i64) -> !cannir.ptr<ub, f32>
+    %634 = "cannir.make_tensor"(%633, %125) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %635 = "cannir.tensor_select"(%23, %76) {cannir.buffer.selection = distinct[5]<>} : (i64, !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %636 = "cannir.extract_pointer"(%635, %634, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<ub, f32>
+    %637 = "cannir.make_tensor"(%636, %66, %66) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<(32, 128)>, <(128, 1)>>, !cannir.layout<<(32, 128)>, <(128, 1)>>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %638 = "cannir.select_buffer_logical_id"(%23, %75) : (i64, !cannir.buffer_logical_id) -> !cannir.buffer_logical_id
+    %639 = "cannir.bind_buffer_logical_id"(%637, %638) {cannir.buffer.logical} : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.buffer_logical_id) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %640 = "cannir.extract_pointer"(%639) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.ptr<ub, f32>
+    %641 = "cannir.make_tensor"(%640, %66) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<(32, 128)>, <(128, 1)>>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %642 = "cannir.tensor_select"(%23, %64) {cannir.buffer.selection = distinct[6]<>} : (i64, !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %643 = "cannir.extract_pointer"(%642, %214, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0c, f32>
+    %644 = "cannir.make_tensor"(%643, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %645 = "cannir.bind_buffer_logical_id"(%644, %220) {cannir.buffer.logical} : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.buffer_logical_id) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %646 = "cannir.extract_pointer"(%645) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0c, f32>
+    %647 = "cannir.make_tensor"(%646, %42) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<(64, 128)>, <(128, 1)>>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %648 = "cannir.extract_pointer"(%641) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.ptr<ub, f32>
+    %649 = "cannir.make_tensor"(%648, %66, %66) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<(32, 128)>, <(128, 1)>>, !cannir.layout<<(32, 128)>, <(128, 1)>>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %650 = "cannir.extract_pointer"(%649) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.ptr<ub, f32>
+    %651 = "cannir.make_tensor"(%650, %66, %66) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<(32, 128)>, <(128, 1)>>, !cannir.layout<<(32, 128)>, <(128, 1)>>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %652 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %653 = "cannir.extract_pointer"(%651, %634, %652) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<ub, f32>
+    %654 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %655 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %656 = "cannir.make_layout"(%654, %655) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %657 = "cannir.make_tensor"(%653, %656) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %658 = "cannir.bind_buffer_logical_id"(%657, %75, %639) {cannir.buffer.logical} : (!cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %659 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %660 = "cannir.extract_pointer"(%647, %214, %659) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0c, f32>
+    %661 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %662 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %663 = "cannir.make_layout"(%661, %662) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %664 = "cannir.make_tensor"(%660, %663) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %665 = "cannir.bind_buffer_logical_id"(%664, %63, %645) {cannir.buffer.logical} : (!cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %666 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %667 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %668 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %669 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %670 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %671 = "arith.constant"() <{value = 64 : index}> : () -> index
+    %672 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %673 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %674 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %675 = "arith.index_cast"(%674) : (i64) -> index
+    %676 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %677 = "arith.divui"(%670, %676) : (index, index) -> index
+    %678 = "arith.muli"(%677, %675) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %679 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %680 = "arith.muli"(%669, %679) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %681 = "arith.addi"(%680, %678) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %682 = "arith.addi"(%668, %681) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %683 = "arith.constant"() <{value = 64 : i64}> : () -> i64
+    %684 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %685 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %686 = "arith.constant"() <{value = 64 : i64}> : () -> i64
+    %687 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %688 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %689 = "arith.constant"() <{value = 2 : i64}> : () -> i64
+    %690 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %691 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %692 = "arith.addi"(%686, %691) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %693 = "arith.divui"(%692, %689) : (i64, i64) -> i64
+    %694 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %695 = "arith.addi"(%693, %694) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %696 = "arith.divui"(%695, %690) : (i64, i64) -> i64
+    %697 = "arith.muli"(%696, %690) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %698 = "arith.muli"(%685, %697) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %699 = "arith.subi"(%686, %698) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %700 = "arith.cmpi"(%686, %698) <{predicate = 8 : i64}> : (i64, i64) -> i1
+    %701 = "arith.minui"(%699, %697) : (i64, i64) -> i64
+    %702 = "arith.select"(%700, %701, %688) : (i1, i64, i64) -> i64
+    %703 = "arith.constant"() <{value = 2 : i64}> : () -> i64
+    %704 = "arith.muli"(%697, %703) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %705 = "arith.index_cast"(%684) : (i64) -> index
+    %706 = "arith.constant"() <{value = 7 : index}> : () -> index
+    %707 = "arith.constant"() <{value = 8 : index}> : () -> index
+    %708 = "arith.addi"(%705, %706) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %709 = "arith.divui"(%708, %707) : (index, index) -> index
+    %710 = "arith.muli"(%709, %707) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %711 = "arith.index_cast"(%710) : (index) -> i64
+    %712 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %713 = "arith.divui"(%675, %712) : (index, index) -> index
+    %714 = "arith.index_cast"(%713) : (index) -> i64
+    %715 = "arith.constant"() <{value = 0 : i32}> : () -> i32
+    %716 = "arith.constant"() <{value = 0 : i32}> : () -> i32
+    %717 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %718 = "arith.index_cast"(%682) : (index) -> i64
+    "cannir.fixpipe_plan"(%658, %665, %717, %718, %711, %704, %673, %714, %22, %716, %715) <{atomic_add = false, dual_dst_ctl = 1 : i32, nz2nd = true, operandSegmentSizes = array<i32: 1, 1, 6, 1, 1, 1, 0, 0, 0>, relu = false, split = false}> : (!cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64, i64, i64, i64, i64, i64, i32, i32, i32) -> ()
+    %719 = "cannir.tensor_select"(%23, %76) {cannir.buffer.selection = distinct[7]<>} : (i64, !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %720 = "cannir.extract_pointer"(%719, %634, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<ub, f32>
+    %721 = "cannir.make_tensor"(%720, %66, %66) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<(32, 128)>, <(128, 1)>>, !cannir.layout<<(32, 128)>, <(128, 1)>>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %722 = "cannir.bind_buffer_logical_id"(%721, %638) {cannir.buffer.logical} : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.buffer_logical_id) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %723 = "cannir.extract_pointer"(%722) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.ptr<ub, f32>
+    %724 = "cannir.make_tensor"(%723, %66) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<(32, 128)>, <(128, 1)>>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    "cannir.vf"(%113, %7, %724, %122, %22, %9, %13, %10) <{unroll = 1 : i64}> ({
+    ^bb0(%arg16: !cannir.tensor<<ub, f32>, <<(32)>, <(1)>>, <<(32)>, <(1)>>, identity>, %arg17: i32, %arg18: !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, %arg19: !cannir.tensor<<ub, bf16>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, %arg20: i32, %arg21: i32, %arg22: i32, %arg23: i32):
+      %779 = "ascvec.create_mask"() <{elem_bits = 32 : i32, pat_mode = "PAT_ALL"}> : () -> !ascvec.mask
+      "scf.for"(%arg20, %arg22, %arg23) ({
+      ^bb0(%arg24: i32):
+        %780 = "arith.index_cast"(%arg24) : (i32) -> index
+        %781 = "cannir.raw_reg.load_brc"(%arg16, %780) <{post_update = false}> : (!cannir.tensor<<ub, f32>, <<(32)>, <(1)>>, <<(32)>, <(1)>>, identity>, index) -> !ascvec.vreg<f32>
+        "scf.for"(%arg20, %arg17, %arg21) ({
+        ^bb0(%arg25: i32):
+          %782 = "arith.muli"(%arg24, %arg17) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+          %783 = "arith.addi"(%782, %arg25) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+          %784 = "arith.index_cast"(%783) : (i32) -> index
+          %785 = "cannir.raw_reg.load"(%arg18, %784) <{post_update = false}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, index) -> !ascvec.vreg<f32>
+          %786 = "ascvec.mul"(%785, %781, %779) : (!ascvec.vreg<f32>, !ascvec.vreg<f32>, !ascvec.mask) -> !ascvec.vreg<f32>
+          %787 = "ascvec.cast"(%786, %779) <{rounding = 0 : i32, saturate = false}> : (!ascvec.vreg<f32>, !ascvec.mask) -> !ascvec.vreg<bf16>
+          "cannir.raw_reg.store_pack"(%arg19, %784, %787, %779) <{mode = "b32_to_b16", post_update = false}> : (!cannir.tensor<<ub, bf16>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, index, !ascvec.vreg<bf16>, !ascvec.mask) -> ()
+          "scf.yield"() : () -> ()
+        }) : (i32, i32, i32) -> ()
+        "scf.yield"() : () -> ()
+      }) : (i32, i32, i32) -> ()
+      "cannir.vf_yield"() : () -> ()
+    }) {cannir.vf_arg_effects = [1 : i8, 0 : i8, 1 : i8, 2 : i8, 0 : i8, 0 : i8, 0 : i8, 0 : i8], cannir.vf_mode = "simd"} : (!cannir.tensor<<ub, f32>, <<(32)>, <(1)>>, <<(32)>, <(1)>>, identity>, i32, !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.tensor<<ub, bf16>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, i32, i32, i32, i32) -> ()
+    %725 = "cannir.make_tile"() : () -> !cannir.tile<(64, 128)>
+    %726 = "cannir.tile_slice"(%arg5, %725, %472) : (!cannir.tensor<<gm, bf16>, <<(64, 512)>, <(-1, 1)>>, <<(64, 512)>, <(-1, 1)>>, identity>, !cannir.tile<(64, 128)>, !cannir.coord<(0, -1)>) -> !cannir.tensor<<gm, bf16>, <<(64, -1)>, <(-1, 1)>>, <<(64, -1)>, <(-1, 1)>>, identity>
+    %727 = "cannir.extract_layout"(%726) : (!cannir.tensor<<gm, bf16>, <<(64, -1)>, <(-1, 1)>>, <<(64, -1)>, <(-1, 1)>>, identity>) -> !cannir.layout<<(64, -1)>, <(-1, 1)>>
+    %728 = "cannir.extract_shape"(%727) : (!cannir.layout<<(64, -1)>, <(-1, 1)>>) -> !cannir.shape<(64, -1)>
+    %729 = "cannir.extract_dim"(%728) <{index = 1 : i64}> : (!cannir.shape<(64, -1)>) -> i64
+    %730 = "cannir.make_shape"(%729) : (i64) -> !cannir.shape<(64, -1)>
+    %731 = "cannir.make_partition_tiler"(%730) : (!cannir.shape<(64, -1)>) -> !cannir.partition_tiler<[64, 128], axis = 0, parts = 2, alignment = 1>
+    %732 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %733 = "arith.muli"(%arg6, %732) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %734 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %735 = "arith.muli"(%733, %734) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %736 = "cannir.extract_pointer"(%726, %arg5, %735) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<gm, bf16>, <<(64, -1)>, <(-1, 1)>>, <<(64, -1)>, <(-1, 1)>>, identity>, !cannir.tensor<<gm, bf16>, <<(64, 512)>, <(-1, 1)>>, <<(64, 512)>, <(-1, 1)>>, identity>, i64) -> !cannir.ptr<gm, bf16>
+    %737 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %738 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %739 = "cannir.make_layout"(%737, %738) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %740 = "cannir.make_tensor"(%736, %739) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<gm, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<gm, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %741 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %742 = "cannir.extract_pointer"(%122, %122, %741) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<ub, bf16>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.tensor<<ub, bf16>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, i64) -> !cannir.ptr<ub, bf16>
+    %743 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %744 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %745 = "cannir.make_layout"(%743, %744) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %746 = "cannir.make_tensor"(%742, %745) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<ub, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<ub, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %747 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %748 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %749 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %750 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %751 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %752 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %753 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %754 = "arith.constant"() <{value = 32 : i64}> : () -> i64
+    %755 = "arith.constant"() <{value = 32 : index}> : () -> index
+    %756 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %757 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %758 = "cannir.extract_layout"(%arg5) : (!cannir.tensor<<gm, bf16>, <<(64, 512)>, <(-1, 1)>>, <<(64, 512)>, <(-1, 1)>>, identity>) -> !cannir.layout<<(64, 512)>, <(-1, 1)>>
+    %759 = "cannir.extract_stride"(%758) : (!cannir.layout<<(64, 512)>, <(-1, 1)>>) -> !cannir.stride<(-1, 1)>
+    %760 = "cannir.extract_dim"(%759) <{index = 0 : i64}> : (!cannir.stride<(-1, 1)>) -> i64
+    %761 = "arith.index_cast"(%760) : (i64) -> index
+    %762 = "arith.constant"() <{value = 32 : i64}> : () -> i64
+    %763 = "arith.muli"(%24, %762) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %764 = "arith.index_cast"(%763) : (i64) -> index
+    %765 = "arith.muli"(%764, %761) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %766 = "arith.addi"(%747, %765) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %767 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %768 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %769 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %770 = "arith.muli"(%749, %769) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %771 = "arith.muli"(%757, %769) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %772 = "arith.muli"(%761, %769) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %773 = "arith.index_cast"(%766) : (index) -> i64
+    %774 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %775 = "arith.constant"() <{value = 32 : i64}> : () -> i64
+    %776 = "arith.index_cast"(%770) : (index) -> i64
+    %777 = "arith.index_cast"(%772) : (index) -> i64
+    %778 = "arith.index_cast"(%771) : (index) -> i64
+    "cannir.dma_ub2gm_plan"(%740, %746, %773, %774, %775, %776, %777, %778, %22) <{atomic_add = false, operandSegmentSizes = array<i32: 1, 1, 6, 1, 0>}> : (!cannir.tensor<<gm, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.tensor<<ub, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64, i64, i64, i64, i64, i64, i32) -> ()
+    "scf.yield"(%1167, %23, %23, %23, %23, %23, %23, %23, %23) : (i32, i64, i64, i64, i64, i64, i64, i64, i64) -> ()
+  }) : (i64, i64, i64, i32, i64, i64, i64, i64, i64, i64, i64, i64) -> (!ascvec.mask, i64, i64, i64, i64, i64, i64, i64, i64)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "${WORKSPACE}/artifacts/dsv41-semantic-review/run_case.py", line 21, in <module>
+    runpy.run_path(str(entry), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/sparse_attention.py", line 2532, in <module>
+    _main_results = validate_swa_core(args)
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/sparse_attention.py", line 2188, in validate_swa_core
+    result = run(
+             ^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1565, in _run_pipeline
+    compiled = compile_step(cfg, compile_state)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1741, in _compile
+    return fn.compile(*dummy_args, config=cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1360, in compile
+    compiled, _ordered_args, _run_config = self._resolve_compiled(args, kwargs, allow_signature_mode=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1096, in _resolve_compiled
+    prepared_contexts = self._build_contexts(
+                        ^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1800, in _build_contexts
+    apply_external_spec(contexts[-1], dep._external_builder(contexts[-1]))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/interop/pypto.py", line 169, in <lambda>
+    return JITFunction(kernel.fn, func_type="extern", external_builder=lambda ctx: _build(kernel, ctx))
+                                                                                   ^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/interop/pypto.py", line 142, in _build
+    exported = cb.export_device(kernel, *arguments, arch="dav-3510")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/aot/device_export.py", line 105, in export_device
+    _run_cannir_passes(module)
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/utils/timer.py", line 45, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/passes.py", line 58, in _run_cannir_passes
+    raise RuntimeError(f"Failed to run pass pipeline '{pipeline}': {e}") from e
+RuntimeError: Failed to run pass pipeline 'builtin.module(func.func(cannir-prepare-tensor-memory),cannir-simplify-scalar-ranges,cse,cannir-prepare-launch-contracts,func.func(cannir-normalize-ring-buffer-state),cse,func.func(cannir-expand-view-boundaries,cannir-infer-layout,cannir-resolve-view-queries,cannir-plan-gm2ub-dma,cannir-plan-gm2l1-dma),cse,cannir-prepare-launch-contracts,func.func(cannir-normalize-tensor-views),func.func(cannir-normalize-reinterpret),func.func(cannir-plan-onchip-memory),cse,cannir-simplify-layout,func.func(cannir-plan-copy-instructions,cannir-plan-compute-access),func.func(cannir-validate-formatted-gm-uses),cannir-form-vf-regions,func.func(cannir-normalize-reinterpret),func.func(cannir-lower-ub-copy),cannir-prepare-launch-contracts,func.func(cannir-expand-buffer-accesses),func.func(canonicalize),func.func(cannir-refresh-vf-effects),cannir-buffer-sync{optimize-read-sharing=true},convert-cannir-to-asc,asccube-plan-state,split-mix-kernel,cannir-legalize-two-address,convert-cannir-host-ops,cannir-verify-target-buffer-sync)': Failure while executing pass pipeline:
+error: unknown: 'scf.for' op 0-th init and 0-th region iter_arg have different type: 'i32' != '!ascvec.mask'
+ note: unknown: see current operation:
+  %398:9 = "scf.for"(%23, %18, %21, %1166, %23, %23, %23, %23, %23, %23, %23, %23) ({
+  ^bb0(%arg6: i64, %arg7: !ascvec.mask, %arg8: i64, %arg9: i64, %arg10: i64, %arg11: i64, %arg12: i64, %arg13: i64, %arg14: i64, %arg15: i64):
+    %399 = "cannir.extract_pointer"(%50, %50, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, i64) -> !cannir.ptr<l0a, bf16>
+    %400 = "cannir.make_tensor"(%399, %125) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %401 = "cannir.tensor_select"(%23, %52) {cannir.buffer.selection = distinct[0]<>} : (i64, !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %402 = "cannir.extract_pointer"(%401, %400, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0a, bf16>
+    %403 = "cannir.make_tensor"(%402, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %404 = "cannir.select_buffer_logical_id"(%23, %51) : (i64, !cannir.buffer_logical_id) -> !cannir.buffer_logical_id
+    %405 = "cannir.bind_buffer_logical_id"(%403, %404) {cannir.buffer.logical} : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.buffer_logical_id) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %406 = "cannir.extract_pointer"(%405) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0a, bf16>
+    %407 = "cannir.make_tensor"(%406, %42) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<(64, 128)>, <(128, 1)>>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %408 = "cannir.extract_pointer"(%407) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0a, bf16>
+    %409 = "cannir.make_tensor"(%408, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %410 = "cannir.extract_pointer"(%409) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0a, bf16>
+    %411 = "cannir.make_tensor"(%410, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %412 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %413 = "cannir.extract_pointer"(%411, %400, %412) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0a, bf16>
+    %414 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %415 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %416 = "cannir.make_layout"(%414, %415) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %417 = "cannir.make_tensor"(%413, %416) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %418 = "cannir.bind_buffer_logical_id"(%417, %51, %405) {cannir.buffer.logical} : (!cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %419 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %420 = "cannir.extract_pointer"(%397, %323, %419) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l1, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l1, bf16>
+    %421 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %422 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %423 = "cannir.make_layout"(%421, %422) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %424 = "cannir.make_tensor"(%420, %423) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l1, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %425 = "cannir.bind_buffer_logical_id"(%424, %46, %395) {cannir.buffer.logical} : (!cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l1, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %426 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %427 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %428 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %429 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %430 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %431 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %432 = "arith.constant"() <{value = 64 : index}> : () -> index
+    %433 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %434 = "arith.constant"() <{value = 64 : index}> : () -> index
+    %435 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %436 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %437 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %438 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %439 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %440 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %441 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %442 = "arith.index_cast"(%441) : (i64) -> index
+    %443 = "arith.muli"(%438, %442) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %444 = "arith.muli"(%439, %440) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %445 = "arith.addi"(%443, %444) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %446 = "arith.addi"(%429, %445) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %447 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %448 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %449 = "arith.constant"() <{value = 15 : index}> : () -> index
+    %450 = "arith.addi"(%432, %449) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %451 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %452 = "arith.divui"(%450, %451) : (index, index) -> index
+    %453 = "arith.index_cast"(%452) : (index) -> i64
+    %454 = "arith.constant"() <{value = 15 : index}> : () -> index
+    %455 = "arith.addi"(%433, %454) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %456 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %457 = "arith.divui"(%455, %456) : (index, index) -> index
+    %458 = "arith.index_cast"(%457) : (index) -> i64
+    %459 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %460 = "arith.index_cast"(%459) : (i64) -> index
+    %461 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %462 = "arith.divui"(%460, %461) : (index, index) -> index
+    %463 = "arith.index_cast"(%462) : (index) -> i64
+    %464 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %465 = "arith.index_cast"(%464) : (i64) -> index
+    %466 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %467 = "arith.divui"(%465, %466) : (index, index) -> index
+    %468 = "arith.index_cast"(%467) : (index) -> i64
+    %469 = "arith.index_cast"(%446) : (index) -> i64
+    %470 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    "cannir.dma_l1l0_plan"(%418, %425, %469, %470, %447, %448, %453, %458, %463, %468) <{mx_scale = false, transpose = false, transpose_repeat = false}> : (!cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64, i64, i64, i64, i64, i64, i64, i64) -> ()
+    %471 = "cannir.make_tile"() : () -> !cannir.tile<(128, 128)>
+    %472 = "cannir.make_coord"(%arg6) : (i64) -> !cannir.coord<(0, -1)>
+    %473 = "cannir.tile_slice"(%212, %471, %472) : (!cannir.tensor<<l1, bf16>, <<(128, 512)>, <(512, 1)>>, <<(32, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.tile<(128, 128)>, !cannir.coord<(0, -1)>) -> !cannir.tensor<<l1, bf16>, <<(128, -1)>, <(512, 1)>>, <<(-1, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %474 = "cannir.extract_pointer"(%57, %57, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, i64) -> !cannir.ptr<l0b, bf16>
+    %475 = "cannir.make_tensor"(%474, %125) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %476 = "cannir.tensor_select"(%23, %59) {cannir.buffer.selection = distinct[1]<>} : (i64, !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %477 = "cannir.make_shape"() : () -> !cannir.shape<(8, 8, 16, 16)>
+    %478 = "cannir.make_layout"(%477, %193) : (!cannir.shape<(8, 8, 16, 16)>, !cannir.stride<(2048, 256, 16, 1)>) -> !cannir.layout<<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>
+    %479 = "cannir.extract_pointer"(%476, %475, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0b, bf16>
+    %480 = "cannir.make_tensor"(%479, %54, %478) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<(128, 128)>, <(128, 1)>>, !cannir.layout<<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %481 = "cannir.select_buffer_logical_id"(%23, %58) : (i64, !cannir.buffer_logical_id) -> !cannir.buffer_logical_id
+    %482 = "cannir.bind_buffer_logical_id"(%480, %481) {cannir.buffer.logical} : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.buffer_logical_id) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %483 = "cannir.extract_pointer"(%482) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0b, bf16>
+    %484 = "cannir.make_tensor"(%483, %54) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<(128, 128)>, <(128, 1)>>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %485 = "cannir.permute_view"(%473) <{dims = array<i64: 1, 0>}> : (!cannir.tensor<<l1, bf16>, <<(128, -1)>, <(512, 1)>>, <<(-1, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l1, bf16>, <<(-1, 128)>, <(1, 512)>>, <<(-1, 8, 16, 16)>, <(2048, 256, 16, 1)>>, dn2nz>
+    %486 = "cannir.extract_pointer"(%484) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0b, bf16>
+    %487 = "cannir.make_tensor"(%486, %54, %478) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<(128, 128)>, <(128, 1)>>, !cannir.layout<<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %488 = "cannir.extract_pointer"(%487) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0b, bf16>
+    %489 = "cannir.make_tensor"(%488, %54, %478) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<(128, 128)>, <(128, 1)>>, !cannir.layout<<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %490 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %491 = "cannir.extract_pointer"(%489, %475, %490) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0b, bf16>
+    %492 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %493 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %494 = "cannir.make_layout"(%492, %493) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %495 = "cannir.make_tensor"(%491, %494) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %496 = "cannir.bind_buffer_logical_id"(%495, %58, %482) {cannir.buffer.logical} : (!cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %497 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %498 = "cannir.extract_pointer"(%485, %190, %497) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l1, bf16>, <<(-1, 128)>, <(1, 512)>>, <<(-1, 8, 16, 16)>, <(2048, 256, 16, 1)>>, dn2nz>, !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l1, bf16>
+    %499 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %500 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %501 = "cannir.make_layout"(%499, %500) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %502 = "cannir.make_tensor"(%498, %501) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l1, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %503 = "cannir.bind_buffer_logical_id"(%502, %38, %210) {cannir.buffer.logical} : (!cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l1, bf16>, <<(128, 512)>, <(512, 1)>>, <<(32, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %504 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %505 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %506 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %507 = "arith.muli"(%arg6, %506) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %508 = "arith.index_cast"(%507) : (i64) -> index
+    %509 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %510 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %511 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %512 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %513 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %514 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %515 = "arith.constant"() <{value = 512 : index}> : () -> index
+    %516 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %517 = "arith.constant"() <{value = 8 : i64}> : () -> i64
+    %518 = "arith.muli"(%arg6, %517) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %519 = "arith.index_cast"(%518) : (i64) -> index
+    %520 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %521 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %522 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %523 = "arith.constant"() <{value = 2048 : i64}> : () -> i64
+    %524 = "arith.index_cast"(%523) : (i64) -> index
+    %525 = "arith.muli"(%520, %524) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %526 = "arith.muli"(%521, %522) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %527 = "arith.addi"(%525, %526) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %528 = "arith.addi"(%509, %527) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %529 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %530 = "arith.index_cast"(%519) : (index) -> i64
+    %531 = "arith.constant"() <{value = 15 : index}> : () -> index
+    %532 = "arith.addi"(%513, %531) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %533 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %534 = "arith.divui"(%532, %533) : (index, index) -> index
+    %535 = "arith.index_cast"(%534) : (index) -> i64
+    %536 = "arith.constant"() <{value = 15 : index}> : () -> index
+    %537 = "arith.addi"(%512, %536) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %538 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %539 = "arith.divui"(%537, %538) : (index, index) -> index
+    %540 = "arith.index_cast"(%539) : (index) -> i64
+    %541 = "arith.constant"() <{value = 2048 : i64}> : () -> i64
+    %542 = "arith.index_cast"(%541) : (i64) -> index
+    %543 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %544 = "arith.divui"(%542, %543) : (index, index) -> index
+    %545 = "arith.index_cast"(%544) : (index) -> i64
+    %546 = "arith.constant"() <{value = 2048 : i64}> : () -> i64
+    %547 = "arith.index_cast"(%546) : (i64) -> index
+    %548 = "arith.constant"() <{value = 256 : index}> : () -> index
+    %549 = "arith.divui"(%547, %548) : (index, index) -> index
+    %550 = "arith.index_cast"(%549) : (index) -> i64
+    %551 = "arith.index_cast"(%528) : (index) -> i64
+    %552 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    "cannir.dma_l1l0_plan"(%496, %503, %551, %552, %529, %530, %535, %540, %545, %550) <{mx_scale = false, transpose = true, transpose_repeat = false}> : (!cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.tensor<<l1, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64, i64, i64, i64, i64, i64, i64, i64) -> ()
+    %553 = "cannir.tensor_select"(%23, %64) {cannir.buffer.selection = distinct[2]<>} : (i64, !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %554 = "cannir.extract_pointer"(%553, %214, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0c, f32>
+    %555 = "cannir.make_tensor"(%554, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %556 = "cannir.bind_buffer_logical_id"(%555, %220) {cannir.buffer.logical} : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.buffer_logical_id) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %557 = "cannir.extract_pointer"(%556) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0c, f32>
+    %558 = "cannir.make_tensor"(%557, %42) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<(64, 128)>, <(128, 1)>>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %559 = "cannir.tensor_select"(%23, %52) {cannir.buffer.selection = distinct[3]<>} : (i64, !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %560 = "cannir.extract_pointer"(%559, %400, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0a, bf16>
+    %561 = "cannir.make_tensor"(%560, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %562 = "cannir.bind_buffer_logical_id"(%561, %404) {cannir.buffer.logical} : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.buffer_logical_id) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %563 = "cannir.extract_pointer"(%562) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0a, bf16>
+    %564 = "cannir.make_tensor"(%563, %42) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<(64, 128)>, <(128, 1)>>) -> !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %565 = "cannir.tensor_select"(%23, %59) {cannir.buffer.selection = distinct[4]<>} : (i64, !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %566 = "cannir.extract_pointer"(%565, %475, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0b, bf16>
+    %567 = "cannir.make_tensor"(%566, %54, %478) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<(128, 128)>, <(128, 1)>>, !cannir.layout<<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %568 = "cannir.bind_buffer_logical_id"(%567, %481) {cannir.buffer.logical} : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.buffer_logical_id) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %569 = "cannir.extract_pointer"(%568) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0b, bf16>
+    %570 = "cannir.make_tensor"(%569, %54) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<(128, 128)>, <(128, 1)>>) -> !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>
+    %571 = "cannir.extract_pointer"(%558) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0c, f32>
+    %572 = "cannir.make_tensor"(%571, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %573 = "cannir.make_shape"() : () -> !cannir.shape<(64, 128)>
+    %574 = "cannir.make_stride"() : () -> !cannir.stride<(128, 1)>
+    %575 = "cannir.make_layout"(%573, %574) : (!cannir.shape<(64, 128)>, !cannir.stride<(128, 1)>) -> !cannir.layout<<(64, 128)>, <(128, 1)>>
+    %576 = "cannir.make_shape"() : () -> !cannir.shape<(8, 4, 16, 16)>
+    %577 = "cannir.make_stride"() : () -> !cannir.stride<(1024, 256, 16, 1)>
+    %578 = "cannir.make_layout"(%576, %577) : (!cannir.shape<(8, 4, 16, 16)>, !cannir.stride<(1024, 256, 16, 1)>) -> !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>
+    %579 = "cannir.extract_pointer"(%572) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0c, f32>
+    %580 = "cannir.make_tensor"(%579, %575, %578) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %581 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %582 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %583 = "arith.constant"() <{value = 256 : i64}> : () -> i64
+    %584 = "arith.constant"() <{value = 256 : i64}> : () -> i64
+    %585 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %586 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %587 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %588 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %589 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %590 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %591 = "arith.constant"() <{value = 256 : i64}> : () -> i64
+    %592 = "arith.constant"() <{value = 256 : i64}> : () -> i64
+    %593 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %594 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %595 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %596 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %597 = "arith.constant"() <{value = 2048 : i64}> : () -> i64
+    %598 = "arith.constant"() <{value = 2048 : i64}> : () -> i64
+    %599 = "arith.constant"() <{value = 256 : i64}> : () -> i64
+    %600 = "arith.constant"() <{value = 256 : i64}> : () -> i64
+    %601 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %602 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %603 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %604 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %605 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %606 = "cannir.extract_pointer"(%580, %214, %605) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0c, f32>
+    %607 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %608 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %609 = "cannir.make_layout"(%607, %608) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %610 = "cannir.make_tensor"(%606, %609) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %611 = "cannir.bind_buffer_logical_id"(%610, %63, %556) {cannir.buffer.logical} : (!cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %612 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %613 = "cannir.extract_pointer"(%564, %400, %612) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0a, bf16>
+    %614 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %615 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %616 = "cannir.make_layout"(%614, %615) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %617 = "cannir.make_tensor"(%613, %616) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0a, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %618 = "cannir.bind_buffer_logical_id"(%617, %51, %562) {cannir.buffer.logical} : (!cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l0a, bf16>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %619 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %620 = "cannir.extract_pointer"(%570, %475, %619) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0b, bf16>
+    %621 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %622 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %623 = "cannir.make_layout"(%621, %622) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %624 = "cannir.make_tensor"(%620, %623) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0b, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %625 = "cannir.bind_buffer_logical_id"(%624, %58, %568) {cannir.buffer.logical} : (!cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l0b, bf16>, <<(128, 128)>, <(128, 1)>>, <<(8, 8, 16, 16)>, <(2048, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %626 = "arith.constant"() <{value = 64 : i64}> : () -> i64
+    %627 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %628 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %629 = "arith.constant"() <{value = 64 : i64}> : () -> i64
+    %630 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %631 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %632 = "arith.constant"() <{value = 0 : i32}> : () -> i32
+    "cannir.mmad_plan"(%611, %618, %625, %629, %630, %631, %632) <{disable_gemv = true, init = true, mx_mode = false, operandSegmentSizes = array<i32: 1, 1, 1, 0, 3, 1>}> : (!cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.tensor<<l0a, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.tensor<<l0b, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64, i64, i64, i32) -> ()
+    %633 = "cannir.extract_pointer"(%74, %74, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, i64) -> !cannir.ptr<ub, f32>
+    %634 = "cannir.make_tensor"(%633, %125) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %635 = "cannir.tensor_select"(%23, %76) {cannir.buffer.selection = distinct[5]<>} : (i64, !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %636 = "cannir.extract_pointer"(%635, %634, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<ub, f32>
+    %637 = "cannir.make_tensor"(%636, %66, %66) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<(32, 128)>, <(128, 1)>>, !cannir.layout<<(32, 128)>, <(128, 1)>>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %638 = "cannir.select_buffer_logical_id"(%23, %75) : (i64, !cannir.buffer_logical_id) -> !cannir.buffer_logical_id
+    %639 = "cannir.bind_buffer_logical_id"(%637, %638) {cannir.buffer.logical} : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.buffer_logical_id) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %640 = "cannir.extract_pointer"(%639) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.ptr<ub, f32>
+    %641 = "cannir.make_tensor"(%640, %66) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<(32, 128)>, <(128, 1)>>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %642 = "cannir.tensor_select"(%23, %64) {cannir.buffer.selection = distinct[6]<>} : (i64, !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %643 = "cannir.extract_pointer"(%642, %214, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0c, f32>
+    %644 = "cannir.make_tensor"(%643, %42, %217) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<(64, 128)>, <(128, 1)>>, !cannir.layout<<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %645 = "cannir.bind_buffer_logical_id"(%644, %220) {cannir.buffer.logical} : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.buffer_logical_id) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %646 = "cannir.extract_pointer"(%645) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.ptr<l0c, f32>
+    %647 = "cannir.make_tensor"(%646, %42) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<(64, 128)>, <(128, 1)>>) -> !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>
+    %648 = "cannir.extract_pointer"(%641) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.ptr<ub, f32>
+    %649 = "cannir.make_tensor"(%648, %66, %66) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<(32, 128)>, <(128, 1)>>, !cannir.layout<<(32, 128)>, <(128, 1)>>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %650 = "cannir.extract_pointer"(%649) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.ptr<ub, f32>
+    %651 = "cannir.make_tensor"(%650, %66, %66) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<(32, 128)>, <(128, 1)>>, !cannir.layout<<(32, 128)>, <(128, 1)>>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %652 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %653 = "cannir.extract_pointer"(%651, %634, %652) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<ub, f32>
+    %654 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %655 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %656 = "cannir.make_layout"(%654, %655) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %657 = "cannir.make_tensor"(%653, %656) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %658 = "cannir.bind_buffer_logical_id"(%657, %75, %639) {cannir.buffer.logical} : (!cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %659 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %660 = "cannir.extract_pointer"(%647, %214, %659) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>, !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<l0c, f32>
+    %661 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %662 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %663 = "cannir.make_layout"(%661, %662) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %664 = "cannir.make_tensor"(%660, %663) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<l0c, f32>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %665 = "cannir.bind_buffer_logical_id"(%664, %63, %645) {cannir.buffer.logical} : (!cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.buffer_logical_id, !cannir.tensor<<l0c, f32>, <<(64, 128)>, <(128, 1)>>, <<(8, 4, 16, 16)>, <(1024, 256, 16, 1)>>, nd2nz>) -> !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>
+    %666 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %667 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %668 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %669 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %670 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %671 = "arith.constant"() <{value = 64 : index}> : () -> index
+    %672 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %673 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %674 = "arith.constant"() <{value = 1024 : i64}> : () -> i64
+    %675 = "arith.index_cast"(%674) : (i64) -> index
+    %676 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %677 = "arith.divui"(%670, %676) : (index, index) -> index
+    %678 = "arith.muli"(%677, %675) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %679 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %680 = "arith.muli"(%669, %679) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %681 = "arith.addi"(%680, %678) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %682 = "arith.addi"(%668, %681) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %683 = "arith.constant"() <{value = 64 : i64}> : () -> i64
+    %684 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %685 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %686 = "arith.constant"() <{value = 64 : i64}> : () -> i64
+    %687 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %688 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %689 = "arith.constant"() <{value = 2 : i64}> : () -> i64
+    %690 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %691 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %692 = "arith.addi"(%686, %691) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %693 = "arith.divui"(%692, %689) : (i64, i64) -> i64
+    %694 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %695 = "arith.addi"(%693, %694) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %696 = "arith.divui"(%695, %690) : (i64, i64) -> i64
+    %697 = "arith.muli"(%696, %690) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %698 = "arith.muli"(%685, %697) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %699 = "arith.subi"(%686, %698) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %700 = "arith.cmpi"(%686, %698) <{predicate = 8 : i64}> : (i64, i64) -> i1
+    %701 = "arith.minui"(%699, %697) : (i64, i64) -> i64
+    %702 = "arith.select"(%700, %701, %688) : (i1, i64, i64) -> i64
+    %703 = "arith.constant"() <{value = 2 : i64}> : () -> i64
+    %704 = "arith.muli"(%697, %703) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %705 = "arith.index_cast"(%684) : (i64) -> index
+    %706 = "arith.constant"() <{value = 7 : index}> : () -> index
+    %707 = "arith.constant"() <{value = 8 : index}> : () -> index
+    %708 = "arith.addi"(%705, %706) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %709 = "arith.divui"(%708, %707) : (index, index) -> index
+    %710 = "arith.muli"(%709, %707) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %711 = "arith.index_cast"(%710) : (index) -> i64
+    %712 = "arith.constant"() <{value = 16 : index}> : () -> index
+    %713 = "arith.divui"(%675, %712) : (index, index) -> index
+    %714 = "arith.index_cast"(%713) : (index) -> i64
+    %715 = "arith.constant"() <{value = 0 : i32}> : () -> i32
+    %716 = "arith.constant"() <{value = 0 : i32}> : () -> i32
+    %717 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %718 = "arith.index_cast"(%682) : (index) -> i64
+    "cannir.fixpipe_plan"(%658, %665, %717, %718, %711, %704, %673, %714, %22, %716, %715) <{atomic_add = false, dual_dst_ctl = 1 : i32, nz2nd = true, operandSegmentSizes = array<i32: 1, 1, 6, 1, 1, 1, 0, 0, 0>, relu = false, split = false}> : (!cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.tensor<<l0c, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64, i64, i64, i64, i64, i64, i32, i32, i32) -> ()
+    %719 = "cannir.tensor_select"(%23, %76) {cannir.buffer.selection = distinct[7]<>} : (i64, !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %720 = "cannir.extract_pointer"(%719, %634, %23) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.tensor<<ub, f32>, <<1>, <1>>, <<1>, <1>>, identity>, i64) -> !cannir.ptr<ub, f32>
+    %721 = "cannir.make_tensor"(%720, %66, %66) <{operandSegmentSizes = array<i32: 1, 1, 1, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<(32, 128)>, <(128, 1)>>, !cannir.layout<<(32, 128)>, <(128, 1)>>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %722 = "cannir.bind_buffer_logical_id"(%721, %638) {cannir.buffer.logical} : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.buffer_logical_id) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    %723 = "cannir.extract_pointer"(%722) <{operandSegmentSizes = array<i32: 1, 0, 0>}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>) -> !cannir.ptr<ub, f32>
+    %724 = "cannir.make_tensor"(%723, %66) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<ub, f32>, !cannir.layout<<(32, 128)>, <(128, 1)>>) -> !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>
+    "cannir.vf"(%113, %7, %724, %122, %22, %9, %13, %10) <{unroll = 1 : i64}> ({
+    ^bb0(%arg16: !cannir.tensor<<ub, f32>, <<(32)>, <(1)>>, <<(32)>, <(1)>>, identity>, %arg17: i32, %arg18: !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, %arg19: !cannir.tensor<<ub, bf16>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, %arg20: i32, %arg21: i32, %arg22: i32, %arg23: i32):
+      %779 = "ascvec.create_mask"() <{elem_bits = 32 : i32, pat_mode = "PAT_ALL"}> : () -> !ascvec.mask
+      "scf.for"(%arg20, %arg22, %arg23) ({
+      ^bb0(%arg24: i32):
+        %780 = "arith.index_cast"(%arg24) : (i32) -> index
+        %781 = "cannir.raw_reg.load_brc"(%arg16, %780) <{post_update = false}> : (!cannir.tensor<<ub, f32>, <<(32)>, <(1)>>, <<(32)>, <(1)>>, identity>, index) -> !ascvec.vreg<f32>
+        "scf.for"(%arg20, %arg17, %arg21) ({
+        ^bb0(%arg25: i32):
+          %782 = "arith.muli"(%arg24, %arg17) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+          %783 = "arith.addi"(%782, %arg25) <{overflowFlags = #arith.overflow<none>}> : (i32, i32) -> i32
+          %784 = "arith.index_cast"(%783) : (i32) -> index
+          %785 = "cannir.raw_reg.load"(%arg18, %784) <{post_update = false}> : (!cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, index) -> !ascvec.vreg<f32>
+          %786 = "ascvec.mul"(%785, %781, %779) : (!ascvec.vreg<f32>, !ascvec.vreg<f32>, !ascvec.mask) -> !ascvec.vreg<f32>
+          %787 = "ascvec.cast"(%786, %779) <{rounding = 0 : i32, saturate = false}> : (!ascvec.vreg<f32>, !ascvec.mask) -> !ascvec.vreg<bf16>
+          "cannir.raw_reg.store_pack"(%arg19, %784, %787, %779) <{mode = "b32_to_b16", post_update = false}> : (!cannir.tensor<<ub, bf16>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, index, !ascvec.vreg<bf16>, !ascvec.mask) -> ()
+          "scf.yield"() : () -> ()
+        }) : (i32, i32, i32) -> ()
+        "scf.yield"() : () -> ()
+      }) : (i32, i32, i32) -> ()
+      "cannir.vf_yield"() : () -> ()
+    }) {cannir.vf_arg_effects = [1 : i8, 0 : i8, 1 : i8, 2 : i8, 0 : i8, 0 : i8, 0 : i8, 0 : i8], cannir.vf_mode = "simd"} : (!cannir.tensor<<ub, f32>, <<(32)>, <(1)>>, <<(32)>, <(1)>>, identity>, i32, !cannir.tensor<<ub, f32>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.tensor<<ub, bf16>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, i32, i32, i32, i32) -> ()
+    %725 = "cannir.make_tile"() : () -> !cannir.tile<(64, 128)>
+    %726 = "cannir.tile_slice"(%arg5, %725, %472) : (!cannir.tensor<<gm, bf16>, <<(64, 512)>, <(-1, 1)>>, <<(64, 512)>, <(-1, 1)>>, identity>, !cannir.tile<(64, 128)>, !cannir.coord<(0, -1)>) -> !cannir.tensor<<gm, bf16>, <<(64, -1)>, <(-1, 1)>>, <<(64, -1)>, <(-1, 1)>>, identity>
+    %727 = "cannir.extract_layout"(%726) : (!cannir.tensor<<gm, bf16>, <<(64, -1)>, <(-1, 1)>>, <<(64, -1)>, <(-1, 1)>>, identity>) -> !cannir.layout<<(64, -1)>, <(-1, 1)>>
+    %728 = "cannir.extract_shape"(%727) : (!cannir.layout<<(64, -1)>, <(-1, 1)>>) -> !cannir.shape<(64, -1)>
+    %729 = "cannir.extract_dim"(%728) <{index = 1 : i64}> : (!cannir.shape<(64, -1)>) -> i64
+    %730 = "cannir.make_shape"(%729) : (i64) -> !cannir.shape<(64, -1)>
+    %731 = "cannir.make_partition_tiler"(%730) : (!cannir.shape<(64, -1)>) -> !cannir.partition_tiler<[64, 128], axis = 0, parts = 2, alignment = 1>
+    %732 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %733 = "arith.muli"(%arg6, %732) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %734 = "arith.constant"() <{value = 16 : i64}> : () -> i64
+    %735 = "arith.muli"(%733, %734) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %736 = "cannir.extract_pointer"(%726, %arg5, %735) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<gm, bf16>, <<(64, -1)>, <(-1, 1)>>, <<(64, -1)>, <(-1, 1)>>, identity>, !cannir.tensor<<gm, bf16>, <<(64, 512)>, <(-1, 1)>>, <<(64, 512)>, <(-1, 1)>>, identity>, i64) -> !cannir.ptr<gm, bf16>
+    %737 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %738 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %739 = "cannir.make_layout"(%737, %738) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %740 = "cannir.make_tensor"(%736, %739) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<gm, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<gm, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %741 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %742 = "cannir.extract_pointer"(%122, %122, %741) <{operandSegmentSizes = array<i32: 1, 1, 1>}> : (!cannir.tensor<<ub, bf16>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, !cannir.tensor<<ub, bf16>, <<(32, 128)>, <(128, 1)>>, <<(32, 128)>, <(128, 1)>>, identity>, i64) -> !cannir.ptr<ub, bf16>
+    %743 = "cannir.make_shape"() : () -> !cannir.shape<1>
+    %744 = "cannir.make_stride"() : () -> !cannir.stride<1>
+    %745 = "cannir.make_layout"(%743, %744) : (!cannir.shape<1>, !cannir.stride<1>) -> !cannir.layout<<1>, <1>>
+    %746 = "cannir.make_tensor"(%742, %745) <{operandSegmentSizes = array<i32: 1, 1, 0, 0>}> : (!cannir.ptr<ub, bf16>, !cannir.layout<<1>, <1>>) -> !cannir.tensor<<ub, bf16>, <<1>, <1>>, <<1>, <1>>, identity>
+    %747 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %748 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %749 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %750 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %751 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %752 = "arith.constant"() <{value = 1 : i64}> : () -> i64
+    %753 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %754 = "arith.constant"() <{value = 32 : i64}> : () -> i64
+    %755 = "arith.constant"() <{value = 32 : index}> : () -> index
+    %756 = "arith.constant"() <{value = 128 : i64}> : () -> i64
+    %757 = "arith.constant"() <{value = 128 : index}> : () -> index
+    %758 = "cannir.extract_layout"(%arg5) : (!cannir.tensor<<gm, bf16>, <<(64, 512)>, <(-1, 1)>>, <<(64, 512)>, <(-1, 1)>>, identity>) -> !cannir.layout<<(64, 512)>, <(-1, 1)>>
+    %759 = "cannir.extract_stride"(%758) : (!cannir.layout<<(64, 512)>, <(-1, 1)>>) -> !cannir.stride<(-1, 1)>
+    %760 = "cannir.extract_dim"(%759) <{index = 0 : i64}> : (!cannir.stride<(-1, 1)>) -> i64
+    %761 = "arith.index_cast"(%760) : (i64) -> index
+    %762 = "arith.constant"() <{value = 32 : i64}> : () -> i64
+    %763 = "arith.muli"(%24, %762) <{overflowFlags = #arith.overflow<none>}> : (i64, i64) -> i64
+    %764 = "arith.index_cast"(%763) : (i64) -> index
+    %765 = "arith.muli"(%764, %761) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %766 = "arith.addi"(%747, %765) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %767 = "arith.constant"() <{value = 0 : index}> : () -> index
+    %768 = "arith.constant"() <{value = 1 : index}> : () -> index
+    %769 = "arith.constant"() <{value = 2 : index}> : () -> index
+    %770 = "arith.muli"(%749, %769) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %771 = "arith.muli"(%757, %769) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %772 = "arith.muli"(%761, %769) <{overflowFlags = #arith.overflow<none>}> : (index, index) -> index
+    %773 = "arith.index_cast"(%766) : (index) -> i64
+    %774 = "arith.constant"() <{value = 0 : i64}> : () -> i64
+    %775 = "arith.constant"() <{value = 32 : i64}> : () -> i64
+    %776 = "arith.index_cast"(%770) : (index) -> i64
+    %777 = "arith.index_cast"(%772) : (index) -> i64
+    %778 = "arith.index_cast"(%771) : (index) -> i64
+    "cannir.dma_ub2gm_plan"(%740, %746, %773, %774, %775, %776, %777, %778, %22) <{atomic_add = false, operandSegmentSizes = array<i32: 1, 1, 6, 1, 0>}> : (!cannir.tensor<<gm, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, !cannir.tensor<<ub, bf16>, <<1>, <1>>, <<1>, <1>>, identity>, i64, i64, i64, i64, i64, i64, i32) -> ()
+    "scf.yield"(%1167, %23, %23, %23, %23, %23, %23, %23, %23) : (i32, i64, i64, i64, i64, i64, i64, i64, i64) -> ()
+  }) : (i64, i64, i64, i32, i64, i64, i64, i64, i64, i64, i64, i64) -> (!ascvec.mask, i64, i64, i64, i64, i64, i64, i64, i64)

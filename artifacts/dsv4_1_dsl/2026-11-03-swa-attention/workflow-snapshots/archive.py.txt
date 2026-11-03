@@ -1,0 +1,85 @@
+"""Archive the SWA integration's source, validation logs and frozen core cases."""
+
+import gzip
+import hashlib
+import json
+from pathlib import Path
+import re
+
+
+workspace = Path(__file__).resolve().parents[2]
+work = workspace / "artifacts/dsv41-swa-dsl"
+repo = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+dest = repo / "artifacts/dsv4_1_dsl/2026-11-03-swa-attention"
+dest.mkdir(parents=True, exist_ok=True)
+records = []
+
+
+def normalize(value):
+    value = value.replace(str(workspace), "${WORKSPACE}")
+    value = value.replace(str(workspace.parent), "${USER_ROOT}")
+    return "\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n"
+
+
+def copy(source, target, *, compressed=False, binary=False):
+    raw = source.read_bytes()
+    output = gzip.compress(raw, compresslevel=6, mtime=0) if compressed else raw
+    if not compressed and not binary:
+        output = normalize(raw.decode()).encode()
+    target = dest / target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(output)
+    records.append({
+        "source": str(source.relative_to(workspace)), "path": str(target.relative_to(dest)),
+        "source_bytes": len(raw), "source_sha256": hashlib.sha256(raw).hexdigest(),
+        "encoding": "gzip" if compressed else ("binary" if binary else "normalized UTF-8"),
+    })
+
+
+for path in sorted(work.glob("*.log")):
+    copy(path, Path("validation") / (path.name + ".txt"))
+for path in sorted(work.glob("*.py")):
+    copy(path, Path("workflow-snapshots") / (path.name + ".txt"))
+copy(work / "progress.txt", "progress.txt")
+copy(work / "validation-summary.json", "validation-summary.json")
+
+first = repo / "build_output/_jit_l2_sparse_attention_swa_20261103_170846_a4xvzhs8"
+last = repo / "build_output/_jit_l2_sparse_attention_swa_20261103_171015_i0a10k_z"
+for name, build in (("gather-3-active", first), ("runs-129-active", last)):
+    for source in sorted((build / "data").rglob("*.pt")):
+        copy(source, Path("fixtures") / name / (str(source.relative_to(build / "data")) + ".gz"), compressed=True)
+
+config = (last / "kernel_config.py").read_text()
+entry = Path(re.search(r'"source": \'([^\']+/entry.cpp)\'', config).group(1))
+for name in ("entry.cpp", "device_callable.hpp", "manifest.json"):
+    copy(entry.with_name(name), Path("generated") / name)
+failed = workspace / "artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65"
+for name in ("entry.cpp", "device_callable.hpp", "manifest.json"):
+    copy(failed / name, Path("generated/failed-native-attempt") / name)
+copy(last / "kernel_config.py", "generated/kernel_config.py.txt")
+copy(last / "compiled_meta.json", "generated/compiled_meta.json")
+copy(last / "orchestration/l2_sparse_attention_swa.cpp", "generated/l2_sparse_attention_swa.cpp")
+for source in sorted((last / "cache").glob("incore_*.bin")):
+    copy(source, Path("generated") / source.name, binary=True)
+
+manifest = {
+    "branch": "nalinaly/pypto-lib:dsv4.1-dsl", "model_base": "ebdc0af0d41adfeb3400d23619451e0182a360c1",
+    "model_source_sha256": {
+        name: hashlib.sha256((repo / "models/deepseek_v4_1_flash" / name).read_bytes()).hexdigest()
+        for name in ("swa_dsl.py", "sparse_attention.py")
+    },
+    "records": records,
+    "stored_files": [
+        {"path": str(p.relative_to(dest)), "bytes": p.stat().st_size, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}
+        for p in sorted(dest.rglob("*")) if p.is_file() and p.name != "artifact-manifest.json"
+    ],
+    "notes": [
+        "Core case 0/3/33/129 inputs share a JIT work directory; only the last 129-active data survives there.",
+        "The first passing 3-active run has its own saved data and is archived separately.",
+        "Stored data/out files are CPU goldens; device correctness is evidenced by the validation logs.",
+        "Full SWA/layer commands do not request save_data; generated-weight fixtures remain reproducible from model sources.",
+        "Native ELF files and installed toolchains are excluded; actual runtime device text images are included.",
+    ],
+}
+(dest / "artifact-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+print("Archived", len(records), "sources;", sum(r["bytes"] for r in manifest["stored_files"]), "stored bytes")

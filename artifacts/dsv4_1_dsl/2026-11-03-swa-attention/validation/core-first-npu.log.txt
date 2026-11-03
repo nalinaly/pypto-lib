@@ -1,0 +1,728 @@
+[RUN] compile ...
+[RUN] compile done (1.05s)
+[RUN] generate inputs ...
+[RUN] generate inputs done (0.01s)
+[RUN] compute golden ...
+[RUN] compute golden done (0.00s)
+[RUN] runtime ...
+[RUN] runtime done (5.38s)
+Traceback (most recent call last):
+  File "${WORKSPACE}/artifacts/dsv41-semantic-review/run_case.py", line 21, in <module>
+    runpy.run_path(str(entry), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/sparse_attention.py", line 2532, in <module>
+    _main_results = validate_swa_core(args)
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/sparse_attention.py", line 2188, in validate_swa_core
+    result = run(
+             ^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1646, in _run_pipeline
+    _dispatch(compiled, specs, tensors, scalar_specs_eff, cfg)
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 472, in _dispatch
+    compiled(*ordered, config=cfg)
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/ir/compiled_program.py", line 1135, in __call__
+    return _invoke_compiled(
+           ^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/ir/compiled_program.py", line 350, in _invoke_compiled
+    _execute_compiled(
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/runtime/runner.py", line 1779, in _execute_compiled
+    chip_callable, runtime_name, runtime_config = _compile_and_assemble(work_dir, platform)
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/runtime/device_runner.py", line 502, in _compile_and_assemble
+    return _compile_and_assemble_locked(work_dir, platform)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/runtime/device_runner.py", line 663, in _compile_and_assemble_locked
+    binaries = {key: future.result() for key, future in futures.items()}
+                     ^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/server-toolkits/miniconda3/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/runtime/device_runner.py", line 619, in _compile_one_kernel
+    _, kernel_bin = _compile_single_kernel(
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/runtime/device_runner.py", line 329, in _compile_single_kernel
+    raw = compiler.compile_incore(
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/runtime/kernel_compiler.py", line 217, in compile_incore
+    binary = self._run(cmd, output, "Incore")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "${WORKSPACE}/issue75-env/pypto-pr/python/pypto/runtime/kernel_compiler.py", line 158, in _run
+    raise RuntimeError(
+RuntimeError: Incore compilation failed with exit code 1:
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:1:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/asc_simd.h:23:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/asc_cube.h:26:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_compute/cube_compute.h:27:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:22:
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:116:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:116:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:128:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:128:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:140:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:140:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:152:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:152:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:164:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:164:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:176:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:176:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:188:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:188:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:200:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/npu_arch_3510/cube_compute_intf_impl.h:200:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:1:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/asc_simd.h:23:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/asc_cube.h:26:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_compute/cube_compute.h:27:
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:263:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:263:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:274:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:274:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:285:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:285:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:296:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:296:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:307:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:307:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:318:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:318:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:329:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:329:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:340:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:340:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:351:44: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                      ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~ ~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/cube_compute_intf_impl.h:351:44: note: place parentheses around the '&' expression to silence this warning
+        uint64_t xd = ((uint64_t)c_matrix) & 0xffffffffULL | ((bias & 0xffffffffULL) << 32);
+                                           ^
+                      (                                   )
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:1:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/asc_simd.h:27:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/asc_reg_vector.h:24:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/utils/base/helpers.h:24:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/utils/base/../../../impl/utils/base/helpers_impl.h:21:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/utils/base/../../../impl/utils/base/../debug/asc_debug_utils.h:36:
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/utils/debug/npu_arch_3510/asc_debug_utils_impl.h:82:109: warning: suggest braces around initialization of subobject [-Wmissing-braces]
+    static const struct AscTlv __asc_debug_meta_section__ __attribute__((used, section(".ascend.meta"))) = {4, 4, 1};
+                                                                                                            ^~~~
+                                                                                                            {   }
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/utils/debug/npu_arch_3510/asc_debug_utils_impl.h:89:110: warning: suggest braces around initialization of subobject [-Wmissing-braces]
+    static const struct AscTlv __asc_assert_meta_section__ __attribute__((used, section(".ascend.meta"))) = {4, 4, 5};
+                                                                                                             ^~~~
+                                                                                                             {   }
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:1:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/asc_simd.h:27:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/asc_reg_vector.h:24:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/utils/base/helpers.h:24:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/utils/base/../../../impl/utils/base/helpers_impl.h:21:
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/utils/base/../../../impl/utils/base/../debug/asc_debug_utils.h:47:109: warning: suggest braces around initialization of subobject [-Wmissing-braces]
+    static const struct AscTlv __asc_debug_meta_section__ __attribute__((used, section(".ascend.meta"))) = {4, 4, 1};
+                                                                                                            ^~~~
+                                                                                                            {   }
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/utils/base/../../../impl/utils/base/../debug/asc_debug_utils.h:54:110: warning: suggest braces around initialization of subobject [-Wmissing-braces]
+    static const struct AscTlv __asc_assert_meta_section__ __attribute__((used, section(".ascend.meta"))) = {4, 4, 5};
+                                                                                                             ^~~~
+                                                                                                             {   }
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:1:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/asc_simd.h:27:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/asc_reg_vector.h:35:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/reg_compute/reg_compute.h:19:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/reg_compute/gather/ub_gather.h:25:
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/ub_gather_intf_impl.h:275:27: warning: unused variable 'src_tmp' [-Wunused-variable]
+        __ubuf__ uint8_t* src_tmp = reinterpret_cast<__ubuf__ uint8_t*>(src);
+                          ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:1:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/asc_simd.h:27:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/asc_reg_vector.h:35:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/reg_compute/reg_compute.h:20:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/reg_compute/load/loadalign.h:25:
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1612:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1612:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1620:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1620:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1628:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1628:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1636:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1636:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1644:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1644:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1652:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1652:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1660:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1660:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1668:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1668:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1677:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1677:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1687:50: warning: '&' within '|' [-Wbitwise-op-parentheses]
+            (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                 ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1687:50: note: place parentheses around the '&' expression to silence this warning
+            (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                 ^
+                                   (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1695:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1695:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1703:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1703:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1712:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1712:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1722:104: warning: '&' within '|' [-Wbitwise-op-parentheses]
+            reinterpret_cast<vector_fp4x2_e1m2_t&>(dst), src_tmp, (block_stride << 16u | repeat_stride & 0xFFFFU),
+                                                                                       ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1722:104: note: place parentheses around the '&' expression to silence this warning
+            reinterpret_cast<vector_fp4x2_e1m2_t&>(dst), src_tmp, (block_stride << 16u | repeat_stride & 0xFFFFU),
+                                                                                                       ^
+                                                                                         (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1732:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1732:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1740:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1740:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1748:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:1748:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3689:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3689:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3697:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3697:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3705:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3705:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3713:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3713:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3721:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3721:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3729:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3729:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3737:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3737:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3745:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3745:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3754:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3754:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3764:50: warning: '&' within '|' [-Wbitwise-op-parentheses]
+            (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                 ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3764:50: note: place parentheses around the '&' expression to silence this warning
+            (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                 ^
+                                   (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3772:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3772:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3780:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3780:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3789:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3789:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3798:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3798:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3808:104: warning: '&' within '|' [-Wbitwise-op-parentheses]
+            reinterpret_cast<vector_fp4x2_e1m2_t&>(dst), src_tmp, (block_stride << 16u | repeat_stride & 0xFFFFU), mask,
+                                                                                       ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3808:104: note: place parentheses around the '&' expression to silence this warning
+            reinterpret_cast<vector_fp4x2_e1m2_t&>(dst), src_tmp, (block_stride << 16u | repeat_stride & 0xFFFFU), mask,
+                                                                                                       ^
+                                                                                         (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3817:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3817:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3825:62: warning: '&' within '|' [-Wbitwise-op-parentheses]
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                             ~ ~~~~~~~~~~~~~~^~~~~~~~~
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/c_api/reg_base_impl/loadalign_intf_impl.h:3825:62: note: place parentheses around the '&' expression to silence this warning
+        vsldb(dst, src, (block_stride << 16u | repeat_stride & 0xFFFFU), mask, POST_UPDATE);
+                                                             ^
+                                               (                      )
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:2:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/kernel_reg_compute_vec_binary_intf.h:29:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/kernel_reg_compute_utils.h:28:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/utils/kernel_utils_mode.h:23:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/utils/kernel_utils_constants.h:23:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/utils/kernel_utils_ceil_oom_que.h:23:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/utils/kernel_utils_macros.h:31:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/utils/../kernel_log.h:28:
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/impl/utils/debug/asc_aicore_printf_impl.h:158:21: warning: unused variable 'strParamAddr' [-Wunused-variable]
+    __gm__ uint8_t* strParamAddr = reinterpret_cast<__gm__ uint8_t*>(dumpheadAddr) + dumpheadLen + strLen;
+                    ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:2:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/reg_compute/../../basic_api/reg_compute/dav_3510/../../../../include/basic_api/reg_compute/kernel_reg_compute_vec_binary_intf.h:97:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/reg_compute/kernel_reg_compute_vec_binary_intf_impl.h:26:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/reg_compute/../../../include/basic_api/reg_compute/kernel_reg_compute_vec_unary_intf.h:74:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/reg_compute/kernel_reg_compute_vec_unary_intf_impl.h:37:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/reg_compute/../../basic_api/reg_compute/dav_3510/kernel_reg_compute_vec_unary_impl.h:28:
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/reg_compute/../../basic_api/reg_compute/dav_3510/kernel_reg_compute_common_impl.h:17:9: warning: impl/basic/reg_compute/dav_3510/kernel_reg_compute_common_impl.h is an internal header file and must not be used directly. Functions or variables defined in this file maybe removed in the future. Please use "#include "reg_compute/kernel_reg_compute_intf.h"" and use public functions or variables defined in interface headers files. [-W#pragma-messages]
+#pragma message( \
+        ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:2:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/reg_compute/../../basic_api/reg_compute/dav_3510/../../../../include/basic_api/reg_compute/kernel_reg_compute_vec_binary_intf.h:97:
+In file included from /usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/reg_compute/kernel_reg_compute_vec_binary_intf_impl.h:40:
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/reg_compute/../../basic_api/reg_compute/dav_3510/kernel_reg_compute_vec_binary_impl.h:17:9: warning: impl/basic/reg_compute/dav_3510/kernel_reg_compute_vec_binary_impl.h is an internal header file and must not be used directly. Functions or variables defined in this file maybe removed in the future. Please use "#include "reg_compute/kernel_reg_compute_vec_binary_intf.h"" and use public functions or variables defined in interface headers files. [-W#pragma-messages]
+#pragma message( \
+        ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/basic_api/reg_compute/../../../impl/basic_api/reg_compute/../../basic_api/reg_compute/dav_3510/kernel_reg_compute_vec_binary_impl.h:911:24: warning: unused variable 'mantissaMask' [-Wunused-variable]
+    constexpr uint32_t mantissaMask = 0x007FFFFFu;
+                       ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:611:119: error: pointer arguments to simd_vf functions must reside in '__ubuf__' address space
+__simd_vf__ inline void kernel_swa_query_vf0(int64_t arg6, int64_t arg7, __ubuf__ int32_t* buf8, __gm__ fp8_e4m3fn_t* buf9, int64_t arg10, __ubuf__ fp8_e4m3fn_t* buf11, __ubuf__ bfloat16_t* buf12, __ubuf__ bfloat16_t* buf13)
+                                                                                                                      ^
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:644:13: error: use of undeclared identifier 'asc_cast_unknown'
+            asc_cast_unknown(v37, v36, mask15);
+            ^
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:651:13: warning: 'asc_bfloat162float' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_bfloat162float(vector_float& dst, vector_bfloat16_t src, vector_bool mask, ASC_POSITION_EVEN) instead. [-Wdeprecated-declarations]
+            asc_bfloat162float(v42, *(vector_bfloat16_t*)&v41, mask15);
+            ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/reg_compute/reg_convert.h:6040:1: note: 'asc_bfloat162float' has been explicitly marked deprecated here
+ASC_DEPRECATED(
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:657:13: warning: 'asc_float2bfloat16_rn' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_float2bfloat16_rn(vector_bfloat16_t& dst, vector_float src, vector_bool mask, ASC_POSITION_EVEN) instead. [-Wdeprecated-declarations]
+            asc_float2bfloat16_rn(v45, v44, mask15);
+            ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/reg_compute/reg_convert.h:6235:1: note: 'asc_float2bfloat16_rn' has been explicitly marked deprecated here
+ASC_DEPRECATED(
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:665:17: warning: unused variable 'vmask' [-Wunused-variable]
+    vector_bool vmask;
+                ^
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:780:9: warning: 'asc_float2bfloat16_rn' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_float2bfloat16_rn(vector_bfloat16_t& dst, vector_float src, vector_bool mask, ASC_POSITION_EVEN) instead. [-Wdeprecated-declarations]
+        asc_float2bfloat16_rn(v116, v99, mask69);
+        ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/reg_compute/reg_convert.h:6235:1: note: 'asc_float2bfloat16_rn' has been explicitly marked deprecated here
+ASC_DEPRECATED(
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:782:9: warning: 'asc_float2bfloat16_rn' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_float2bfloat16_rn(vector_bfloat16_t& dst, vector_float src, vector_bool mask, ASC_POSITION_EVEN) instead. [-Wdeprecated-declarations]
+        asc_float2bfloat16_rn(v117, v100, mask69);
+        ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/reg_compute/reg_convert.h:6235:1: note: 'asc_float2bfloat16_rn' has been explicitly marked deprecated here
+ASC_DEPRECATED(
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:686:17: warning: unused variable 'vmask' [-Wunused-variable]
+    vector_bool vmask;
+                ^
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:809:13: warning: 'asc_float2bfloat16_rn' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_float2bfloat16_rn(vector_bfloat16_t& dst, vector_float src, vector_bool mask, ASC_POSITION_EVEN) instead. [-Wdeprecated-declarations]
+            asc_float2bfloat16_rn(v135, v134, mask125);
+            ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/reg_compute/reg_convert.h:6235:1: note: 'asc_float2bfloat16_rn' has been explicitly marked deprecated here
+ASC_DEPRECATED(
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:794:17: warning: unused variable 'vmask' [-Wunused-variable]
+    vector_bool vmask;
+                ^
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:830:5: warning: 'asc_set_l0c2gm_config' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_set_l0c_copy_config instead. [-Wdeprecated-declarations]
+    asc_set_l0c2gm_config(0, 0, false);
+    ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:1525:1: note: 'asc_set_l0c2gm_config' has been explicitly marked deprecated here
+ASC_DEPRECATED(9.2.0, "2027/09/07", asc_set_l0c_copy_config)
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:831:5: warning: 'asc_set_l0c2gm_nz2nd' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_set_l0c_copy_nz_para instead. [-Wdeprecated-declarations]
+    asc_set_l0c2gm_nz2nd(0, 0, 0);
+    ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:1522:1: note: 'asc_set_l0c2gm_nz2nd' has been explicitly marked deprecated here
+ASC_DEPRECATED(9.2.0, "2027/09/07", asc_set_l0c_copy_nz_para)
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:833:5: warning: 'asc_set_l0c2gm_quant_post' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07 [-Wdeprecated-declarations]
+    asc_set_l0c2gm_quant_post(0);
+    ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:1543:3: note: 'asc_set_l0c2gm_quant_post' has been explicitly marked deprecated here
+[[deprecated("Deprecated since 9.2.0, Will be removed after 2027/09/07")]]
+  ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:834:5: warning: 'asc_set_l0c2gm_relu_alpha' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_set_l0c_copy_relu_alpha instead. [-Wdeprecated-declarations]
+    asc_set_l0c2gm_relu_alpha(0);
+    ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:1546:1: note: 'asc_set_l0c2gm_relu_alpha' has been explicitly marked deprecated here
+ASC_DEPRECATED(9.2.0, "2027/09/07", asc_set_l0c_copy_relu_alpha)
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:836:5: warning: 'asc_set_l0c2gm_lrelu_alpha' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_set_l0c_copy_lrelu_alpha instead. [-Wdeprecated-declarations]
+    asc_set_l0c2gm_lrelu_alpha(cannbotdsl_lrelu_alpha);
+    ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:1552:1: note: 'asc_set_l0c2gm_lrelu_alpha' has been explicitly marked deprecated here
+ASC_DEPRECATED(9.2.0, "2027/09/07", asc_set_l0c_copy_lrelu_alpha)
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:837:5: warning: 'asc_set_l0c2gm_channel_para' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_set_l0c_copy_channel_para instead. [-Wdeprecated-declarations]
+    asc_set_l0c2gm_channel_para(0);
+    ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:1519:1: note: 'asc_set_l0c2gm_channel_para' has been explicitly marked deprecated here
+ASC_DEPRECATED(9.2.0, "2027/09/07", asc_set_l0c_copy_channel_para)
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:841:5: warning: 'asc_set_l13d_padding' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_set_l12l0a_3d_padding instead. [-Wdeprecated-declarations]
+    asc_set_l13d_padding(static_cast<uint64_t>(0));
+    ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:1528:1: note: 'asc_set_l13d_padding' has been explicitly marked deprecated here
+ASC_DEPRECATED(9.2.0, "2027/09/07", asc_set_l12l0a_3d_padding)
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:842:5: warning: 'asc_set_l12l0_padding_val' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_set_l12l0b_3d_padding instead. [-Wdeprecated-declarations]
+    asc_set_l12l0_padding_val(static_cast<uint64_t>(0));
+    ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:1540:1: note: 'asc_set_l12l0_padding_val' has been explicitly marked deprecated here
+ASC_DEPRECATED(9.2.0, "2027/09/07", asc_set_l12l0b_3d_padding)
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:878:9: warning: 'asc_copy_gm2l1_nd2nz' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_copy_gm2l1_nd2nz( __cbuf__ bfloat16_t* dst, __gm__ bfloat16_t* src, uint64_t src_d_value, asc_load_l2_cache_mode l2_cache_mode, uint16_t n_value, uint32_t d_value, uint64_t src_nd_matrix_stride, bool enable_small_c0) instead. [-Wdeprecated-declarations]
+        asc_copy_gm2l1_nd2nz(view_root157 + 0, gm0 + 0, t161, 0, 64, 512, 0, false);
+        ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:1774:1: note: 'asc_copy_gm2l1_nd2nz' has been explicitly marked deprecated here
+ASC_DEPRECATED(
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:902:17: warning: 'asc_mmad' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_mmad( __cc__ float* c_matrix, __ca__ bfloat16_t* a_matrix, __cb__ bfloat16_t* b_matrix, uint16_t m, uint16_t k, uint16_t n, asc_unit_flag_mode unit_flag_mode, bool k_direction_align, bool c_matrix_source, bool c_matrix_init_val) instead. [-Wdeprecated-declarations]
+                asc_mmad(view_root169 + 0, view_root163, view_root166, 64, 128, 128, 0, true, false, true);
+                ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_compute/cube_compute.h:315:1: note: 'asc_mmad' has been explicitly marked deprecated here
+ASC_DEPRECATED(
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:904:17: warning: 'asc_mmad' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_mmad( __cc__ float* c_matrix, __ca__ bfloat16_t* a_matrix, __cb__ bfloat16_t* b_matrix, uint16_t m, uint16_t k, uint16_t n, asc_unit_flag_mode unit_flag_mode, bool k_direction_align, bool c_matrix_source, bool c_matrix_init_val) instead. [-Wdeprecated-declarations]
+                asc_mmad(view_root169 + 0, view_root163, view_root166, 64, 128, 128, 0, true, false, false);
+                ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_compute/cube_compute.h:315:1: note: 'asc_mmad' has been explicitly marked deprecated here
+ASC_DEPRECATED(
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:915:9: warning: 'asc_set_l0c2gm_nz2nd' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_set_l0c_copy_nz_para instead. [-Wdeprecated-declarations]
+        asc_set_l0c2gm_nz2nd(1, 0, 0);
+        ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:1522:1: note: 'asc_set_l0c2gm_nz2nd' has been explicitly marked deprecated here
+ASC_DEPRECATED(9.2.0, "2027/09/07", asc_set_l0c_copy_nz_para)
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:916:9: warning: 'asc_copy_l0c2ub' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_copy_l0c2ub( __ubuf__ float* dst, __cc__ float* src, uint16_t n_size, uint16_t m_size, uint32_t dst_stride, uint16_t src_stride, int8_t sub_blockid, asc_dual_dst_mode dual_dst_ctrl, asc_unit_flag_mode unit_flag_mode, asc_quant_mode quant_pre_mode, asc_relu_pre_mode relu_pre_mode, bool enable_channel_split, bool enable_nz2nd, bool enable_nz2dn, bool enable_clip_relu_pre) instead. [-Wdeprecated-declarations]
+        asc_copy_l0c2ub((__ubuf__ float*)view_root170 + 0, view_root171, 128, 64, 128, 64, 1, static_cast<bool>(0), 0, 0, QuantMode_t::NoQuant, 0, false, true, 0, 0, false, 0, false, false, false, false);
+        ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:2382:1: note: 'asc_copy_l0c2ub' has been explicitly marked deprecated here
+ASC_DEPRECATED(
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:938:13: warning: 'asc_mmad' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_mmad( __cc__ float* c_matrix, __ca__ bfloat16_t* a_matrix, __cb__ bfloat16_t* b_matrix, uint16_t m, uint16_t k, uint16_t n, asc_unit_flag_mode unit_flag_mode, bool k_direction_align, bool c_matrix_source, bool c_matrix_init_val) instead. [-Wdeprecated-declarations]
+            asc_mmad(view_root171 + 0, view_root174, view_root175, 64, 128, 128, 0, true, false, true);
+            ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_compute/cube_compute.h:315:1: note: 'asc_mmad' has been explicitly marked deprecated here
+ASC_DEPRECATED(
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:946:13: warning: 'asc_set_l0c2gm_nz2nd' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_set_l0c_copy_nz_para instead. [-Wdeprecated-declarations]
+            asc_set_l0c2gm_nz2nd(1, 0, 0);
+            ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:1522:1: note: 'asc_set_l0c2gm_nz2nd' has been explicitly marked deprecated here
+ASC_DEPRECATED(9.2.0, "2027/09/07", asc_set_l0c_copy_nz_para)
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+In file included from ${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/entry.cpp:1:
+${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/90b0c6396179407cde2fc228ae883c8ef765d23261afc83c9c43558998a20f65/device_callable.hpp:947:13: warning: 'asc_copy_l0c2ub' is deprecated: Deprecated since 9.2.0, Will be removed after 2027/09/07, Use asc_copy_l0c2ub( __ubuf__ float* dst, __cc__ float* src, uint16_t n_size, uint16_t m_size, uint32_t dst_stride, uint16_t src_stride, int8_t sub_blockid, asc_dual_dst_mode dual_dst_ctrl, asc_unit_flag_mode unit_flag_mode, asc_quant_mode quant_pre_mode, asc_relu_pre_mode relu_pre_mode, bool enable_channel_split, bool enable_nz2nd, bool enable_nz2dn, bool enable_clip_relu_pre) instead. [-Wdeprecated-declarations]
+            asc_copy_l0c2ub((__ubuf__ float*)view_root179 + 0, view_root171, 128, 64, 128, 64, 1, static_cast<bool>(0), 0, 0, QuantMode_t::NoQuant, 0, false, true, 0, 0, false, 0, false, false, false, false);
+            ^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/cube_datamove/cube_datamove.h:2382:1: note: 'asc_copy_l0c2ub' has been explicitly marked deprecated here
+ASC_DEPRECATED(
+^
+/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include/c_api/defs/macro.h:15:7: note: expanded from macro 'ASC_DEPRECATED'
+    [[deprecated("Deprecated since " #version ", Will be removed after " removal_date ", Use " #replacement \
+      ^
+84 warnings and 2 errors generated.

@@ -1,0 +1,14 @@
+compiling reused_mask
+Fatal Python error: Segmentation fault
+
+Current thread 0x0000ffffba624020 (most recent call first):
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/passes.py", line 54 in _run_cannir_passes
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/utils/timer.py", line 45 in wrapper
+  File "${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/aot/device_export.py", line 105 in export_device
+  File "${WORKSPACE}/artifacts/dsv41-swa-dsl/repro-vf-mask-scope.py", line 49 in <module>
+
+Extension modules: numpy._core._multiarray_umath, numpy.linalg._umath_linalg (total: 2)
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.

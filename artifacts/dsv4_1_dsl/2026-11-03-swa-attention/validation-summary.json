@@ -1,0 +1,40 @@
+{
+  "scope": "A5 TP1 SWA MIX integration",
+  "core_first": {
+    "task": "task_20261103_170749_26383031013",
+    "status": "PASS",
+    "active_queries": 3,
+    "device": 6
+  },
+  "core_cases": {
+    "task": "task_20261103_171009_36825611936",
+    "status": "PASS",
+    "active_queries": [
+      0,
+      3,
+      33,
+      129
+    ]
+  },
+  "swa": {
+    "task": "task_20261103_171009_36825914745",
+    "status": "PASS",
+    "active_queries": 72,
+    "run_seconds": 39.31
+  },
+  "layer0": {
+    "task": "task_20261103_171233_45772714226",
+    "status": "PASS",
+    "ep": 2,
+    "active_queries_per_rank": 72,
+    "devices": [
+      4,
+      5
+    ],
+    "run_seconds": 174.79
+  },
+  "thresholds_changed": false,
+  "native_cpp_sources_changed": false,
+  "new_toolchain_changes": false,
+  "performance_claim": null
+}

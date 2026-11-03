@@ -1,0 +1,52 @@
+"""Compile-only comparison of reused and distinct VF mask names."""
+
+import faulthandler
+import sys
+
+import cannbotdsl as cb
+from cannbotdsl import reg as rr
+from cannbotdsl.buffer import Buffer
+
+
+@cb.kernel
+def reused_mask(x: cb.Tensor, out: cb.Tensor):
+    src = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, 64)))
+    dst = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, 64)))
+    cb.mem_copy(src, x)
+    with cb.vf():
+        mask = rr.full_mask()
+        rr.vstore(dst, 0, rr.vload(src), mask)
+    for i in cb.range(2):
+        with cb.vf():
+            mask = rr.full_mask()
+            value = rr.vload(src)
+            rr.vstore(dst, 0, rr.vadds(value, 1.0, mask=mask), mask)
+        cb.mem_copy(out, dst)
+
+
+@cb.kernel
+def separate_masks(x: cb.Tensor, out: cb.Tensor):
+    src = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, 64)))
+    dst = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, 64)))
+    cb.mem_copy(src, x)
+    with cb.vf():
+        mask = rr.full_mask()
+        rr.vstore(dst, 0, rr.vload(src), mask)
+    for i in cb.range(2):
+        with cb.vf():
+            inner_mask = rr.full_mask()
+            value = rr.vload(src)
+            rr.vstore(dst, 0, rr.vadds(value, 1.0, mask=inner_mask), inner_mask)
+        cb.mem_copy(out, dst)
+
+
+spec = cb.TensorSpec((1, 64), cb.dtypes.float32)
+faulthandler.enable()
+kernels = (reused_mask,) if sys.argv[-1] == "bad" else (separate_masks,)
+for kernel in kernels:
+    print("compiling", kernel.fn.__name__, flush=True)
+    try:
+        cb.export_device(kernel, spec, spec, arch="dav-3510")
+        print(kernel.fn.__name__, "PASS", flush=True)
+    except Exception as exc:
+        print(kernel.fn.__name__, "FAIL", str(exc).splitlines()[0], flush=True)
