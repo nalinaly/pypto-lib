@@ -109,7 +109,7 @@ def input_projection_validation(
 
 
 def golden_input_projection(tensors):
-    """量化有效输入，并按 K128 顺序累加计算 QA/KV。"""
+    """量化有效输入，并按每组 32 个元素顺序累加计算 QA/KV 参考结果。"""
     import torch
     from gemm import golden_gemm_bf16_via_mxfp8_to_bf16_sequential
     from quant import _quantize_mxfp8_activation, encode_e8m0, pack_mx_a_scale, unpack_fp8_nz

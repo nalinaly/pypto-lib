@@ -1,0 +1,473 @@
+{
+  "arch": "dav-3510",
+  "calling_convention": "device_function",
+  "completion": {
+    "ddr_barrier": true,
+    "local_pipelines_drained": true,
+    "scalar_gm_flushed": true,
+    "wait_for_all_participants": false
+  },
+  "contract": {
+    "dimensions": [
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_activation_scale_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_output_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_payload_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_weight_scale_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_weight_stride_0"
+      }
+    ],
+    "host_abi_version": 9,
+    "parameters": [
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f8e4m3",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 80
+            },
+            {
+              "kind": "constant",
+              "value": 1280
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_payload_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "payload",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f8e4m3",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 1
+            },
+            {
+              "kind": "constant",
+              "value": 41943040
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_weight_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "weight",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f8e8m0",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 1
+            },
+            {
+              "kind": "constant",
+              "value": 3200
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_activation_scale_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "activation_scale",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f8e8m0",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 1
+            },
+            {
+              "kind": "constant",
+              "value": 1310720
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_weight_scale_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "weight_scale",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "bf16",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 80
+            },
+            {
+              "kind": "constant",
+              "value": 128
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_output_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "output",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "element": "i64",
+          "kind": "scalar"
+        },
+        "has_runtime_default": false,
+        "name": "column",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "element": "i64",
+          "kind": "scalar"
+        },
+        "has_runtime_default": false,
+        "name": "valid_rows",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      }
+    ],
+    "schema_version": 6
+  },
+  "core_type": "aic",
+  "loading": {
+    "host_runtime": false,
+    "text_only": "requires_binary_validation"
+  },
+  "parameters": [
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_fp8_e4m3fn_t_2d_Device_ss_ds",
+      "dtype": "f8e4m3",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "fp8_e4m3fn_t",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 0,
+      "name": "payload",
+      "shape": [
+        80,
+        1280
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_fp8_e4m3fn_t_2d_Device_ss_ds",
+      "dtype": "f8e4m3",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "fp8_e4m3fn_t",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 1,
+      "name": "weight",
+      "shape": [
+        1,
+        41943040
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_fp8_e8m0_t_2d_Device_ss_ds",
+      "dtype": "f8e8m0",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "fp8_e8m0_t",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 2,
+      "name": "activation_scale",
+      "shape": [
+        1,
+        3200
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_fp8_e8m0_t_2d_Device_ss_ds",
+      "dtype": "f8e8m0",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "fp8_e8m0_t",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 3,
+      "name": "weight_scale",
+      "shape": [
+        1,
+        1310720
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "write",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_bfloat16_t_2d_Device_ss_ds",
+      "dtype": "bf16",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "bfloat16_t",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 4,
+      "name": "output",
+      "shape": [
+        80,
+        128
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "alignment": 8,
+      "bits": 64,
+      "cpp_type": "int64_t",
+      "kind": "scalar",
+      "logical_index": 5,
+      "name": "column",
+      "scalar_kind": "integer",
+      "signed": true,
+      "size": 8
+    },
+    {
+      "alignment": 8,
+      "bits": 64,
+      "cpp_type": "int64_t",
+      "kind": "scalar",
+      "logical_index": 6,
+      "name": "valid_rows",
+      "scalar_kind": "integer",
+      "signed": true,
+      "size": 8
+    }
+  ],
+  "participants": {
+    "aic": 1,
+    "aiv": 0
+  },
+  "resources": {
+    "allocations": [
+      {
+        "byte_offset": 0,
+        "bytes": 40960,
+        "core": "aic",
+        "memory_space": 5
+      },
+      {
+        "byte_offset": 0,
+        "bytes": 10240,
+        "core": "aic",
+        "memory_space": 3
+      },
+      {
+        "byte_offset": 0,
+        "bytes": 16384,
+        "core": "aic",
+        "memory_space": 4
+      },
+      {
+        "byte_offset": 27136,
+        "bytes": 512,
+        "core": "aic",
+        "memory_space": 2
+      },
+      {
+        "byte_offset": 10240,
+        "bytes": 16384,
+        "core": "aic",
+        "memory_space": 2
+      },
+      {
+        "byte_offset": 26624,
+        "bytes": 320,
+        "core": "aic",
+        "memory_space": 2
+      },
+      {
+        "byte_offset": 0,
+        "bytes": 10240,
+        "core": "aic",
+        "memory_space": 2
+      }
+    ],
+    "exclusive_local_memory": true,
+    "exclusive_sync_resources": true,
+    "implicit_workspace_bytes": 0,
+    "subblock_id": "physical_aiv_lane"
+  },
+  "schema_version": 1,
+  "source_sha256": "dd014800d82b7a898cd95c76302ed2e8c184c4e9afdbcf1ae94cb69376e5ac4c",
+  "state": {
+    "clobbered": [
+      "DMA",
+      "padding",
+      "quantization",
+      "mask",
+      "local_memory",
+      "sync_resources"
+    ],
+    "entry": "asc_init_and_default_dma_state_atomic_none",
+    "exit_atomic": "none",
+    "preserved": [
+      "CTRL"
+    ]
+  },
+  "symbol": "kernel_project_q_b"
+}

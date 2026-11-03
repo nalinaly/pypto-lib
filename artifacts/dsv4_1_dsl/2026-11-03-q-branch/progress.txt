@@ -1,0 +1,7 @@
+Base 4e9829e752d46687232bd2a2acdc0c64d386d016; branch nalinaly/pypto-lib:dsv4.1-dsl.
+Scope: Q RMSNorm + OCP MXFP8 quantization, QB projection, adjacent-pair RoPE. Preserve BF16 rounding boundaries, E8M0 packing and Indexer outputs.
+Separated AIV normalize/quantize, AIC QB, and AIV RoPE tasks with a BF16 intermediate. Full padded QB payload/scales are zeroed for inactive groups.
+First 17-active norm stage PASS: task_20261103_231650_62644432442. First QB/RoPE stage PASS: task_20261103_231650_62649631514. FP8 payload/E8M0 scales compare byte-exactly against the existing Torch RMSNorm/quantization reference.
+All six norm/QB cases PASS at 0/17/81 active tokens: task_20261103_232156_66521931692. Includes zero/near-zero rows, inactive NaN input, exact untouched output sentinels and an M80 crossing.
+Complete 72-token SWA PASS: task_20261103_232156_66528625140; existing comparators and goldens unchanged. Removed obsolete proj_q_b.cpp and its private q_lora_projection.hpp after eliminating all consumers.
+Layer0 EP2 PASS: task_20261103_232726_71324818679; RUN PASS 157.73s. All original comparators and the 1.5% attention-output budget retained. No framework changes in this step.

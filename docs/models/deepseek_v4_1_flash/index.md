@@ -117,8 +117,7 @@ layer-0 command above to validate composition with EP MoE.
 [`qkv_proj_dsl.py`](../../../models/deepseek_v4_1_flash/qkv_proj_dsl.py)
 quantizes the shared BF16 input to OCP MXFP8, projects QA to BF16 query
 latents, and projects KV to BF16 rows. The existing `qkv_proj_rope.py`
-interface now uses these leaves; Q normalization, QB and Q RoPE remain
-their existing implementations during this stage of the migration.
+interface uses these leaves together with the Q-branch DSL stages below.
 
 Input and output projection share the vector quantizer and NZ-weight
 matrix primitive in
@@ -139,7 +138,40 @@ The default cases cover 0, 17 and 81 active tokens, including an M80
 boundary and inactive NaN input sentinels. FP8/E8M0 output bytes are
 compared exactly; QA/KV use the existing projection tolerance with exact
 inactive-output checks. The SWA and layer-0 commands exercise composition
-with the existing Q normalization, QB, RoPE and the DSL output projection.
+with Q normalization, QB, RoPE and the DSL output projection.
+
+## Q normalization, QB and RoPE in DSL
+
+[`q_branch_dsl.py`](../../../models/deepseek_v4_1_flash/q_branch_dsl.py)
+completes the Q branch with three task types: AIV RMSNorm/quantization,
+AIC QB projection, and AIV adjacent-pair RoPE. PyPTO/simpler owns their
+dependencies. `q_proj_rope` keeps its four outputs: BF16 query latent,
+BF16 Query, MXFP8 QB payload and packed E8M0 scales for Indexer reuse.
+
+RMSNorm accumulates in FP32, uses square root and precise FP32 division,
+rounds to BF16, then applies the shared OCP quantizer. QB writes an explicit
+BF16 intermediate before RoPE. RoPE keeps the non-rotary prefix and stores
+the final 64 lanes as adjacent real/imaginary pairs with BF16 rounding.
+Padded payload/scales are initialized to zero, including inactive M80
+groups; inactive latent and Query output rows retain their input contents.
+
+The intermediate QB buffer makes each stage independently inspectable;
+this implementation does not depend on a hand-written Cube/Vector
+handshake. The obsolete native QB entry and its private header are removed.
+This completes the TP1 SWA projection/cache/Attention/output-projection
+compute path in DSL; mHC and MoE retain their separate implementations.
+
+With an allocated A5 device, run:
+
+```bash
+python models/deepseek_v4_1_flash/qkv_proj_rope.py --stage all --case all -d "$TASK_DEVICE"
+```
+
+The default stages cover 0/17/81 active tokens, zero and near-zero rows,
+inactive NaN input sentinels, and an M80 boundary. They check normalized
+BF16 values, exact FP8/E8M0 bytes, QB output before RoPE, final Q, and exact
+inactive-output preservation. The composed SWA and layer entries keep
+their original golden functions and comparison thresholds.
 
 ## Output projection in DSL
 
@@ -190,3 +222,5 @@ contains its staged validation, generated kernels and cumulative companion
 patches, including the adapter migration to PyPTO.
 The [QA/KV input archive](../../../artifacts/dsv4_1_dsl/2026-11-03-qkv-input/README.txt)
 records the next projection stage and the #1666/#1667 cache-quantizer alignment.
+The [Q-branch archive](../../../artifacts/dsv4_1_dsl/2026-11-03-q-branch/README.txt)
+contains normalization/QB/RoPE stage evidence, frozen data and generated kernels.

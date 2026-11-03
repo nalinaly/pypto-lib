@@ -1,0 +1,41 @@
+# Kernel and Orchestration Configuration
+
+from pathlib import Path
+
+from simpler.task_interface import ArgDirection as _D
+
+_ROOT_DIR = Path(__file__).parent
+
+# Runtime configuration for tensormap_and_ringbuffer.
+# AICPU thread count 0 selects the runtime's architecture default (a2a3: 4; a5: 5).
+RUNTIME_CONFIG = {
+	"runtime": "tensormap_and_ringbuffer",
+	"aicpu_thread_num": 0,
+}
+
+ORCHESTRATION = {
+	"source": str(_ROOT_DIR / "orchestration" / "l2_decode_swa.cpp"),
+	"function_name": "aicpu_orchestration_entry",
+	"signature": [_D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.INOUT, _D.INOUT, _D.INOUT, _D.OUT, _D.OUT],
+}
+
+KERNELS = [
+	{"func_id": 0, "name": "hc_collapse_norm", "source": str(_ROOT_DIR / "kernels" / "aiv" / "hc_collapse_norm.cpp"), "core_type": "aiv", "code_name": "hc_collapse_norm", "signature": [_D.IN, _D.IN, _D.OUT, _D.IN]},
+	{"func_id": 1, "name": "decode_sp_zero_padding", "source": str(_ROOT_DIR / "kernels" / "aiv" / "decode_sp_zero_padding.cpp"), "core_type": "aiv", "code_name": "decode_sp_zero_padding", "signature": [_D.INOUT]},
+	{"func_id": 2, "name": "quantize_bf16_tile", "source": '${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/74e7ba99104d1a980fb5aab06969604832523ae416f92aa119ff279cf2f7e07c/entry.cpp', "core_type": "aiv", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.INOUT, _D.INOUT]},
+	{"func_id": 3, "name": "project_q_a", "source": '${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/2cd9f1d7e14ef152f6c80d6f1373de3ff205a2d2bbd4dfca1738d1443a9a94b6/entry.cpp', "core_type": "aic", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.IN, _D.IN, _D.IN, _D.OUT]},
+	{"func_id": 4, "name": "normalize_quant_rows", "source": '${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/6472cbc672550a6d1a888b15e84a69f6d76981d3cd4cb3d9136942635368b121/entry.cpp', "core_type": "aiv", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.IN, _D.OUT, _D.OUT, _D.OUT]},
+	{"func_id": 5, "name": "project_q_b", "source": '${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/f389a0f6595080dbce4bc8984967fa7ce6b6b54ebed03f1b0248e6146fc9dc73/entry.cpp', "core_type": "aic", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.IN, _D.IN, _D.IN, _D.OUT]},
+	{"func_id": 6, "name": "query_rope_head", "source": '${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/8f2c28324d0d37e186d88f515987c7e8e8c2bd3f88655b3a051ac8ed3ddcffb7/entry.cpp', "core_type": "aiv", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.IN, _D.IN, _D.INOUT]},
+	{"func_id": 7, "name": "project_kv", "source": '${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/d70007ce06a63891f93ccd6f21a06967a2bdd9a515b433e2b4a739bb0bac4173/entry.cpp', "core_type": "aic", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.IN, _D.IN, _D.IN, _D.OUT]},
+	{"func_id": 8, "name": "window_kv_page", "source": '${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/e743abe1941ad6f68eb4c4ad4e223087c50b2f60c9e38d4712a7e0b5e9535a6d/entry.cpp', "core_type": "aiv", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.OUT, _D.OUT]},
+	{"func_id": 9, "name": "swa_query_aic", "source": '${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/fb308b0451fcc9f2257acc3fd6e801bcd4c3238d33999fc385fe4c7b8c42280a/entry.cpp', "core_type": "aic", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.OUT]},
+	{"func_id": 10, "name": "swa_query_aiv", "source": '${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/fb308b0451fcc9f2257acc3fd6e801bcd4c3238d33999fc385fe4c7b8c42280a/entry.cpp', "core_type": "aiv", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.IN, _D.IN, _D.IN, _D.IN, _D.OUT]},
+	{"func_id": 11, "name": "mhc_rms", "source": str(_ROOT_DIR / "kernels" / "aiv" / "mhc_rms.cpp"), "core_type": "aiv", "code_name": "mhc_rms", "signature": [_D.IN, _D.OUT]},
+	{"func_id": 12, "name": "_hc_linear", "source": '${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/kernels/hc_linear.cpp', "core_type": "aic", "external": True, "extra_include_dirs": ['${WORKSPACE}/issue75-env/pypto-pr/runtime/build/pto-isa/include'], "signature": [_D.IN, _D.IN, _D.OUT]},
+	{"func_id": 13, "name": "_hc_sinkhorn", "source": '${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/kernels/hc_sinkhorn.cpp', "core_type": "aiv", "external": True, "extra_include_dirs": ['${WORKSPACE}/issue75-env/pypto-pr/runtime/build/pto-isa/include'], "signature": [_D.IN, _D.IN, _D.IN, _D.IN, _D.OUT, _D.OUT, _D.OUT]},
+	{"func_id": 14, "name": "rope_quant_head", "source": '${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/933000b0184e35692861424b33291ddbd479f77cc3fa73dc6e2580064771d568/entry.cpp', "core_type": "aiv", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.IN, _D.IN, _D.OUT, _D.OUT]},
+	{"func_id": 15, "name": "project_o_a", "source": '${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/983832d5294601d4c425467622b2fb0d0c534242daf566e92862170201a9488c/entry.cpp', "core_type": "aic", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.IN, _D.IN, _D.IN, _D.OUT]},
+	{"func_id": 16, "name": "project_o_b", "source": '${WORKSPACE}/artifacts/dsv41-semantic-review/jit-cache/98e865c984eda2b6e03177f60b7d24a3128ac67d7ce1f69899baaf049ebc3d38/entry.cpp', "core_type": "aic", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '${WORKSPACE}/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.IN, _D.IN, _D.IN, _D.OUT]},
+	{"func_id": 17, "name": "hc_post", "source": str(_ROOT_DIR / "kernels" / "aiv" / "hc_post.cpp"), "core_type": "aiv", "code_name": "hc_post", "signature": [_D.OUT, _D.IN, _D.IN, _D.IN, _D.IN]},
+]

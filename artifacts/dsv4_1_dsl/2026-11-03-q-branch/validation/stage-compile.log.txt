@@ -1,0 +1,12 @@
+[Q_BRANCH] norm tail: active=17
+[RUN] compile ...
+[RUN] compile done (0.39s)
+[RUN] PASS (0.39s)
+[Q_BRANCH] qb tail: active=17
+[RUN] compile ...
+[RUN] compile done (0.64s)
+[RUN] PASS (0.64s)
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.

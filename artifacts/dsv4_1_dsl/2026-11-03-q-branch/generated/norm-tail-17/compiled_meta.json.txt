@@ -1,0 +1,130 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "source",
+      "direction": "In",
+      "shape": [
+        -1,
+        1280
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "weight",
+      "direction": "In",
+      "shape": [
+        1280
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "latent",
+      "direction": "Out",
+      "shape": [
+        -1,
+        1280
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "payload",
+      "direction": "Out",
+      "shape": [
+        -1,
+        1280
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "scales",
+      "direction": "Out",
+      "shape": [
+        1,
+        -1
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "source",
+      "direction": "In",
+      "shape": [
+        -1,
+        1280
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "weight",
+      "direction": "In",
+      "shape": [
+        1280
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "latent",
+      "direction": "Out",
+      "shape": [
+        -1,
+        1280
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "payload",
+      "direction": "Out",
+      "shape": [
+        -1,
+        1280
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "scales",
+      "direction": "Out",
+      "shape": [
+        1,
+        -1
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "num_return_types": 3,
+  "return_aliases": [
+    2,
+    3,
+    4
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}
