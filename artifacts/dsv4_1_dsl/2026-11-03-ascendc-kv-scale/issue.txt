@@ -1,0 +1,97 @@
+[Question][DeepSeek V4.1] 滑窗 KV 量化与 recipes AscendC 的 scale 策略不同，是否影响精度？
+
+## 背景（Background）
+
+在对齐 DeepSeek V4.1 的 decode 滑窗 KV 实现时，发现 PyPTO-lib `main` 与 `cann-recipes-infer` 的 AscendC 路径虽然都使用 **FP8 E4M3 payload、每 32 个元素一个 BF16 scale**，但选择 scale 的量化方式不同。想请维护者确认：这是否是有意的模型实现差异，是否可能影响与参考模型的一致性或实际推理精度？
+
+本 issue 聚焦滑窗 KV 的量化规则。已确认源码差异并完成 CPU 数值复现；尚未据此证明真实权重整网精度退化，也不预设向上取 2 的幂一定更准确。
+
+| 对照对象 | 版本 / 范围 |
+| --- | --- |
+| PyPTO-lib | 提交时核对的 `main`：`420bc107942f94626dc1405172a20eeff70e176f` |
+| cann-recipes-infer | 已检出的 `master` 快照：`fe91511d4bfdc76f58cd0820ea623f7dd88af433`，以下 AscendC 引用均固定在该提交 |
+| 最小数值复现 | Linux aarch64，Python 3.12.15，Torch 2.12.0+cpu；仅在 CPU 上执行两种量化公式，未运行 NPU kernel 或整网 |
+
+## 与 AscendC 的量化方式差异
+
+令 `a = max(abs(x_i))`，其中 `x_i` 是同一组 32 个 RMSNorm/RoPE 后的 BF16 元素。常规有限输入下，两条路径的 scale 策略如下：
+
+| 实现 | scale 策略 | 当 `a = 1` 时 |
+| --- | --- | --- |
+| PyPTO-lib `main` | `BF16(max(a, 1e-4) / 448)` | `0.002227783203125` |
+| recipes AscendC，`round_scale=True` | `BF16(2 ** ceil(log2(max(a, 1e-4) / 448)))` | `0.00390625`，即 `2**-8` |
+
+**PyPTO-lib 当前路径：**
+
+- [`qkv_proj_rope.py` 的 `window_publish`](https://github.com/hw-native-sys/pypto-lib/blob/420bc107942f94626dc1405172a20eeff70e176f/models/deepseek_v4_1_flash/qkv_proj_rope.py#L231-L245) 调用 `norm_rope_publish`。
+- [设备内核 `norm_rope_publish.cpp`](https://github.com/hw-native-sys/pypto-lib/blob/420bc107942f94626dc1405172a20eeff70e176f/models/deepseek_v4_1_flash/kernels/norm_rope_publish.cpp#L144-L165) 对 `amax` 做下限保护、乘 `1/448`、转为 BF16 再转回 FP32，然后用这个已舍入的 scale 归一化并转 FP8；没有向上取 2 的幂。
+- [CPU golden `quantize_mxfp8_cache`](https://github.com/hw-native-sys/pypto-lib/blob/420bc107942f94626dc1405172a20eeff70e176f/models/deepseek_v4_1_flash/quant.py#L192-L206) 同样先把 scale 转为 BF16，再用它计算 payload。设备与自身 golden 在该策略上是一致的。
+
+**recipes AscendC 对照路径：**
+
+- [`Attention.update_win_kv`](https://gitcode.com/cann/cann-recipes-infer/blob/fe91511d4bfdc76f58cd0820ea623f7dd88af433/models/deepseek_v4_1/models/modeling_deepseek.py#L1155-L1163) 调用 `kv_compress_epilog_v2`，明确设置 `quant_mode="mxfp8_bf16"`、`round_scale=True`。
+- [2D kernel 分派](https://gitcode.com/cann/cann-recipes-infer/blob/fe91511d4bfdc76f58cd0820ea623f7dd88af433/ops/ascendc/src/kv_compress_epilog_v2/op_kernel/kv_compress_epilog_v2_layout_2d.h#L131-L150) 在 `roundScale == 1` 时选择 `VFProcessMxFp8FullRowPerf`。
+- [AscendC FP8 量化实现](https://gitcode.com/cann/cann-recipes-infer/blob/fe91511d4bfdc76f58cd0820ea623f7dd88af433/ops/ascendc/src/kv_compress_epilog_v2/op_kernel/kv_compress_epilog_v2_quant_fp8.h#L269-L297) 先计算 FP32 的 `max(a, 1e-4) * (1/448)`，再根据指数和尾数位构造向上取整的 2 的幂，用它量化并存为 BF16。这里的公式是对该位操作规则的表达，并非 kernel 实际调用 `log2`。
+
+另一个相关细节：简单把 recipes 的 `round_scale` 设为 `False` 也不能保证与 PyPTO-lib 逐位相同。[AscendC 非取幂分支](https://gitcode.com/cann/cann-recipes-infer/blob/fe91511d4bfdc76f58cd0820ea623f7dd88af433/ops/ascendc/src/kv_compress_epilog_v2/op_kernel/kv_compress_epilog_v2_quant_fp8.h#L135-L158) 使用 FP32 scale 做除法，随后才将 scale 转 BF16 存储；PyPTO-lib 则先做 BF16 舍入，再参与除法。
+
+## 最小数值示例（CPU）
+
+下面固定量化前的一组 BF16 数据，只比较上述两种量化策略，排除投影、RMSNorm、RoPE 和调度的影响。保存为 `repro.py`，在支持 CPU FP8 转换的 Torch 环境中运行 `python repro.py`。
+
+```python
+import platform
+
+import torch
+
+
+# One BF16 group after RMSNorm/RoPE; only the quantizer is compared.
+x = torch.tensor([1.0, 0.3, 0.1, -0.3] + [0.0] * 28, dtype=torch.bfloat16)
+x = x.float().reshape(1, 32)
+amax = x.abs().amax(dim=-1, keepdim=True).clamp_min(1e-4)
+main_scale = (amax / 448.0).to(torch.bfloat16).float()
+raw_scale = amax * (1.0 / 448.0)
+ascendc_scale = torch.exp2(torch.ceil(torch.log2(raw_scale))).to(torch.bfloat16).float()
+
+print("Python:", platform.python_version())
+print("Torch:", torch.__version__)
+print("Host:", platform.system(), platform.machine())
+print("input[:4]:", x[0, :4].tolist())
+for name, scale in (("PyPTO-lib main", main_scale), ("recipes AscendC round_scale=True", ascendc_scale)):
+    payload = (x / scale).clamp(-448.0, 448.0).to(torch.float8_e4m3fn)
+    restored = payload.float() * scale
+    print(name)
+    print("  scale:", scale.item())
+    print("  payload[:4]:", payload.float()[0, :4].tolist())
+    print("  restored[:4]:", restored[0, :4].tolist())
+
+assert main_scale.item() == 0.002227783203125
+assert ascendc_scale.item() == 0.00390625
+```
+
+实测输出：
+
+```text
+Python: 3.12.15
+Torch: 2.12.0+cpu
+Host: Linux aarch64
+input[:4]: [1.0, 0.30078125, 0.10009765625, -0.30078125]
+PyPTO-lib main
+  scale: 0.002227783203125
+  payload[:4]: [448.0, 128.0, 44.0, -128.0]
+  restored[:4]: [0.998046875, 0.28515625, 0.0980224609375, -0.28515625]
+recipes AscendC round_scale=True
+  scale: 0.00390625
+  payload[:4]: [256.0, 80.0, 26.0, -80.0]
+  restored[:4]: [1.0, 0.3125, 0.1015625, -0.3125]
+```
+
+可见差异会进入 **FP8 payload 和反量化后的 KV 数值**，并不只存在于 scale 的存储值。上面的单组结果只证明两种量化器不等价；scale 的相对差值不能直接当作 Attention 或整网的相对误差。
+
+## 希望维护者确认
+
+1. DeepSeek V4.1 的滑窗 KV 期望采用哪一种规则？`main` 当前的直接 BF16 scale 是否是有意选择，还是应当与 recipes AscendC 的 `round_scale=True` 对齐？
+2. 两种方式均可用存储的 scale 解码，但生成的 KV 数值不同。这种差异是否已有真实权重、连续 decode 或长上下文下的精度对照，能够说明其影响可接受？
+3. 当前 kernel 与 golden 使用同一规则，二者通过校验是否仍可能遗漏与 AscendC 参考路径的语义差异？是否建议补充同一量化前 KV 输入下的跨实现对照，并据结果决定统一规则或明确记录这项差异？
+
+相关：[PyPTO-lib #1543](https://github.com/hw-native-sys/pypto-lib/issues/1543) 讨论其他 V4.1 算术与 CANN 对齐项；本 issue 单独聚焦滑窗 KV 的 FP8 scale 选择和舍入顺序。

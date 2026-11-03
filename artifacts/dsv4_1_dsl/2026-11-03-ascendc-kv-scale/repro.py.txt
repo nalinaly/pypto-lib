@@ -1,0 +1,27 @@
+import platform
+
+import torch
+
+
+# One BF16 group after RMSNorm/RoPE; only the quantizer is compared.
+x = torch.tensor([1.0, 0.3, 0.1, -0.3] + [0.0] * 28, dtype=torch.bfloat16)
+x = x.float().reshape(1, 32)
+amax = x.abs().amax(dim=-1, keepdim=True).clamp_min(1e-4)
+main_scale = (amax / 448.0).to(torch.bfloat16).float()
+raw_scale = amax * (1.0 / 448.0)
+ascendc_scale = torch.exp2(torch.ceil(torch.log2(raw_scale))).to(torch.bfloat16).float()
+
+print("Python:", platform.python_version())
+print("Torch:", torch.__version__)
+print("Host:", platform.system(), platform.machine())
+print("input[:4]:", x[0, :4].tolist())
+for name, scale in (("PyPTO-lib main", main_scale), ("recipes AscendC round_scale=True", ascendc_scale)):
+    payload = (x / scale).clamp(-448.0, 448.0).to(torch.float8_e4m3fn)
+    restored = payload.float() * scale
+    print(name)
+    print("  scale:", scale.item())
+    print("  payload[:4]:", payload.float()[0, :4].tolist())
+    print("  restored[:4]:", restored[0, :4].tolist())
+
+assert main_scale.item() == 0.002227783203125
+assert ascendc_scale.item() == 0.00390625
