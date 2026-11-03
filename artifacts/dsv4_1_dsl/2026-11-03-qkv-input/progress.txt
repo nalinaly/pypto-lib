@@ -1,0 +1,9 @@
+Base 9ca192f3b7eab89d06addd87c44376e195ccf75a; branch nalinaly/pypto-lib:dsv4.1-dsl.
+Scope: shared BF16 input OCP MXFP8 quantization, QA projection and KV projection. Preserve NZ weights, E8M0 packing, BF16 outputs and inactive-row behavior. Q normalization/QB/RoPE remain the existing implementation.
+Extracted shared DSL quantization and MX matrix primitives from o_proj_dsl.py into mxfp8_dsl.py for reuse.
+Shared quantization, QA and KV stage PASS at active=0/17/81 on A5; FP8/E8M0 bytes exact and inactive BF16 output sentinels unchanged. First tail task task_20261103_212749_368373519284; full cases task_20261103_213011_371356820388.
+User requested issue #1666 fix alignment. Inspected merged PR #1667 / e04d7b670d6c99db227b8a514fd7a799f5711cba. Backported common CPU cache FP32 bit rounding; DSL hardware already used that rule. window_kv_dsl now re-exports the common quantizer, removing its separate golden.
+Preserve branch attention_output layer threshold max_error_ratio=0.015; do not adopt upstream 0.02 without need. No C++ implementation changes; obsolete QA/KV native entry files removed after replacing their callers.
+CPU cache check PASS on 2069 groups including adjacent FP32 power-of-two threshold values and amax=1 -> scale=0.00390625. Two-update NPU cache replay PASS: task_20261103_212749_368380730581.
+Complete 72-token SWA PASS: task_20261103_213012_371370125129, same model comparators.
+Layer0 EP2 PASS under unchanged 1.5% attention-output budget: task_20261103_213245_374842719719; RUN PASS 164.56s. All existing comparators passed.

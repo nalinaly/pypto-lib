@@ -1,0 +1,1486 @@
+{
+  "branch": "nalinaly/pypto-lib:dsv4.1-dsl",
+  "model_base": "9ca192f3b7eab89d06addd87c44376e195ccf75a",
+  "cache_fix_reference": "e04d7b670d6c99db227b8a514fd7a799f5711cba",
+  "companion_patches": "../2026-11-03-o-proj/companion-patches",
+  "model_source_sha256": {
+    "mxfp8_dsl.py": "5a50d1b7cad9d2473ec2edce18070a5e7584032554883cb0066050c4801ce2fd",
+    "qkv_proj_dsl.py": "5242486afc53ba7a8b4b1e817cf47b72bc42788424b40b23cd24725e7215b979",
+    "qkv_proj_rope.py": "04e7395d1b684dd904eecfeda623262f7ffd5c926e6d49838c266db004ceab2a",
+    "o_proj.py": "e626121a2c6deec204e79ef4eec3e34c911c89e1fc54a3b917e79c4172d5a8c1",
+    "o_proj_dsl.py": "d25a61e00d04fdb7967b34637866012423557a91fff26f1c28a0bcc88ffe28ac",
+    "quant.py": "eb9efb44c1a72403998ea20119edfcb991611ca544ca82a6a7e1553dfcd82c36",
+    "window_kv_dsl.py": "0b93af2b12ce35daa42e99c8c811cc0cce886aa698d6f83d2d3e87f3d9f1af10",
+    "decode_layer.py": "980dbe4459a06b7894dbe4b3777a3127ebea2bd81532a16aeb7711ad815648fb"
+  },
+  "records": [
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/cache-replay-npu.log",
+      "path": "validation/cache-replay-npu.log.txt",
+      "source_bytes": 6759,
+      "source_sha256": "6bae6cf0f799ecb232ce5fc3e3709ce0399cd740005864aa9101df5a40b062ba",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/cache-scale-cpu.log",
+      "path": "validation/cache-scale-cpu.log.txt",
+      "source_bytes": 469,
+      "source_sha256": "f01946f27cb20af15bb18aed9b453beb78e29a7cf8b9c8f8b85242491ded39b8",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/diff-check.log",
+      "path": "validation/diff-check.log.txt",
+      "source_bytes": 0,
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/layer0-ep2-npu.log",
+      "path": "validation/layer0-ep2-npu.log.txt",
+      "source_bytes": 65812,
+      "source_sha256": "7d323977dab8934b925c17eaff11c4eeaf88fa48c35812509512c60ba27e984a",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/pre-commit.log",
+      "path": "validation/pre-commit.log.txt",
+      "source_bytes": 320,
+      "source_sha256": "5fe92395134bde4d48c3fee75522d76235c330531b943fa00b1491f0d7dba9d3",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/stage-all-npu.log",
+      "path": "validation/stage-all-npu.log.txt",
+      "source_bytes": 20523,
+      "source_sha256": "669dfc1c47b78c691ae638ed9eefc547ec63ea6e3f3854bdcb1f84dd7a12a189",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/stage-compile-2.log",
+      "path": "validation/stage-compile-2.log.txt",
+      "source_bytes": 337,
+      "source_sha256": "f2697ac7968271c79477269b5c7984504393be3c2e2fbb900639afe5e599c609",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/stage-compile.log",
+      "path": "validation/stage-compile.log.txt",
+      "source_bytes": 847,
+      "source_sha256": "14e5cede08f6ba7c501ad878bf4ad8d95696cf43cb660ebf9b72344320f4f936",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/stage-tail-npu.log",
+      "path": "validation/stage-tail-npu.log.txt",
+      "source_bytes": 6845,
+      "source_sha256": "8ca3c1c0bb77f0ce9315adc93378ebc995145b21dcec0d82f4f86d3089fd6dbb",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/swa-72-npu.log",
+      "path": "validation/swa-72-npu.log.txt",
+      "source_bytes": 14614,
+      "source_sha256": "7fa38379f6626e3483dae72253250c7e9c80e6441fbfa805dc01ca124a0cc52e",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/swa-compile.log",
+      "path": "validation/swa-compile.log.txt",
+      "source_bytes": 743,
+      "source_sha256": "ad4ad135c20e2d20d7bc330f7977e767ca77073a039c0d6c8ae2f131c8f0e1c7",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/archive.py",
+      "path": "workflow-snapshots/archive.py.txt",
+      "source_bytes": 5049,
+      "source_sha256": "f038c8254fcc6bd753ceb6905f54d61c6f043468cbb8d66acc5071151b20ef57",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/check-cache-scale.py",
+      "path": "workflow-snapshots/check-cache-scale.py.txt",
+      "source_bytes": 1734,
+      "source_sha256": "7c0a15c51206574aaa82c0ab5bf09ee4ada96580209840645c7351c39c38186f",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/progress.txt",
+      "path": "progress.txt",
+      "source_bytes": 1560,
+      "source_sha256": "bc07e21f76208bf90195f0c30eb393e735298df17ced4e4d0618b48a10742d2d",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/validation-summary.json",
+      "path": "validation-summary.json",
+      "source_bytes": 8286,
+      "source_sha256": "8492985baa0f8d84651c0807899e71f2bd1370a079266de9dc6833cf24751e45",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-qkv-input-dsl/upstream-1666-fix.json",
+      "path": "upstream-1666-fix.json",
+      "source_bytes": 4373,
+      "source_sha256": "8a8ff15b24bd0cac0adb7267438ce2afedfc17ce3107b06f938c318af9080a99",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/data/in/num_tokens.pt",
+      "path": "fixtures/qkv-tail-17/in/num_tokens.pt.gz",
+      "source_bytes": 1598,
+      "source_sha256": "e6c49e5129685259eb7205d9e9b434ca012572cdfacada298757dc37f64c5d07",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/data/in/wkv.pt",
+      "path": "fixtures/qkv-tail-17/in/wkv.pt.gz",
+      "source_bytes": 2622989,
+      "source_sha256": "483bc1b6c615aa15feac1abbaff2795c27532efa737cd9cfb235f59297bb05e8",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/data/in/wkv_scale.pt",
+      "path": "fixtures/qkv-tail-17/in/wkv_scale.pt.gz",
+      "source_bytes": 83575,
+      "source_sha256": "d729161246f652dc1b290f5ff478320b842e06acb4dec77792746e9458c18c2c",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/data/in/wqa.pt",
+      "path": "fixtures/qkv-tail-17/in/wqa.pt.gz",
+      "source_bytes": 6555149,
+      "source_sha256": "4a5b61016161132a0da47dd5bfbbe0d034b28fe659354c797b35d34a93914ef7",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/data/in/wqa_scale.pt",
+      "path": "fixtures/qkv-tail-17/in/wqa_scale.pt.gz",
+      "source_bytes": 206455,
+      "source_sha256": "758aa5db234e3c1971cf40fb593eb6af1ae99978f19c6185a0bf7846f4a96fee",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/data/in/x.pt",
+      "path": "fixtures/qkv-tail-17/in/x.pt.gz",
+      "source_bytes": 329023,
+      "source_sha256": "9f2b2332ff94f2db0e0046c2e743b39a1059e00ac7f378ab25e21a62b114fd58",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/data/out/kv.pt",
+      "path": "fixtures/qkv-tail-17/out/kv.pt.gz",
+      "source_bytes": 34182,
+      "source_sha256": "20e3d199ef9042c4eec9c3ef2aa02e7790871f3716d4ab76da06a08dd184dfa9",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/data/out/payload.pt",
+      "path": "fixtures/qkv-tail-17/out/payload.pt.gz",
+      "source_bytes": 411241,
+      "source_sha256": "029e96806117f7a1294c2b456f3d9fab33b38d2c992f9478fc27e0999e028e49",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/data/out/qa.pt",
+      "path": "fixtures/qkv-tail-17/out/qa.pt.gz",
+      "source_bytes": 83334,
+      "source_sha256": "2079f16fa68e105be7a0c54d5ebea0d13edafa6e2ab7ba8145ce2731e3c10815",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/data/out/scales.pt",
+      "path": "fixtures/qkv-tail-17/out/scales.pt.gz",
+      "source_bytes": 14370,
+      "source_sha256": "374c289427ef990e2814d2be06e505e0513963dba35be3ca8ab9d5ff88f9f816",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/kernel_config.py",
+      "path": "generated/qkv-tail-17/kernel_config.py.txt",
+      "source_bytes": 2260,
+      "source_sha256": "78b5cf732ed1ca168cb5ffdfa7c14bd6cad3832fa379c379285bef5b9e4012e5",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/compiled_meta.json",
+      "path": "generated/qkv-tail-17/compiled_meta.json.txt",
+      "source_bytes": 3472,
+      "source_sha256": "b951b9b7259cae4892a79ea64bad8be9d740ac48dfada55f0d760faaa5e91b18",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/orchestration/input_projection_validation.cpp",
+      "path": "generated/qkv-tail-17/input_projection_validation.cpp",
+      "source_bytes": 14696,
+      "source_sha256": "81d6c392f2f2db82e01717a4f435f780fb42088e3265b52ba3d7df2f72e4e51f",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/cache/incore_0_aiv_entry_d5ab786d017d5a68bab8.bin",
+      "path": "generated/qkv-tail-17/incore_0_aiv_entry_d5ab786d017d5a68bab8.bin",
+      "source_bytes": 1728,
+      "source_sha256": "1e7e861ced781a9dcc30ccefed580eea91584a7962c361beb1da02f5a0f464db",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/cache/incore_1_aic_entry_c7d28d8e0269df776cd1.bin",
+      "path": "generated/qkv-tail-17/incore_1_aic_entry_c7d28d8e0269df776cd1.bin",
+      "source_bytes": 1680,
+      "source_sha256": "a8fbae16a782b1095a35cb3a17d9750159d10f182042a1afafd6685da5a22ad6",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_212752_6xjyy5cd/cache/incore_2_aic_entry_ec4db8ae7bfd7d7e9d84.bin",
+      "path": "generated/qkv-tail-17/incore_2_aic_entry_ec4db8ae7bfd7d7e9d84.bin",
+      "source_bytes": 1704,
+      "source_sha256": "f4fac0f5a76d19c7cfe70e620a4f865d5f0274e4a882a9e2f056abadf546c8ec",
+      "encoding": "binary"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/74e7ba99104d1a980fb5aab06969604832523ae416f92aa119ff279cf2f7e07c/entry.cpp",
+      "path": "generated/qkv-tail-17/quantize_bf16_tile/entry.cpp",
+      "source_bytes": 1096,
+      "source_sha256": "5769fe4ddab530402cca0866c124735b457dacafd5de7c4da0ba7bfc6ffd15ab",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/74e7ba99104d1a980fb5aab06969604832523ae416f92aa119ff279cf2f7e07c/device_callable.hpp",
+      "path": "generated/qkv-tail-17/quantize_bf16_tile/device_callable.hpp",
+      "source_bytes": 36814,
+      "source_sha256": "869b27e4b61456d1cc8d50d89149f9e377c9d8bb03f6aaca29eda2883232e67c",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/74e7ba99104d1a980fb5aab06969604832523ae416f92aa119ff279cf2f7e07c/manifest.json",
+      "path": "generated/qkv-tail-17/quantize_bf16_tile/manifest.json",
+      "source_bytes": 7048,
+      "source_sha256": "3cfdb33355592e974af28ef1063afac30f5c458c67c3aa0de20566d0deade21e",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/2cd9f1d7e14ef152f6c80d6f1373de3ff205a2d2bbd4dfca1738d1443a9a94b6/entry.cpp",
+      "path": "generated/qkv-tail-17/project_q_a/entry.cpp",
+      "source_bytes": 1611,
+      "source_sha256": "272e1035f449b697d222fef24185f1902c52132ed737f5a6b8dc630c2b499dc6",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/2cd9f1d7e14ef152f6c80d6f1373de3ff205a2d2bbd4dfca1738d1443a9a94b6/device_callable.hpp",
+      "path": "generated/qkv-tail-17/project_q_a/device_callable.hpp",
+      "source_bytes": 37161,
+      "source_sha256": "7e4c509df634dfc0ed303e24958683ee59c30664632d18f60635e0ecfb8f8def",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/2cd9f1d7e14ef152f6c80d6f1373de3ff205a2d2bbd4dfca1738d1443a9a94b6/manifest.json",
+      "path": "generated/qkv-tail-17/project_q_a/manifest.json",
+      "source_bytes": 10371,
+      "source_sha256": "4ddbf5168b07223e698a08dfd3d75b06e6cfb27b395d4882b20625d17aba65ea",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/d70007ce06a63891f93ccd6f21a06967a2bdd9a515b433e2b4a739bb0bac4173/entry.cpp",
+      "path": "generated/qkv-tail-17/project_kv/entry.cpp",
+      "source_bytes": 1681,
+      "source_sha256": "2e2c58153db0487ad784c5c9f3b0da6e1106033533ab64f7d9bbbce1844cecf7",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/d70007ce06a63891f93ccd6f21a06967a2bdd9a515b433e2b4a739bb0bac4173/device_callable.hpp",
+      "path": "generated/qkv-tail-17/project_kv/device_callable.hpp",
+      "source_bytes": 37308,
+      "source_sha256": "79a3ed2caa2fd2d2aacba59117c00b3de2bda0c7d1f59e71a46b27ce6235b7aa",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/d70007ce06a63891f93ccd6f21a06967a2bdd9a515b433e2b4a739bb0bac4173/manifest.json",
+      "path": "generated/qkv-tail-17/project_kv/manifest.json",
+      "source_bytes": 10909,
+      "source_sha256": "3be0722465b1d7b456d5184b5dfc37dd9755cf05ac6161c3ed1ea5e3287c0140",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/data/in/num_tokens.pt",
+      "path": "fixtures/qkv-multi-81/in/num_tokens.pt.gz",
+      "source_bytes": 1598,
+      "source_sha256": "f54508fcb26c57e2a03f2e1809b8d754b9ee6ef89bf08ebc240cc80985de4420",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/data/in/wkv.pt",
+      "path": "fixtures/qkv-multi-81/in/wkv.pt.gz",
+      "source_bytes": 2622989,
+      "source_sha256": "483bc1b6c615aa15feac1abbaff2795c27532efa737cd9cfb235f59297bb05e8",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/data/in/wkv_scale.pt",
+      "path": "fixtures/qkv-multi-81/in/wkv_scale.pt.gz",
+      "source_bytes": 83575,
+      "source_sha256": "d729161246f652dc1b290f5ff478320b842e06acb4dec77792746e9458c18c2c",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/data/in/wqa.pt",
+      "path": "fixtures/qkv-multi-81/in/wqa.pt.gz",
+      "source_bytes": 6555149,
+      "source_sha256": "4a5b61016161132a0da47dd5bfbbe0d034b28fe659354c797b35d34a93914ef7",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/data/in/wqa_scale.pt",
+      "path": "fixtures/qkv-multi-81/in/wqa_scale.pt.gz",
+      "source_bytes": 206455,
+      "source_sha256": "758aa5db234e3c1971cf40fb593eb6af1ae99978f19c6185a0bf7846f4a96fee",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/data/in/x.pt",
+      "path": "fixtures/qkv-multi-81/in/x.pt.gz",
+      "source_bytes": 984383,
+      "source_sha256": "2d9de8d0df6c9582c4ccd468feefadf74a6d967ef9dc30443dcb0f8c8657c1e2",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/data/out/kv.pt",
+      "path": "fixtures/qkv-multi-81/out/kv.pt.gz",
+      "source_bytes": 99718,
+      "source_sha256": "d320cbaaa7b7b1f1c451e75095f383f324201f7476e2baba90c077ccbe707e54",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/data/out/payload.pt",
+      "path": "fixtures/qkv-multi-81/out/payload.pt.gz",
+      "source_bytes": 820841,
+      "source_sha256": "21bb55e36d38794db520e816bce05f7101b1ff58eee609fe3d1cbc55557abcad",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/data/out/qa.pt",
+      "path": "fixtures/qkv-multi-81/out/qa.pt.gz",
+      "source_bytes": 247174,
+      "source_sha256": "4556807b881e1601d3d616e7cef389571f2a45a1ec81db706b2667362daf8210",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/data/out/scales.pt",
+      "path": "fixtures/qkv-multi-81/out/scales.pt.gz",
+      "source_bytes": 27170,
+      "source_sha256": "65e13ece16d57a30e354155a94a44a9f2400dfa8043b452db264a97a31b3245d",
+      "encoding": "gzip"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/kernel_config.py",
+      "path": "generated/qkv-multi-81/kernel_config.py.txt",
+      "source_bytes": 2260,
+      "source_sha256": "78b5cf732ed1ca168cb5ffdfa7c14bd6cad3832fa379c379285bef5b9e4012e5",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/compiled_meta.json",
+      "path": "generated/qkv-multi-81/compiled_meta.json.txt",
+      "source_bytes": 3472,
+      "source_sha256": "b951b9b7259cae4892a79ea64bad8be9d740ac48dfada55f0d760faaa5e91b18",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/orchestration/input_projection_validation.cpp",
+      "path": "generated/qkv-multi-81/input_projection_validation.cpp",
+      "source_bytes": 14696,
+      "source_sha256": "81d6c392f2f2db82e01717a4f435f780fb42088e3265b52ba3d7df2f72e4e51f",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/cache/incore_0_aiv_entry_d5ab786d017d5a68bab8.bin",
+      "path": "generated/qkv-multi-81/incore_0_aiv_entry_d5ab786d017d5a68bab8.bin",
+      "source_bytes": 1728,
+      "source_sha256": "1e7e861ced781a9dcc30ccefed580eea91584a7962c361beb1da02f5a0f464db",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/cache/incore_1_aic_entry_c7d28d8e0269df776cd1.bin",
+      "path": "generated/qkv-multi-81/incore_1_aic_entry_c7d28d8e0269df776cd1.bin",
+      "source_bytes": 1680,
+      "source_sha256": "a8fbae16a782b1095a35cb3a17d9750159d10f182042a1afafd6685da5a22ad6",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_input_projection_validation_20261103_213015_eouzxfhu/cache/incore_2_aic_entry_ec4db8ae7bfd7d7e9d84.bin",
+      "path": "generated/qkv-multi-81/incore_2_aic_entry_ec4db8ae7bfd7d7e9d84.bin",
+      "source_bytes": 1704,
+      "source_sha256": "f4fac0f5a76d19c7cfe70e620a4f865d5f0274e4a882a9e2f056abadf546c8ec",
+      "encoding": "binary"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/74e7ba99104d1a980fb5aab06969604832523ae416f92aa119ff279cf2f7e07c/entry.cpp",
+      "path": "generated/qkv-multi-81/quantize_bf16_tile/entry.cpp",
+      "source_bytes": 1096,
+      "source_sha256": "5769fe4ddab530402cca0866c124735b457dacafd5de7c4da0ba7bfc6ffd15ab",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/74e7ba99104d1a980fb5aab06969604832523ae416f92aa119ff279cf2f7e07c/device_callable.hpp",
+      "path": "generated/qkv-multi-81/quantize_bf16_tile/device_callable.hpp",
+      "source_bytes": 36814,
+      "source_sha256": "869b27e4b61456d1cc8d50d89149f9e377c9d8bb03f6aaca29eda2883232e67c",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/74e7ba99104d1a980fb5aab06969604832523ae416f92aa119ff279cf2f7e07c/manifest.json",
+      "path": "generated/qkv-multi-81/quantize_bf16_tile/manifest.json",
+      "source_bytes": 7048,
+      "source_sha256": "3cfdb33355592e974af28ef1063afac30f5c458c67c3aa0de20566d0deade21e",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/2cd9f1d7e14ef152f6c80d6f1373de3ff205a2d2bbd4dfca1738d1443a9a94b6/entry.cpp",
+      "path": "generated/qkv-multi-81/project_q_a/entry.cpp",
+      "source_bytes": 1611,
+      "source_sha256": "272e1035f449b697d222fef24185f1902c52132ed737f5a6b8dc630c2b499dc6",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/2cd9f1d7e14ef152f6c80d6f1373de3ff205a2d2bbd4dfca1738d1443a9a94b6/device_callable.hpp",
+      "path": "generated/qkv-multi-81/project_q_a/device_callable.hpp",
+      "source_bytes": 37161,
+      "source_sha256": "7e4c509df634dfc0ed303e24958683ee59c30664632d18f60635e0ecfb8f8def",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/2cd9f1d7e14ef152f6c80d6f1373de3ff205a2d2bbd4dfca1738d1443a9a94b6/manifest.json",
+      "path": "generated/qkv-multi-81/project_q_a/manifest.json",
+      "source_bytes": 10371,
+      "source_sha256": "4ddbf5168b07223e698a08dfd3d75b06e6cfb27b395d4882b20625d17aba65ea",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/d70007ce06a63891f93ccd6f21a06967a2bdd9a515b433e2b4a739bb0bac4173/entry.cpp",
+      "path": "generated/qkv-multi-81/project_kv/entry.cpp",
+      "source_bytes": 1681,
+      "source_sha256": "2e2c58153db0487ad784c5c9f3b0da6e1106033533ab64f7d9bbbce1844cecf7",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/d70007ce06a63891f93ccd6f21a06967a2bdd9a515b433e2b4a739bb0bac4173/device_callable.hpp",
+      "path": "generated/qkv-multi-81/project_kv/device_callable.hpp",
+      "source_bytes": 37308,
+      "source_sha256": "79a3ed2caa2fd2d2aacba59117c00b3de2bda0c7d1f59e71a46b27ce6235b7aa",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/d70007ce06a63891f93ccd6f21a06967a2bdd9a515b433e2b4a739bb0bac4173/manifest.json",
+      "path": "generated/qkv-multi-81/project_kv/manifest.json",
+      "source_bytes": 10909,
+      "source_sha256": "3be0722465b1d7b456d5184b5dfc37dd9755cf05ac6161c3ed1ea5e3287c0140",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_window_kv_replay_program_20261103_212752_mjxpdr02/kernel_config.py",
+      "path": "generated/cache-replay/kernel_config.py.txt",
+      "source_bytes": 1417,
+      "source_sha256": "4b9cf8681e316a7d77a4147baca05ccb74c52b8a38414814fcd57a02376a4122",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_window_kv_replay_program_20261103_212752_mjxpdr02/compiled_meta.json",
+      "path": "generated/cache-replay/compiled_meta.json.txt",
+      "source_bytes": 3579,
+      "source_sha256": "e8ed8186a5a349e52560a483a93806dc0327a111f5636a92eab3c1d238b984b8",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_window_kv_replay_program_20261103_212752_mjxpdr02/orchestration/window_kv_replay_program.cpp",
+      "path": "generated/cache-replay/window_kv_replay_program.cpp",
+      "source_bytes": 14737,
+      "source_sha256": "b59772480a300eeb62050f4057a57c80a62f35a6ecdd7a2a1ed3e4be3f86c4b0",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_window_kv_replay_program_20261103_212752_mjxpdr02/cache/incore_0_aiv_entry_975c74fc80f64964c2c9.bin",
+      "path": "generated/cache-replay/incore_0_aiv_entry_975c74fc80f64964c2c9.bin",
+      "source_bytes": 1816,
+      "source_sha256": "0a2a93a457dd498f8bca029a0e17a7dfe0520dbefeb9f1a845527ac7dd1f0a4a",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_window_kv_replay_program_20261103_212752_mjxpdr02/cache/incore_146e13d56b60942412fc8eb0_aiv_consume_window_kv_a5.bin",
+      "path": "generated/cache-replay/incore_146e13d56b60942412fc8eb0_aiv_consume_window_kv_a5.bin",
+      "source_bytes": 320,
+      "source_sha256": "e584222b453a075dcd2010835bc0b51d13e570e6d98dd333cd643f03c797efbf",
+      "encoding": "binary"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/f3867bf1fd4b2273a735e1decf4985556f863c112ad45ecc169adbb52d9a9c2a/entry.cpp",
+      "path": "generated/cache-replay/window_kv_page/entry.cpp",
+      "source_bytes": 2024,
+      "source_sha256": "e7ab844ed38047c55ee7b37f1e6649302a6d49d0174885d09df515dae8b85779",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/f3867bf1fd4b2273a735e1decf4985556f863c112ad45ecc169adbb52d9a9c2a/device_callable.hpp",
+      "path": "generated/cache-replay/window_kv_page/device_callable.hpp",
+      "source_bytes": 40435,
+      "source_sha256": "e2c4986b9dc01ebe306028481906bb678760715949747b2a6b98e4dbd4a107c5",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/f3867bf1fd4b2273a735e1decf4985556f863c112ad45ecc169adbb52d9a9c2a/manifest.json",
+      "path": "generated/cache-replay/window_kv_page/manifest.json",
+      "source_bytes": 12197,
+      "source_sha256": "e4f1cd776a6f3f7ff1f6e816250ef6fe401bc7af3d322a79e9cb1bfa608f03fe",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/kernel_config.py",
+      "path": "generated/composed-swa/kernel_config.py.txt",
+      "source_bytes": 8283,
+      "source_sha256": "147c8d36432fa3b1c9c27a72d26cee234ece853b7d09d9b430df23f5556b64f0",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/orchestration/l2_decode_swa.cpp",
+      "path": "generated/composed-swa/l2_decode_swa.cpp",
+      "source_bytes": 81187,
+      "source_sha256": "23aace0dab7a609472bd3130f41db88e73f508697b96edf805f4724b2c7197e5",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_10_aiv_entry_cae606d419a684f8cb20.bin",
+      "path": "generated/composed-swa/incore_10_aiv_entry_cae606d419a684f8cb20.bin",
+      "source_bytes": 3928,
+      "source_sha256": "b4172ad82645319803a2cb55c344bd867b36b725a46b342a77abe19eab94d5a8",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_12_aic_hc_linear_ee7576c762afdf343b0c.bin",
+      "path": "generated/composed-swa/incore_12_aic_hc_linear_ee7576c762afdf343b0c.bin",
+      "source_bytes": 2000,
+      "source_sha256": "beab41b5437893bac03db16a8d2045221ba082f78d64cf349c0a1d7a039efb5b",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_13_aiv_hc_sinkhorn_6c26187f2cb4daa91c6a.bin",
+      "path": "generated/composed-swa/incore_13_aiv_hc_sinkhorn_6c26187f2cb4daa91c6a.bin",
+      "source_bytes": 2488,
+      "source_sha256": "081cfc1a79bcb2efa2a74c4a131245e01d9c2754e6888a76f0de6a62a48b23c8",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_14_aiv_entry_05589327899190b4cd76.bin",
+      "path": "generated/composed-swa/incore_14_aiv_entry_05589327899190b4cd76.bin",
+      "source_bytes": 2040,
+      "source_sha256": "10e5b4e05d8a3396bc9e422d23b71a51a0e1b543363fc9a7bd793e58fb7c0f9e",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_15_aic_entry_6831dc65606edb5abc95.bin",
+      "path": "generated/composed-swa/incore_15_aic_entry_6831dc65606edb5abc95.bin",
+      "source_bytes": 1632,
+      "source_sha256": "b981b6dc74b989f46daef1f0f28441da334fa148b17634db42acac3ef1284453",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_16_aic_entry_855480af782a1848c605.bin",
+      "path": "generated/composed-swa/incore_16_aic_entry_855480af782a1848c605.bin",
+      "source_bytes": 1664,
+      "source_sha256": "c9ceca13a42b851aa689690dc1faba5a7c582df5b1e564d902a0e489b79f405c",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_2_aiv_entry_d5ab786d017d5a68bab8.bin",
+      "path": "generated/composed-swa/incore_2_aiv_entry_d5ab786d017d5a68bab8.bin",
+      "source_bytes": 1728,
+      "source_sha256": "1e7e861ced781a9dcc30ccefed580eea91584a7962c361beb1da02f5a0f464db",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_34c0f31f5cff271bdad8a2a8_aiv_mhc_rms_a5.bin",
+      "path": "generated/composed-swa/incore_34c0f31f5cff271bdad8a2a8_aiv_mhc_rms_a5.bin",
+      "source_bytes": 2712,
+      "source_sha256": "215885ea1ccfda73647d05bdba1748e03ec4d2ecef387382875be716f77bd55e",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_3_aic_entry_c7d28d8e0269df776cd1.bin",
+      "path": "generated/composed-swa/incore_3_aic_entry_c7d28d8e0269df776cd1.bin",
+      "source_bytes": 1680,
+      "source_sha256": "a8fbae16a782b1095a35cb3a17d9750159d10f182042a1afafd6685da5a22ad6",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_3d478377ddcb071052dfe816_aiv_attention_q_norm_quant_a5.bin",
+      "path": "generated/composed-swa/incore_3d478377ddcb071052dfe816_aiv_attention_q_norm_quant_a5.bin",
+      "source_bytes": 12896,
+      "source_sha256": "35dde84e0025a254d7c0f9c1e05b9b8e5846530c4f33ef4268dfadb543d43a2d",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_5_aic_proj_q_b_95b0884e6e710219a380.bin",
+      "path": "generated/composed-swa/incore_5_aic_proj_q_b_95b0884e6e710219a380.bin",
+      "source_bytes": 17880,
+      "source_sha256": "bf857fcb52338bed9b3e968a055fc06092e8da27d755415d63e3f73562c29450",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_6_aiv_proj_q_b_cdf2d4eb1449a92eaf9a.bin",
+      "path": "generated/composed-swa/incore_6_aiv_proj_q_b_cdf2d4eb1449a92eaf9a.bin",
+      "source_bytes": 1120,
+      "source_sha256": "9c822b136f0693d9cb17622396612edd2c4d89dc7fb11cdeea6dc78e0e1d07a4",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_7_aic_entry_ec4db8ae7bfd7d7e9d84.bin",
+      "path": "generated/composed-swa/incore_7_aic_entry_ec4db8ae7bfd7d7e9d84.bin",
+      "source_bytes": 1704,
+      "source_sha256": "f4fac0f5a76d19c7cfe70e620a4f865d5f0274e4a882a9e2f056abadf546c8ec",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_8_aiv_entry_1ab6e956a72ae3028f43.bin",
+      "path": "generated/composed-swa/incore_8_aiv_entry_1ab6e956a72ae3028f43.bin",
+      "source_bytes": 2072,
+      "source_sha256": "982d4b4ae10a720b411757976cf3890a7275e272c7ae619d4090cbe4ac7fec97",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_9_aic_entry_2b60792f9d9534735751.bin",
+      "path": "generated/composed-swa/incore_9_aic_entry_2b60792f9d9534735751.bin",
+      "source_bytes": 1240,
+      "source_sha256": "910fb22b6710d90b2660fb989c1a1766ca626c09878981efd869e14f5a8a45e6",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_c7dc6212d2ebec8e92fc167c_aiv_hc_post_a5.bin",
+      "path": "generated/composed-swa/incore_c7dc6212d2ebec8e92fc167c_aiv_hc_post_a5.bin",
+      "source_bytes": 5208,
+      "source_sha256": "93a3762df78c4bf1a1cdaa62967745bb3ebbd0b44f121ac550a887c10bf862f2",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_d43e9a67dee96974a81d7b84_aiv_decode_sp_zero_padding_a5.bin",
+      "path": "generated/composed-swa/incore_d43e9a67dee96974a81d7b84_aiv_decode_sp_zero_padding_a5.bin",
+      "source_bytes": 544,
+      "source_sha256": "fe3369d70d2a2c23635a909fc73adfaa030b9f095b3b4814f9aeecdb8b232545",
+      "encoding": "binary"
+    },
+    {
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_swa_20261103_213021_9ndg21wa/next_levels/l2_decode_swa/cache/incore_f86d06861f0340f0c46c6d02_aiv_hc_collapse_norm_a5.bin",
+      "path": "generated/composed-swa/incore_f86d06861f0340f0c46c6d02_aiv_hc_collapse_norm_a5.bin",
+      "source_bytes": 8000,
+      "source_sha256": "92b76aae1fc89ad85ef302546805b42076303ec6f93f163b2eab28ab6a32f424",
+      "encoding": "binary"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/74e7ba99104d1a980fb5aab06969604832523ae416f92aa119ff279cf2f7e07c/entry.cpp",
+      "path": "generated/composed-swa/quantize_bf16_tile/entry.cpp",
+      "source_bytes": 1096,
+      "source_sha256": "5769fe4ddab530402cca0866c124735b457dacafd5de7c4da0ba7bfc6ffd15ab",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/74e7ba99104d1a980fb5aab06969604832523ae416f92aa119ff279cf2f7e07c/device_callable.hpp",
+      "path": "generated/composed-swa/quantize_bf16_tile/device_callable.hpp",
+      "source_bytes": 36814,
+      "source_sha256": "869b27e4b61456d1cc8d50d89149f9e377c9d8bb03f6aaca29eda2883232e67c",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/74e7ba99104d1a980fb5aab06969604832523ae416f92aa119ff279cf2f7e07c/manifest.json",
+      "path": "generated/composed-swa/quantize_bf16_tile/manifest.json",
+      "source_bytes": 7048,
+      "source_sha256": "3cfdb33355592e974af28ef1063afac30f5c458c67c3aa0de20566d0deade21e",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/2cd9f1d7e14ef152f6c80d6f1373de3ff205a2d2bbd4dfca1738d1443a9a94b6/entry.cpp",
+      "path": "generated/composed-swa/project_q_a/entry.cpp",
+      "source_bytes": 1611,
+      "source_sha256": "272e1035f449b697d222fef24185f1902c52132ed737f5a6b8dc630c2b499dc6",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/2cd9f1d7e14ef152f6c80d6f1373de3ff205a2d2bbd4dfca1738d1443a9a94b6/device_callable.hpp",
+      "path": "generated/composed-swa/project_q_a/device_callable.hpp",
+      "source_bytes": 37161,
+      "source_sha256": "7e4c509df634dfc0ed303e24958683ee59c30664632d18f60635e0ecfb8f8def",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/2cd9f1d7e14ef152f6c80d6f1373de3ff205a2d2bbd4dfca1738d1443a9a94b6/manifest.json",
+      "path": "generated/composed-swa/project_q_a/manifest.json",
+      "source_bytes": 10371,
+      "source_sha256": "4ddbf5168b07223e698a08dfd3d75b06e6cfb27b395d4882b20625d17aba65ea",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/d70007ce06a63891f93ccd6f21a06967a2bdd9a515b433e2b4a739bb0bac4173/entry.cpp",
+      "path": "generated/composed-swa/project_kv/entry.cpp",
+      "source_bytes": 1681,
+      "source_sha256": "2e2c58153db0487ad784c5c9f3b0da6e1106033533ab64f7d9bbbce1844cecf7",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/d70007ce06a63891f93ccd6f21a06967a2bdd9a515b433e2b4a739bb0bac4173/device_callable.hpp",
+      "path": "generated/composed-swa/project_kv/device_callable.hpp",
+      "source_bytes": 37308,
+      "source_sha256": "79a3ed2caa2fd2d2aacba59117c00b3de2bda0c7d1f59e71a46b27ce6235b7aa",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/d70007ce06a63891f93ccd6f21a06967a2bdd9a515b433e2b4a739bb0bac4173/manifest.json",
+      "path": "generated/composed-swa/project_kv/manifest.json",
+      "source_bytes": 10909,
+      "source_sha256": "3be0722465b1d7b456d5184b5dfc37dd9755cf05ac6161c3ed1ea5e3287c0140",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/e743abe1941ad6f68eb4c4ad4e223087c50b2f60c9e38d4712a7e0b5e9535a6d/entry.cpp",
+      "path": "generated/composed-swa/window_kv_page/entry.cpp",
+      "source_bytes": 2164,
+      "source_sha256": "269ea33c753aabf8fe56a69e6de0cdd5882fc4523ec819e1658ed73fbd0e2347",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/e743abe1941ad6f68eb4c4ad4e223087c50b2f60c9e38d4712a7e0b5e9535a6d/device_callable.hpp",
+      "path": "generated/composed-swa/window_kv_page/device_callable.hpp",
+      "source_bytes": 41399,
+      "source_sha256": "3c57942244f9645207b0d72e324f6a654399b3e25d3062a6a9a7c1a35ece08a3",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/e743abe1941ad6f68eb4c4ad4e223087c50b2f60c9e38d4712a7e0b5e9535a6d/manifest.json",
+      "path": "generated/composed-swa/window_kv_page/manifest.json",
+      "source_bytes": 12946,
+      "source_sha256": "f5cbe0346df0120f1feaae6fe7963e81b60d2fe3a713663ac009c09254865d2e",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/fb308b0451fcc9f2257acc3fd6e801bcd4c3238d33999fc385fe4c7b8c42280a/entry.cpp",
+      "path": "generated/composed-swa/swa_query_aic/entry.cpp",
+      "source_bytes": 1776,
+      "source_sha256": "3dcc90f4aa04ace1de4cc8236b943eba50a7e075d8bb0ec8f662226f9bdac5ba",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/fb308b0451fcc9f2257acc3fd6e801bcd4c3238d33999fc385fe4c7b8c42280a/device_callable.hpp",
+      "path": "generated/composed-swa/swa_query_aic/device_callable.hpp",
+      "source_bytes": 51452,
+      "source_sha256": "a6b92354fcafef37bd9dff2d52b558782a1cc295e843da7e9c319697fd3c339f",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/fb308b0451fcc9f2257acc3fd6e801bcd4c3238d33999fc385fe4c7b8c42280a/manifest.json",
+      "path": "generated/composed-swa/swa_query_aic/manifest.json",
+      "source_bytes": 12833,
+      "source_sha256": "f04b89c637ae89f49f6fd607c89f882d1f47eb0825e7263e5e1670e4fee3c3f6",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/fb308b0451fcc9f2257acc3fd6e801bcd4c3238d33999fc385fe4c7b8c42280a/entry.cpp",
+      "path": "generated/composed-swa/swa_query_aiv/entry.cpp",
+      "source_bytes": 1776,
+      "source_sha256": "3dcc90f4aa04ace1de4cc8236b943eba50a7e075d8bb0ec8f662226f9bdac5ba",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/fb308b0451fcc9f2257acc3fd6e801bcd4c3238d33999fc385fe4c7b8c42280a/device_callable.hpp",
+      "path": "generated/composed-swa/swa_query_aiv/device_callable.hpp",
+      "source_bytes": 51452,
+      "source_sha256": "a6b92354fcafef37bd9dff2d52b558782a1cc295e843da7e9c319697fd3c339f",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/fb308b0451fcc9f2257acc3fd6e801bcd4c3238d33999fc385fe4c7b8c42280a/manifest.json",
+      "path": "generated/composed-swa/swa_query_aiv/manifest.json",
+      "source_bytes": 12833,
+      "source_sha256": "f04b89c637ae89f49f6fd607c89f882d1f47eb0825e7263e5e1670e4fee3c3f6",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/933000b0184e35692861424b33291ddbd479f77cc3fa73dc6e2580064771d568/entry.cpp",
+      "path": "generated/composed-swa/rope_quant_head/entry.cpp",
+      "source_bytes": 1696,
+      "source_sha256": "21f61cf8666696bc7b127a7b764132d4789a03baa3904aa4001b27e0ebdeac7e",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/933000b0184e35692861424b33291ddbd479f77cc3fa73dc6e2580064771d568/device_callable.hpp",
+      "path": "generated/composed-swa/rope_quant_head/device_callable.hpp",
+      "source_bytes": 41283,
+      "source_sha256": "ef19cbd45336fd7060b0a4dfb8159b74aaedec3bd1685de509a998d9e8298e4c",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/933000b0184e35692861424b33291ddbd479f77cc3fa73dc6e2580064771d568/manifest.json",
+      "path": "generated/composed-swa/rope_quant_head/manifest.json",
+      "source_bytes": 10759,
+      "source_sha256": "c00a9a3af5e3956dd65437ab467cf9cd49602bf2c754bb1117e372c286cc8619",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/983832d5294601d4c425467622b2fb0d0c534242daf566e92862170201a9488c/entry.cpp",
+      "path": "generated/composed-swa/project_o_a/entry.cpp",
+      "source_bytes": 1540,
+      "source_sha256": "b6e959f1c92c769e43dacfb704f45992b957cc9e2f9e56a8a59890d2438fe004",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/983832d5294601d4c425467622b2fb0d0c534242daf566e92862170201a9488c/device_callable.hpp",
+      "path": "generated/composed-swa/project_o_a/device_callable.hpp",
+      "source_bytes": 37013,
+      "source_sha256": "a49dfca2a867ed9c28c91059968a55fa3bc8c09730438653bc9d2267ad30fbee",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/983832d5294601d4c425467622b2fb0d0c534242daf566e92862170201a9488c/manifest.json",
+      "path": "generated/composed-swa/project_o_a/manifest.json",
+      "source_bytes": 9828,
+      "source_sha256": "2f59455480b9f9438410def015d456f7a487eb3b0ca587d589f180c3d5749bce",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/98e865c984eda2b6e03177f60b7d24a3128ac67d7ce1f69899baaf049ebc3d38/entry.cpp",
+      "path": "generated/composed-swa/project_o_b/entry.cpp",
+      "source_bytes": 1611,
+      "source_sha256": "99f05b63d6a240e8cc9073f27f836e55a096509fe43f4e57fadb8a92e8aa025f",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/98e865c984eda2b6e03177f60b7d24a3128ac67d7ce1f69899baaf049ebc3d38/device_callable.hpp",
+      "path": "generated/composed-swa/project_o_b/device_callable.hpp",
+      "source_bytes": 37164,
+      "source_sha256": "c8b4f539fd96bd172c976e6be8f2e3b91001998d958b880ff8bbafcc6e72bafa",
+      "encoding": "normalized UTF-8"
+    },
+    {
+      "source": "artifacts/dsv41-semantic-review/jit-cache/98e865c984eda2b6e03177f60b7d24a3128ac67d7ce1f69899baaf049ebc3d38/manifest.json",
+      "path": "generated/composed-swa/project_o_b/manifest.json",
+      "source_bytes": 10375,
+      "source_sha256": "5931ba9a62ffb9dedfcac641785dc00f2119fb6100ef3c7edf365da691d5cc17",
+      "encoding": "normalized UTF-8"
+    }
+  ],
+  "stored_files": [
+    {
+      "path": "README.txt",
+      "bytes": 5453,
+      "sha256": "80319f8411f80fa75b3b80c10121b90f8f052a978dec4f7a046035b3b517dea1"
+    },
+    {
+      "path": "fixtures/qkv-multi-81/in/num_tokens.pt.gz",
+      "bytes": 583,
+      "sha256": "db5184d577c314a82d2b22c46531517fdd315a44f4ac9c1148a2cc3f40aac05b"
+    },
+    {
+      "path": "fixtures/qkv-multi-81/in/wkv.pt.gz",
+      "bytes": 2165799,
+      "sha256": "05eae0219f6a11f8971c671242b87462d278d7bf21b522ab98ec7c114eb36886"
+    },
+    {
+      "path": "fixtures/qkv-multi-81/in/wkv_scale.pt.gz",
+      "bytes": 18223,
+      "sha256": "4d8cc511e7f88528cfadf39cdc39e092e9a6378bb45cd7763c39b25d082d1776"
+    },
+    {
+      "path": "fixtures/qkv-multi-81/in/wqa.pt.gz",
+      "bytes": 5413256,
+      "sha256": "18d4d12e047d22e22500ea9176047a4331b6adf597a5a8034966de439d841b44"
+    },
+    {
+      "path": "fixtures/qkv-multi-81/in/wqa_scale.pt.gz",
+      "bytes": 43780,
+      "sha256": "c6610d5d774790b3ad3ab8c01e9c9a6ddc6f42cca010b7a5d5e6438059ea1aa7"
+    },
+    {
+      "path": "fixtures/qkv-multi-81/in/x.pt.gz",
+      "bytes": 658761,
+      "sha256": "d440a032eae513f2c9e4859e3ca9e247a5f836b7405482ff7734906d13076d4b"
+    },
+    {
+      "path": "fixtures/qkv-multi-81/out/kv.pt.gz",
+      "bytes": 67461,
+      "sha256": "4bed2f30803ef223ba899c42415c64ca77f4548624e3b38cfd836d8e8000b980"
+    },
+    {
+      "path": "fixtures/qkv-multi-81/out/payload.pt.gz",
+      "bytes": 345218,
+      "sha256": "fb795cf3189b1b92b9ef8841f9bffcaf619f9eadd50154b17e3517a63ca35167"
+    },
+    {
+      "path": "fixtures/qkv-multi-81/out/qa.pt.gz",
+      "bytes": 167366,
+      "sha256": "acb8d47f6524b6cb91f454b50cc6da7adf0089fb454d7da7508d6f5a91b025c8"
+    },
+    {
+      "path": "fixtures/qkv-multi-81/out/scales.pt.gz",
+      "bytes": 2765,
+      "sha256": "bec64a32244fb421da0ecc5581f59fa1072885bf2e4a30938c59332d0ba7f440"
+    },
+    {
+      "path": "fixtures/qkv-tail-17/in/num_tokens.pt.gz",
+      "bytes": 586,
+      "sha256": "367f8c4b87705523d790587f9ef8a2b771a686b35b35833a64a5c882dee55709"
+    },
+    {
+      "path": "fixtures/qkv-tail-17/in/wkv.pt.gz",
+      "bytes": 2165799,
+      "sha256": "05eae0219f6a11f8971c671242b87462d278d7bf21b522ab98ec7c114eb36886"
+    },
+    {
+      "path": "fixtures/qkv-tail-17/in/wkv_scale.pt.gz",
+      "bytes": 18223,
+      "sha256": "4d8cc511e7f88528cfadf39cdc39e092e9a6378bb45cd7763c39b25d082d1776"
+    },
+    {
+      "path": "fixtures/qkv-tail-17/in/wqa.pt.gz",
+      "bytes": 5413256,
+      "sha256": "18d4d12e047d22e22500ea9176047a4331b6adf597a5a8034966de439d841b44"
+    },
+    {
+      "path": "fixtures/qkv-tail-17/in/wqa_scale.pt.gz",
+      "bytes": 43780,
+      "sha256": "c6610d5d774790b3ad3ab8c01e9c9a6ddc6f42cca010b7a5d5e6438059ea1aa7"
+    },
+    {
+      "path": "fixtures/qkv-tail-17/in/x.pt.gz",
+      "bytes": 139254,
+      "sha256": "20876ecd31d1a837ca0c18a9efc64c9e9a9cc1dfbeaf8ec780309a2edc00b7c2"
+    },
+    {
+      "path": "fixtures/qkv-tail-17/out/kv.pt.gz",
+      "bytes": 14897,
+      "sha256": "f5aba589ae7a80cf36c9ba70bd98b1fc3cbcd271d25e1d627a07375557add48b"
+    },
+    {
+      "path": "fixtures/qkv-tail-17/out/payload.pt.gz",
+      "bytes": 73674,
+      "sha256": "dd3100f71848d9dcc1e1cb97795be23e72a69a2c7bfe612e4b802b5ce0ade8a3"
+    },
+    {
+      "path": "fixtures/qkv-tail-17/out/qa.pt.gz",
+      "bytes": 35952,
+      "sha256": "a9542460eea417898cf5ae3fead0f3e4e6b2b8561a564fe1379877b3502efed2"
+    },
+    {
+      "path": "fixtures/qkv-tail-17/out/scales.pt.gz",
+      "bytes": 1189,
+      "sha256": "c0e2448e6f8122a0602ef11c2c885eca18ee25a9c3802a4db816054d4e6ee620"
+    },
+    {
+      "path": "generated/cache-replay/compiled_meta.json.txt",
+      "bytes": 3580,
+      "sha256": "6c1bfc3a2d3fdf048d93f7470bf7dd2053b54446defeb89ef30520af2f02c63f"
+    },
+    {
+      "path": "generated/cache-replay/incore_0_aiv_entry_975c74fc80f64964c2c9.bin",
+      "bytes": 1816,
+      "sha256": "0a2a93a457dd498f8bca029a0e17a7dfe0520dbefeb9f1a845527ac7dd1f0a4a"
+    },
+    {
+      "path": "generated/cache-replay/incore_146e13d56b60942412fc8eb0_aiv_consume_window_kv_a5.bin",
+      "bytes": 320,
+      "sha256": "e584222b453a075dcd2010835bc0b51d13e570e6d98dd333cd643f03c797efbf"
+    },
+    {
+      "path": "generated/cache-replay/kernel_config.py.txt",
+      "bytes": 1367,
+      "sha256": "4665f55ba212e6eee5ba11f25ee47df2f4308c0290f875dffc6dbbbf3d8034d7"
+    },
+    {
+      "path": "generated/cache-replay/window_kv_page/device_callable.hpp",
+      "bytes": 40435,
+      "sha256": "e2c4986b9dc01ebe306028481906bb678760715949747b2a6b98e4dbd4a107c5"
+    },
+    {
+      "path": "generated/cache-replay/window_kv_page/entry.cpp",
+      "bytes": 2024,
+      "sha256": "e7ab844ed38047c55ee7b37f1e6649302a6d49d0174885d09df515dae8b85779"
+    },
+    {
+      "path": "generated/cache-replay/window_kv_page/manifest.json",
+      "bytes": 12197,
+      "sha256": "e4f1cd776a6f3f7ff1f6e816250ef6fe401bc7af3d322a79e9cb1bfa608f03fe"
+    },
+    {
+      "path": "generated/cache-replay/window_kv_replay_program.cpp",
+      "bytes": 14737,
+      "sha256": "b59772480a300eeb62050f4057a57c80a62f35a6ecdd7a2a1ed3e4be3f86c4b0"
+    },
+    {
+      "path": "generated/composed-swa/incore_10_aiv_entry_cae606d419a684f8cb20.bin",
+      "bytes": 3928,
+      "sha256": "b4172ad82645319803a2cb55c344bd867b36b725a46b342a77abe19eab94d5a8"
+    },
+    {
+      "path": "generated/composed-swa/incore_12_aic_hc_linear_ee7576c762afdf343b0c.bin",
+      "bytes": 2000,
+      "sha256": "beab41b5437893bac03db16a8d2045221ba082f78d64cf349c0a1d7a039efb5b"
+    },
+    {
+      "path": "generated/composed-swa/incore_13_aiv_hc_sinkhorn_6c26187f2cb4daa91c6a.bin",
+      "bytes": 2488,
+      "sha256": "081cfc1a79bcb2efa2a74c4a131245e01d9c2754e6888a76f0de6a62a48b23c8"
+    },
+    {
+      "path": "generated/composed-swa/incore_14_aiv_entry_05589327899190b4cd76.bin",
+      "bytes": 2040,
+      "sha256": "10e5b4e05d8a3396bc9e422d23b71a51a0e1b543363fc9a7bd793e58fb7c0f9e"
+    },
+    {
+      "path": "generated/composed-swa/incore_15_aic_entry_6831dc65606edb5abc95.bin",
+      "bytes": 1632,
+      "sha256": "b981b6dc74b989f46daef1f0f28441da334fa148b17634db42acac3ef1284453"
+    },
+    {
+      "path": "generated/composed-swa/incore_16_aic_entry_855480af782a1848c605.bin",
+      "bytes": 1664,
+      "sha256": "c9ceca13a42b851aa689690dc1faba5a7c582df5b1e564d902a0e489b79f405c"
+    },
+    {
+      "path": "generated/composed-swa/incore_2_aiv_entry_d5ab786d017d5a68bab8.bin",
+      "bytes": 1728,
+      "sha256": "1e7e861ced781a9dcc30ccefed580eea91584a7962c361beb1da02f5a0f464db"
+    },
+    {
+      "path": "generated/composed-swa/incore_34c0f31f5cff271bdad8a2a8_aiv_mhc_rms_a5.bin",
+      "bytes": 2712,
+      "sha256": "215885ea1ccfda73647d05bdba1748e03ec4d2ecef387382875be716f77bd55e"
+    },
+    {
+      "path": "generated/composed-swa/incore_3_aic_entry_c7d28d8e0269df776cd1.bin",
+      "bytes": 1680,
+      "sha256": "a8fbae16a782b1095a35cb3a17d9750159d10f182042a1afafd6685da5a22ad6"
+    },
+    {
+      "path": "generated/composed-swa/incore_3d478377ddcb071052dfe816_aiv_attention_q_norm_quant_a5.bin",
+      "bytes": 12896,
+      "sha256": "35dde84e0025a254d7c0f9c1e05b9b8e5846530c4f33ef4268dfadb543d43a2d"
+    },
+    {
+      "path": "generated/composed-swa/incore_5_aic_proj_q_b_95b0884e6e710219a380.bin",
+      "bytes": 17880,
+      "sha256": "bf857fcb52338bed9b3e968a055fc06092e8da27d755415d63e3f73562c29450"
+    },
+    {
+      "path": "generated/composed-swa/incore_6_aiv_proj_q_b_cdf2d4eb1449a92eaf9a.bin",
+      "bytes": 1120,
+      "sha256": "9c822b136f0693d9cb17622396612edd2c4d89dc7fb11cdeea6dc78e0e1d07a4"
+    },
+    {
+      "path": "generated/composed-swa/incore_7_aic_entry_ec4db8ae7bfd7d7e9d84.bin",
+      "bytes": 1704,
+      "sha256": "f4fac0f5a76d19c7cfe70e620a4f865d5f0274e4a882a9e2f056abadf546c8ec"
+    },
+    {
+      "path": "generated/composed-swa/incore_8_aiv_entry_1ab6e956a72ae3028f43.bin",
+      "bytes": 2072,
+      "sha256": "982d4b4ae10a720b411757976cf3890a7275e272c7ae619d4090cbe4ac7fec97"
+    },
+    {
+      "path": "generated/composed-swa/incore_9_aic_entry_2b60792f9d9534735751.bin",
+      "bytes": 1240,
+      "sha256": "910fb22b6710d90b2660fb989c1a1766ca626c09878981efd869e14f5a8a45e6"
+    },
+    {
+      "path": "generated/composed-swa/incore_c7dc6212d2ebec8e92fc167c_aiv_hc_post_a5.bin",
+      "bytes": 5208,
+      "sha256": "93a3762df78c4bf1a1cdaa62967745bb3ebbd0b44f121ac550a887c10bf862f2"
+    },
+    {
+      "path": "generated/composed-swa/incore_d43e9a67dee96974a81d7b84_aiv_decode_sp_zero_padding_a5.bin",
+      "bytes": 544,
+      "sha256": "fe3369d70d2a2c23635a909fc73adfaa030b9f095b3b4814f9aeecdb8b232545"
+    },
+    {
+      "path": "generated/composed-swa/incore_f86d06861f0340f0c46c6d02_aiv_hc_collapse_norm_a5.bin",
+      "bytes": 8000,
+      "sha256": "92b76aae1fc89ad85ef302546805b42076303ec6f93f163b2eab28ab6a32f424"
+    },
+    {
+      "path": "generated/composed-swa/kernel_config.py.txt",
+      "bytes": 7633,
+      "sha256": "aede94d72323b412b5a240cb5881fdd759b0faf04bb7d43e75b5cdacd1d38e3a"
+    },
+    {
+      "path": "generated/composed-swa/l2_decode_swa.cpp",
+      "bytes": 81187,
+      "sha256": "23aace0dab7a609472bd3130f41db88e73f508697b96edf805f4724b2c7197e5"
+    },
+    {
+      "path": "generated/composed-swa/project_kv/device_callable.hpp",
+      "bytes": 37308,
+      "sha256": "79a3ed2caa2fd2d2aacba59117c00b3de2bda0c7d1f59e71a46b27ce6235b7aa"
+    },
+    {
+      "path": "generated/composed-swa/project_kv/entry.cpp",
+      "bytes": 1681,
+      "sha256": "2e2c58153db0487ad784c5c9f3b0da6e1106033533ab64f7d9bbbce1844cecf7"
+    },
+    {
+      "path": "generated/composed-swa/project_kv/manifest.json",
+      "bytes": 10909,
+      "sha256": "3be0722465b1d7b456d5184b5dfc37dd9755cf05ac6161c3ed1ea5e3287c0140"
+    },
+    {
+      "path": "generated/composed-swa/project_o_a/device_callable.hpp",
+      "bytes": 37013,
+      "sha256": "a49dfca2a867ed9c28c91059968a55fa3bc8c09730438653bc9d2267ad30fbee"
+    },
+    {
+      "path": "generated/composed-swa/project_o_a/entry.cpp",
+      "bytes": 1540,
+      "sha256": "b6e959f1c92c769e43dacfb704f45992b957cc9e2f9e56a8a59890d2438fe004"
+    },
+    {
+      "path": "generated/composed-swa/project_o_a/manifest.json",
+      "bytes": 9828,
+      "sha256": "2f59455480b9f9438410def015d456f7a487eb3b0ca587d589f180c3d5749bce"
+    },
+    {
+      "path": "generated/composed-swa/project_o_b/device_callable.hpp",
+      "bytes": 37164,
+      "sha256": "c8b4f539fd96bd172c976e6be8f2e3b91001998d958b880ff8bbafcc6e72bafa"
+    },
+    {
+      "path": "generated/composed-swa/project_o_b/entry.cpp",
+      "bytes": 1611,
+      "sha256": "99f05b63d6a240e8cc9073f27f836e55a096509fe43f4e57fadb8a92e8aa025f"
+    },
+    {
+      "path": "generated/composed-swa/project_o_b/manifest.json",
+      "bytes": 10375,
+      "sha256": "5931ba9a62ffb9dedfcac641785dc00f2119fb6100ef3c7edf365da691d5cc17"
+    },
+    {
+      "path": "generated/composed-swa/project_q_a/device_callable.hpp",
+      "bytes": 37161,
+      "sha256": "7e4c509df634dfc0ed303e24958683ee59c30664632d18f60635e0ecfb8f8def"
+    },
+    {
+      "path": "generated/composed-swa/project_q_a/entry.cpp",
+      "bytes": 1611,
+      "sha256": "272e1035f449b697d222fef24185f1902c52132ed737f5a6b8dc630c2b499dc6"
+    },
+    {
+      "path": "generated/composed-swa/project_q_a/manifest.json",
+      "bytes": 10371,
+      "sha256": "4ddbf5168b07223e698a08dfd3d75b06e6cfb27b395d4882b20625d17aba65ea"
+    },
+    {
+      "path": "generated/composed-swa/quantize_bf16_tile/device_callable.hpp",
+      "bytes": 36814,
+      "sha256": "869b27e4b61456d1cc8d50d89149f9e377c9d8bb03f6aaca29eda2883232e67c"
+    },
+    {
+      "path": "generated/composed-swa/quantize_bf16_tile/entry.cpp",
+      "bytes": 1096,
+      "sha256": "5769fe4ddab530402cca0866c124735b457dacafd5de7c4da0ba7bfc6ffd15ab"
+    },
+    {
+      "path": "generated/composed-swa/quantize_bf16_tile/manifest.json",
+      "bytes": 7048,
+      "sha256": "3cfdb33355592e974af28ef1063afac30f5c458c67c3aa0de20566d0deade21e"
+    },
+    {
+      "path": "generated/composed-swa/rope_quant_head/device_callable.hpp",
+      "bytes": 41283,
+      "sha256": "ef19cbd45336fd7060b0a4dfb8159b74aaedec3bd1685de509a998d9e8298e4c"
+    },
+    {
+      "path": "generated/composed-swa/rope_quant_head/entry.cpp",
+      "bytes": 1696,
+      "sha256": "21f61cf8666696bc7b127a7b764132d4789a03baa3904aa4001b27e0ebdeac7e"
+    },
+    {
+      "path": "generated/composed-swa/rope_quant_head/manifest.json",
+      "bytes": 10759,
+      "sha256": "c00a9a3af5e3956dd65437ab467cf9cd49602bf2c754bb1117e372c286cc8619"
+    },
+    {
+      "path": "generated/composed-swa/swa_query_aic/device_callable.hpp",
+      "bytes": 51452,
+      "sha256": "a6b92354fcafef37bd9dff2d52b558782a1cc295e843da7e9c319697fd3c339f"
+    },
+    {
+      "path": "generated/composed-swa/swa_query_aic/entry.cpp",
+      "bytes": 1776,
+      "sha256": "3dcc90f4aa04ace1de4cc8236b943eba50a7e075d8bb0ec8f662226f9bdac5ba"
+    },
+    {
+      "path": "generated/composed-swa/swa_query_aic/manifest.json",
+      "bytes": 12833,
+      "sha256": "f04b89c637ae89f49f6fd607c89f882d1f47eb0825e7263e5e1670e4fee3c3f6"
+    },
+    {
+      "path": "generated/composed-swa/swa_query_aiv/device_callable.hpp",
+      "bytes": 51452,
+      "sha256": "a6b92354fcafef37bd9dff2d52b558782a1cc295e843da7e9c319697fd3c339f"
+    },
+    {
+      "path": "generated/composed-swa/swa_query_aiv/entry.cpp",
+      "bytes": 1776,
+      "sha256": "3dcc90f4aa04ace1de4cc8236b943eba50a7e075d8bb0ec8f662226f9bdac5ba"
+    },
+    {
+      "path": "generated/composed-swa/swa_query_aiv/manifest.json",
+      "bytes": 12833,
+      "sha256": "f04b89c637ae89f49f6fd607c89f882d1f47eb0825e7263e5e1670e4fee3c3f6"
+    },
+    {
+      "path": "generated/composed-swa/window_kv_page/device_callable.hpp",
+      "bytes": 41399,
+      "sha256": "3c57942244f9645207b0d72e324f6a654399b3e25d3062a6a9a7c1a35ece08a3"
+    },
+    {
+      "path": "generated/composed-swa/window_kv_page/entry.cpp",
+      "bytes": 2164,
+      "sha256": "269ea33c753aabf8fe56a69e6de0cdd5882fc4523ec819e1658ed73fbd0e2347"
+    },
+    {
+      "path": "generated/composed-swa/window_kv_page/manifest.json",
+      "bytes": 12946,
+      "sha256": "f5cbe0346df0120f1feaae6fe7963e81b60d2fe3a713663ac009c09254865d2e"
+    },
+    {
+      "path": "generated/qkv-multi-81/compiled_meta.json.txt",
+      "bytes": 3473,
+      "sha256": "52e54aa724c793148420deb45e082dc05722870e5b57f46d3f0ca170439b8b6a"
+    },
+    {
+      "path": "generated/qkv-multi-81/incore_0_aiv_entry_d5ab786d017d5a68bab8.bin",
+      "bytes": 1728,
+      "sha256": "1e7e861ced781a9dcc30ccefed580eea91584a7962c361beb1da02f5a0f464db"
+    },
+    {
+      "path": "generated/qkv-multi-81/incore_1_aic_entry_c7d28d8e0269df776cd1.bin",
+      "bytes": 1680,
+      "sha256": "a8fbae16a782b1095a35cb3a17d9750159d10f182042a1afafd6685da5a22ad6"
+    },
+    {
+      "path": "generated/qkv-multi-81/incore_2_aic_entry_ec4db8ae7bfd7d7e9d84.bin",
+      "bytes": 1704,
+      "sha256": "f4fac0f5a76d19c7cfe70e620a4f865d5f0274e4a882a9e2f056abadf546c8ec"
+    },
+    {
+      "path": "generated/qkv-multi-81/input_projection_validation.cpp",
+      "bytes": 14696,
+      "sha256": "81d6c392f2f2db82e01717a4f435f780fb42088e3265b52ba3d7df2f72e4e51f"
+    },
+    {
+      "path": "generated/qkv-multi-81/kernel_config.py.txt",
+      "bytes": 2110,
+      "sha256": "5667a2733c2b1921dfaa321f2ddcc43dcf8650933fdb3caa97e5208ff74f6268"
+    },
+    {
+      "path": "generated/qkv-multi-81/project_kv/device_callable.hpp",
+      "bytes": 37308,
+      "sha256": "79a3ed2caa2fd2d2aacba59117c00b3de2bda0c7d1f59e71a46b27ce6235b7aa"
+    },
+    {
+      "path": "generated/qkv-multi-81/project_kv/entry.cpp",
+      "bytes": 1681,
+      "sha256": "2e2c58153db0487ad784c5c9f3b0da6e1106033533ab64f7d9bbbce1844cecf7"
+    },
+    {
+      "path": "generated/qkv-multi-81/project_kv/manifest.json",
+      "bytes": 10909,
+      "sha256": "3be0722465b1d7b456d5184b5dfc37dd9755cf05ac6161c3ed1ea5e3287c0140"
+    },
+    {
+      "path": "generated/qkv-multi-81/project_q_a/device_callable.hpp",
+      "bytes": 37161,
+      "sha256": "7e4c509df634dfc0ed303e24958683ee59c30664632d18f60635e0ecfb8f8def"
+    },
+    {
+      "path": "generated/qkv-multi-81/project_q_a/entry.cpp",
+      "bytes": 1611,
+      "sha256": "272e1035f449b697d222fef24185f1902c52132ed737f5a6b8dc630c2b499dc6"
+    },
+    {
+      "path": "generated/qkv-multi-81/project_q_a/manifest.json",
+      "bytes": 10371,
+      "sha256": "4ddbf5168b07223e698a08dfd3d75b06e6cfb27b395d4882b20625d17aba65ea"
+    },
+    {
+      "path": "generated/qkv-multi-81/quantize_bf16_tile/device_callable.hpp",
+      "bytes": 36814,
+      "sha256": "869b27e4b61456d1cc8d50d89149f9e377c9d8bb03f6aaca29eda2883232e67c"
+    },
+    {
+      "path": "generated/qkv-multi-81/quantize_bf16_tile/entry.cpp",
+      "bytes": 1096,
+      "sha256": "5769fe4ddab530402cca0866c124735b457dacafd5de7c4da0ba7bfc6ffd15ab"
+    },
+    {
+      "path": "generated/qkv-multi-81/quantize_bf16_tile/manifest.json",
+      "bytes": 7048,
+      "sha256": "3cfdb33355592e974af28ef1063afac30f5c458c67c3aa0de20566d0deade21e"
+    },
+    {
+      "path": "generated/qkv-tail-17/compiled_meta.json.txt",
+      "bytes": 3473,
+      "sha256": "52e54aa724c793148420deb45e082dc05722870e5b57f46d3f0ca170439b8b6a"
+    },
+    {
+      "path": "generated/qkv-tail-17/incore_0_aiv_entry_d5ab786d017d5a68bab8.bin",
+      "bytes": 1728,
+      "sha256": "1e7e861ced781a9dcc30ccefed580eea91584a7962c361beb1da02f5a0f464db"
+    },
+    {
+      "path": "generated/qkv-tail-17/incore_1_aic_entry_c7d28d8e0269df776cd1.bin",
+      "bytes": 1680,
+      "sha256": "a8fbae16a782b1095a35cb3a17d9750159d10f182042a1afafd6685da5a22ad6"
+    },
+    {
+      "path": "generated/qkv-tail-17/incore_2_aic_entry_ec4db8ae7bfd7d7e9d84.bin",
+      "bytes": 1704,
+      "sha256": "f4fac0f5a76d19c7cfe70e620a4f865d5f0274e4a882a9e2f056abadf546c8ec"
+    },
+    {
+      "path": "generated/qkv-tail-17/input_projection_validation.cpp",
+      "bytes": 14696,
+      "sha256": "81d6c392f2f2db82e01717a4f435f780fb42088e3265b52ba3d7df2f72e4e51f"
+    },
+    {
+      "path": "generated/qkv-tail-17/kernel_config.py.txt",
+      "bytes": 2110,
+      "sha256": "5667a2733c2b1921dfaa321f2ddcc43dcf8650933fdb3caa97e5208ff74f6268"
+    },
+    {
+      "path": "generated/qkv-tail-17/project_kv/device_callable.hpp",
+      "bytes": 37308,
+      "sha256": "79a3ed2caa2fd2d2aacba59117c00b3de2bda0c7d1f59e71a46b27ce6235b7aa"
+    },
+    {
+      "path": "generated/qkv-tail-17/project_kv/entry.cpp",
+      "bytes": 1681,
+      "sha256": "2e2c58153db0487ad784c5c9f3b0da6e1106033533ab64f7d9bbbce1844cecf7"
+    },
+    {
+      "path": "generated/qkv-tail-17/project_kv/manifest.json",
+      "bytes": 10909,
+      "sha256": "3be0722465b1d7b456d5184b5dfc37dd9755cf05ac6161c3ed1ea5e3287c0140"
+    },
+    {
+      "path": "generated/qkv-tail-17/project_q_a/device_callable.hpp",
+      "bytes": 37161,
+      "sha256": "7e4c509df634dfc0ed303e24958683ee59c30664632d18f60635e0ecfb8f8def"
+    },
+    {
+      "path": "generated/qkv-tail-17/project_q_a/entry.cpp",
+      "bytes": 1611,
+      "sha256": "272e1035f449b697d222fef24185f1902c52132ed737f5a6b8dc630c2b499dc6"
+    },
+    {
+      "path": "generated/qkv-tail-17/project_q_a/manifest.json",
+      "bytes": 10371,
+      "sha256": "4ddbf5168b07223e698a08dfd3d75b06e6cfb27b395d4882b20625d17aba65ea"
+    },
+    {
+      "path": "generated/qkv-tail-17/quantize_bf16_tile/device_callable.hpp",
+      "bytes": 36814,
+      "sha256": "869b27e4b61456d1cc8d50d89149f9e377c9d8bb03f6aaca29eda2883232e67c"
+    },
+    {
+      "path": "generated/qkv-tail-17/quantize_bf16_tile/entry.cpp",
+      "bytes": 1096,
+      "sha256": "5769fe4ddab530402cca0866c124735b457dacafd5de7c4da0ba7bfc6ffd15ab"
+    },
+    {
+      "path": "generated/qkv-tail-17/quantize_bf16_tile/manifest.json",
+      "bytes": 7048,
+      "sha256": "3cfdb33355592e974af28ef1063afac30f5c458c67c3aa0de20566d0deade21e"
+    },
+    {
+      "path": "progress.txt",
+      "bytes": 1560,
+      "sha256": "bc07e21f76208bf90195f0c30eb393e735298df17ced4e4d0618b48a10742d2d"
+    },
+    {
+      "path": "upstream-1666-fix.json",
+      "bytes": 4373,
+      "sha256": "8a8ff15b24bd0cac0adb7267438ce2afedfc17ce3107b06f938c318af9080a99"
+    },
+    {
+      "path": "validation/cache-replay-npu.log.txt",
+      "bytes": 6723,
+      "sha256": "16a1101737c3ccedfc3bdb6eaae1fcee824cd46c2edb5a295fe4967a53a370fe"
+    },
+    {
+      "path": "validation/cache-scale-cpu.log.txt",
+      "bytes": 469,
+      "sha256": "f01946f27cb20af15bb18aed9b453beb78e29a7cf8b9c8f8b85242491ded39b8"
+    },
+    {
+      "path": "validation/diff-check.log.txt",
+      "bytes": 1,
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "validation/layer0-ep2-npu.log.txt",
+      "bytes": 65390,
+      "sha256": "cd4e6c4f5af8b1991c061f5e114fe3ab11e21a60dee96104e707216788934e38"
+    },
+    {
+      "path": "validation/pre-commit.log.txt",
+      "bytes": 320,
+      "sha256": "5fe92395134bde4d48c3fee75522d76235c330531b943fa00b1491f0d7dba9d3"
+    },
+    {
+      "path": "validation/stage-all-npu.log.txt",
+      "bytes": 20490,
+      "sha256": "7ebae14b421d8c5264808ecfefbe23880b72e2eb87691b927129e7751853c7e7"
+    },
+    {
+      "path": "validation/stage-compile-2.log.txt",
+      "bytes": 337,
+      "sha256": "f2697ac7968271c79477269b5c7984504393be3c2e2fbb900639afe5e599c609"
+    },
+    {
+      "path": "validation/stage-compile.log.txt",
+      "bytes": 797,
+      "sha256": "1f895fcbb9e4f8244c74e735e0b8ccca06c2fbceeff9c91be56e6f0192b36073"
+    },
+    {
+      "path": "validation/stage-tail-npu.log.txt",
+      "bytes": 6834,
+      "sha256": "7030f850b4359656b3d977d4904ada7772901944e05ff4f6c566b2f749e053d6"
+    },
+    {
+      "path": "validation/swa-72-npu.log.txt",
+      "bytes": 14553,
+      "sha256": "0648b36996fdf2b45214db2e2369cdf0bcc09c1a590a527efd58dd03b5267671"
+    },
+    {
+      "path": "validation/swa-compile.log.txt",
+      "bytes": 693,
+      "sha256": "31b4eb19cd0c385f2cdbc1d0f3205c7ddba0befb72d60303d4ddfa20a4eec7f7"
+    },
+    {
+      "path": "validation-summary.json",
+      "bytes": 8286,
+      "sha256": "8492985baa0f8d84651c0807899e71f2bd1370a079266de9dc6833cf24751e45"
+    },
+    {
+      "path": "workflow-snapshots/archive.py.txt",
+      "bytes": 5049,
+      "sha256": "f038c8254fcc6bd753ceb6905f54d61c6f043468cbb8d66acc5071151b20ef57"
+    },
+    {
+      "path": "workflow-snapshots/check-cache-scale.py.txt",
+      "bytes": 1734,
+      "sha256": "7c0a15c51206574aaa82c0ab5bf09ee4ada96580209840645c7351c39c38186f"
+    }
+  ],
+  "notes": [
+    "The first 17-active and final 81-active stage inputs/goldens are frozen in full, including generated weights.",
+    "The multi-case harness reused its build directory; 0/17 data there was overwritten by the final 81-active case.",
+    "Stored data/out tensors are CPU goldens; logs record comparisons against actual device outputs.",
+    "Cache replay, full SWA and layer commands did not request save_data; their deterministic specs remain in the model.",
+    "The upstream cache rounding fix is applied while retaining the branch's 1.5% layer attention-output outlier threshold.",
+    "PyPTO/CANNBotDSL worktrees are unchanged in this step; use the preceding archive's cumulative companion patches.",
+    "Native ELF files and installed toolchains are excluded; runtime device text images are included."
+  ]
+}

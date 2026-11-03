@@ -13,7 +13,8 @@
 from pathlib import Path
 
 from gemm import MX_M_TILE
-from o_proj_dsl import grouped_projection, output_projection, quantize_projection, rope_quant
+from o_proj_dsl import grouped_projection, output_projection, rope_quant
+from mxfp8_dsl import quantize_matrix
 
 import torch
 
@@ -147,7 +148,7 @@ def o_proj(
         payload = pl.create_tensor([80, LOCAL_O_WIDTH], dtype=pl.FP8E4M3FN)
         activation_scale_backing = pl.create_tensor([1, 80 * (LOCAL_O_WIDTH // 32)], dtype=pl.FP8E8M0)
         if TP_SIZE == 1:
-            quantize_projection(projected, payload, activation_scale_backing, active_rows)
+            quantize_matrix(projected, payload, activation_scale_backing, active_rows)
         else:
             output_blocks = row_tiles * (LOCAL_O_WIDTH // K_TILE)
             output_workers = pl.min(pl.min(output_blocks, 64), 2 * pl.system.available_cluster_count())

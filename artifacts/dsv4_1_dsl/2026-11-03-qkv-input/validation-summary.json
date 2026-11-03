@@ -1,0 +1,126 @@
+{
+  "date": "2026-11-03",
+  "scope": "Shared input quantization and QA/KV DSL projection; upstream #1666 cache-scale alignment",
+  "npu_validation": [
+    {
+      "log": "stage-tail-npu.log",
+      "task": "task_20261103_212749_368373519284",
+      "scope": "17 active rows; byte-exact input quantization; QA/KV within original tolerance",
+      "status": "PASS",
+      "exit_code": 0,
+      "devices": [
+        0
+      ],
+      "pass_lines": [
+        "[RUN]   'payload' PASS  shape=(80, 5120) dtype=torch.float8_e4m3fn (compare_payload_bytes)",
+        "[RUN]   'scales' PASS  shape=(1, 12800) dtype=torch.float8_e8m0fnu (compare_payload_bytes)",
+        "[RUN]   'qa' PASS  shape=(32, 1280) dtype=torch.bfloat16 (compare_projection)",
+        "[RUN]   'kv' PASS  shape=(32, 512) dtype=torch.bfloat16 (compare_projection)",
+        "[RUN] PASS (22.67s)"
+      ]
+    },
+    {
+      "log": "stage-all-npu.log",
+      "task": "task_20261103_213011_371356820388",
+      "scope": "0/17/81 active rows; dynamic shapes, M80 crossing, inactive sentinels",
+      "status": "PASS",
+      "exit_code": 0,
+      "devices": [
+        2
+      ],
+      "pass_lines": [
+        "[RUN]   'payload' PASS  shape=(80, 5120) dtype=torch.float8_e4m3fn (compare_payload_bytes)",
+        "[RUN]   'scales' PASS  shape=(1, 12800) dtype=torch.float8_e8m0fnu (compare_payload_bytes)",
+        "[RUN]   'qa' PASS  shape=(16, 1280) dtype=torch.bfloat16 (compare_projection)",
+        "[RUN]   'kv' PASS  shape=(16, 512) dtype=torch.bfloat16 (compare_projection)",
+        "[RUN] PASS (22.77s)",
+        "[RUN]   'payload' PASS  shape=(80, 5120) dtype=torch.float8_e4m3fn (compare_payload_bytes)",
+        "[RUN]   'scales' PASS  shape=(1, 12800) dtype=torch.float8_e8m0fnu (compare_payload_bytes)",
+        "[RUN]   'qa' PASS  shape=(32, 1280) dtype=torch.bfloat16 (compare_projection)",
+        "[RUN]   'kv' PASS  shape=(32, 512) dtype=torch.bfloat16 (compare_projection)",
+        "[RUN] PASS (1.21s)",
+        "[RUN]   'payload' PASS  shape=(160, 5120) dtype=torch.float8_e4m3fn (compare_payload_bytes)",
+        "[RUN]   'scales' PASS  shape=(1, 25600) dtype=torch.float8_e8m0fnu (compare_payload_bytes)",
+        "[RUN]   'qa' PASS  shape=(96, 1280) dtype=torch.bfloat16 (compare_projection)",
+        "[RUN]   'kv' PASS  shape=(96, 512) dtype=torch.bfloat16 (compare_projection)",
+        "[RUN] PASS (1.24s)"
+      ]
+    },
+    {
+      "log": "cache-replay-npu.log",
+      "task": "task_20261103_212749_368380730581",
+      "scope": "two cache updates, 72 physical / 71 active tokens, 13 pages",
+      "status": "PASS",
+      "exit_code": 0,
+      "devices": [
+        1
+      ],
+      "pass_lines": [
+        "[RUN]   'cache' PASS  shape=(13, 128, 1, 512) dtype=torch.float8_e4m3fn (compare_payload_bytes)",
+        "[RUN]   'scales' PASS  shape=(13, 128, 1, 16) dtype=torch.bfloat16",
+        "[RUN]   'snapshots' PASS  shape=(2, 1664, 512) dtype=torch.float8_e4m3fn (compare_payload_bytes)",
+        "[RUN]   'scale_snapshots' PASS  shape=(2, 1664, 16) dtype=torch.bfloat16",
+        "[RUN] PASS (20.62s)"
+      ]
+    },
+    {
+      "log": "swa-72-npu.log",
+      "task": "task_20261103_213012_371370125129",
+      "scope": "complete 72-token SWA subgraph",
+      "status": "PASS",
+      "exit_code": 0,
+      "devices": [
+        4
+      ],
+      "pass_lines": [
+        "[RUN]   'window_cache' PASS  shape=(37, 128, 1, 512) dtype=torch.float8_e4m3fn (mapped_pool_ratio_allclose(mapping=window_slots, shape=(72,), block_size=128, leading_rank_axis=False, atol=0.001953125, rtol=0.125, max_error_ratio=0.01))",
+        "[RUN]   'window_cache_scale' PASS  shape=(37, 128, 1, 16) dtype=torch.bfloat16 (mapped_pool_ratio_allclose(mapping=window_slots, shape=(72,), block_size=128, leading_rank_axis=False, atol=0.0, rtol=0.0, max_error_ratio=0.0))",
+        "[RUN]   'attention_output' PASS  shape=(72, 5120) dtype=torch.bfloat16 (ratio_allclose(atol=0.01, rtol=0.0078125, max_error_ratio=0.005, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'attention_hidden' PASS  shape=(72, 4, 5120) dtype=torch.float32 (ratio_allclose(atol=0.01, rtol=0.0078125, max_error_ratio=0.005, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'attention_pre_mix' PASS  shape=(72, 4) dtype=torch.float32 (ratio_allclose(atol=0.0001, rtol=0.0001, max_error_ratio=0.005, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN] PASS (54.28s)"
+      ]
+    },
+    {
+      "log": "layer0-ep2-npu.log",
+      "task": "task_20261103_213245_374842719719",
+      "scope": "complete layer0 EP2, 72 active tokens/rank, generated weights",
+      "status": "PASS",
+      "exit_code": 0,
+      "devices": [
+        2,
+        4
+      ],
+      "pass_lines": [
+        "[RUN]   'window_cache' PASS  shape=(2, 17, 128, 1, 512) dtype=torch.float8_e4m3fn (mapped_pool_ratio_allclose(mapping=window_slots, shape=(2, 72), block_size=128, leading_rank_axis=True, atol=0.001953125, rtol=0.125, max_error_ratio=0.01))",
+        "[RUN]   'window_cache_scale' PASS  shape=(2, 17, 128, 1, 16) dtype=torch.bfloat16 (mapped_pool_ratio_allclose(mapping=window_slots, shape=(2, 72), block_size=128, leading_rank_axis=True, atol=0.0, rtol=0.02, max_error_ratio=0.01))",
+        "[RUN]   'compressed_cache' PASS  shape=(2, 1, 128, 1, 256) dtype=torch.uint8 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'compressed_cache_scale' PASS  shape=(2, 1, 128, 1, 32) dtype=torch.bfloat16 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'index_cache' PASS  shape=(2, 1, 128, 1, 64) dtype=torch.uint8 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'index_cache_scale' PASS  shape=(2, 1, 128, 1, 4) dtype=torch.float8_e8m0fnu (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'state_cache' PASS  shape=(2, 1, 4, 1024) dtype=torch.float32 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'topk_indices' PASS  shape=(2, 72, 512) dtype=torch.int32 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'pool_block_ids' PASS  shape=(2, 72, 32) dtype=torch.int32 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'pool_block_counts' PASS  shape=(2, 72) dtype=torch.int32 (ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'attention_output' PASS  shape=(2, 80, 5120) dtype=torch.bfloat16 (compare_active)",
+        "[RUN]   'attention_hidden' PASS  shape=(2, 80, 4, 5120) dtype=torch.float32 (compare_active)",
+        "[RUN]   'attention_pre_mix' PASS  shape=(2, 80, 4) dtype=torch.float32 (ratio_allclose(atol=0.0001, rtol=0.0001, max_error_ratio=0.005, valid_rows=None, valid_axis=0, zero_tail=False, ignore_nan=False))",
+        "[RUN]   'next_pre_mix' PASS  shape=(2, 80, 4) dtype=torch.float32 (compare)",
+        "[RUN]   'x_mixed' PASS  shape=(2, 80, 5120) dtype=torch.bfloat16 (compare_active)",
+        "[RUN]   'x_next' PASS  shape=(2, 80, 4, 5120) dtype=torch.float32 (compare)",
+        "[RUN] PASS (164.56s)"
+      ]
+    }
+  ],
+  "cpu_validation": {
+    "cache-scale-cpu.log": "2069 groups including FP32 power-of-two boundaries; exact payload/scales; shared quantizer identity"
+  },
+  "upstream_reference": "https://github.com/hw-native-sys/pypto-lib/commit/e04d7b670d6c99db227b8a514fd7a799f5711cba",
+  "retained_threshold": {
+    "layer_attention_output_max_error_ratio": 0.015,
+    "atol": 0.01,
+    "rtol": 0.0078125
+  },
+  "remaining_stages": "Q normalization, QB and Q RoPE retain their existing implementation",
+  "performance": "No A/B performance claim; timings belong to single correctness runs"
+}

@@ -14,10 +14,10 @@ import pypto.language as pl
 from config import FLASH as M
 
 
-# model config
+# 模型配置
 MX_GROUP = M.weight_block_size[0]
 
-# tiling
+# 分块参数
 QUANT_K_TILE = 256
 QUANT_SCALE_TILE = QUANT_K_TILE // 32
 
@@ -190,12 +190,15 @@ def quantize_mxfp4_weight(weight: torch.Tensor) -> tuple[torch.Tensor, torch.Ten
 
 
 def quantize_mxfp8_cache(value: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-    """Quantize the last dimension to E4M3 payload and group-32 BF16 scales."""
+    """沿最后一维量化为 E4M3 数据，每组 32 个元素使用向上取整到 2 的幂次的 BF16 缩放值。"""
     if value.shape[-1] % MX_GROUP:
         raise ValueError("MXFP8 cache width must be divisible by 32")
     grouped = value.float().unflatten(-1, (-1, MX_GROUP))
     amax = grouped.abs().amax(dim=-1).clamp_min(1e-4)
-    scale = (amax / 448.0).to(torch.bfloat16)
+    raw_scale = amax * (1.0 / 448.0)
+    # 将正 FP32 缩放值向上取整到 2 的幂次（上游 #1667）。
+    scale_bits = (raw_scale.view(torch.int32) + 0x007FFFFF) & -0x00800000
+    scale = scale_bits.view(torch.float32).to(torch.bfloat16)
     payload = (grouped / scale.float().unsqueeze(-1)).clamp(-448.0, 448.0)
     return payload.flatten(-2).to(torch.float8_e4m3fn), scale
 

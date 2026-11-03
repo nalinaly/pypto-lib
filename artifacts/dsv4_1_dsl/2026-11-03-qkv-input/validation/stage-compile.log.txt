@@ -1,0 +1,13 @@
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.
+Traceback (most recent call last):
+  File "${WORKSPACE}/artifacts/dsv41-semantic-review/run_case.py", line 21, in <module>
+    runpy.run_path(str(entry), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/qkv_proj_dsl.py", line 166, in <module>
+    from golden.comparators import ratio_allclose
+ModuleNotFoundError: No module named 'golden.comparators'

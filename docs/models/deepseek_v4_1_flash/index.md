@@ -31,6 +31,16 @@ Previous cache rows are interpreted using their stored scales.
 RMS reciprocal and FP8 normalization use precise FP32 division: a one-ULP
 reciprocal error near a BF16 tie can otherwise change an FP8 cache value.
 
+The common CPU cache initializer and DSL golden now share
+`quant.quantize_mxfp8_cache`, using the FP32 bit-rounding rule from
+[upstream #1667](https://github.com/hw-native-sys/pypto-lib/pull/1667), which
+closed [#1666](https://github.com/hw-native-sys/pypto-lib/issues/1666).
+This aligns newly prepared historical cache rows with the publisher's
+existing upward power-of-two rule. It does not change the OCP E8M0
+activation quantizer used by matrix projections. Layer validation retains
+this branch's 1.5% attention-output outlier budget; the upstream change to
+2% is not part of this backport.
+
 PyPTO schedules one AIV task per physical page. Each DSL task processes its
 matching slots in token order: the last active token wins a repeated slot,
 negative/out-of-range slots are skipped, and unselected rows retain their
@@ -102,6 +112,35 @@ indices, irregular/repeated indices, and inactive output sentinels. The
 existing core and composed Attention error thresholds are unchanged. Use the
 layer-0 command above to validate composition with EP MoE.
 
+## Shared input and QA/KV projection in DSL
+
+[`qkv_proj_dsl.py`](../../../models/deepseek_v4_1_flash/qkv_proj_dsl.py)
+quantizes the shared BF16 input to OCP MXFP8, projects QA to BF16 query
+latents, and projects KV to BF16 rows. The existing `qkv_proj_rope.py`
+interface now uses these leaves; Q normalization, QB and Q RoPE remain
+their existing implementations during this stage of the migration.
+
+Input and output projection share the vector quantizer and NZ-weight
+matrix primitive in
+[`mxfp8_dsl.py`](../../../models/deepseek_v4_1_flash/mxfp8_dsl.py).
+PyPTO/simpler schedules 16x256 quantization tiles and M80/N128/K128
+projection tiles. NZ weights, paired E8M0 scale packing, BF16 output
+rounding and inactive-row preservation retain the model's contract.
+The shared input quantizer fills its padded rows with zero payload and
+zero E8M0 codes. The existing Q/KV callers keep the same interface.
+
+Run the standalone stages with an allocated A5 device:
+
+```bash
+python models/deepseek_v4_1_flash/qkv_proj_dsl.py --case all -d "$TASK_DEVICE"
+```
+
+The default cases cover 0, 17 and 81 active tokens, including an M80
+boundary and inactive NaN input sentinels. FP8/E8M0 output bytes are
+compared exactly; QA/KV use the existing projection tolerance with exact
+inactive-output checks. The SWA and layer-0 commands exercise composition
+with the existing Q normalization, QB, RoPE and the DSL output projection.
+
 ## Output projection in DSL
 
 For TP1, [`o_proj_dsl.py`](../../../models/deepseek_v4_1_flash/o_proj_dsl.py)
@@ -149,3 +188,5 @@ contains the subsequent MIX leaf's validation and generated device code.
 The [output projection archive](../../../artifacts/dsv4_1_dsl/2026-11-03-o-proj/README.txt)
 contains its staged validation, generated kernels and cumulative companion
 patches, including the adapter migration to PyPTO.
+The [QA/KV input archive](../../../artifacts/dsv4_1_dsl/2026-11-03-qkv-input/README.txt)
+records the next projection stage and the #1666/#1667 cache-quantizer alignment.

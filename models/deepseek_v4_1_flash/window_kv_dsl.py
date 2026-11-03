@@ -15,6 +15,7 @@ import pypto.language as pl
 import torch
 
 from config import FLASH as M
+from quant import quantize_mxfp8_cache as quantize_window_kv
 
 
 # 模型配置
@@ -210,16 +211,6 @@ def window_kv_replay_program(
                 scale_snapshot = pl.store(factor, [row, 0], scale_snapshot)
         ready = consumed
     return cache, scales, snapshots, scale_snapshots
-
-
-def quantize_window_kv(value: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-    """按每组 32 个元素编码 E4M3，使用以 BF16 存储的 2 的幂次缩放值。"""
-    grouped = value.float().unflatten(-1, (-1, CACHE_GROUP))
-    amax = grouped.abs().amax(dim=-1).clamp_min(1.0e-4)
-    raw_scale = amax * (1.0 / 448.0)
-    scale = torch.exp2(torch.ceil(torch.log2(raw_scale.double()))).bfloat16()
-    normalized = (grouped / scale.float().unsqueeze(-1)).clamp(-448.0, 448.0)
-    return normalized.flatten(-2).to(torch.float8_e4m3fn), scale
 
 
 def golden_window_kv(tensors):
