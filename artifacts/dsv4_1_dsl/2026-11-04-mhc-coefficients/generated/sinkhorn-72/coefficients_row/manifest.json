@@ -1,0 +1,719 @@
+{
+  "arch": "dav-3510",
+  "calling_convention": "device_function",
+  "completion": {
+    "ddr_barrier": true,
+    "local_pipelines_drained": true,
+    "scalar_gm_flushed": true,
+    "wait_for_all_participants": false
+  },
+  "contract": {
+    "dimensions": [
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_inverse_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_partial0_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_partial1_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_partial2_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_partial3_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_post_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_pre_stride_0"
+      },
+      {
+        "max": null,
+        "min": 1,
+        "multiple_of": 1,
+        "name": "__pypto_residual_stride_0"
+      }
+    ],
+    "host_abi_version": 9,
+    "parameters": [
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 1
+            },
+            {
+              "kind": "constant",
+              "value": 32
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_partial0_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "partial0",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 1
+            },
+            {
+              "kind": "constant",
+              "value": 32
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_partial1_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "partial1",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 1
+            },
+            {
+              "kind": "constant",
+              "value": 32
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_partial2_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "partial2",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 1
+            },
+            {
+              "kind": "constant",
+              "value": 32
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_partial3_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "partial3",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 1
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_inverse_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "inverse",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 3
+            }
+          ],
+          "stride": [
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "scale",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 24
+            }
+          ],
+          "stride": [
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "base",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 1
+            },
+            {
+              "kind": "constant",
+              "value": 4
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_pre_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "pre",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 1
+            },
+            {
+              "kind": "constant",
+              "value": 4
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_post_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "post",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      },
+      {
+        "argument": {
+          "address_space": "GM",
+          "element": "f32",
+          "kind": "tensor",
+          "shape": [
+            {
+              "kind": "constant",
+              "value": 1
+            },
+            {
+              "kind": "constant",
+              "value": 16
+            }
+          ],
+          "stride": [
+            {
+              "kind": "dimension",
+              "name": "__pypto_residual_stride_0"
+            },
+            {
+              "kind": "constant",
+              "value": 1
+            }
+          ]
+        },
+        "has_runtime_default": false,
+        "name": "residual",
+        "parameter_kind": "POSITIONAL_OR_KEYWORD",
+        "role": "runtime",
+        "runtime_default": null,
+        "static_value": null
+      }
+    ],
+    "schema_version": 6
+  },
+  "core_type": "aiv",
+  "loading": {
+    "host_runtime": false,
+    "text_only": "requires_binary_validation"
+  },
+  "parameters": [
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_2d_Device_ss_ds",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 0,
+      "name": "partial0",
+      "shape": [
+        1,
+        32
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_2d_Device_ss_ds",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 1,
+      "name": "partial1",
+      "shape": [
+        1,
+        32
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_2d_Device_ss_ds",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 2,
+      "name": "partial2",
+      "shape": [
+        1,
+        32
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_2d_Device_ss_ds",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 3,
+      "name": "partial3",
+      "shape": [
+        1,
+        32
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_2d_Device_ss_ds",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 4,
+      "name": "inverse",
+      "shape": [
+        1,
+        1
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_1d_Device_s_s",
+      "dtype": "f32",
+      "dynamic_fields": [],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 5,
+      "name": "scale",
+      "shape": [
+        3
+      ],
+      "size": 8,
+      "stride": [
+        1
+      ]
+    },
+    {
+      "access": "read",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_1d_Device_s_s",
+      "dtype": "f32",
+      "dynamic_fields": [],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 6,
+      "name": "base",
+      "shape": [
+        24
+      ],
+      "size": 8,
+      "stride": [
+        1
+      ]
+    },
+    {
+      "access": "write",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_2d_Device_ss_ds",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 7,
+      "name": "pre",
+      "shape": [
+        1,
+        4
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "write",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_2d_Device_ss_ds",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 8,
+      "name": "post",
+      "shape": [
+        1,
+        4
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    },
+    {
+      "access": "write",
+      "alignment": 8,
+      "cpp_type": "KernelArgTensor_float_2d_Device_ss_ds",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "element_cpp_type": "float",
+      "kind": "tensor",
+      "layout_map": 0,
+      "logical_index": 9,
+      "name": "residual",
+      "shape": [
+        1,
+        16
+      ],
+      "size": 16,
+      "stride": [
+        -1,
+        1
+      ]
+    }
+  ],
+  "participants": {
+    "aic": 0,
+    "aiv": 1
+  },
+  "resources": {
+    "allocations": [
+      {
+        "byte_offset": 0,
+        "bytes": 256,
+        "core": "aiv",
+        "memory_space": 1
+      },
+      {
+        "byte_offset": 256,
+        "bytes": 256,
+        "core": "aiv",
+        "memory_space": 1
+      },
+      {
+        "byte_offset": 512,
+        "bytes": 256,
+        "core": "aiv",
+        "memory_space": 1
+      },
+      {
+        "byte_offset": 768,
+        "bytes": 256,
+        "core": "aiv",
+        "memory_space": 1
+      },
+      {
+        "byte_offset": 1024,
+        "bytes": 256,
+        "core": "aiv",
+        "memory_space": 1
+      },
+      {
+        "byte_offset": 1280,
+        "bytes": 256,
+        "core": "aiv",
+        "memory_space": 1
+      },
+      {
+        "byte_offset": 1536,
+        "bytes": 256,
+        "core": "aiv",
+        "memory_space": 1
+      },
+      {
+        "byte_offset": 1792,
+        "bytes": 256,
+        "core": "aiv",
+        "memory_space": 1
+      }
+    ],
+    "exclusive_local_memory": true,
+    "exclusive_sync_resources": true,
+    "implicit_workspace_bytes": 0,
+    "subblock_id": "physical_aiv_lane"
+  },
+  "schema_version": 1,
+  "source_sha256": "20e597c43da3ea5d466a87b7b8dd8f5b42e315d69a537d076497aa08b660e1da",
+  "state": {
+    "clobbered": [
+      "DMA",
+      "padding",
+      "quantization",
+      "mask",
+      "local_memory",
+      "sync_resources"
+    ],
+    "entry": "asc_init_and_default_dma_state_atomic_none",
+    "exit_atomic": "none",
+    "preserved": [
+      "CTRL"
+    ]
+  },
+  "symbol": "kernel_coefficients_row"
+}

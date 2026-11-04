@@ -1,0 +1,29 @@
+[HC] pre
+[RUN] compile ...
+Failed to obtain the console log level. The possible causes are as follows:
+ 1. Different containers share the same device;
+ 2. Failed to open the character device when interacting with the OS kernel;
+ 3. Failed to obtain the number of devices.
+2026-11-04 09:21:52.812 I | [perf_hint] 1 hint across 1 site; see ${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l2_hc_pre_20261104_092152_02dz0cvl/report/perf_hints.log
+[RUN] compile done (1.08s)
+[RUN] PASS (1.08s)
+[HC] sinkhorn
+[RUN] compile ...
+[RUN] compile done (0.31s)
+[RUN] PASS (0.31s)
+[HC] project
+[RUN] compile ...
+[RUN] compile done (0.41s)
+Error: if condition must be a Bool-typed scalar expression, got pl.Scalar[pl.INDEX]
+  --> ${WORKSPACE}/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/hc.py:89:5
+   |
+87 |             inverse_rms_row(rms_source, inverse)
+88 |
+89 |     if hf32:
+   |     ^^
+90 |         row_tiles = (t_dim + PROJECT_ROW_TILE - 1) // PROJECT_ROW_TILE
+91 |         for row_tile in pl.parallel(row_tiles):
+   |
+   = help: Use an explicit boolean comparison, e.g. `if x != 0:` or `if x > 0:`
+
+note: run with `PTO_BACKTRACE=1` environment variable to display a backtrace.

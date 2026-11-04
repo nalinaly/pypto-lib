@@ -1,0 +1,25 @@
+"""Check extraction of the coefficient reference against the previous model revision."""
+import ast
+from pathlib import Path
+import subprocess
+import sys
+
+workspace = Path(__file__).resolve().parents[2]
+repo = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+sys.path.insert(0, str(repo / "models/deepseek_v4_1_flash"))
+import hc
+
+original = subprocess.check_output(
+    ['git', 'show', '1e9a8a4:models/deepseek_v4_1_flash/hc.py'], cwd=repo, text=True,
+)
+node = next(n for n in ast.parse(original).body if isinstance(n, ast.FunctionDef) and n.name == 'golden_mhc_mixes')
+space = dict(hc.__dict__)
+exec(compile(ast.Module(body=[node], type_ignores=[]), '<original-golden>', 'exec'), space)
+values = hc.make_hc_inputs(17, 43, 'mixed')
+for mode in (False, True):
+    args = (values['x_hc'], values['hc_attn_fn'], values['hc_attn_scale'], values['hc_attn_base'])
+    old = space['golden_mhc_mixes'](*args, hf32=mode)
+    new = hc.golden_mhc_mixes(*args, hf32=mode)
+    if not all(hc.torch.equal(a, b) for a, b in zip(old, new)):
+        raise SystemExit('Golden refactor changed numerical behavior')
+    print('Golden refactor identical, hf32=', mode)

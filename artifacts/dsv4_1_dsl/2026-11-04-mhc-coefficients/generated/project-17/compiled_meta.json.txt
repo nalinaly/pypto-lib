@@ -1,0 +1,99 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "x_hc",
+      "direction": "In",
+      "shape": [
+        -1,
+        4,
+        5120
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "function",
+      "direction": "In",
+      "shape": [
+        24,
+        20480
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "inv_rms",
+      "direction": "InOut",
+      "shape": [
+        -1,
+        1
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "partials",
+      "direction": "InOut",
+      "shape": [
+        -1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "x_hc",
+      "direction": "In",
+      "shape": [
+        -1,
+        4,
+        5120
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "function",
+      "direction": "In",
+      "shape": [
+        24,
+        20480
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "inv_rms",
+      "direction": "InOut",
+      "shape": [
+        -1,
+        1
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "partials",
+      "direction": "InOut",
+      "shape": [
+        -1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    }
+  ],
+  "num_return_types": 2,
+  "return_aliases": [
+    2,
+    3
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

@@ -1,0 +1,82 @@
+{
+  "scope": [
+    "hc_project RMS/HF32 branch",
+    "hc_sinkhorn"
+  ],
+  "branch": "nalinaly/pypto-lib:dsv4.1-dsl",
+  "framework_changes": false,
+  "checks": [
+    {
+      "case": "sinkhorn17",
+      "status": "PASS",
+      "task": "task_20261104_092149_65520625119",
+      "log": "sinkhorn-17.log"
+    },
+    {
+      "case": "pre17",
+      "status": "PASS",
+      "task": "task_20261104_092218_66095121663",
+      "log": "pre-17.log"
+    },
+    {
+      "case": "project17",
+      "status": "PASS",
+      "task": "task_20261104_092323_6783087646",
+      "log": "project-17-fixed.log"
+    },
+    {
+      "case": "full FP32 project17",
+      "status": "PASS",
+      "task": "task_20261104_092408_69295815447",
+      "log": "project-fp32-17-fixed.log"
+    },
+    {
+      "case": "pre/Sinkhorn/project1 and 72",
+      "status": "PASS",
+      "task": "task_20261104_092426_69543826783",
+      "logs": [
+        "coefficients-1.log",
+        "coefficients-72.log"
+      ]
+    },
+    {
+      "case": "SWA72",
+      "status": "PASS",
+      "task": "task_20261104_092426_69552932311",
+      "log": "swa-72.log",
+      "run_seconds": 39.97
+    },
+    {
+      "case": "layer0 EP2",
+      "status": "PASS",
+      "task": "task_20261104_092523_71074410859",
+      "log": "layer0-ep2.log",
+      "devices": [
+        0,
+        1
+      ],
+      "run_seconds": 152.29,
+      "validated_outputs": 16
+    },
+    {
+      "case": "CPU golden extraction equivalence, HF32 and FP32",
+      "status": "PASS",
+      "log": "golden-equivalence.log"
+    }
+  ],
+  "acceptance": {
+    "inverse_rms": "atol=1e-6, rtol=2e-6, zero outliers; exact padding preservation",
+    "projection": "atol=2e-5, rtol=5e-4, zero outliers; exact midpoint probes; HF32 output padding preserved",
+    "sinkhorn": "atol=2e-6, rtol=1e-5, zero outliers",
+    "composed": "Original model goldens and thresholds unchanged"
+  },
+  "notes": [
+    "The legacy FP32 branch does not define unused scratch columns; its meaningful outputs and exact probes are checked.",
+    "Intermediate source/harness authoring errors are preserved in logs; all required final checks supersede them.",
+    "Timing includes compilation and validation; no performance claim."
+  ],
+  "repository_checks": {
+    "pre_commit_all_files": "PASS",
+    "log": "pre-commit.log"
+  }
+}

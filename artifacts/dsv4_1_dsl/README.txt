@@ -28,3 +28,7 @@ device and orchestration code, and compiler diagnostic reproductions.
 residual expansion in DSL, including standalone numerical fixtures,
 composed validation logs, generated kernels, and the corrected initial
 output-slice offset diagnostic.
+
+2026-11-04-mhc-coefficients/ records original-stream RMS, nearest-away
+HF32 projection, and FP32 coefficient/Sinkhorn generation in DSL, with
+midpoint and cancellation probes, composed validation and generated code.

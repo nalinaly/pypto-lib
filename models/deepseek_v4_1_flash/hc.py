@@ -9,15 +9,14 @@
 """V4.1 HC coefficient generation, stream collapse, residual expansion, and final collapse."""
 
 import math
-from pathlib import Path
 
 import pypto.language as pl
 import torch
 import torch.nn.functional as F
-from pypto.runtime import pto_isa_include_dir
 
 from config import FLASH as M, SP_T_DYN, T_DYN
-from hc_dsl import collapse_norm_row, expand_row, TASK_TILE
+from hc_dsl import collapse_norm_row, expand_row, coefficients_row, inverse_rms_row, project_hf32_tile
+from hc_dsl import TASK_TILE, PROJECT_ROW_TILE
 
 
 # 模型配置
@@ -25,7 +24,6 @@ D = M.hidden_size
 HC_MULT = M.hc_mult
 HC_DIM = M.hc_dim
 MIX_HC = M.mix_hc
-HC_DIM_INV = 1.0 / HC_DIM
 HC_SINKHORN_ITER = M.hc_sinkhorn_iters
 HC_EPS = M.hc_eps
 NORM_EPS = M.rms_norm_eps
@@ -33,42 +31,16 @@ NORM_EPS = M.rms_norm_eps
 # 分块参数
 MIX_PAD = 32
 HC_PAD = 8
-T_TILE = 8
 LINEAR_T_TILE = 16
-HF32_LINEAR_T_TILE = 80  # Matches M_TILE in kernels/hc_linear.cpp.
-SINKHORN_T_TILE = 6
-SINKHORN_WORKER_TILE = 12
-RMS_K_TILE = 1024
 LINEAR_K_TILE = 256
 LINEAR_OK = 4
 LINEAR_K_PER_SPLIT = HC_DIM // LINEAR_OK
 PRE_T_TILE = 2
 HEAD_D_TILE = 5120
 
-
-@pl.jit.extern(core_type="aic", source=Path(__file__).parent / "kernels" / "hc_linear.cpp",
-               include_dirs=(pto_isa_include_dir(),))
-def _hc_linear(
-    x: pl.Tensor,
-    weight: pl.Tensor,
-    partials: pl.Out[pl.Tensor],
-    rows: pl.Scalar[pl.INDEX],
-    padded_rows: pl.Scalar[pl.INDEX],
-) -> pl.Tensor:
-    """Project FP32 HC operands with nearest-away HF32 and FP32 accumulation."""
-    ...
-
-
-@pl.jit.extern(core_type="aiv", source=Path(__file__).parent / "kernels" / "hc_sinkhorn.cpp",
-               include_dirs=(pto_isa_include_dir(),))
-def _hc_sinkhorn(
-    partials: pl.Tensor, inv_rms: pl.Tensor, scale: pl.Tensor, base: pl.Tensor,
-    pre_mix: pl.Out[pl.Tensor], post_mix: pl.Out[pl.Tensor], residual_mix: pl.Out[pl.Tensor],
-    tokens: pl.Scalar[pl.INDEX], padded_rows: pl.Scalar[pl.INDEX],
-    eps: pl.Scalar[pl.FP32], iterations: pl.Scalar[pl.INDEX],
-) -> pl.Tensor:
-    """Compute FP32 coefficients in a register-resident VF."""
-    ...
+# 校验存储维度
+RMS_ROWS_DYN = pl.dynamic("HC_RMS_ROWS")
+PARTIAL_ROWS_DYN = pl.dynamic("HC_PARTIAL_ROWS")
 
 
 @pl.jit.inline
@@ -76,49 +48,57 @@ def hc_sinkhorn(
     inv_rms: pl.Tensor, partials: pl.Tensor, scale: pl.Tensor, base: pl.Tensor,
     pre_mix: pl.Tensor, post_mix: pl.Tensor, residual_mix: pl.Tensor,
 ):
-    """Normalize six independent HC matrices per vector worker."""
+    """按行调度 FP32 系数生成，并返回汇合后的 TaskId。"""
     tokens = pl.tensor.dim(pre_mix, 0)
     padded_rows = pl.tensor.dim(inv_rms, 0)
-    blocks = (tokens + SINKHORN_T_TILE - 1) // SINKHORN_T_TILE
-    workers = pl.min(blocks, SINKHORN_WORKER_TILE)
-    with pl.spmd(workers, name_hint="mhc_sinkhorn") as ready:
-        _hc_sinkhorn(partials, inv_rms, scale, base, pre_mix, post_mix, residual_mix,
-                     tokens, padded_rows, HC_EPS, HC_SINKHORN_ITER)
-    return ready
+    residual_flat = pl.reshape(residual_mix, [tokens, HC_MULT * HC_MULT])
+    ready = pl.system.task_dummy(deps=[])
+    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
+    for i in pl.range(TASK_TILE):
+        completed[i] = ready
+    for row in pl.parallel(tokens):
+        p0 = pl.slice(partials, [1, MIX_PAD], [row, 0])
+        p1 = pl.slice(partials, [1, MIX_PAD], [padded_rows + row, 0])
+        p2 = pl.slice(partials, [1, MIX_PAD], [2 * padded_rows + row, 0])
+        p3 = pl.slice(partials, [1, MIX_PAD], [3 * padded_rows + row, 0])
+        inverse = pl.slice(inv_rms, [1, 1], [row, 0])
+        pre = pl.slice(pre_mix, [1, HC_MULT], [row, 0])
+        post = pl.slice(post_mix, [1, HC_MULT], [row, 0])
+        residual = pl.slice(residual_flat, [1, HC_MULT * HC_MULT], [row, 0])
+        previous = completed[row % TASK_TILE]
+        with pl.spmd(1, name_hint="dsl_mhc_sinkhorn", deps=[previous]) as done:
+            coefficients_row(p0, p1, p2, p3, inverse, scale, base, pre, post, residual)
+        completed[row % TASK_TILE] = done
+    joined = pl.system.task_dummy(deps=[completed])
+    return joined
 
 
 @pl.jit.inline
-def hc_project(x_hc: pl.Tensor, function: pl.Tensor, hf32: pl.constexpr):
-    """Compute FP32 inverse RMS and split-K coefficients, using HF32 for decode."""
-    t_dim = pl.tensor.dim(x_hc, 0)
-    t_linear = ((t_dim + LINEAR_T_TILE - 1) // LINEAR_T_TILE) * LINEAR_T_TILE
-    x_flat = pl.reshape(x_hc, [t_dim, HC_DIM])
+def hc_project_into(x_hc: pl.Tensor, function: pl.Tensor, inv_rms: pl.Tensor, mixes_partials: pl.Tensor,
+                    t_dim: pl.Scalar[pl.INDEX], hf32: pl.constexpr):
+    """在给定存储中计算原始数据流的 RMS 和四份投影部分和。"""
+    t_linear = pl.tensor.dim(inv_rms, 0)
+    tokens = pl.tensor.dim(x_hc, 0)
+    x_flat = pl.reshape(x_hc, [tokens, HC_DIM])
+    for row in pl.parallel(t_dim):
+        rms_source = pl.slice(x_flat, [1, HC_DIM], [row, 0])
+        inverse = pl.slice(inv_rms, [1, 1], [row, 0])
+        with pl.spmd(1, name_hint="dsl_mhc_rms"):
+            inverse_rms_row(rms_source, inverse)
 
-    inv_rms = pl.create_tensor([t_linear, 1], dtype=pl.FP32)
-    for block in pl.spmd((t_dim + T_TILE - 1) // T_TILE, name_hint="mhc_rms"):
-        t0 = block * T_TILE
-        valid_rows = pl.min(T_TILE, t_dim - t0)
-        sq_sum = pl.full([1, T_TILE], dtype=pl.FP32, value=0.0)
-        for kb in pl.pipeline(HC_DIM // RMS_K_TILE, stage=4):
-            k0 = kb * RMS_K_TILE
-            rms_x_tile = pl.slice(
-                x_flat,
-                [T_TILE, RMS_K_TILE],
-                [t0, k0],
-                valid_shape=[valid_rows, RMS_K_TILE],
-            )
-            sq_sum = pl.add(sq_sum, pl.reshape(pl.row_sum(pl.mul(rms_x_tile, rms_x_tile)), [1, T_TILE]))
-        rms_arg = pl.add(pl.mul(sq_sum, HC_DIM_INV), NORM_EPS)
-        inv_rms[t0 : t0 + T_TILE, 0:1] = pl.reshape(
-            pl.rsqrt(rms_arg, high_precision=True), [T_TILE, 1]
-        )
-
-    mixes_partials = pl.create_tensor([LINEAR_OK * t_linear, MIX_PAD], dtype=pl.FP32)
     if hf32:
-        tasks = ((t_dim + HF32_LINEAR_T_TILE - 1) // HF32_LINEAR_T_TILE) * LINEAR_OK
-        workers = pl.min(tasks, pl.system.available_cluster_count())
-        with pl.spmd(workers, name_hint="mhc_linear"):
-            _hc_linear(x_flat, function, mixes_partials, t_dim, t_linear)
+        row_tiles = (t_dim + PROJECT_ROW_TILE - 1) // PROJECT_ROW_TILE
+        for row_tile in pl.parallel(row_tiles):
+            t0 = row_tile * PROJECT_ROW_TILE
+            rows = pl.min(PROJECT_ROW_TILE, t_dim - t0)
+            for split in pl.parallel(LINEAR_OK):
+                k0 = split * LINEAR_K_PER_SPLIT
+                project_source = pl.slice(x_flat, [PROJECT_ROW_TILE, LINEAR_K_PER_SPLIT], [t0, k0], valid_shape=[rows, LINEAR_K_PER_SPLIT])
+                weight = pl.slice(function, [MIX_HC, LINEAR_K_PER_SPLIT], [0, k0])
+                partial = split * t_linear + t0
+                target = pl.slice(mixes_partials, [PROJECT_ROW_TILE, MIX_PAD], [partial, 0], valid_shape=[rows, MIX_HC])
+                with pl.spmd(1, name_hint="dsl_mhc_hf32"):
+                    project_hf32_tile(project_source, weight, target, t_dim, row_tile)
     else:
         for task in pl.spmd((t_linear // LINEAR_T_TILE) * LINEAR_OK, name_hint="mhc_linear"):
             t0 = (task // LINEAR_OK) * LINEAR_T_TILE
@@ -145,6 +125,17 @@ def hc_project(x_hc: pl.Tensor, function: pl.Tensor, hf32: pl.constexpr):
             mixes_partials[partial : partial + LINEAR_T_TILE, 0:MIX_PAD] = acc
 
     return inv_rms, mixes_partials
+
+
+@pl.jit.inline
+def hc_project(x_hc: pl.Tensor, function: pl.Tensor, hf32: pl.constexpr):
+    """为共享 mHC 投影分配带填充的 FP32 RMS 和 split-K 存储。"""
+    tokens = pl.tensor.dim(x_hc, 0)
+    padded_rows = ((tokens + LINEAR_T_TILE - 1) // LINEAR_T_TILE) * LINEAR_T_TILE
+    inv_rms = pl.create_tensor([padded_rows, 1], dtype=pl.FP32)
+    partials = pl.create_tensor([LINEAR_OK * padded_rows, MIX_PAD], dtype=pl.FP32)
+    hc_project_into(x_hc, function, inv_rms, partials, tokens, hf32=hf32)
+    return inv_rms, partials
 
 
 @pl.jit.inline
@@ -334,6 +325,11 @@ def golden_mhc_mixes(
     projection_input = _round_hf32(flat) if hf32 else flat
     projection_weight = _round_hf32(function.float()) if hf32 else function.float()
     mixes = F.linear(projection_input, projection_weight) * inverse_rms
+    return golden_hc_coefficients(mixes, scale, base, iterations)
+
+
+def golden_hc_coefficients(mixes, scale, base, iterations=M.hc_sinkhorn_iters):
+    """生成 FP32 延迟 pre/post 系数及残差矩阵。"""
     hc = M.hc_mult
     pre_raw, post_raw, residual_raw = mixes.split((hc, hc, hc * hc), dim=-1)
     pre = torch.sigmoid(pre_raw * scale[0] + base[:hc]) + M.hc_eps
@@ -399,6 +395,71 @@ def golden_l2_hc_head_norm(tensors):
     inverse = torch.rsqrt(collapsed.square().mean(dim=-1, keepdim=True) + NORM_EPS)
     normalized = collapsed * inverse * tensors["norm_weight"].float()
     tensors["output"].copy_(normalized.bfloat16())
+
+
+def golden_l2_hc_sinkhorn(tensors):
+    """独立于投影和 RMS 核函数校验系数生成。"""
+    tokens = tensors["pre_mix"].shape[0]
+    padded = tensors["inv_rms"].shape[0]
+    parts = tensors["partials"].reshape(LINEAR_OK, padded, MIX_PAD)[:, :tokens, :MIX_HC]
+    mixed = ((parts[0] + parts[1]) + parts[2]) + parts[3]
+    mixed = mixed * tensors["inv_rms"][:tokens]
+    pre, post, residual = golden_hc_coefficients(mixed, tensors["scale"], tensors["base"])
+    tensors["pre_mix"].copy_(pre)
+    tensors["post_mix"].copy_(post)
+    tensors["residual_mix"].copy_(residual)
+
+
+def golden_l2_hc_project(tensors, *, hf32=True):
+    """校验原始数据流的 RMS，以及各自独立舍入的 split-K 投影。"""
+    flat = tensors["x_hc"].flatten(1).float()
+    tokens = flat.shape[0]
+    padded = tensors["inv_rms"].shape[0]
+    tensors["inv_rms"][:tokens].copy_(torch.rsqrt(flat.square().mean(dim=-1, keepdim=True) + NORM_EPS))
+    weight = tensors["function"].float()
+    lhs = _round_hf32(flat) if hf32 else flat
+    rhs = _round_hf32(weight) if hf32 else weight
+    partials = tensors["partials"].reshape(LINEAR_OK, padded, MIX_PAD)
+    for split in range(LINEAR_OK):
+        start = split * LINEAR_K_PER_SPLIT
+        end = start + LINEAR_K_PER_SPLIT
+        partials[split, :tokens, :MIX_HC].copy_(F.linear(lhs[:, start:end], rhs[:, start:end]))
+
+
+def compare_hc_projection(actual, expected, *, inputs, check_padding=True, **kwargs):
+    """校验投影数值、精确中点样本和未被改写的填充存储。"""
+    from golden import ratio_allclose
+
+    tokens = inputs["x_hc"].shape[0]
+    padded = actual.shape[0] // LINEAR_OK
+    got = actual.reshape(LINEAR_OK, padded, MIX_PAD)
+    ref = expected.reshape(LINEAR_OK, padded, MIX_PAD)
+    compare = ratio_allclose(atol=2e-5, rtol=5e-4, max_error_ratio=0.0)
+    passed, detail = compare(got[:, :tokens, :MIX_HC], ref[:, :tokens, :MIX_HC], inputs=inputs, **kwargs)
+    if not passed:
+        return passed, detail
+    exact = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
+    passed, detail = exact(got[:, :tokens, :2], ref[:, :tokens, :2], inputs=inputs, **kwargs)
+    if not passed:
+        return passed, "HF32 midpoint/FP32 probes: " + detail
+    if not check_padding:
+        return passed, detail
+    care = torch.ones_like(ref, dtype=torch.bool)
+    care[:, :tokens, :MIX_HC] = False
+    return exact(got[care], ref[care], inputs=inputs, **kwargs)
+
+
+def compare_hc_inverse(actual, expected, *, inputs, **kwargs):
+    """校验 FP32 RMS 倒数，并确认填充行逐位保持不变。"""
+    from golden import ratio_allclose
+
+    tokens = inputs["x_hc"].shape[0]
+    compare = ratio_allclose(atol=1e-6, rtol=2e-6, max_error_ratio=0.0)
+    passed, detail = compare(actual[:tokens], expected[:tokens], inputs=inputs, **kwargs)
+    if not passed:
+        return passed, detail
+    exact = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
+    return exact(actual[tokens:], expected[tokens:], inputs=inputs, **kwargs)
 
 
 def compare_hc_post_order(actual, expected, *, inputs, **kwargs):
@@ -626,8 +687,135 @@ def build_l2_hc_head_norm_specs(batch: int = 33, sequence: int = 1):
     ]
 
 
+@pl.jit
+def l2_hc_sinkhorn(
+    inv_rms: pl.Tensor[[RMS_ROWS_DYN, 1], pl.FP32],
+    partials: pl.Tensor[[PARTIAL_ROWS_DYN, MIX_PAD], pl.FP32],
+    scale: pl.Tensor[[3], pl.FP32],
+    base: pl.Tensor[[MIX_HC], pl.FP32],
+    pre_mix: pl.Out[pl.Tensor[[T_DYN, HC_MULT], pl.FP32]],
+    post_mix: pl.Out[pl.Tensor[[T_DYN, HC_MULT], pl.FP32]],
+    residual_mix: pl.Out[pl.Tensor[[T_DYN, HC_MULT, HC_MULT], pl.FP32]],
+):
+    """使用独立的部分和及 RMS 值校验共享系数叶子任务。"""
+    inv_rms.bind_dynamic(0, RMS_ROWS_DYN)
+    partials.bind_dynamic(0, PARTIAL_ROWS_DYN)
+    pre_mix.bind_dynamic(0, T_DYN)
+    post_mix.bind_dynamic(0, T_DYN)
+    residual_mix.bind_dynamic(0, T_DYN)
+    hc_sinkhorn(inv_rms, partials, scale, base, pre_mix, post_mix, residual_mix)
+    return pre_mix, post_mix, residual_mix
+
+
+def build_l2_hc_sinkhorn_specs(batch: int = 33, sequence: int = 1):
+    """构造带填充的部分和，包含相消、零值和非有效区域的 NaN。"""
+    from golden import TensorSpec
+
+    tokens = batch * sequence
+    padded = (tokens + LINEAR_T_TILE - 1) // LINEAR_T_TILE * LINEAR_T_TILE
+    generator = torch.Generator().manual_seed(23)
+
+    def init_inverse():
+        value = torch.full((padded, 1), float("nan"))
+        value[:tokens] = torch.rand(tokens, 1, generator=generator) + 0.5
+        return value
+
+    def init_partials():
+        value = torch.full((LINEAR_OK, padded, MIX_PAD), float("nan"))
+        value[:, :tokens, :MIX_HC] = torch.randn(LINEAR_OK, tokens, MIX_HC, generator=generator)
+        value[:, 0, :MIX_HC] = 0.0
+        if tokens > 1:
+            value[:, 1, :MIX_HC] = torch.tensor([2**24, 1, 1, -(2**24)]).float().reshape(-1, 1)
+        return value.reshape(LINEAR_OK * padded, MIX_PAD)
+
+    def init_base():
+        value = torch.randn(MIX_HC, generator=generator)
+        value[:4] = torch.tensor([-60.0, 60.0, -1.0, 1.0])
+        return value
+
+    return [
+        TensorSpec("inv_rms", [padded, 1], torch.float32, init_value=init_inverse),
+        TensorSpec("partials", [LINEAR_OK * padded, MIX_PAD], torch.float32, init_value=init_partials),
+        TensorSpec("scale", [3], torch.float32, init_value=torch.tensor([0.7, -0.3, 1.2])),
+        TensorSpec("base", [MIX_HC], torch.float32, init_value=init_base),
+        TensorSpec("pre_mix", [tokens, HC_MULT], torch.float32),
+        TensorSpec("post_mix", [tokens, HC_MULT], torch.float32),
+        TensorSpec("residual_mix", [tokens, HC_MULT, HC_MULT], torch.float32),
+    ]
+
+
+@pl.jit
+def l2_hc_project(
+    x_hc: pl.Tensor[[T_DYN, HC_MULT, D], pl.FP32],
+    function: pl.Tensor[[MIX_HC, HC_DIM], pl.FP32],
+    inv_rms: pl.InOut[pl.Tensor[[RMS_ROWS_DYN, 1], pl.FP32]],
+    partials: pl.InOut[pl.Tensor[[PARTIAL_ROWS_DYN, MIX_PAD], pl.FP32]],
+):
+    """校验共享 RMS/投影实现及其填充区域写入。"""
+    x_hc.bind_dynamic(0, T_DYN)
+    inv_rms.bind_dynamic(0, RMS_ROWS_DYN)
+    partials.bind_dynamic(0, PARTIAL_ROWS_DYN)
+    tokens = pl.tensor.dim(x_hc, 0)
+    hc_project_into(x_hc, function, inv_rms, partials, tokens, hf32=True)
+    return inv_rms, partials
+
+
+@pl.jit
+def l2_hc_project_fp32(
+    x_hc: pl.Tensor[[T_DYN, HC_MULT, D], pl.FP32],
+    function: pl.Tensor[[MIX_HC, HC_DIM], pl.FP32],
+    inv_rms: pl.InOut[pl.Tensor[[RMS_ROWS_DYN, 1], pl.FP32]],
+    partials: pl.InOut[pl.Tensor[[PARTIAL_ROWS_DYN, MIX_PAD], pl.FP32]],
+):
+    """使用共享 DSL RMS 校验现有全 FP32 投影分支。"""
+    x_hc.bind_dynamic(0, T_DYN)
+    inv_rms.bind_dynamic(0, RMS_ROWS_DYN)
+    partials.bind_dynamic(0, PARTIAL_ROWS_DYN)
+    tokens = pl.tensor.dim(x_hc, 0)
+    hc_project_into(x_hc, function, inv_rms, partials, tokens, hf32=False)
+    return inv_rms, partials
+
+
+def build_l2_hc_project_specs(batch: int = 33, sequence: int = 1):
+    """为两个操作数构造正负 HF32 舍入中点，并加入 RMS 为零及接近零的行。"""
+    from golden import TensorSpec
+
+    tokens = batch * sequence
+    padded = (tokens + LINEAR_T_TILE - 1) // LINEAR_T_TILE * LINEAR_T_TILE
+    generator = torch.Generator().manual_seed(29)
+
+    def init_x_hc():
+        value = torch.randn(tokens, HC_DIM, generator=generator)
+        signs = torch.where(torch.arange(tokens) % 2 == 0, 1.0, -1.0)
+        for split in range(LINEAR_OK):
+            start = split * LINEAR_K_PER_SPLIT
+            value[:, start] = signs * (1.0 + 2**-11)
+            value[:, start + 1] = 1.0
+        if tokens > 2:
+            value[-1].zero_()
+            value[-2].mul_(1e-7)
+        return value.reshape(tokens, HC_MULT, D)
+
+    def init_function():
+        value = torch.randn(MIX_HC, HC_DIM, generator=generator) / math.sqrt(HC_DIM)
+        value[:2].zero_()
+        for split in range(LINEAR_OK):
+            start = split * LINEAR_K_PER_SPLIT
+            value[0, start] = 1.0
+            value[1, start + 1] = (-1.0 if split % 2 else 1.0) * (1.0 + 2**-11)
+        return value
+
+    return [
+        TensorSpec("x_hc", [tokens, HC_MULT, D], torch.float32, init_value=init_x_hc),
+        TensorSpec("function", [MIX_HC, HC_DIM], torch.float32, init_value=init_function),
+        TensorSpec("inv_rms", [padded, 1], torch.float32, init_value=-123.5),
+        TensorSpec("partials", [LINEAR_OK * padded, MIX_PAD], torch.float32, init_value=-123.5),
+    ]
+
+
 if __name__ == "__main__":
     import argparse
+    from functools import partial
 
     from golden import ratio_allclose, run
 
@@ -637,24 +825,30 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--device", type=int, default=0)
     parser.add_argument("--batch", type=int, default=33)
     parser.add_argument("--sequence", type=int, default=1)
-    parser.add_argument("--op", choices=["pre", "post", "head", "head-norm", "boundary", "all"], default="all")
+    operations = ["pre", "post", "head", "head-norm", "sinkhorn", "project", "boundary", "coefficients", "all"]
+    parser.add_argument("--op", choices=operations, default="all")
+    parser.add_argument("--full-fp32", action="store_true", help="Check the existing FP32 projection branch")
     parser.add_argument("--compile-only", action="store_true")
     parser.add_argument("--save-data", action="store_true")
     parser.add_argument("--golden-data")
     parser.add_argument("--runtime-dir")
     parser.add_argument("--enable-chip-swimlane", type=int, choices=[1, 2, 3, 4], default=0)
     args = parser.parse_args()
-    if args.op in ("all", "boundary") and (args.golden_data or args.runtime_dir):
+    if args.op in ("all", "boundary", "coefficients") and (args.golden_data or args.runtime_dir):
         parser.error("replay requires selecting one --op")
     cases = [
         ("pre", l2_hc_pre, build_l2_hc_pre_specs, golden_l2_hc_pre),
         ("post", l2_hc_post, build_l2_hc_post_specs, golden_l2_hc_post),
         ("head", l2_hc_head, build_l2_hc_head_specs, golden_l2_hc_head),
         ("head-norm", l2_hc_head_norm, build_l2_hc_head_norm_specs, golden_l2_hc_head_norm),
+        ("sinkhorn", l2_hc_sinkhorn, build_l2_hc_sinkhorn_specs, golden_l2_hc_sinkhorn),
+        ("project", l2_hc_project, build_l2_hc_project_specs, golden_l2_hc_project),
     ]
     failures = []
     for name, fn, build_specs, golden_fn in cases:
         selected = ("head-norm", "post") if args.op == "boundary" else (args.op,)
+        if args.op == "coefficients":
+            selected = ("sinkhorn", "project", "pre")
         if args.op != "all" and name not in selected:
             continue
         print(f"[HC] {name}", flush=True)
@@ -669,10 +863,20 @@ if __name__ == "__main__":
             compare_fn = {"output": compare_hc_post_order}
         elif name == "head-norm":
             compare_fn = {"output": ratio_allclose(atol=1e-6, rtol=1.0 / 128, max_error_ratio=0.0)}
+        elif name == "sinkhorn":
+            compare = ratio_allclose(atol=2e-6, rtol=1e-5, max_error_ratio=0.0)
+            compare_fn = {"pre_mix": compare, "post_mix": compare, "residual_mix": compare}
+        elif name == "project":
+            compare_fn = {"inv_rms": compare_hc_inverse, "partials": compare_hc_projection}
         else:
             compare_fn = {"output": ratio_allclose(atol=1e-4, rtol=1.0 / 128)}
         config = {"backend_type": args.backend_type, "execution_mode": args.execution_mode}
         config.update(device_id=args.device, enable_chip_swimlane=args.enable_chip_swimlane)
+        if name == "project" and args.full_fp32:
+            fn = l2_hc_project_fp32
+            golden_fn = partial(golden_l2_hc_project, hf32=False)
+            # 现有 FP32 投影未定义未使用的临时存储列。
+            compare_fn["partials"] = partial(compare_hc_projection, check_padding=False)
         result = run(
             fn=fn,
             specs=build_specs(args.batch, args.sequence),

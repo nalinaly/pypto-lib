@@ -6,11 +6,14 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-"""实现延迟 mHC 数据流合并/RMSNorm 和 FP32 残差展开的 AIV 叶子任务。"""
+"""实现 mHC 系数生成、延迟合并/RMSNorm 和 FP32 残差展开。"""
 
 import cannbotdsl as cb
 from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
+from cannbotdsl.lang.jit import jit
+from cannbotdsl.ops.cube import enable_hf32, set_hf32_round_mode
+from cannbotdsl.ring_buffer import RingBuffer
 from config import FLASH as M
 
 
@@ -19,10 +22,168 @@ D = M.hidden_size
 HC_MULT = M.hc_mult
 HC_DIM = M.hc_dim
 EPS = M.rms_norm_eps
+HC_EPS = M.hc_eps
+HC_ITERATIONS = M.hc_sinkhorn_iters
+MIX_HC = M.mix_hc
 
 # 分块参数
 VECTOR_TILE = 64
 TASK_TILE = 12
+PROJECT_ROW_TILE = 16
+PROJECT_K_TILE = 64
+MIX_TILE = 32
+
+
+@jit
+def _sum_four(value, mask):
+    """广播四个 FP32 元素两两相加后的总和。"""
+    a = rr.vgather_reg(value, rr.vdups(0, cb.dtypes.uint32))
+    b = rr.vgather_reg(value, rr.vdups(1, cb.dtypes.uint32))
+    c = rr.vgather_reg(value, rr.vdups(2, cb.dtypes.uint32))
+    d = rr.vgather_reg(value, rr.vdups(3, cb.dtypes.uint32))
+    return rr.vadd(rr.vadd(a, b, mask=mask), rr.vadd(c, d, mask=mask), mask=mask)
+
+
+@jit
+def _softmax_four(value, mask):
+    """逐行执行 softmax，再加上 mHC 初始 epsilon。"""
+    maximum = rr.vdup(rr.vreduce_max(value, mask=mask), mask=mask)
+    exponential = rr.vexp(rr.vsub(value, maximum, mask=mask), mask=mask)
+    normalized = rr.vdiv(exponential, _sum_four(exponential, mask), mask=mask)
+    return rr.vadds(normalized, HC_EPS, mask=mask)
+
+
+@cb.kernel
+def coefficients_row(
+    partial0: cb.Tensor, partial1: cb.Tensor, partial2: cb.Tensor, partial3: cb.Tensor,
+    inverse: cb.Tensor, scale: cb.Tensor, base: cb.Tensor,
+    pre: cb.Tensor, post: cb.Tensor, residual: cb.Tensor,
+):
+    """归约四份 split-K 部分和，并生成一行延迟 mHC 系数。"""
+    p0 = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    p1 = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    p2 = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    p3 = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    bias = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((VECTOR_TILE,)))
+    pre_ub = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    post_ub = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    comb_ub = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    cb.mem_copy(cb.tile_slice(p0, (1, MIX_TILE), (0, 0)), partial0)
+    cb.mem_copy(cb.tile_slice(p1, (1, MIX_TILE), (0, 0)), partial1)
+    cb.mem_copy(cb.tile_slice(p2, (1, MIX_TILE), (0, 0)), partial2)
+    cb.mem_copy(cb.tile_slice(p3, (1, MIX_TILE), (0, 0)), partial3)
+    cb.mem_copy(cb.tile_slice(bias, (MIX_HC,), (0,)), base)
+    inv = inverse[0, 0]
+    s0 = scale[0]
+    s1 = scale[1]
+    s2 = scale[2]
+    with cb.vf():
+        full = rr.full_mask()
+        live = rr.update_mask(MIX_HC, elem_bits=32)[0]
+        four = rr.update_mask(HC_MULT, elem_bits=32)[0]
+        mixed = rr.vadd(rr.vload(p0), rr.vload(p1), mask=live)
+        mixed = rr.vadd(mixed, rr.vload(p2), mask=live)
+        mixed = rr.vadd(mixed, rr.vload(p3), mask=live)
+        mixed = rr.vmuls(mixed, inv, mask=live)
+        lane = rr.varange(0, cb.dtypes.uint32)
+        column = rr.vbitwise_and(lane, rr.vdups(3, cb.dtypes.uint32), mask=full)
+        post_index = rr.vadds(column, 4, mask=full)
+        row0_index = rr.vadds(column, 8, mask=full)
+        row1_index = rr.vadds(column, 12, mask=full)
+        row2_index = rr.vadds(column, 16, mask=full)
+        row3_index = rr.vadds(column, 20, mask=full)
+        biases = rr.vload(bias)
+        pre_value = rr.vmuls(rr.vgather_reg(mixed, column), s0, mask=four)
+        pre_value = rr.vadd(pre_value, rr.vgather_reg(biases, column), mask=four)
+        post_value = rr.vmuls(rr.vgather_reg(mixed, post_index), s1, mask=four)
+        post_value = rr.vadd(post_value, rr.vgather_reg(biases, post_index), mask=four)
+        m0 = rr.vmuls(rr.vgather_reg(mixed, row0_index), s2, mask=four)
+        m0 = rr.vadd(m0, rr.vgather_reg(biases, row0_index), mask=four)
+        m1 = rr.vmuls(rr.vgather_reg(mixed, row1_index), s2, mask=four)
+        m1 = rr.vadd(m1, rr.vgather_reg(biases, row1_index), mask=four)
+        m2 = rr.vmuls(rr.vgather_reg(mixed, row2_index), s2, mask=four)
+        m2 = rr.vadd(m2, rr.vgather_reg(biases, row2_index), mask=four)
+        m3 = rr.vmuls(rr.vgather_reg(mixed, row3_index), s2, mask=four)
+        m3 = rr.vadd(m3, rr.vgather_reg(biases, row3_index), mask=four)
+        one = rr.vdups(1.0, cb.dtypes.float32, mask=four)
+        pre_exp = rr.vexp(rr.vmuls(pre_value, -1.0, mask=four), mask=four)
+        pre_sigmoid = rr.vdiv(one, rr.vadds(pre_exp, 1.0, mask=four), mask=four)
+        post_exp = rr.vexp(rr.vmuls(post_value, -1.0, mask=four), mask=four)
+        post_sigmoid = rr.vdiv(one, rr.vadds(post_exp, 1.0, mask=four), mask=four)
+        rr.vstore(pre_ub, 0, rr.vadds(pre_sigmoid, HC_EPS, mask=four), four)
+        rr.vstore(post_ub, 0, rr.vmuls(post_sigmoid, 2.0, mask=four), four)
+        m0 = _softmax_four(m0, four)
+        m1 = _softmax_four(m1, four)
+        m2 = _softmax_four(m2, four)
+        m3 = _softmax_four(m3, four)
+        for iteration in range(HC_ITERATIONS):
+            if iteration > 0:
+                m0 = rr.vdiv(m0, rr.vadds(_sum_four(m0, four), HC_EPS, mask=four), mask=four)
+                m1 = rr.vdiv(m1, rr.vadds(_sum_four(m1, four), HC_EPS, mask=four), mask=four)
+                m2 = rr.vdiv(m2, rr.vadds(_sum_four(m2, four), HC_EPS, mask=four), mask=four)
+                m3 = rr.vdiv(m3, rr.vadds(_sum_four(m3, four), HC_EPS, mask=four), mask=four)
+            total = rr.vadd(m0, m1, mask=four)
+            total = rr.vadd(total, m2, mask=four)
+            total = rr.vadd(total, m3, mask=four)
+            total = rr.vadds(total, HC_EPS, mask=four)
+            m0 = rr.vdiv(m0, total, mask=four)
+            m1 = rr.vdiv(m1, total, mask=four)
+            m2 = rr.vdiv(m2, total, mask=four)
+            m3 = rr.vdiv(m3, total, mask=four)
+        rr.vscatter(comb_ub, m0, column, mask=four)
+        rr.vscatter(comb_ub, m1, post_index, mask=four)
+        rr.vscatter(comb_ub, m2, row0_index, mask=four)
+        rr.vscatter(comb_ub, m3, row1_index, mask=four)
+    cb.mem_copy(pre, cb.tile_slice(pre_ub, (1, HC_MULT), (0, 0)))
+    cb.mem_copy(post, cb.tile_slice(post_ub, (1, HC_MULT), (0, 0)))
+    cb.mem_copy(residual, cb.tile_slice(comb_ub, (1, HC_MULT * HC_MULT), (0, 0)))
+
+
+@cb.kernel
+def inverse_rms_row(source: cb.Tensor, output: cb.Tensor):
+    """根据原始四路 FP32 数据流计算 RMS 倒数。"""
+    raw = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, HC_DIM)))
+    result = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    cb.mem_copy(raw, source)
+    with cb.vf():
+        full = rr.full_mask()
+        accum = rr.vdups(0.0, cb.dtypes.float32, mask=full)
+        for col in range(0, HC_DIM, VECTOR_TILE):
+            value = rr.vload(raw, col)
+            accum = rr.vadd(accum, rr.vmul(value, value, mask=full), mask=full)
+        total = rr.vreduce_sum(accum, mask=full)
+        mean = rr.vmuls(total, 1.0 / HC_DIM, mask=full)
+        denominator = rr.vsqrt(rr.vadds(mean, EPS, mask=full), mask=full)
+        one = rr.vdups(1.0, cb.dtypes.float32, mask=full)
+        inverse = rr.vdiv(one, denominator, mask=full, precision_mode=True)
+        rr.vstore(result, 0, inverse, full)
+    cb.mem_copy(output, cb.tile_slice(result, (1, 1), (0, 0)))
+
+
+@cb.kernel
+def project_hf32_tile(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor,
+                      num_tokens: cb.ScalarValue, row_tile: cb.ScalarValue):
+    """对一个 M16 split-K 分块执行投影，使用中点远离零舍入的 HF32 和 K64 FP32 累加。"""
+    active = min(PROJECT_ROW_TILE, num_tokens - row_tile * PROJECT_ROW_TILE)
+    enable_hf32()
+    set_hf32_round_mode("rna")
+    a_l1 = RingBuffer(cb.MemLoc.L1, cb.dtypes.float32, cb.make_layout((PROJECT_ROW_TILE, PROJECT_K_TILE)), depth=1)
+    b_l1 = RingBuffer(cb.MemLoc.L1, cb.dtypes.float32, cb.make_layout((MIX_TILE, PROJECT_K_TILE)), depth=1)
+    a_l0 = RingBuffer(cb.MemLoc.L0A, cb.dtypes.float32, cb.make_layout((PROJECT_ROW_TILE, PROJECT_K_TILE)), depth=1)
+    b_l0 = RingBuffer(cb.MemLoc.L0B, cb.dtypes.float32, cb.make_layout((MIX_TILE, PROJECT_K_TILE)), depth=1)
+    c_l0 = RingBuffer(cb.MemLoc.L0C, cb.dtypes.float32, cb.make_layout((PROJECT_ROW_TILE, MIX_TILE)), depth=1)
+    accumulator = c_l0.next_write()
+    for k in cb.range((HC_DIM // HC_MULT) // PROJECT_K_TILE):
+        a = a_l1.next_write()
+        b = b_l1.next_write()
+        cb.mem_copy(a, cb.tile_slice(source[0:active, None], (PROJECT_ROW_TILE, PROJECT_K_TILE), (0, k)))
+        cb.mem_copy(b, cb.tile_slice(weight, (MIX_TILE, PROJECT_K_TILE), (0, k)))
+        cb.mem_copy(a_l0.next_write(), a_l1.next_read())
+        cb.mem_copy(b_l0.next_write(), b_l1.next_read())
+        cb.matmul(accumulator, a_l0.next_read(), b_l0.next_read(), init=k == 0)
+    result = c_l0.next_read()
+    valid = result.reinterpret(layout=cb.make_layout((active, MIX_HC)), physical_layout=result.physical_layout)
+    cb.mem_copy(output[0:active, 0:MIX_HC], valid)
 
 
 @cb.kernel

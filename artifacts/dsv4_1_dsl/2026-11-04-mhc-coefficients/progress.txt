@@ -1,0 +1,8 @@
+Base 1e9a8a4; branch nalinaly/pypto-lib:dsv4.1-dsl.
+Scope: original FP32 stream RMS, nearest-away HF32 split-K projection, and FP32 coefficients/Sinkhorn. Preserve public scheduling interfaces and delayed pre-mix.
+Nine standalone pre/Sinkhorn/project cases at 1,17,72 rows PASS. Full-FP32 projection17 regression PASS.
+Midpoint probes cover both operands and signs; cancellation probes check the sequential four-way reduction. HF32 output padding is protected; legacy FP32 scratch padding is outside its contract.
+CPU coefficient golden extraction is elementwise-identical to base 1e9a8a4 for both HF32 and FP32 modes.
+SWA72 PASS, task_20261104_092426_69552932311, RUN PASS 39.97s.
+Layer0 EP2 PASS, task_20261104_092523_71074410859, devices 0,1; all 16 outputs PASS, RUN PASS 152.29s. Original acceptance thresholds retained.
+No new PyPTO/CANNBotDSL framework changes. Removed obsolete hc_linear.cpp and hc_sinkhorn.cpp after eliminating all consumers.

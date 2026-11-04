@@ -1,0 +1,105 @@
+"""Archive mHC RMS, HF32 projection and Sinkhorn coefficient validation."""
+
+import gzip
+import json
+from pathlib import Path
+import re
+
+
+workspace = Path(__file__).resolve().parents[2]
+work = workspace / "artifacts/dsv41-mhc-coeff-dsl"
+repo = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+dest = repo / "artifacts/dsv4_1_dsl/2026-11-04-mhc-coefficients"
+dest.mkdir(parents=True, exist_ok=True)
+records = []
+
+
+def normalize(value):
+    value = value.replace(str(workspace), "${WORKSPACE}")
+    value = value.replace(str(workspace.parent), "${USER_ROOT}")
+    return "\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n"
+
+
+def copy(source, target, *, compressed=False, binary=False):
+    raw = source.read_bytes()
+    output = gzip.compress(raw, compresslevel=6, mtime=0) if compressed else raw
+    if not compressed and not binary:
+        output = normalize(raw.decode()).encode()
+    target = dest / target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(output)
+    records.append({
+        "source": str(source.relative_to(workspace)), "path": str(target.relative_to(dest)),
+        "source_bytes": len(raw),
+        "encoding": "gzip" if compressed else ("binary" if binary else "normalized UTF-8"),
+    })
+
+
+for source in sorted(work.glob("*.log")):
+    if source.name != "archive-result.log":
+        copy(source, Path("validation") / (source.name + ".txt"))
+for source in sorted([*work.glob("*.py"), *work.glob("*.sh")]):
+    copy(source, Path("workflow-snapshots") / (source.name + ".txt"))
+for name in ("progress.txt", "validation-summary.json"):
+    copy(work / name, name)
+
+builds = {
+    "pre-1": "_jit_l2_hc_pre_20261104_092429_3laf67bg",
+    "sinkhorn-1": "_jit_l2_hc_sinkhorn_20261104_092438_ldds2xot",
+    "project-1": "_jit_l2_hc_project_20261104_092442_n7qsmzr4",
+    "pre-17": "_jit_l2_hc_pre_20261104_092221_05x22i54",
+    "sinkhorn-17": "_jit_l2_hc_sinkhorn_20261104_092152_fdzbn5_l",
+    "project-17": "_jit_l2_hc_project_20261104_092326_3t_swvzq",
+    "pre-72": "_jit_l2_hc_pre_20261104_092457_dgm3i6s8",
+    "sinkhorn-72": "_jit_l2_hc_sinkhorn_20261104_092506__dile1ln",
+    "project-72": "_jit_l2_hc_project_20261104_092510_ya7n39oq",
+    "fp32-17": "_jit_l2_hc_project_fp32_20261104_092410_gpfdtsg5",
+    "composed-swa": "_jit_l3_decode_swa_20261104_092435_f602d3rr/next_levels/l2_decode_swa",
+}
+for label, build_name in builds.items():
+    build = repo / "build_output" / build_name
+    if label != "composed-swa":
+        for source in sorted((build / "data").rglob("*.pt")):
+            target = Path("fixtures") / label / (str(source.relative_to(build / "data")) + ".gz")
+            copy(source, target, compressed=True)
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        if (build / name).exists():
+            copy(build / name, Path("generated") / label / (name + ".txt"))
+    for source in sorted((build / "orchestration").glob("*.cpp")):
+        copy(source, Path("generated") / label / source.name)
+    for source in sorted((build / "cache").glob("incore_*.bin")):
+        copy(source, Path("generated") / label / source.name, binary=True)
+    for source in sorted((build / "kernels").rglob("*.cpp")):
+        copy(source, Path("generated") / label / source.relative_to(build))
+    config = (build / "kernel_config.py").read_text()
+    for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+/entry.cpp)\'', config):
+        for filename in ("entry.cpp", "device_callable.hpp", "manifest.json"):
+            copy(Path(entry).with_name(filename), Path("generated") / label / name / filename)
+
+for name in ("hc.py", "hc_dsl.py"):
+    copy(repo / "models/deepseek_v4_1_flash" / name, Path("model-snapshot") / (name + ".txt"))
+
+manifest = {
+    "branch": "nalinaly/pypto-lib:dsv4.1-dsl",
+    "model_base": "1e9a8a4",
+    "companion_patches": "../2026-11-03-o-proj/companion-patches",
+    "model_sources": ["hc.py", "hc_dsl.py"],
+    "records": records,
+    "stored_files": [
+        {"path": str(p.relative_to(dest)), "bytes": p.stat().st_size}
+        for p in sorted(dest.rglob("*")) if p.is_file() and p.name != "artifact-manifest.json"
+    ],
+    "notes": [
+        "All nine pre/Sinkhorn/project cases and the full-FP32 projection case have frozen inputs and CPU goldens.",
+        "Stored data/out tensors are CPU goldens; logs record comparisons with actual device outputs.",
+        "Projection probes require exact positive/negative midpoint results for both HF32 operands.",
+        "Sinkhorn probes include cancellation that distinguishes sequential from pairwise split-K summation.",
+        "The existing full-FP32 branch defines only the active coefficient columns; unused scratch padding is not compared.",
+        "SWA and layer runs did not request save_data; their deterministic specs remain in the model sources.",
+        "Original model goldens and thresholds are retained; extraction of the CPU coefficient helper was checked for exact equivalence.",
+        "No PyPTO or CANNBotDSL framework changes. The output-projection archive has the existing companion patches.",
+        "Native ELF files and installed toolchains are excluded; runtime device text images are included."
+    ],
+}
+(dest / "artifact-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+print("Archived", len(records), "sources;", sum(r["bytes"] for r in manifest["stored_files"]), "stored bytes")

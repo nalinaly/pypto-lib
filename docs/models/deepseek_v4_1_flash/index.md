@@ -159,8 +159,8 @@ The intermediate QB buffer makes each stage independently inspectable;
 this implementation does not depend on a hand-written Cube/Vector
 handshake. The obsolete native QB entry and its private header are removed.
 This completes the TP1 SWA projection/cache/Attention/output-projection
-compute path in DSL. The mHC boundary leaves are described below; coefficient
-generation and the MoE kernels retain their separate implementations.
+compute path in DSL. The mHC boundary and coefficient leaves are described
+below; the MoE kernels retain their separate implementations.
 
 With an allocated A5 device, run:
 
@@ -192,9 +192,9 @@ using `residual_mix[input_stream, output_stream]`. Its output stays FP32.
 Both helpers process every physical row; existing callers own padding clears.
 
 The same shared residual expansion serves Attention and MoE callers. The
-collapse-only `hc_head`, prefill's padding-aware `prefill_sp_post`, HF32
-coefficient projection, and Sinkhorn remain on their existing paths. Their
-migration requires separate validation of their distinct contracts.
+collapse-only `hc_head` and prefill's padding-aware `prefill_sp_post` remain
+on their existing paths. Their migration requires separate validation of
+their distinct contracts.
 
 With an allocated A5 device, run the standalone boundary checks and the
 SWA/layer entries documented above:
@@ -209,6 +209,46 @@ The fused-norm entry checks zero and near-zero rows with no allowed
 outliers. The post entry checks the existing model golden and exact
 elementwise equality against sequential FP32 accumulation. Composed model
 goldens and acceptance thresholds are unchanged.
+
+## mHC coefficient generation in DSL
+
+The shared `hc_project` and `hc_sinkhorn` interfaces use three DSL leaves
+from `hc_dsl.py`: AIV inverse RMS, AIC HF32 projection, and AIV coefficient
+generation. Their FP32 scratch layout and the joined coefficient TaskId
+remain compatible with the Attention and MoE callers. The obsolete
+`hc_linear.cpp` and `hc_sinkhorn.cpp` leaves are removed.
+
+RMS statistics come from the original four FP32 residual streams, before
+collapse or BF16 rounding. Inverse RMS uses square root and precise FP32
+division. Decode projection explicitly enables nearest-away HF32 rounding
+for both operands, accumulates K64 steps in FP32, and retains four split-K
+segments. PyPTO schedules M16 projection tiles with explicit runtime row
+counts; each task writes only its active rows and 24 coefficient columns.
+
+The coefficient leaf merges partials in order `((p0 + p1) + p2) + p3`,
+applies inverse RMS, learned scales and biases, then computes Sigmoid and
+the 4x4 residual Sinkhorn matrix. Epsilon placement, 20 iterations, FP32
+storage and delayed `next_pre_mix` semantics are preserved. Full-FP32
+projection (`hf32=False`) retains its PyPTO implementation and uses the
+shared DSL RMS and coefficient leaves.
+
+With an allocated A5 device:
+
+```bash
+python models/deepseek_v4_1_flash/hc.py --op coefficients --batch 17 -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/hc.py --op coefficients --batch 1 -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/hc.py --op coefficients --batch 72 -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/hc.py --op project --full-fp32 --batch 17 -d "$TASK_DEVICE"
+```
+
+The coefficient cases include independent Sinkhorn, RMS/projection and
+composed mHC-pre checks. They cover split-K cancellation order, Sigmoid
+saturation, zero/near-zero rows, NaN input padding, and exact positive and
+negative midpoint probes for both HF32 operands. The HF32 stage also
+checks untouched output padding. The legacy FP32 branch is checked over
+its defined coefficient columns; its unused scratch columns have no
+preservation contract. The SWA and layer-0 commands above validate the
+same implementation with the original model goldens and thresholds.
 
 ## Output projection in DSL
 
@@ -263,3 +303,5 @@ The [Q-branch archive](../../../artifacts/dsv4_1_dsl/2026-11-03-q-branch/README.
 contains normalization/QB/RoPE stage evidence, frozen data and generated kernels.
 The [mHC boundary archive](../../../artifacts/dsv4_1_dsl/2026-11-04-mhc-boundary/README.txt)
 contains collapse/RMSNorm and FP32 residual-expansion validation and generated kernels.
+The [mHC coefficient archive](../../../artifacts/dsv4_1_dsl/2026-11-04-mhc-coefficients/README.txt)
+contains RMS/HF32/Sinkhorn validation, midpoint probes, frozen fixtures and generated kernels.
