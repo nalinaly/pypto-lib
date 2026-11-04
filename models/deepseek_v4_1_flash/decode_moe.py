@@ -41,9 +41,10 @@ from expert_routed import (
     MX_PACKED_LANE_COLS, MX_W1_PACKED_ROWS, MX_W2_PACKED_ROWS, MX_W3_PACKED_ROWS, expert_routed_scatter,
 )
 from hc import hc_pre, hc_post
+from moe_combine_dsl import combine_local
 
 
-# model config
+# 模型配置
 D = M.hidden_size
 HC_MULT = M.hc_mult
 HC_DIM = M.hc_dim
@@ -70,9 +71,8 @@ AUX_PAD = AUX_WIDTH
 IDX_PAD = ROUTE_WIDTH
 SIGNAL_PAD = 128  # 512-byte padded monotonic counter lane
 
-# tiling
+# 分块参数
 DISPATCH_STAGE_TILE = 8
-COMBINE_T_TILE = 2
 SCALE_PACK_TMP_TILE = ((64 + K_SCALE + 31) // 32) * 32
 RECV_TILE = 16
 
@@ -313,23 +313,7 @@ def combine_scattered(
             if src != my_rank:
                 pld.system.defer_wait(signal=combine_arrived, offsets=[src, 0, 0], expected=moe_epoch, cmp=pld.WaitCmp.Ge)
 
-    # Wait for local and peer routed-output stores.
-    with pl.spmd((T + COMBINE_T_TILE - 1) // COMBINE_T_TILE, name_hint="combine_reduce", deps=[_cwait_tid]) as _reduce_tid:
-        t_begin = pl.tile.get_block_idx() * COMBINE_T_TILE
-        for t in pl.range(t_begin, pl.min(t_begin + COMBINE_T_TILE, T)):
-            if t < num_tokens:
-                shared_row = pl.load(shared_output, [t, 0], [1, D])
-                acc = pl.cast(shared_row, target_type=pl.FP32)
-                for k in pl.range(TOPK):
-                    routed_row = pl.load(routed_output, [t * TOPK + k, 0], [1, D])
-                    routed_fp32 = pl.cast(routed_row, target_type=pl.FP32)
-                    acc = pl.add(acc, routed_fp32)
-                ffn_row = pl.cast(acc, target_type=pl.BF16, mode="rint")
-                ffn_out = pl.store(ffn_row, [t, 0], ffn_out)
-            else:
-                zero_row = pl.tile.full([1, D], dtype=pl.BF16, value=0.0)
-                ffn_out = pl.store(zero_row, [t, 0], ffn_out)
-    return _reduce_tid
+    return combine_local(shared_output, routed_output, ffn_out, num_tokens, _cwait_tid)
 
 
 @pl.jit.inline(auto_scope=False)

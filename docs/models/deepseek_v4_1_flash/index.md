@@ -420,6 +420,38 @@ rows. The composed entry retains its original goldens and
 of inactive output sentinels. Its cases cover empty experts, receive capacity,
 15/16/17 and 63/64/65 rows, and repeated invocations with changed counts.
 
+## Local MoE output reduction in DSL
+
+The decode `combine_reduce` computation in
+[`decode_moe.py`](../../../models/deepseek_v4_1_flash/decode_moe.py) calls
+[`moe_combine_dsl.py`](../../../models/deepseek_v4_1_flash/moe_combine_dsl.py).
+The existing `combine_notify` and `combine_wait` scopes remain unchanged.
+The routed tensor is a view of the current rank's communication window;
+the DSL leaf receives its local address and performs no cross-rank operation.
+
+Each `dsl_combine_reduce` AIV leaf handles up to two rows. It widens the shared
+expert output to FP32, adds routed lanes 0 through 5 in order, and rounds once
+to BF16 with nearest-even rounding. Inactive rows become zero without reading
+their inputs. An explicit physical-row bound protects an odd final row.
+
+PyPTO owns slicing and completion tracking. A bounded completion array is
+initialized from the original `combine_wait` TaskId; each slot chains its
+subsequent leaf tasks, and the returned join covers every output row before
+mHC post-processing. No DSL or PyPTO framework changes are required.
+
+With an allocated A5 device in `TASK_DEVICE`, run:
+
+```bash
+python models/deepseek_v4_1_flash/moe_combine_dsl.py -d "$TASK_DEVICE"
+```
+
+The bounded cases cover 5 physical rows with 3 or 0 active rows, and 80 rows
+with 71 or 80 active rows. They compare BF16 outputs at zero tolerance,
+including FP32 cancellation order, BF16 rounding midpoints, distinct routed
+lanes, NaN inactive inputs and an untouched output guard row. The layer-0
+EP2 entry validates the local communication-window view and the preserved
+notification/wait boundary using the existing model comparators.
+
 ## DSL development branch and evidence
 
 Continue DSL implementation and evidence collection on
@@ -450,3 +482,6 @@ CPU fixtures, and the layer-0 EP2 regression with communication tasks retained.
 The [routed-expert archive](../../../artifacts/dsv4_1_dsl/2026-11-04-routed-expert/README.txt)
 contains the original baseline, leaf checks, full local FFN cases, generated
 compute stages, CPU leaf fixtures, and layer-0 EP2 integration evidence.
+The [combine archive](../../../artifacts/dsv4_1_dsl/2026-11-04-combine/README.txt)
+contains the local reduction checks, communication-scope review, generated
+leaf/wrapper/orchestration, CPU fixtures and the layer-0 EP2 regression.

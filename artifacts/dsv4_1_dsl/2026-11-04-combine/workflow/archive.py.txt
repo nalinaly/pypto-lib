@@ -1,0 +1,116 @@
+"""Capture local combine validation, generated sources and CPU fixtures."""
+
+import ast
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-combine-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-04-combine"
+archive.mkdir(parents=True, exist_ok=True)
+inventory = []
+
+
+def capture(source, target, binary=False):
+    target = archive / target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(target, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        text = source.read_text().replace(str(workspace), "<workspace>")
+        text = text.replace(str(workspace.parent), "<user-home>")
+        text = "\n".join(line.rstrip() for line in text.splitlines()).rstrip() + "\n"
+        target.write_text(text)
+    inventory.append({"path": str(target.relative_to(archive)), "source": str(source.relative_to(workspace)),
+                      "bytes": target.stat().st_size, "encoding": "gzip" if binary else "utf-8"})
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        source = directory / name
+        if source.is_file():
+            capture(source, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*.cpp")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if not name.startswith("combine_rows"):
+                continue
+            for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                source = Path(entry).parent / filename
+                if source.is_file():
+                    capture(source, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+old = ast.parse((work / "decode_moe_before.py").read_text())
+new = ast.parse((model / "models/deepseek_v4_1_flash/decode_moe.py").read_text())
+functions = lambda tree: {n.name: n for n in tree.body if isinstance(n, ast.FunctionDef)}
+a, b = functions(old), functions(new)
+review = []
+for name in a:
+    if name == "combine_scattered":
+        continue
+    if ast.dump(a[name]) != ast.dump(b[name]):
+        raise RuntimeError("Unrelated function changed: " + name)
+    review.append(name + ": unchanged")
+for index, name in enumerate(("combine_notify", "combine_wait")):
+    if ast.dump(a["combine_scattered"].body[index]) != ast.dump(b["combine_scattered"].body[index]):
+        raise RuntimeError(name + " changed")
+    review.append(name + ": unchanged")
+subprocess.run(["git", "diff", "--exit-code", "HEAD", "--", "models/deepseek_v4_1_flash/expert_routed.py",
+                "models/deepseek_v4_1_flash/decode_layer.py"], cwd=model, stdout=subprocess.DEVNULL, check=True)
+(work / "communication-review.txt").write_text("\n".join(review) + "\n")
+
+for name in ("local.log", "layer0-ep2.log", "local-compile.log", "moe-compile.log", "communication-review.txt"):
+    capture(work / name, f"validation/{name}")
+for name in ("decode_moe.py", "moe_combine_dsl.py"):
+    capture(model / "models/deepseek_v4_1_flash" / name, f"model-snapshot/{name}.txt")
+capture(work / "decode_moe_before.py", "model-snapshot/decode_moe_before.py.txt")
+generated("local5", model / "build_output/_jit_validate_combine_20261104_182259_hlo3tsfq", True)
+generated("local80", model / "build_output/_jit_validate_combine_20261104_182305_lsizni8o", True)
+layer = model / "build_output/_jit_l3_decode_layer_20261104_182926__ocg5uyn"
+generated("layer0-ep2", layer)
+generated("layer0-ep2/chip", layer / "next_levels/l2_decode_layer")
+capture(Path(__file__).resolve(), "workflow/archive.py.txt")
+
+local_log = (work / "local.log").read_text()
+layer_log = (work / "layer0-ep2.log").read_text()
+if len(re.findall(r"^\[RUN\] PASS", local_log, re.MULTILINE)) != 4:
+    raise RuntimeError("All four local cases must pass before capture")
+outputs = len(re.findall(r"^\[RUN\]   '[^']+' PASS", layer_log, re.MULTILINE))
+if "[RUN] PASS" not in layer_log or outputs != 16:
+    raise RuntimeError("The layer regression must pass before capture")
+
+
+def revision(path):
+    return subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
+
+
+summary = {
+    "status": "PASS", "branch": "dsv4.1-dsl", "model_base": revision(model),
+    "pypto_revision": revision(workspace / "issue75-env/pypto-pr"),
+    "dsl_revision": revision(workspace / "cannbot-dsl-dev"),
+    "replaced_task": "combine_reduce", "replacement_task": "dsl_combine_reduce",
+    "communication_scopes_unchanged": ["combine_notify", "combine_wait"],
+    "other_decode_moe_functions_unchanged": True,
+    "local_cases": [{"rows": r, "active": n, "result": "PASS"} for r, n in ((5, 3), (5, 0), (80, 71), (80, 80))],
+    "local_acceptance": "BF16 zero tolerance, including the untouched output guard row",
+    "local_task": re.search(r"task_\d+_\d+_\d+", local_log).group(0),
+    "ep2_task": re.search(r"task_\d+_\d+_\d+", layer_log).group(0),
+    "ep2_devices": [1, 2], "layer_outputs": outputs,
+    "limits": ["A5 with generated CPU fixtures", "No checkpoint/prefill or performance study", "Original layer tolerances retained"],
+}
+(archive / "validation-summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+(archive / "artifact-manifest.json").write_text(json.dumps(inventory, indent=2) + "\n")
+print(f"Captured {len(inventory)} files; {sum(item['bytes'] for item in inventory)} bytes")

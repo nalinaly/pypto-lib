@@ -1,0 +1,49 @@
+{
+  "status": "PASS",
+  "branch": "dsv4.1-dsl",
+  "model_base": "50fb049da1effc4b191bf8e332dac69dd5838c23",
+  "pypto_revision": "4a65a9c79b305aac9cac5a8cd84eef4cc8e4986c",
+  "dsl_revision": "91feb222c59ec3ad1175ba5fd88445c72f8abdff",
+  "replaced_task": "combine_reduce",
+  "replacement_task": "dsl_combine_reduce",
+  "communication_scopes_unchanged": [
+    "combine_notify",
+    "combine_wait"
+  ],
+  "other_decode_moe_functions_unchanged": true,
+  "local_cases": [
+    {
+      "rows": 5,
+      "active": 3,
+      "result": "PASS"
+    },
+    {
+      "rows": 5,
+      "active": 0,
+      "result": "PASS"
+    },
+    {
+      "rows": 80,
+      "active": 71,
+      "result": "PASS"
+    },
+    {
+      "rows": 80,
+      "active": 80,
+      "result": "PASS"
+    }
+  ],
+  "local_acceptance": "BF16 zero tolerance, including the untouched output guard row",
+  "local_task": "task_20261104_182257_391662622056",
+  "ep2_task": "task_20261104_182720_395829120696",
+  "ep2_devices": [
+    1,
+    2
+  ],
+  "layer_outputs": 16,
+  "limits": [
+    "A5 with generated CPU fixtures",
+    "No checkpoint/prefill or performance study",
+    "Original layer tolerances retained"
+  ]
+}
