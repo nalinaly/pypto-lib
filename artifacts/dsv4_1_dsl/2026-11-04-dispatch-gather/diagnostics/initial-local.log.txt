@@ -1,0 +1,91 @@
+任务已提交: task_20261104_190311_29388217872 (断开后可用 task-submit --wait task_20261104_190311_29388217872 重连)
+等待任务执行: task_20261104_190311_29388217872 (Ctrl+C 终止任务)
+[npu-lock] 获取设备 0 的锁 (无超时)...
+[npu-lock] 已获取设备 0 的锁 (pid=294142)
+[DISPATCH_GATHER_DSL] case=bounds
+[RUN] compile ...
+[RUN] compile done (0.33s)
+[RUN] generate inputs ...
+[RUN] generate inputs done (0.01s)
+[RUN] compute golden ...
+[RUN] compute golden done (0.01s)
+[RUN] runtime ...
+[mono_ns=107959291809770][T0xffffb3f28020][TIMING] emit_host_span: [STRACE] v=1 pid=294277 tid=294277 inv=0 hid=0 depth=0 name=chip.prewarm.build ts=107959268696480 dur=23104790
+[mono_ns=107959298959590][T0xffffb3f28020][TIMING] log_callable_image: Callable image: device=0 runner=0xaaaae8b58880 chip_hash=0xa722cc050ea7e04f chip_dev=0x12000001c000 upload_bytes=664456 children=1
+[mono_ns=107959298974060][T0xffffb3f28020][TIMING] log_callable_image: Callable code: device=0 runner=0xaaaae8b58880 chip_hash=0xa722cc050ea7e04f chip_dev=0x12000001c000 func_id=0 code_begin=0x1200000bdc60 code_end_exclusive=0x1200000be380 code_bytes=1824 code_fnv1a64=0xc37c5e2121a5d67a
+[mono_ns=107959298981260][T0xffffb3f28020][TIMING] record_device_orch_callable: [device_runner_base.cpp:2432] Callable registration: device=0 runner=0xaaaae8b58880 cid=0 chip_hash=0xa722cc050ea7e04f aicore_image_hash=0x503431edf815d806 orch_hash=0xaaf4a6ccf410e83d orch_bytes=644864
+[mono_ns=107959306980340][T0xffffb3f28020][TIMING] emit_host_span: [STRACE] v=1 pid=294277 tid=294277 inv=1 hid=aaf4a6ccf410e83d depth=2 name=chip.run.bind.args ts=107959306974190 dur=2000
+[mono_ns=107959306991840][T0xffffb3f28020][TIMING] emit_host_span: [STRACE] v=1 pid=294277 tid=294277 inv=1 hid=aaf4a6ccf410e83d depth=2 name=chip.run.bind.prebuilt ts=107959306988750 dur=1660
+[mono_ns=107959306995100][T0xffffb3f28020][TIMING] emit_host_span: [STRACE] v=1 pid=294277 tid=294277 inv=1 hid=aaf4a6ccf410e83d depth=1 name=chip.run.bind ts=107959306076120 dur=917750
+[mono_ns=107959306997480][T0xffffb3f28020][TIMING] emit_host_span: [STRACE] v=1 pid=294277 tid=294277 inv=1 hid=aaf4a6ccf410e83d depth=1 name=chip.run.publish_image ts=107959306996400 dur=100
+[mono_ns=107959307957220][T0xffffb3f28020][TIMING] emit_host_span: [STRACE] v=1 pid=294277 tid=294277 inv=1 hid=aaf4a6ccf410e83d depth=1 name=chip.run.stage_inputs ts=107959306998790 dur=954250
+[mono_ns=107959317777050][T0xffffb3f28020][TIMING] emit_host_span: [STRACE] v=1 pid=294277 tid=294277 inv=1 hid=aaf4a6ccf410e83d depth=1 name=chip.run.prepare_execution ts=107959307968400 dur=9805640
+[mono_ns=107959318743030][T0xffffb3f28020][TIMING] emit_host_span: [STRACE] v=1 pid=294277 tid=294277 inv=1 hid=aaf4a6ccf410e83d depth=2 name=chip.run.runner_run.aicpu_launch ts=107959318740530 dur=0
+[mono_ns=107959575338210][T0xffffb3f28020][ERROR] wait_run_fence: [device_runner_base.cpp:3752] aclrtSynchronizeEventWithTimeout (run completion boundary) failed: 507000
+[mono_ns=107959575347210][T0xffffb3f28020][ERROR] wait_run_fence: [device_runner_base.cpp:3753] ACL error detail: 507000 ACL_ERROR_RT_INTERNAL_ERROR - runtime internal error -- on a5 this is what an AICPU op timeout surfaces as at stream sync
+[mono_ns=107959575349310][T0xffffb3f28020][ERROR] wait_run_fence: [device_runner_base.cpp:3753] ACL error hint: do NOT read this as 'deadlock' or 'OOM' on its own -- it is a generic host-side code. Grep the host log for 'orch_error_code=' / 'sched_error_code=' / 'sub_class=' to get the device-classified reason, and read the device log for the detector that fired. See docs/troubleshooting/device-error-codes.md
+[mono_ns=107959575452780][T0xffffb3f28020][ERROR] wait_run_fence: [device_runner_base.cpp:3753] ACL recent error message: EE9999: Internal error!
+EE9999[PID: 294277] 2026-11-04-19:03:19.041.305 (EE9999):  The stream status is ABNORMAL(1), device_id=0, stream_id=61.[FUNC:SynchronizeExecutedTask][FILE:stream.cc][LINE:2010]
+TraceBack (most recent call last):
+       rtEventSynchronizeWithTimeout execution failed, reason=stream sync error[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:76]
+
+[mono_ns=107959575455970][T0xffffb3f28020][ERROR] log_run_failure: [device_runner_base.cpp:1985] Run device failure: device=0 runner=0xaaaae8b58880 rc=507000 run_epoch=1 generation=1 dispatch_id=0 pipeline_slot=0 cid=0 chip_hash=0xa722cc050ea7e04f chip_dev=0x12000001c000 runtime_args=0x1200000c3000
+[mono_ns=107965265369040][T0xffffb3f28020][ERROR] recover_device_or_mark_unusable: [device_runner.cpp:1052] AICore error 507000: bounded device drain failed: 507000 (force reset will follow in finalize)
+[mono_ns=107965265397680][T0xffffb3f28020][TIMING] emit_host_span: [STRACE] v=1 pid=294277 tid=294277 inv=1 hid=aaf4a6ccf410e83d depth=1 name=chip.run.runner_run ts=107959317791150 dur=5947601550
+[mono_ns=107965265680070][T0xffffb3f28020][ERROR] operator(): [device_runner_base.cpp:4119] device fault reported: device_id=0 stream_id=61 task_id=17 error_code=507018 thread_id=294277 (device-level; not attributed to any run)
+[mono_ns=107965265686160][T0xffffb3f28020][ERROR] consume_device_fault_notices: [device_runner_base.cpp:4169] device 0: fault channel matched 1 notice(s) to its run streams (first code=507018, generation=0). Admission is refused until a confirmed reset retires this generation; no run's outcome is changed by it.
+[mono_ns=107965265688220][T0xffffb3f28020][WARN] simpler_finalize_run: [c_api_shared.cpp:2541] device fault channel matched 1 notice(s) to this runner's run streams while finalizing run_id=0 dispatch_id=0 slot_id=0 generation=1 run_epoch=1; this run's own outcome is unchanged and the device refuses further admission
+[mono_ns=107965265691390][T0xffffb3f28020][WARN] copy_back_run_outputs_impl: [runtime_maker.cpp:1088] this run published no terminal record; its execution status stands and the device-side detail is in the device log
+[mono_ns=107965265693310][T0xffffb3f28020][WARN] copy_back_run_outputs_impl: [runtime_maker.cpp:1119] Skipping tensor copy-back because execution failed
+[mono_ns=107965265696590][T0xffffb3f28020][TIMING] emit_host_span: [STRACE] v=1 pid=294277 tid=294277 inv=1 hid=aaf4a6ccf410e83d depth=1 name=chip.run.validate ts=107965265690450 dur=4820
+[mono_ns=107965265705370][T0xffffb3f28020][TIMING] emit_host_span: [STRACE] v=1 pid=294277 tid=294277 inv=1 hid=aaf4a6ccf410e83d depth=1 name=chip.run.claim_release ts=107965265703910 dur=440
+[mono_ns=107965265709090][T0xffffb3f28020][TIMING] emit_host_span: [STRACE] v=1 pid=294277 tid=294277 inv=1 hid=aaf4a6ccf410e83d depth=0 name=chip.run ts=107959306064610 dur=5959642980 run_id=0 dispatch_id=0 slot_id=0 generation=1 run_epoch=1
+[mono_ns=107968899227090][T0xffffb3f28020][WARN] force_reset_device: [device_runner.cpp:1217] force_reset_device: aclrtResetDeviceForce(0) cleared the poisoned card (probe confirmed clean)
+[mono_ns=107968899250550][T0xffffb3f28020][WARN] retire_device_generation_after_confirmed_reset: [device_runner_base.cpp:4081] device 0: confirmed reset retired the suspect generation; fault notices reported before it are no longer this device's (generation is now 1)
+[mono_ns=107975062907700][T0xffffb3f28020][WARN] finalize_common_impl: [device_runner_base.cpp:2888] Fatal teardown: force reset/quarantine finished; skipping per-resource RTS destroy/free calls
+[mono_ns=107975062987320][T0xffffb3f28020][TIMING] finalize_common_impl: [device_runner_base.cpp:3029] Callable images abandoned: device=0 runner=0xaaaae8b58880 count=1
+[mono_ns=107975062998810][T0xffffb3f28020][WARN] finalize_common_impl: [device_runner_base.cpp:3256] Fatal teardown: host-side ownership cleared without further device calls
+[mono_ns=107975063000420][T0xffffb3f28020][WARN] finalize_impl: [device_runner.cpp:1317] DeviceRunner finalized after fatal device failure
+[RUN] runtime done (20.52s)
+Traceback (most recent call last):
+  File "<workspace>/artifacts/dsv41-semantic-review/run_case.py", line 21, in <module>
+    runpy.run_path(str(entry), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/moe_dispatch_dsl.py", line 230, in <module>
+    result = run(
+             ^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1646, in _run_pipeline
+    _dispatch(compiled, specs, tensors, scalar_specs_eff, cfg)
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 472, in _dispatch
+    compiled(*ordered, config=cfg)
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/ir/compiled_program.py", line 1135, in __call__
+    return _invoke_compiled(
+           ^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/ir/compiled_program.py", line 350, in _invoke_compiled
+    _execute_compiled(
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/runtime/runner.py", line 1851, in _execute_compiled
+    _execute_dfx_passes(_run_pass, _capture_deps, dfx, platform)
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/runtime/runner.py", line 1034, in _execute_dfx_passes
+    run_pass(dfx)
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/runtime/runner.py", line 1803, in _run_pass
+    _execute_on_device(
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/runtime/device_runner.py", line 896, in _execute_on_device
+    worker.run(cid, wire_args, cfg)
+  File "<workspace>/issue75-env/pypto-pr/runtime/python/simpler/worker.py", line 13472, in run
+    self.submit(callable, args=args, config=config, **submit_options).wait()
+  File "<workspace>/issue75-env/pypto-pr/runtime/python/simpler/worker.py", line 5303, in wait
+    raise published_error
+  File "<workspace>/issue75-env/pypto-pr/runtime/python/simpler/worker.py", line 5253, in wait
+    completed = self._worker._wait_run_handle(run_id, remaining)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/runtime/python/simpler/worker.py", line 14004, in _wait_run_handle
+    return chip_run.wait(-1.0 if timeout is None else max(0.0, timeout))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: chip run lane is poisoned: finalize_native_run failed with code 507000 (run_id=0 slot=0 generation=1 dispatch_id=0 run_epoch=1)
+[npu-lock] 已释放设备 0 的锁
+=== 任务失败 (exit=1) ===

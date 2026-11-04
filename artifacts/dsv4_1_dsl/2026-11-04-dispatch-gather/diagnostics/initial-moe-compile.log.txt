@@ -1,0 +1,75 @@
+[RUN] compile ...
+2026-11-04 19:03:17.881 W | [warning] [ScalarWriteLineShared] (pipeline_input) pl.write into 'scale_src' from 10 concurrent blocks ('dispatch_stage_spmd') in function 'dispatch': the index is computed at runtime, so the compiler cannot tell whether two blocks share a 64-byte cache line. A scalar write reaches DDR a whole 64-byte line at a time, carrying the neighbouring elements as the writing core last saw them, so two blocks sharing a line silently lose each other's stores. Give each one whole 64-byte lines (64 x UINT8), or issue the writes from a single instance (pl.spmd(1)). at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py:146:17
+2026-11-04 19:03:18.420 I | [perf_hint] 4 hints across 4 sites; see <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_moe_20261104_190317_g7510gw7/report/perf_hints.log
+Failed to generate orchestration 'l2_moe': Internal error: tensor.dim input must be TensorType [<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/moe_dispatch_dsl.py:91:5]
+Check failed: tensor_type at <workspace>/issue75-env/pypto-pr/src/codegen/tensor_op_codegen.cpp:532
+
+C++ Traceback (most recent call last):
+ File "./src/codegen/orchestration/orchestration_codegen.cpp", line 563
+ File "./include/pypto/ir/transforms/base/functor.h", line 231
+ File "./src/codegen/orchestration/orchestration_control_flow.cpp", line 531
+ File "./include/pypto/ir/transforms/base/functor.h", line 235
+ File "./src/codegen/orchestration/orchestration_stmt_codegen.cpp", line 455
+ File "./include/pypto/ir/transforms/base/functor.h", line 231
+ File "./src/codegen/orchestration/orchestration_control_flow.cpp", line 531
+ File "./include/pypto/ir/transforms/base/functor.h", line 235
+ File "./src/codegen/orchestration/orchestration_stmt_codegen.cpp", line 455
+ File "./include/pypto/ir/transforms/base/functor.h", line 220
+ File "./src/codegen/orchestration/orchestration_stmt_codegen.cpp", line 293
+ File "./src/codegen/orchestration/orchestration_tensor_codegen.cpp", line 82
+ File "./src/codegen/tensor_op_codegen.cpp", line 532
+
+[RUN] compile done (5.98s)
+Traceback (most recent call last):
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py", line 941, in <module>
+    result = run(
+             ^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1565, in _run_pipeline
+    compiled = compile_step(cfg, compile_state)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1731, in _compile
+    return fn.compile(config=cfg, **scalar_compile_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1443, in compile
+    compiled, _ordered_args, _run_config = self._resolve_compiled(args, kwargs, allow_signature_mode=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1266, in _resolve_compiled
+    compiled = self._cache[key] = build()
+                                  ^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1202, in build
+    return self._compile(
+           ^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1668, in _compile
+    return ir_compile(parsed, skip_ptoas=skip_ptoas, **ir_compile_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/ir/compile.py", line 445, in compile
+    result = _compile_to_files(
+             ^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/ir/compile.py", line 658, in _compile_to_files
+    files = generate(
+            ^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/backend/pto_backend.py", line 1898, in generate
+    return _generate_with_distributed(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/backend/pto_backend.py", line 1969, in _generate_with_distributed
+    chip_files = _generate_single_chip(
+                 ^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/backend/pto_backend.py", line 2410, in _generate_single_chip
+    raise PartialCodegenError(report, result_files)
+pypto.backend.pto_backend.PartialCodegenError: 1 function(s) failed to compile:
+
+  Function  | Error
+  ----------+--------------------------------------------------------------
+  l2_moe    | Internal error: tensor.dim input must be TensorType
+            | [<workspace>/pypto-a5-dev/pypto-
+            | lib-dsv41-
+            | dsl/models/deepseek_v4_1_flash/moe_dispatch_dsl.py:91:5]
+  ----------+--------------------------------------------------------------
+
+  Full details: <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_moe_20261104_190317_g7510gw7/next_levels/l2_moe/report/codegen_errors.txt

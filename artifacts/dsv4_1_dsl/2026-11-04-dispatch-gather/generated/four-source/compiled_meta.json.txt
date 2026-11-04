@@ -1,0 +1,219 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "source",
+      "direction": "In",
+      "shape": [
+        1280,
+        5120
+      ],
+      "dtype": "int8",
+      "layout": "ND"
+    },
+    {
+      "name": "source_scale",
+      "direction": "In",
+      "shape": [
+        1280,
+        160
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "source_weight",
+      "direction": "In",
+      "shape": [
+        1280,
+        8
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "source_route",
+      "direction": "In",
+      "shape": [
+        1280,
+        8
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "metadata",
+      "direction": "In",
+      "shape": [
+        4,
+        4
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "counts",
+      "direction": "In",
+      "shape": [
+        4,
+        1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "payload",
+      "direction": "InOut",
+      "shape": [
+        1296,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "scales",
+      "direction": "InOut",
+      "shape": [
+        1,
+        207360
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "weights",
+      "direction": "InOut",
+      "shape": [
+        1296,
+        1
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "routes",
+      "direction": "InOut",
+      "shape": [
+        1296,
+        1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "source",
+      "direction": "In",
+      "shape": [
+        1280,
+        5120
+      ],
+      "dtype": "int8",
+      "layout": "ND"
+    },
+    {
+      "name": "source_scale",
+      "direction": "In",
+      "shape": [
+        1280,
+        160
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "source_weight",
+      "direction": "In",
+      "shape": [
+        1280,
+        8
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "source_route",
+      "direction": "In",
+      "shape": [
+        1280,
+        8
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "metadata",
+      "direction": "In",
+      "shape": [
+        4,
+        4
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "counts",
+      "direction": "In",
+      "shape": [
+        4,
+        1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "payload",
+      "direction": "InOut",
+      "shape": [
+        1296,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "scales",
+      "direction": "InOut",
+      "shape": [
+        1,
+        207360
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "weights",
+      "direction": "InOut",
+      "shape": [
+        1296,
+        1
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "routes",
+      "direction": "InOut",
+      "shape": [
+        1296,
+        1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    }
+  ],
+  "num_return_types": 4,
+  "return_aliases": [
+    6,
+    7,
+    8,
+    9
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

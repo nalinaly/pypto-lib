@@ -1,0 +1,5 @@
+[RUN] compile ...
+2026-11-04 19:09:04.638 W | [warning] [ScalarWriteLineShared] (pipeline_input) pl.write into 'scale_src' from 10 concurrent blocks ('dispatch_stage_spmd') in function 'dispatch': the index is computed at runtime, so the compiler cannot tell whether two blocks share a 64-byte cache line. A scalar write reaches DDR a whole 64-byte line at a time, carrying the neighbouring elements as the writing core last saw them, so two blocks sharing a line silently lose each other's stores. Give each one whole 64-byte lines (64 x UINT8), or issue the writes from a single instance (pl.spmd(1)). at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py:146:17
+2026-11-04 19:09:05.168 I | [perf_hint] 4 hints across 4 sites; see <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_moe_20261104_190904__j_kzpx2/report/perf_hints.log
+[RUN] compile done (5.59s)
+[RUN] PASS (5.59s)

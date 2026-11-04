@@ -452,6 +452,42 @@ lanes, NaN inactive inputs and an untouched output guard row. The layer-0
 EP2 entry validates the local communication-window view and the preserved
 notification/wait boundary using the existing model comparators.
 
+## Local MoE receive gather in DSL
+
+The decode `dispatch_gather` task in
+[`decode_moe.py`](../../../models/deepseek_v4_1_flash/decode_moe.py) calls
+[`moe_dispatch_dsl.py`](../../../models/deepseek_v4_1_flash/moe_dispatch_dsl.py).
+Each `dsl_dispatch_gather` AIV task compacts up to 16 rows for one local expert
+in source-rank order. FP8 payload bytes, E8M0 scale codes, FP32 route weights
+and INT32 route indices retain their original bits. The scales are rearranged
+from transport ND rows into the existing M16-paired `MX_A_ZZ` storage; no
+quantization or floating-point arithmetic is performed.
+
+The DSL receives local views of the current rank's receive windows. The
+existing staging, metadata publication/finalization, remote payload stores,
+notification and deferred-wait scopes remain unchanged. PyPTO/simpler retains
+the original push, wait and metadata dependencies and joins every local gather
+before routed-expert compute. A bounded completion pool also retains those
+dependencies when every expert is empty.
+
+The final active scale tile has zero codes in unused row positions. Other
+inactive payload, scale, weight and route regions remain untouched. Expert
+capacity stays M16-aligned with equal source lanes. The intermediate ND scale
+buffer is removed; each DSL task packs its scale tile in UB.
+
+With an allocated A5 device in `TASK_DEVICE`:
+
+```bash
+python models/deepseek_v4_1_flash/moe_dispatch_dsl.py -d "$TASK_DEVICE"
+```
+
+The four bounded cases cover empty experts and sources, 15/16/17-row boundaries,
+full receive capacity, and local windows containing four source lanes. All four
+output buffers are compared byte-for-byte, including sentinel tails and an
+extra output guard tile. Fixtures exercise all 256 payload and scale byte codes
+and signed-zero route weights. The four-source case is a local data-layout
+test; distributed integration is validated by the existing EP2 layer entry.
+
 ## DSL development branch and evidence
 
 Continue DSL implementation and evidence collection on
@@ -485,3 +521,6 @@ compute stages, CPU leaf fixtures, and layer-0 EP2 integration evidence.
 The [combine archive](../../../artifacts/dsv4_1_dsl/2026-11-04-combine/README.txt)
 contains the local reduction checks, communication-scope review, generated
 leaf/wrapper/orchestration, CPU fixtures and the layer-0 EP2 regression.
+The [receive-gather archive](../../../artifacts/dsv4_1_dsl/2026-11-04-dispatch-gather/README.txt)
+contains byte-exact layout/compaction checks, unchanged communication-scope
+review, generated code, CPU fixtures and the layer-0 EP2 regression.

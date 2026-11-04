@@ -1,0 +1,42 @@
+{
+  "status": "PASS",
+  "branch": "dsv4.1-dsl",
+  "model_base": "0b9508670fcc8d170de9695251abfbf23db2b2dc",
+  "pypto_revision": "4a65a9c79b305aac9cac5a8cd84eef4cc8e4986c",
+  "dsl_revision": "91feb222c59ec3ad1175ba5fd88445c72f8abdff",
+  "replaced_task": "dispatch_gather",
+  "replacement_task": "dsl_dispatch_gather",
+  "unchanged_scopes": [
+    "dispatch_stage",
+    "dispatch_meta_publish",
+    "dispatch_meta_wait",
+    "dispatch_meta_finalize",
+    "dispatch_push",
+    "dispatch_publish_epoch",
+    "dispatch_wait",
+    "combine_notify",
+    "combine_wait",
+    "ffn_reduce_scatter"
+  ],
+  "other_decode_moe_functions_unchanged": true,
+  "local_cases": [
+    "bounds",
+    "zero",
+    "full",
+    "multi"
+  ],
+  "local_acceptance": "Byte-exact payload, scales, weights and routes, including tails and guard tiles",
+  "local_task": "task_20261104_190858_47192215433",
+  "ep2_task": "task_20261104_191023_495307989",
+  "ep2_devices": [
+    2,
+    3
+  ],
+  "layer_outputs": 16,
+  "limits": [
+    "A5 generated CPU fixtures",
+    "Four-source case is local, not EP4 communication",
+    "No checkpoint/prefill or performance claim",
+    "Original layer comparators retained"
+  ]
+}

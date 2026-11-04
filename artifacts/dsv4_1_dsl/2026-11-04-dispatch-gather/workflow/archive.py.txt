@@ -1,0 +1,128 @@
+"""Capture local receive-gather validation, generated code and CPU fixtures."""
+
+import ast
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-dispatch-gather-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-04-dispatch-gather"
+archive.mkdir(parents=True, exist_ok=True)
+inventory = []
+
+
+def capture(source, target, binary=False):
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        value = source.read_text().replace(str(workspace), "<workspace>")
+        value = value.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n")
+    inventory.append({"path": str(destination.relative_to(archive)),
+                      "source": str(source.relative_to(workspace)),
+                      "bytes": destination.stat().st_size, "encoding": "gzip" if binary else "utf-8"})
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        source = directory / name
+        if source.is_file():
+            capture(source, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*.cpp")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name.startswith("gather_rows"):
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+local_log = (work / "local.log").read_text()
+layer_log = (work / "layer0-ep2.log").read_text()
+if len(re.findall(r"^\[RUN\] PASS", local_log, re.MULTILINE)) != 4:
+    raise RuntimeError("All four local cases must pass before capture")
+outputs = len(re.findall(r"^\[RUN\]   '[^']+' PASS", layer_log, re.MULTILINE))
+if "[RUN] PASS" not in layer_log or outputs != 16:
+    raise RuntimeError("The EP2 layer must pass all 16 comparisons before capture")
+
+old = ast.parse((work / "decode_moe_before.py").read_text())
+new = ast.parse((model / "models/deepseek_v4_1_flash/decode_moe.py").read_text())
+a = {node.name: node for node in old.body if isinstance(node, ast.FunctionDef)}
+b = {node.name: node for node in new.body if isinstance(node, ast.FunctionDef)}
+review = []
+for name in a:
+    if name != "dispatch":
+        if ast.dump(a[name]) != ast.dump(b[name]):
+            raise RuntimeError("Unrelated function changed: " + name)
+        review.append(name + ": unchanged")
+
+
+def prefix(function, variable):
+    for index, node in enumerate(function.body):
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == variable for t in node.targets):
+            return [ast.dump(item) for item in function.body[:index]]
+    raise RuntimeError("Cannot locate gather boundary")
+
+
+if prefix(a["dispatch"], "recv_x_out_flat") != prefix(b["dispatch"], "flat_x"):
+    raise RuntimeError("A pre-gather dispatch statement changed")
+scopes = ["dispatch_stage", "dispatch_meta_publish", "dispatch_meta_wait", "dispatch_meta_finalize",
+          "dispatch_push", "dispatch_publish_epoch", "dispatch_wait", "combine_notify", "combine_wait"]
+review.extend(name + ": unchanged" for name in scopes)
+subprocess.run(["git", "diff", "--exit-code", "HEAD", "--", "models/deepseek_v4_1_flash/expert_routed.py",
+                "models/deepseek_v4_1_flash/decode_layer.py"], cwd=model, check=True)
+review.extend(["expert_routed.py: unchanged, including ffn_reduce_scatter", "decode_layer.py: unchanged"])
+(work / "communication-review.txt").write_text("\n".join(review) + "\n")
+
+for name in ("local.log", "layer0-ep2.log", "local-compile.log", "moe-compile.log"):
+    capture(work / name, f"validation/{name}.txt")
+capture(work / "communication-review.txt", "validation/communication-review.txt")
+for name in ("initial-local.log", "initial-moe-compile.log", "second-local.log", "second-moe-compile.log"):
+    capture(work / name, f"diagnostics/{name}.txt")
+for name in ("decode_moe.py", "moe_dispatch_dsl.py"):
+    capture(model / "models/deepseek_v4_1_flash" / name, f"model-snapshot/{name}.txt")
+capture(work / "decode_moe_before.py", "model-snapshot/decode_moe_before.py.txt")
+generated("two-source", model / "build_output/_jit_validate_gather_20261104_190900_ggdxe50x", True)
+generated("four-source", model / "build_output/_jit_validate_gather_20261104_190907_b1hn_oj7", True)
+layer = max((model / "build_output").glob("_jit_l3_decode_layer_*"), key=lambda p: p.stat().st_mtime)
+generated("layer0-ep2", layer)
+generated("layer0-ep2/chip", layer / "next_levels/l2_decode_layer")
+capture(Path(__file__).resolve(), "workflow/archive.py.txt")
+
+
+def revision(path):
+    return subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
+
+
+devices = [int(value) for value in re.findall(r"已获取设备 (\d+) 的锁", layer_log)]
+summary = {
+    "status": "PASS", "branch": "dsv4.1-dsl", "model_base": revision(model),
+    "pypto_revision": revision(workspace / "issue75-env/pypto-pr"),
+    "dsl_revision": revision(workspace / "cannbot-dsl-dev"),
+    "replaced_task": "dispatch_gather", "replacement_task": "dsl_dispatch_gather",
+    "unchanged_scopes": scopes + ["ffn_reduce_scatter"],
+    "other_decode_moe_functions_unchanged": True,
+    "local_cases": ["bounds", "zero", "full", "multi"],
+    "local_acceptance": "Byte-exact payload, scales, weights and routes, including tails and guard tiles",
+    "local_task": re.search(r"task_\d+_\d+_\d+", local_log).group(0),
+    "ep2_task": re.search(r"task_\d+_\d+_\d+", layer_log).group(0),
+    "ep2_devices": devices, "layer_outputs": outputs,
+    "limits": ["A5 generated CPU fixtures", "Four-source case is local, not EP4 communication",
+               "No checkpoint/prefill or performance claim", "Original layer comparators retained"],
+}
+(archive / "validation-summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+(archive / "artifact-manifest.json").write_text(json.dumps(inventory, indent=2) + "\n")
+print(f"Captured {len(inventory)} files; {sum(item['bytes'] for item in inventory)} bytes")

@@ -42,6 +42,7 @@ from expert_routed import (
 )
 from hc import hc_pre, hc_post
 from moe_combine_dsl import combine_local
+from moe_dispatch_dsl import gather_local
 
 
 # 模型配置
@@ -73,8 +74,6 @@ SIGNAL_PAD = 128  # 512-byte padded monotonic counter lane
 
 # 分块参数
 DISPATCH_STAGE_TILE = 8
-SCALE_PACK_TMP_TILE = ((64 + K_SCALE + 31) // 32) * 32
-RECV_TILE = 16
 
 
 @pl.jit.inline(auto_scope=False)
@@ -239,57 +238,14 @@ def dispatch(
             if src != my_rank:
                 pld.system.defer_wait(signal=data_arrived, offsets=[src, 0, 0], expected=moe_epoch, cmp=pld.WaitCmp.Ge)
 
-    # Gather aligned row tiles into compact expert buffers.
-    recv_x_out_flat = pl.reshape(recv_x_out, [N_LOCAL * RECV_MAX, D])
-    recv_scale_nd = pl.create_tensor([N_LOCAL * RECV_MAX, K_SCALE], dtype=pl.FP8E8M0, manual_dep=True)
-    gather_tids = pl.array.create(N_LOCAL, pl.TASK_ID)
-    for e in pl.parallel(N_LOCAL):
-        gather_tile_tids = pl.array.create(((RECV_MAX + RECV_TILE - 1) // RECV_TILE), pl.TASK_ID)
-        for tile in pl.range(((RECV_MAX + RECV_TILE - 1) // RECV_TILE)):
-            gather_tile_tids[tile] = pl.system.task_dummy(deps=[])
-        expert_count = pl.read(recv_count_out, [e, 0])
-        expert_rows = pl.cast(expert_count, pl.INDEX)
-        expert_tiles = (expert_rows + RECV_TILE - 1) // RECV_TILE
-        for tile in pl.parallel(expert_tiles):
-            tile_row = tile * RECV_TILE
-            tile_end = pl.min(tile_row + RECV_TILE, expert_rows)
-            with pl.at(level=pl.Level.CORE_GROUP, name_hint="dispatch_gather", deps=[_wait_tid, _push_tid, _meta_tid], allow_early_resolve=False) as gather_tile_tid:
-                e_base_row = e * RECV_MAX
-                source_begin = pl.cast(0, pl.INDEX)
-                for src in pl.range(N_RANKS):
-                    source_count = pl.read(recv_meta_local, [src, e])
-                    source_rows = pl.cast(source_count, pl.INDEX)
-                    source_end = source_begin + source_rows
-                    src_base_row = e_base_row + src * MAX_PER_SRC
-                    gather_begin = pl.max(tile_row, source_begin)
-                    gather_end = pl.min(tile_end, source_end)
-                    for out_col in pl.range(gather_begin, gather_end):
-                        in_row = src_base_row + out_col - source_begin
-                        out_row = e_base_row + out_col
-                        recv_x_raw = pl.load(recv_x, [in_row, 0], [1, D])
-                        recv_x_mx = pl.reinterpret_view(recv_x_raw, pl.FP8E4M3FN)
-                        recv_x_out_flat = pl.store(recv_x_mx, [out_row, 0], recv_x_out_flat)
-                        recv_scale_raw = pl.load(recv_scale, [in_row, 0], [1, K_SCALE])
-                        recv_scale_mx = pl.reinterpret_view(recv_scale_raw, pl.FP8E8M0)
-                        recv_scale_nd = pl.store(recv_scale_mx, [out_row, 0], recv_scale_nd)
-                        recv_weight = pl.read(recv_weights, [in_row, AUX_W])
-                        pl.write(recv_weight_out, [e, out_col], recv_weight)
-                        recv_route = pl.read(recv_routes, [in_row, 0])
-                        pl.write(recv_route_out, [e, out_col], recv_route)
-                    source_begin = source_end
-                flat_t0 = e_base_row + tile_row
-                scale_nd = pl.load(recv_scale_nd, [flat_t0, 0], [RECV_TILE, K_SCALE])
-                scale_raw = pl.reinterpret_view(scale_nd, pl.UINT8)
-                tmp = pl.create_tile([1, SCALE_PACK_TMP_TILE], dtype=pl.UINT8)
-                scale_zz_raw = pl.tmov_x2zz(scale_raw, tmp, group_axis=1, dst_rows=RECV_TILE, dst_cols=K_SCALE)
-                scale_zz = pl.reinterpret_view(scale_zz_raw, pl.FP8E8M0)
-                scale_zz_flat = pl.reshape(scale_zz, [1, RECV_TILE * K_SCALE])
-                recv_scale_out = pl.store(scale_zz_flat, [0, flat_t0 * K_SCALE], recv_scale_out)
-            gather_tile_tids[tile] = gather_tile_tid
-        gather_tids[e] = pl.system.task_dummy(deps=[gather_tile_tids])
-    _gather_tid = pl.system.task_dummy(deps=[gather_tids[e] for e in range(N_LOCAL)])
-
-    return _gather_tid
+    flat_x = pl.reshape(recv_x_out, [N_LOCAL * RECV_MAX, D])
+    flat_weights = pl.reshape(recv_weight_out, [N_LOCAL * RECV_MAX, 1])
+    flat_routes = pl.reshape(recv_route_out, [N_LOCAL * RECV_MAX, 1])
+    return gather_local(
+        recv_x, recv_scale, recv_weights, recv_routes, recv_meta_local, recv_count_out,
+        flat_x, recv_scale_out, flat_weights, flat_routes,
+        _wait_tid, _push_tid, _meta_tid, AUX_PAD, IDX_PAD,
+    )
 
 
 @pl.jit.inline
