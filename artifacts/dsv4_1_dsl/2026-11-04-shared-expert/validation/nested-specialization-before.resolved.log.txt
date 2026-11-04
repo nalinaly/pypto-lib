@@ -1,0 +1,178 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_nested_foreign_calls_preserve_tensor_specializations[second_shape0-second_dtype0-BackendType.Ascend950] _
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-93/test_nested_foreign_calls_pres0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff9b5a0fe0>
+ascend_backend = BackendType.Ascend950, second_shape = (1, 64)
+second_dtype = torch.float32
+
+    @pytest.mark.parametrize("ascend_backend", [BackendType.Ascend950], indirect=True)
+    @pytest.mark.parametrize(
+        "second_shape,second_dtype",
+        [((1, 64), torch.float32), ((1, 32), torch.bfloat16), ((1, 64), torch.bfloat16)],
+    )
+    def test_nested_foreign_calls_preserve_tensor_specializations(
+        tmp_path, monkeypatch, ascend_backend, second_shape, second_dtype
+    ):
+        cb = pytest.importorskip("cannbotdsl")
+        monkeypatch.setenv("CANNBOTDSL_PYPTO_CACHE_DIR", str(tmp_path))
+    
+        @cb.kernel
+        def copy_tile(source: cb.Tensor, output: cb.Tensor):
+            staging = cb.Buffer(cb.MemLoc.UB, source.dtype, cb.make_layout(source.shape))
+            cb.mem_copy(staging, source)
+            cb.mem_copy(output, staging)
+    
+        @pl.jit.inline(auto_scope=False)
+        def dispatch(source: pl.Tensor, output: pl.Tensor):
+            with pl.spmd(1):
+                copy_tile(source, output)
+    
+        @pl.jit.inline(auto_scope=False)
+        def project(source: pl.Tensor, output: pl.Tensor):
+            dispatch(source, output)
+    
+        @pl.jit
+        def entry(a: pl.Tensor, b: pl.Tensor, x: pl.Out[pl.Tensor], y: pl.Out[pl.Tensor], z: pl.Out[pl.Tensor]):
+            project(a, x)
+            project(b, y)
+            project(a, z)
+            return x, y, z
+    
+        a = torch.zeros(1, 32)
+        b = torch.zeros(second_shape, dtype=second_dtype)
+        _, _, tensor_meta, scalar_dtypes, constexpr, dynamic = entry._bind_args(
+            (a, b, torch.zeros_like(a), torch.zeros_like(b), torch.zeros_like(a)), {}
+        )
+        contexts = entry._build_contexts(tensor_meta, scalar_dtypes, constexpr, dynamic)
+        foreign = [ctx for ctx in contexts if ctx.external_parameter_access is not None]
+        observed = {(ctx.tensor_meta["source"].shape, ctx.tensor_meta["source"].dtype) for ctx in foreign}
+        expected = {((1, 32), pl.FP32), (second_shape, pl.FP32 if second_dtype == torch.float32 else pl.BF16)}
+>       assert observed == expected
+E       assert {((1, 32), fp32)} == {((1, 32), fp...1, 64), fp32)}
+E         
+E         Extra items in the right set:
+E         ((1, 64), fp32)
+E         Use -v to get more diff
+
+<workspace>/issue75-env/pypto-pr/tests/ut/jit/test_cannbotdsl_adapter.py:190: AssertionError
+_ test_nested_foreign_calls_preserve_tensor_specializations[second_shape1-second_dtype1-BackendType.Ascend950] _
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-93/test_nested_foreign_calls_pres1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff9b5c22a0>
+ascend_backend = BackendType.Ascend950, second_shape = (1, 32)
+second_dtype = torch.bfloat16
+
+    @pytest.mark.parametrize("ascend_backend", [BackendType.Ascend950], indirect=True)
+    @pytest.mark.parametrize(
+        "second_shape,second_dtype",
+        [((1, 64), torch.float32), ((1, 32), torch.bfloat16), ((1, 64), torch.bfloat16)],
+    )
+    def test_nested_foreign_calls_preserve_tensor_specializations(
+        tmp_path, monkeypatch, ascend_backend, second_shape, second_dtype
+    ):
+        cb = pytest.importorskip("cannbotdsl")
+        monkeypatch.setenv("CANNBOTDSL_PYPTO_CACHE_DIR", str(tmp_path))
+    
+        @cb.kernel
+        def copy_tile(source: cb.Tensor, output: cb.Tensor):
+            staging = cb.Buffer(cb.MemLoc.UB, source.dtype, cb.make_layout(source.shape))
+            cb.mem_copy(staging, source)
+            cb.mem_copy(output, staging)
+    
+        @pl.jit.inline(auto_scope=False)
+        def dispatch(source: pl.Tensor, output: pl.Tensor):
+            with pl.spmd(1):
+                copy_tile(source, output)
+    
+        @pl.jit.inline(auto_scope=False)
+        def project(source: pl.Tensor, output: pl.Tensor):
+            dispatch(source, output)
+    
+        @pl.jit
+        def entry(a: pl.Tensor, b: pl.Tensor, x: pl.Out[pl.Tensor], y: pl.Out[pl.Tensor], z: pl.Out[pl.Tensor]):
+            project(a, x)
+            project(b, y)
+            project(a, z)
+            return x, y, z
+    
+        a = torch.zeros(1, 32)
+        b = torch.zeros(second_shape, dtype=second_dtype)
+        _, _, tensor_meta, scalar_dtypes, constexpr, dynamic = entry._bind_args(
+            (a, b, torch.zeros_like(a), torch.zeros_like(b), torch.zeros_like(a)), {}
+        )
+        contexts = entry._build_contexts(tensor_meta, scalar_dtypes, constexpr, dynamic)
+        foreign = [ctx for ctx in contexts if ctx.external_parameter_access is not None]
+        observed = {(ctx.tensor_meta["source"].shape, ctx.tensor_meta["source"].dtype) for ctx in foreign}
+        expected = {((1, 32), pl.FP32), (second_shape, pl.FP32 if second_dtype == torch.float32 else pl.BF16)}
+>       assert observed == expected
+E       assert {((1, 32), fp32)} == {((1, 32), fp...2), bfloat16)}
+E         
+E         Extra items in the right set:
+E         ((1, 32), bfloat16)
+E         Use -v to get more diff
+
+<workspace>/issue75-env/pypto-pr/tests/ut/jit/test_cannbotdsl_adapter.py:190: AssertionError
+_ test_nested_foreign_calls_preserve_tensor_specializations[second_shape2-second_dtype2-BackendType.Ascend950] _
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-93/test_nested_foreign_calls_pres2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xffff9b5c2660>
+ascend_backend = BackendType.Ascend950, second_shape = (1, 64)
+second_dtype = torch.bfloat16
+
+    @pytest.mark.parametrize("ascend_backend", [BackendType.Ascend950], indirect=True)
+    @pytest.mark.parametrize(
+        "second_shape,second_dtype",
+        [((1, 64), torch.float32), ((1, 32), torch.bfloat16), ((1, 64), torch.bfloat16)],
+    )
+    def test_nested_foreign_calls_preserve_tensor_specializations(
+        tmp_path, monkeypatch, ascend_backend, second_shape, second_dtype
+    ):
+        cb = pytest.importorskip("cannbotdsl")
+        monkeypatch.setenv("CANNBOTDSL_PYPTO_CACHE_DIR", str(tmp_path))
+    
+        @cb.kernel
+        def copy_tile(source: cb.Tensor, output: cb.Tensor):
+            staging = cb.Buffer(cb.MemLoc.UB, source.dtype, cb.make_layout(source.shape))
+            cb.mem_copy(staging, source)
+            cb.mem_copy(output, staging)
+    
+        @pl.jit.inline(auto_scope=False)
+        def dispatch(source: pl.Tensor, output: pl.Tensor):
+            with pl.spmd(1):
+                copy_tile(source, output)
+    
+        @pl.jit.inline(auto_scope=False)
+        def project(source: pl.Tensor, output: pl.Tensor):
+            dispatch(source, output)
+    
+        @pl.jit
+        def entry(a: pl.Tensor, b: pl.Tensor, x: pl.Out[pl.Tensor], y: pl.Out[pl.Tensor], z: pl.Out[pl.Tensor]):
+            project(a, x)
+            project(b, y)
+            project(a, z)
+            return x, y, z
+    
+        a = torch.zeros(1, 32)
+        b = torch.zeros(second_shape, dtype=second_dtype)
+        _, _, tensor_meta, scalar_dtypes, constexpr, dynamic = entry._bind_args(
+            (a, b, torch.zeros_like(a), torch.zeros_like(b), torch.zeros_like(a)), {}
+        )
+        contexts = entry._build_contexts(tensor_meta, scalar_dtypes, constexpr, dynamic)
+        foreign = [ctx for ctx in contexts if ctx.external_parameter_access is not None]
+        observed = {(ctx.tensor_meta["source"].shape, ctx.tensor_meta["source"].dtype) for ctx in foreign}
+        expected = {((1, 32), pl.FP32), (second_shape, pl.FP32 if second_dtype == torch.float32 else pl.BF16)}
+>       assert observed == expected
+E       assert {((1, 32), fp32)} == {((1, 32), fp...4), bfloat16)}
+E         
+E         Extra items in the right set:
+E         ((1, 64), bfloat16)
+E         Use -v to get more diff
+
+<workspace>/issue75-env/pypto-pr/tests/ut/jit/test_cannbotdsl_adapter.py:190: AssertionError
+=========================== short test summary info ============================
+FAILED tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape0-second_dtype0-BackendType.Ascend950]
+FAILED tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape1-second_dtype1-BackendType.Ascend950]
+FAILED tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape2-second_dtype2-BackendType.Ascend950]
+3 failed, 7 deselected in 0.40s

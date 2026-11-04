@@ -1,0 +1,57 @@
+{
+  "arch": "dav-3510",
+  "core_type": "aiv",
+  "device_abi": {
+    "parameters": [
+      {
+        "alignment": 8,
+        "kind": "pod",
+        "logical_index": 0,
+        "offset": 0,
+        "size": 16
+      },
+      {
+        "alignment": 8,
+        "kind": "pod",
+        "logical_index": 1,
+        "offset": 16,
+        "size": 16
+      }
+    ],
+    "schema": 1,
+    "size": 32,
+    "symbol": "kernel_unpack_weight_probe"
+  },
+  "export_backend": "source_bundle",
+  "parameters": [
+    {
+      "access": "read",
+      "dtype": "u8",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "kind": "tensor",
+      "logical_index": 0,
+      "name": "source"
+    },
+    {
+      "access": "write",
+      "dtype": "u8",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "kind": "tensor",
+      "logical_index": 1,
+      "name": "output"
+    }
+  ],
+  "symbol": "kernel_unpack_weight_probe"
+}

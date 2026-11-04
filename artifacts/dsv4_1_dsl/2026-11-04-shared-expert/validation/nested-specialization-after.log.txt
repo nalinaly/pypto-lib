@@ -1,0 +1,14 @@
+...                                                                      [100%]
+=============================== warnings summary ===============================
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape0-second_dtype0-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape1-second_dtype1-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape2-second_dtype2-BackendType.Ascend950]
+  <string>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape0-second_dtype0-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape1-second_dtype1-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape2-second_dtype2-BackendType.Ascend950]
+  <string>:9: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 7 deselected, 6 warnings in 0.43s

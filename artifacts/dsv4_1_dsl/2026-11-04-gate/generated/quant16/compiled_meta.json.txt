@@ -1,0 +1,77 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "source",
+      "direction": "In",
+      "shape": [
+        16,
+        5120
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "payload",
+      "direction": "Out",
+      "shape": [
+        16,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "scales",
+      "direction": "Out",
+      "shape": [
+        1,
+        2560
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "source",
+      "direction": "In",
+      "shape": [
+        16,
+        5120
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "payload",
+      "direction": "Out",
+      "shape": [
+        16,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "scales",
+      "direction": "Out",
+      "shape": [
+        1,
+        2560
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    }
+  ],
+  "num_return_types": 2,
+  "return_aliases": [
+    1,
+    2
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

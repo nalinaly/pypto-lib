@@ -1,0 +1,125 @@
+"""Archive local routed-expert evidence without supplemental checksums."""
+
+import ast
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-routed-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-04-routed-expert"
+archive.mkdir(parents=True, exist_ok=True)
+inventory = []
+
+
+def capture(source, target, binary=False):
+    target = archive / target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(target, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        text = source.read_text().replace(str(workspace), "<workspace>")
+        target.write_text(text.replace(str(workspace.parent), "<user-home>"))
+    inventory.append({"path": str(target.relative_to(archive)), "source": str(source.relative_to(workspace)),
+                      "bytes": target.stat().st_size, "encoding": "gzip" if binary else "utf-8"})
+
+
+def generated(label, directory, fixtures=False, routed_only=False):
+    for filename in ("kernel_config.py", "compiled_meta.json"):
+        source = directory / filename
+        if source.is_file():
+            capture(source, f"generated/{label}/{filename}.txt")
+    for source in sorted((directory / "orchestration").glob("*.cpp")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    seen = set()
+    if config.is_file():
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            parent = Path(entry).parent
+            if parent in seen or (routed_only and not name.startswith(("project_up_worker", "activate_worker", "project_down_worker"))):
+                continue
+            seen.add(parent)
+            for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                source = parent / filename
+                if source.is_file():
+                    capture(source, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+for name in ("baseline-bounds.log", "probes.log", "activation.log", "bounds.log", "local-all.log",
+             "layer0-ep2.log", "full-compile.log", "static-checks.log", "communication-review.txt"):
+    source = work / name
+    if source.is_file():
+        capture(source, f"validation/{name}.txt")
+for name in ("expert_routed.py", "expert_routed_dsl.py"):
+    capture(model / "models/deepseek_v4_1_flash" / name, f"model-snapshot/{name}.txt")
+capture(model / "models/deepseek_v4_1_flash/mxfp8_dsl.py", "model-snapshot/mxfp8_dsl.py.txt")
+capture(work / "expert_routed_before.py", "model-snapshot/expert_routed_before.py.txt")
+capture(work / "expert_routed_before.cpp", "model-snapshot/expert_routed_before.cpp.txt")
+generated("unpack", model / "build_output/_jit_validate_unpack_20261104_162432_ne262giu", True)
+generated("projection", model / "build_output/_jit_validate_projection_20261104_162437_ukt2guml", True)
+generated("activation", model / "build_output/_jit_validate_activation_20261104_163213_ao2y5p4a", True)
+generated("local-all", model / "build_output/_jit_local_compute_test_20261104_163602_nemvv_gr", routed_only=True)
+layer = model / "build_output/_jit_l3_decode_layer_20261104_163808__gdv_3iw"
+generated("layer0-ep2", layer, routed_only=True)
+generated("layer0-ep2/chip", layer / "next_levels/l2_decode_layer", routed_only=True)
+capture(Path(__file__).resolve(), "workflow/archive.py.txt")
+
+old = ast.parse((work / "expert_routed_before.py").read_text())
+new = ast.parse((model / "models/deepseek_v4_1_flash/expert_routed.py").read_text())
+reviewed = ("expert_routed_scatter", "_reduce_ffn_tile", "golden_expert_routed", "golden_local_compute", "compare_local_compute")
+for name in reviewed:
+    before = next(n for n in old.body if isinstance(n, ast.FunctionDef) and n.name == name)
+    after = next(n for n in new.body if isinstance(n, ast.FunctionDef) and n.name == name)
+    if ast.dump(before) != ast.dump(after):
+        raise RuntimeError(name + " changed")
+subprocess.run(["git", "diff", "--exit-code", "HEAD", "--", "models/deepseek_v4_1_flash/decode_moe.py",
+                "models/deepseek_v4_1_flash/decode_layer.py"], cwd=model, check=True, stdout=subprocess.DEVNULL)
+layer_text = (work / "layer0-ep2.log").read_text()
+outputs = len(re.findall(r"^\[RUN\]   '[^']+' PASS", layer_text, re.MULTILINE))
+if "[RUN] PASS" not in layer_text or outputs != 16:
+    raise RuntimeError("The full layer regression must pass before capture")
+
+
+def revision(path):
+    return subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
+
+
+checks = []
+for file, case, passes in (
+    ("baseline-bounds.log", "Original C++ local FFN bounds", 1),
+    ("probes.log", "Exact FP4 widening/NZ placement and MXA8W4 projection", 2),
+    ("activation.log", "FP32 weighted activation, byte-exact payload and scales", 1),
+    ("bounds.log", "DSL local FFN receive-capacity bounds", 1),
+    ("local-all.log", "Repeated bounds, two tail batches, then zero expert counts", 4),
+    ("layer0-ep2.log", "TP1/EP2 layer 0, 72 active tokens per rank, 16 outputs", 1),
+):
+    log = (work / file).read_text()
+    actual = len(re.findall(r"^\[RUN\] PASS", log, re.MULTILINE))
+    if actual != passes:
+        raise RuntimeError(f"{file}: expected {passes} successful cases, got {actual}")
+    checks.append({"case": case, "result": "PASS", "cases": actual,
+                   "task": re.search(r"task_\d+_\d+_\d+", log).group(0), "log": file})
+summary = {
+    "status": "PASS", "delivery": "Local dsv4.1-dsl working tree; no commit or push",
+    "model_base": revision(model), "pypto": revision(workspace / "issue75-env/pypto-pr"),
+    "dsl": revision(workspace / "cannbot-dsl-dev"), "official_samples": revision(workspace / "cannbot-dsl"),
+    "replaced_task": "fused_expert_ffn",
+    "replacement_tasks": ["dsl_routed_up", "dsl_routed_act_quant", "dsl_routed_down"],
+    "unchanged_function_contracts": reviewed, "communication_tasks_unchanged": True,
+    "original_cpp_removed": True, "ep2_devices": [4, 7], "layer_outputs": outputs,
+    "checks": checks, "intermediate_capacity_mib_per_ep2_rank": 76.201171875,
+    "limits": ["Generated CPU fixtures and A5 validation", "No checkpoint, prefill or other TP/EP validation",
+               "Staged GM intermediates; on-chip fusion/performance tuning deferred", "Original precision criteria retained"],
+}
+(archive / "validation-summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+(archive / "artifact-manifest.json").write_text(json.dumps(inventory, indent=2) + "\n")
+print(f"Captured {len(inventory)} files; {sum(item['bytes'] for item in inventory)} bytes")

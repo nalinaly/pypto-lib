@@ -1,0 +1,79 @@
+{
+  "status": "PASS",
+  "delivery": "Local dsv4.1-dsl working tree; no commit or push",
+  "model_base": "7431870928f912e119ec60fec26672c1d2b24a39",
+  "pypto": "4a65a9c79b305aac9cac5a8cd84eef4cc8e4986c",
+  "dsl": "91feb222c59ec3ad1175ba5fd88445c72f8abdff",
+  "official_samples": "48fa202201de6e962e6277824de9e8f68b4b9e14",
+  "replaced_task": "fused_expert_ffn",
+  "replacement_tasks": [
+    "dsl_routed_up",
+    "dsl_routed_act_quant",
+    "dsl_routed_down"
+  ],
+  "unchanged_function_contracts": [
+    "expert_routed_scatter",
+    "_reduce_ffn_tile",
+    "golden_expert_routed",
+    "golden_local_compute",
+    "compare_local_compute"
+  ],
+  "communication_tasks_unchanged": true,
+  "original_cpp_removed": true,
+  "ep2_devices": [
+    4,
+    7
+  ],
+  "layer_outputs": 16,
+  "checks": [
+    {
+      "case": "Original C++ local FFN bounds",
+      "result": "PASS",
+      "cases": 1,
+      "task": "task_20261104_161707_541528313",
+      "log": "baseline-bounds.log"
+    },
+    {
+      "case": "Exact FP4 widening/NZ placement and MXA8W4 projection",
+      "result": "PASS",
+      "cases": 2,
+      "task": "task_20261104_162429_6999755228",
+      "log": "probes.log"
+    },
+    {
+      "case": "FP32 weighted activation, byte-exact payload and scales",
+      "result": "PASS",
+      "cases": 1,
+      "task": "task_20261104_163210_87908812632",
+      "log": "activation.log"
+    },
+    {
+      "case": "DSL local FFN receive-capacity bounds",
+      "result": "PASS",
+      "cases": 1,
+      "task": "task_20261104_163209_8784048336",
+      "log": "bounds.log"
+    },
+    {
+      "case": "Repeated bounds, two tail batches, then zero expert counts",
+      "result": "PASS",
+      "cases": 4,
+      "task": "task_20261104_163559_95620219899",
+      "log": "local-all.log"
+    },
+    {
+      "case": "TP1/EP2 layer 0, 72 active tokens per rank, 16 outputs",
+      "result": "PASS",
+      "cases": 1,
+      "task": "task_20261104_163600_9573064574",
+      "log": "layer0-ep2.log"
+    }
+  ],
+  "intermediate_capacity_mib_per_ep2_rank": 76.201171875,
+  "limits": [
+    "Generated CPU fixtures and A5 validation",
+    "No checkpoint, prefill or other TP/EP validation",
+    "Staged GM intermediates; on-chip fusion/performance tuning deferred",
+    "Original precision criteria retained"
+  ]
+}

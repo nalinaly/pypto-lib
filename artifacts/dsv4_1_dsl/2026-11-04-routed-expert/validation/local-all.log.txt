@@ -1,0 +1,182 @@
+任务已提交: task_20261104_163559_95620219899 (断开后可用 task-submit --wait task_20261104_163559_95620219899 重连)
+等待任务执行: task_20261104_163559_95620219899 (Ctrl+C 终止任务)
+[npu-lock] 获取设备 2 的锁 (无超时)...
+[npu-lock] 已获取设备 2 的锁 (pid=956586)
+Local routed compute: case=bounds, tail_round=0, experts=4, stride=160
+[RUN] compile ...
+[RUN] compile done (1.75s)
+[RUN] generate inputs ...
+[RUN] generate inputs done (2.32s)
+[RUN] compute golden ...
+[RUN] compute golden done (2.16s)
+[RUN] runtime ...
+[mono_ns=99154310190570][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=0 hid=0 depth=0 name=chip.prewarm.build ts=99154282466840 dur=27712700 
+[mono_ns=99154318487690][T0xffff9bacb020][TIMING] log_callable_image: Callable image: device=2 runner=0xaaaae9e06480 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 upload_bytes=770160 children=6
+[mono_ns=99154318504100][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaae9e06480 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=0 code_begin=0x1200000d4960 code_end_exclusive=0x1200000d55c0 code_bytes=3168 code_fnv1a64=0x6b356fe1762119f2
+[mono_ns=99154318509040][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaae9e06480 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=1 code_begin=0x1200000d56a0 code_end_exclusive=0x1200000d5d18 code_bytes=1656 code_fnv1a64=0xb4fe11beb1877cbc
+[mono_ns=99154318515630][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaae9e06480 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=2 code_begin=0x1200000d5de0 code_end_exclusive=0x1200000d6880 code_bytes=2720 code_fnv1a64=0x982f8febf9dc816b
+[mono_ns=99154318521390][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaae9e06480 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=3 code_begin=0x1200000d6960 code_end_exclusive=0x1200000d72b0 code_bytes=2384 code_fnv1a64=0x37f86a8e7e1d3c69
+[mono_ns=99154318525350][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaae9e06480 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=4 code_begin=0x1200000d73a0 code_end_exclusive=0x1200000d7918 code_bytes=1400 code_fnv1a64=0x64d522ce390d58d5
+[mono_ns=99154318529460][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaae9e06480 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=5 code_begin=0x1200000d79e0 code_end_exclusive=0x1200000d8020 code_bytes=1600 code_fnv1a64=0xc42d3285124a222e
+[mono_ns=99154318537920][T0xffff9bacb020][TIMING] record_device_orch_callable: [device_runner_base.cpp:2432] Callable registration: device=2 runner=0xaaaae9e06480 cid=0 chip_hash=0x664dfc69096a9a11 aicore_image_hash=0xf751c20b98264983 orch_hash=0x8cd214aeb9b30d26 orch_bytes=738304
+[mono_ns=99154328631970][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=2 name=chip.run.bind.args ts=99154328621860 dur=3880 
+[mono_ns=99154328646340][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=2 name=chip.run.bind.prebuilt ts=99154328641620 dur=3120 
+[mono_ns=99154328650240][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=1 name=chip.run.bind ts=99154327380610 dur=1268230 
+[mono_ns=99154328652940][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=1 name=chip.run.publish_image ts=99154328651740 dur=190 
+[mono_ns=99154335971090][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=1 name=chip.run.stage_inputs ts=99154328654530 dur=7308750 
+[mono_ns=99154351893090][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=1 name=chip.run.prepare_execution ts=99154335981150 dur=15906770 
+[mono_ns=99154353985850][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=2 name=chip.run.runner_run.aicpu_launch ts=99154353979480 dur=0 
+[mono_ns=99154355949750][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=1 name=chip.run.runner_run ts=99154351918650 dur=4024960 
+[mono_ns=99154356688300][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=1 name=chip.run.validate ts=99154355980640 dur=702930 
+[mono_ns=99154356699440][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=2 name=chip.run.runner_run.device_wall ts=0 dur=1150336 clk=dev dev_id=2 dev_start_cycle=99359664400064 dev_end_cycle=99359665550400 dev_cnt_hz=1000000000
+[mono_ns=99154356702510][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.preamble ts=0 dur=356798 clk=dev
+[mono_ns=99154356705260][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.graph_build ts=26708 dur=1103214 clk=dev
+[mono_ns=99154356707660][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.config_validate ts=34503 dur=7410 clk=dev
+[mono_ns=99154356709920][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.arena_wire ts=41942 dur=16470 clk=dev
+[mono_ns=99154356712090][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.sm_reset ts=58440 dur=19121 clk=dev
+[mono_ns=99154356849490][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.post_orch ts=1130416 dur=11141 clk=dev
+[mono_ns=99154356851430][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.orch ts=79322 dur=140138 clk=dev
+[mono_ns=99154356853540][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.sched ts=358760 dur=729027 clk=dev
+[mono_ns=99154356866100][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=2 name=chip.run.runner_run.device_boundaries ts=99154356864360 dur=0 clk=dev dev_id=2 aic_start=99359662467 aic_rc=0 wo_end=0 wo_rc=-1000 ts_hz=1000000
+[mono_ns=99154356870920][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=1 name=chip.run.claim_release ts=99154356869020 dur=960 
+[mono_ns=99154356874550][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=1 hid=8cd214aeb9b30d26 depth=0 name=chip.run ts=99154327361290 dur=29511720 run_id=0 dispatch_id=0 slot_id=0 generation=1 run_epoch=1
+[mono_ns=99154365163020][T0xffff9bacb020][TIMING] finalize_common_impl: [device_runner_base.cpp:3022] Callable image freed: device=2 runner=0xaaaae9e06480 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 upload_bytes=770160
+[RUN] runtime done (26.26s)
+[RUN] validate ...
+[RUN]   'routed_y' PASS  shape=(640, 5120) dtype=torch.bfloat16 (compare_local_compute)
+[RUN] validate done (0.04s)
+[RUN] PASS (32.53s)
+Local routed compute: case=tails, tail_round=0, experts=4, stride=160
+[RUN] compile ...
+[RUN] compile done (1.40s)
+[RUN] generate inputs ...
+[RUN] generate inputs done (1.81s)
+[RUN] compute golden ...
+[RUN] compute golden done (1.09s)
+[RUN] runtime ...
+[mono_ns=99159698430430][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=0 hid=0 depth=0 name=chip.prewarm.build ts=99159675140220 dur=23280780 
+[mono_ns=99159703143810][T0xffff9bacb020][TIMING] log_callable_image: Callable image: device=2 runner=0xaaaaec90c700 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 upload_bytes=770160 children=6
+[mono_ns=99159703160690][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c700 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=0 code_begin=0x1200000d4960 code_end_exclusive=0x1200000d55c0 code_bytes=3168 code_fnv1a64=0x6b356fe1762119f2
+[mono_ns=99159703166280][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c700 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=1 code_begin=0x1200000d56a0 code_end_exclusive=0x1200000d5d18 code_bytes=1656 code_fnv1a64=0xb4fe11beb1877cbc
+[mono_ns=99159703172800][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c700 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=2 code_begin=0x1200000d5de0 code_end_exclusive=0x1200000d6880 code_bytes=2720 code_fnv1a64=0x982f8febf9dc816b
+[mono_ns=99159703178470][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c700 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=3 code_begin=0x1200000d6960 code_end_exclusive=0x1200000d72b0 code_bytes=2384 code_fnv1a64=0x37f86a8e7e1d3c69
+[mono_ns=99159703182430][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c700 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=4 code_begin=0x1200000d73a0 code_end_exclusive=0x1200000d7918 code_bytes=1400 code_fnv1a64=0x64d522ce390d58d5
+[mono_ns=99159703186530][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c700 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=5 code_begin=0x1200000d79e0 code_end_exclusive=0x1200000d8020 code_bytes=1600 code_fnv1a64=0xc42d3285124a222e
+[mono_ns=99159703194740][T0xffff9bacb020][TIMING] record_device_orch_callable: [device_runner_base.cpp:2432] Callable registration: device=2 runner=0xaaaaec90c700 cid=0 chip_hash=0x664dfc69096a9a11 aicore_image_hash=0xf751c20b98264983 orch_hash=0x8cd214aeb9b30d26 orch_bytes=738304
+[mono_ns=99159711990260][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=2 name=chip.run.bind.args ts=99159711983930 dur=3300 
+[mono_ns=99159712010670][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=2 name=chip.run.bind.prebuilt ts=99159711997080 dur=2580 
+[mono_ns=99159712013780][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=1 name=chip.run.bind ts=99159711211150 dur=801220 
+[mono_ns=99159712016810][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=1 name=chip.run.publish_image ts=99159712015730 dur=80 
+[mono_ns=99159722562240][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=1 name=chip.run.stage_inputs ts=99159712018450 dur=10537130 
+[mono_ns=99159735744850][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=1 name=chip.run.prepare_execution ts=99159722571820 dur=13169510 
+[mono_ns=99159737311920][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=2 name=chip.run.runner_run.aicpu_launch ts=99159737308880 dur=0 
+[mono_ns=99159738539870][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=1 name=chip.run.runner_run ts=99159735766110 dur=2771630 
+[mono_ns=99159739473690][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=1 name=chip.run.validate ts=99159738553000 dur=918710 
+[mono_ns=99159739482100][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=2 name=chip.run.runner_run.device_wall ts=0 dur=538694 clk=dev dev_id=2 dev_start_cycle=99365047631520 dev_end_cycle=99365048170215 dev_cnt_hz=1000000000
+[mono_ns=99159739484970][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.preamble ts=0 dur=24857 clk=dev
+[mono_ns=99159739487680][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.graph_build ts=4970 dur=528763 clk=dev
+[mono_ns=99159739490100][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.config_validate ts=5412 dur=1406 clk=dev
+[mono_ns=99159739492320][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.arena_wire ts=6846 dur=2785 clk=dev
+[mono_ns=99159739494500][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.sm_reset ts=9663 dur=3163 clk=dev
+[mono_ns=99159739498940][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.post_orch ts=534535 dur=2786 clk=dev
+[mono_ns=99159739500890][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.orch ts=12874 dur=140653 clk=dev
+[mono_ns=99159739502900][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.sched ts=24491 dur=479244 clk=dev
+[mono_ns=99159739509830][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=2 name=chip.run.runner_run.device_boundaries ts=99159739508370 dur=0 clk=dev dev_id=2 aic_start=99365046132 aic_rc=0 wo_end=0 wo_rc=-1000 ts_hz=1000000
+[mono_ns=99159739512820][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=1 name=chip.run.claim_release ts=99159739511540 dur=360 
+[mono_ns=99159739516400][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=2 hid=8cd214aeb9b30d26 depth=0 name=chip.run ts=99159711194000 dur=28320840 run_id=0 dispatch_id=0 slot_id=0 generation=1 run_epoch=2
+[mono_ns=99159747153210][T0xffff9bacb020][TIMING] finalize_common_impl: [device_runner_base.cpp:3022] Callable image freed: device=2 runner=0xaaaaec90c700 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 upload_bytes=770160
+[RUN] runtime done (1.04s)
+[RUN] validate ...
+[RUN]   'routed_y' PASS  shape=(640, 5120) dtype=torch.bfloat16 (compare_local_compute)
+[RUN] validate done (0.01s)
+[RUN] PASS (5.34s)
+Local routed compute: case=tails, tail_round=1, experts=4, stride=160
+[RUN] compile ...
+[RUN] compile done (1.19s)
+[RUN] generate inputs ...
+[RUN] generate inputs done (2.00s)
+[RUN] compute golden ...
+[RUN] compute golden done (1.14s)
+[RUN] runtime ...
+[mono_ns=99165069780040][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=0 hid=0 depth=0 name=chip.prewarm.build ts=99165046068720 dur=23700740 
+[mono_ns=99165074270140][T0xffff9bacb020][TIMING] log_callable_image: Callable image: device=2 runner=0xaaaaec90c580 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 upload_bytes=770160 children=6
+[mono_ns=99165074284200][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c580 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=0 code_begin=0x1200000d4960 code_end_exclusive=0x1200000d55c0 code_bytes=3168 code_fnv1a64=0x6b356fe1762119f2
+[mono_ns=99165074289260][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c580 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=1 code_begin=0x1200000d56a0 code_end_exclusive=0x1200000d5d18 code_bytes=1656 code_fnv1a64=0xb4fe11beb1877cbc
+[mono_ns=99165074295870][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c580 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=2 code_begin=0x1200000d5de0 code_end_exclusive=0x1200000d6880 code_bytes=2720 code_fnv1a64=0x982f8febf9dc816b
+[mono_ns=99165074301740][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c580 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=3 code_begin=0x1200000d6960 code_end_exclusive=0x1200000d72b0 code_bytes=2384 code_fnv1a64=0x37f86a8e7e1d3c69
+[mono_ns=99165074305550][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c580 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=4 code_begin=0x1200000d73a0 code_end_exclusive=0x1200000d7918 code_bytes=1400 code_fnv1a64=0x64d522ce390d58d5
+[mono_ns=99165074309720][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c580 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=5 code_begin=0x1200000d79e0 code_end_exclusive=0x1200000d8020 code_bytes=1600 code_fnv1a64=0xc42d3285124a222e
+[mono_ns=99165074315610][T0xffff9bacb020][TIMING] record_device_orch_callable: [device_runner_base.cpp:2432] Callable registration: device=2 runner=0xaaaaec90c580 cid=0 chip_hash=0x664dfc69096a9a11 aicore_image_hash=0xf751c20b98264983 orch_hash=0x8cd214aeb9b30d26 orch_bytes=738304
+[mono_ns=99165082988780][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=2 name=chip.run.bind.args ts=99165082983230 dur=1720 
+[mono_ns=99165082999330][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=2 name=chip.run.bind.prebuilt ts=99165082995820 dur=2380 
+[mono_ns=99165083002460][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=1 name=chip.run.bind ts=99165082217890 dur=783130 
+[mono_ns=99165083004950][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=1 name=chip.run.publish_image ts=99165083003860 dur=130 
+[mono_ns=99165090349160][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=1 name=chip.run.stage_inputs ts=99165083006590 dur=7336270 
+[mono_ns=99165101811280][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=1 name=chip.run.prepare_execution ts=99165090357810 dur=11449380 
+[mono_ns=99165103183660][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=2 name=chip.run.runner_run.aicpu_launch ts=99165103179820 dur=0 
+[mono_ns=99165103924860][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=1 name=chip.run.runner_run ts=99165101828460 dur=2093480 
+[mono_ns=99165104669960][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=1 name=chip.run.validate ts=99165103968090 dur=699610 
+[mono_ns=99165104678300][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=2 name=chip.run.runner_run.device_wall ts=0 dur=602204 clk=dev dev_id=2 dev_start_cycle=99370413482630 dev_end_cycle=99370414084834 dev_cnt_hz=1000000000
+[mono_ns=99165104681300][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.preamble ts=0 dur=28008 clk=dev
+[mono_ns=99165104684040][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.graph_build ts=5154 dur=591711 clk=dev
+[mono_ns=99165104686520][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.config_validate ts=5649 dur=1398 clk=dev
+[mono_ns=99165104688880][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.arena_wire ts=7075 dur=3085 clk=dev
+[mono_ns=99165104691030][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.sm_reset ts=10189 dur=3050 clk=dev
+[mono_ns=99165104843590][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.post_orch ts=597155 dur=3622 clk=dev
+[mono_ns=99165104845550][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.orch ts=13322 dur=146019 clk=dev
+[mono_ns=99165104847460][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.sched ts=27654 dur=539324 clk=dev
+[mono_ns=99165104855140][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=2 name=chip.run.runner_run.device_boundaries ts=99165104853650 dur=0 clk=dev dev_id=2 aic_start=99370412182 aic_rc=0 wo_end=0 wo_rc=-1000 ts_hz=1000000
+[mono_ns=99165104858160][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=1 name=chip.run.claim_release ts=99165104856920 dur=280 
+[mono_ns=99165104861430][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=3 hid=8cd214aeb9b30d26 depth=0 name=chip.run ts=99165082202370 dur=22657510 run_id=0 dispatch_id=0 slot_id=0 generation=1 run_epoch=3
+[mono_ns=99165112151700][T0xffff9bacb020][TIMING] finalize_common_impl: [device_runner_base.cpp:3022] Callable image freed: device=2 runner=0xaaaaec90c580 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 upload_bytes=770160
+[RUN] runtime done (1.03s)
+[RUN] validate ...
+[RUN]   'routed_y' PASS  shape=(640, 5120) dtype=torch.bfloat16 (compare_local_compute)
+[RUN] validate done (0.01s)
+[RUN] PASS (5.37s)
+Local routed compute: case=zero, tail_round=0, experts=4, stride=160
+[RUN] compile ...
+[RUN] compile done (1.20s)
+[RUN] generate inputs ...
+[RUN] generate inputs done (1.84s)
+[RUN] compute golden ...
+[RUN] compute golden done (0.04s)
+[RUN] runtime ...
+[mono_ns=99169233969520][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=0 hid=0 depth=0 name=chip.prewarm.build ts=99169213362020 dur=20595890 
+[mono_ns=99169239024060][T0xffff9bacb020][TIMING] log_callable_image: Callable image: device=2 runner=0xaaaaec90c4c0 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 upload_bytes=770160 children=6
+[mono_ns=99169239042950][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c4c0 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=0 code_begin=0x1200000d4960 code_end_exclusive=0x1200000d55c0 code_bytes=3168 code_fnv1a64=0x6b356fe1762119f2
+[mono_ns=99169239048380][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c4c0 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=1 code_begin=0x1200000d56a0 code_end_exclusive=0x1200000d5d18 code_bytes=1656 code_fnv1a64=0xb4fe11beb1877cbc
+[mono_ns=99169239055040][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c4c0 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=2 code_begin=0x1200000d5de0 code_end_exclusive=0x1200000d6880 code_bytes=2720 code_fnv1a64=0x982f8febf9dc816b
+[mono_ns=99169239060750][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c4c0 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=3 code_begin=0x1200000d6960 code_end_exclusive=0x1200000d72b0 code_bytes=2384 code_fnv1a64=0x37f86a8e7e1d3c69
+[mono_ns=99169239064500][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c4c0 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=4 code_begin=0x1200000d73a0 code_end_exclusive=0x1200000d7918 code_bytes=1400 code_fnv1a64=0x64d522ce390d58d5
+[mono_ns=99169239068610][T0xffff9bacb020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaec90c4c0 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 func_id=5 code_begin=0x1200000d79e0 code_end_exclusive=0x1200000d8020 code_bytes=1600 code_fnv1a64=0xc42d3285124a222e
+[mono_ns=99169239077330][T0xffff9bacb020][TIMING] record_device_orch_callable: [device_runner_base.cpp:2432] Callable registration: device=2 runner=0xaaaaec90c4c0 cid=0 chip_hash=0x664dfc69096a9a11 aicore_image_hash=0xf751c20b98264983 orch_hash=0x8cd214aeb9b30d26 orch_bytes=738304
+[mono_ns=99169248131910][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=2 name=chip.run.bind.args ts=99169248123340 dur=2880 
+[mono_ns=99169248145380][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=2 name=chip.run.bind.prebuilt ts=99169248141030 dur=2950 
+[mono_ns=99169248149330][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=1 name=chip.run.bind ts=99169247122920 dur=1024880 
+[mono_ns=99169248152380][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=1 name=chip.run.publish_image ts=99169248151340 dur=70 
+[mono_ns=99169257797290][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=1 name=chip.run.stage_inputs ts=99169248153910 dur=9636620 
+[mono_ns=99169270423650][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=1 name=chip.run.prepare_execution ts=99169257807320 dur=12612230 
+[mono_ns=99169272626990][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=2 name=chip.run.runner_run.aicpu_launch ts=99169272620470 dur=0 
+[mono_ns=99169273822370][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=1 name=chip.run.runner_run ts=99169270443950 dur=3372830 
+[mono_ns=99169275324730][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=1 name=chip.run.validate ts=99169273865590 dur=1454450 
+[mono_ns=99169275334890][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=2 name=chip.run.runner_run.device_wall ts=0 dur=330480 clk=dev dev_id=2 dev_start_cycle=99374582911341 dev_end_cycle=99374583241821 dev_cnt_hz=1000000000
+[mono_ns=99169275337930][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.preamble ts=0 dur=28647 clk=dev
+[mono_ns=99169275340530][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.graph_build ts=5087 dur=319514 clk=dev
+[mono_ns=99169275342840][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.config_validate ts=6084 dur=1323 clk=dev
+[mono_ns=99169275345110][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.arena_wire ts=7435 dur=2175 clk=dev
+[mono_ns=99169275347250][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.sm_reset ts=9847 dur=3413 clk=dev
+[mono_ns=99169275370350][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.post_orch ts=325483 dur=3481 clk=dev
+[mono_ns=99169275372410][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.orch ts=13292 dur=248067 clk=dev
+[mono_ns=99169275374540][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=3 name=chip.run.runner_run.device_wall.sched ts=28237 dur=266664 clk=dev
+[mono_ns=99169275385380][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=2 name=chip.run.runner_run.device_boundaries ts=99169275383930 dur=0 clk=dev dev_id=2 aic_start=99374580823 aic_rc=0 wo_end=0 wo_rc=-1000 ts_hz=1000000
+[mono_ns=99169275389070][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=1 name=chip.run.claim_release ts=99169275387420 dur=700 
+[mono_ns=99169275392960][T0xffff9bacb020][TIMING] emit_host_span: [STRACE] v=1 pid=957007 tid=957007 inv=4 hid=8cd214aeb9b30d26 depth=0 name=chip.run ts=99169247104770 dur=28286670 run_id=0 dispatch_id=0 slot_id=0 generation=1 run_epoch=4
+[mono_ns=99169285024470][T0xffff9bacb020][TIMING] finalize_common_impl: [device_runner_base.cpp:3022] Callable image freed: device=2 runner=0xaaaaec90c4c0 chip_hash=0x664dfc69096a9a11 chip_dev=0x12000001c000 upload_bytes=770160
+[RUN] runtime done (1.09s)
+[RUN] validate ...
+[RUN]   'routed_y' PASS  shape=(640, 5120) dtype=torch.bfloat16 (compare_local_compute)
+[RUN] validate done (0.00s)
+[RUN] PASS (4.17s)
+[npu-lock] 已释放设备 2 的锁
+=== 任务完成 (exit=0) ===

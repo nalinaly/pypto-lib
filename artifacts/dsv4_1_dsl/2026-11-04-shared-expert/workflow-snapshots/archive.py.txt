@@ -1,0 +1,134 @@
+"""Collect shared-expert evidence, including the failed and corrected full runs."""
+
+import ast
+import gzip
+import json
+from pathlib import Path
+import shutil
+import subprocess
+
+
+archive = Path(__file__).resolve().parents[1]
+repo = archive.parents[2]
+workspace = repo.parent.parent
+external = workspace / "artifacts/dsv41-shared-expert-dsl"
+build = repo / "build_output"
+records = []
+
+
+def normalized(text):
+    text = text.replace(str(workspace), "<workspace>").replace(str(workspace.parent), "<user-home>")
+    return text.replace(workspace.parent.name, "<user>")
+
+
+def source_name(path):
+    return str(path.relative_to(workspace))
+
+
+def copy_text(source, relative):
+    destination = archive / relative
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(normalized(source.read_text(errors="replace")))
+    records.append({
+        "source": source_name(source), "path": relative,
+        "source_bytes": source.stat().st_size, "stored_bytes": destination.stat().st_size,
+        "encoding": "normalized UTF-8",
+    })
+
+
+def copy_fixture(source, relative):
+    destination = archive / relative
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with source.open("rb") as incoming, gzip.open(destination, "wb", compresslevel=6) as outgoing:
+        shutil.copyfileobj(incoming, outgoing)
+    records.append({
+        "source": source_name(source), "path": relative,
+        "source_bytes": source.stat().st_size, "stored_bytes": destination.stat().st_size,
+        "encoding": "gzip-compressed PyTorch CPU tensor",
+    })
+
+
+passing_logs = [
+    "baseline-swa72", "baseline-layer0-ep2", "vector16", "vector80", "projection17",
+    "shared-full80-fixed", "adapter-tests-final", "foreign-planner-jit-regression",
+    "nested-specialization-after", "shared-compile-fixed",
+]
+for name in passing_logs:
+    copy_text(external / f"{name}.log", f"validation/{name}.log.txt")
+copy_text(external / "shared-full80.log", "validation/full80-first-failure.resolved.log.txt")
+copy_text(external / "nested-specialization-before.log", "validation/nested-specialization-before.resolved.log.txt")
+
+fixture_sources = {
+    "vector16-edges": "_jit_shared_swiglu_quant_validation_20261104_133748_ebuc7_5z",
+    "vector80-edges": "_jit_shared_swiglu_quant_validation_20261104_133800_898zpj41",
+    "full80": "_jit_l2_expert_shared_20261104_134918_tkrsg3eq",
+}
+for name, directory in fixture_sources.items():
+    for source in sorted((build / directory / "data").rglob("*.pt")):
+        relative = str(source.relative_to(build / directory / "data")) + ".gz"
+        copy_fixture(source, f"fixtures/{name}/{relative}")
+
+generated_sources = {
+    "vector16": "_jit_shared_swiglu_quant_validation_20261104_133748_ebuc7_5z",
+    "projection17-gate": "_jit_validate_gate_projection_20261104_134043_4k465ua7",
+    "projection17-down": "_jit_validate_down_projection_20261104_134048_yq0d8he3",
+    "full80": "_jit_l2_expert_shared_20261104_134918_tkrsg3eq",
+}
+for name, directory in generated_sources.items():
+    source_root = build / directory
+    copy_text(source_root / "kernel_config.py", f"generated/{name}/kernel_config.py.txt")
+    copy_text(source_root / "compiled_meta.json", f"generated/{name}/compiled_meta.json")
+    for source in sorted((source_root / "orchestration").glob("*.cpp")):
+        copy_text(source, f"generated/{name}/{source.name}")
+    tree = ast.parse((source_root / "kernel_config.py").read_text())
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        if not any(isinstance(target, ast.Name) and target.id == "KERNELS" for target in node.targets):
+            continue
+        for item in node.value.elts:
+            fields = {key.value: value for key, value in zip(item.keys, item.values)}
+            kernel_name = ast.literal_eval(fields["name"])
+            kernel_root = Path(ast.literal_eval(fields["source"])).parent
+            for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                copy_text(kernel_root / filename, f"generated/{name}/{kernel_name}/{filename}")
+
+failed_root = build / "_jit_l2_expert_shared_20261104_134059_luln0azg"
+copy_text(failed_root / "kernel_config.py", "generated/full80-first-failure/kernel_config.py.txt")
+copy_text(failed_root / "compiled_meta.json", "generated/full80-first-failure/compiled_meta.json")
+copy_text(failed_root / "orchestration/l2_expert_shared.cpp", "generated/full80-first-failure/l2_expert_shared.cpp")
+
+pypto_root = workspace / "issue75-env/pypto-pr"
+pypto_sources = [
+    "python/pypto/jit/cannbotdsl.py", "python/pypto/jit/_cannbotdsl_source.py",
+    "python/pypto/jit/_call_binding.py", "python/pypto/jit/decorator.py",
+    "python/pypto/jit/_tensor_meta.py", "python/pypto/jit/foreign.py",
+    "tests/ut/jit/test_cannbotdsl_adapter.py", "tests/ut/jit/test_extern_kernel.py",
+    "docs/en/dev/language/04-external-kernels.md", "docs/zh/dev/language/04-external-kernels.md",
+]
+for source in pypto_sources:
+    copy_text(pypto_root / source, "companion-snapshots/" + source + ".txt")
+patch = subprocess.run(
+    ["git", "diff", "HEAD", "--", *pypto_sources], cwd=pypto_root,
+    check=True, text=True, capture_output=True,
+).stdout
+patch_path = archive / "companion-patches/pypto-local.patch"
+patch_path.parent.mkdir(parents=True, exist_ok=True)
+patch_path.write_text(normalized(patch))
+records.append({
+    "source": "git diff HEAD in issue75-env/pypto-pr; selected adapter, test and documentation paths",
+    "path": "companion-patches/pypto-local.patch",
+    "stored_bytes": patch_path.stat().st_size, "encoding": "normalized UTF-8 patch",
+})
+
+manifest = {
+    "collection_state": "full shared FFN passed; final layer0 EP2 integration pending",
+    "dsl_revision": "91feb222c59ec3ad1175ba5fd88445c72f8abdff",
+    "model_base": "7431870",
+    "pypto_base": "ae6f6d76",
+    "normalization": "Workspace paths become <workspace>; other paths beneath the same user home become <user-home>; abbreviated account names become <user>.",
+    "fixture_note": "out/ contains CPU reference tensors, not device readback. Full80 fixtures come from the corrected passing runtime attempt.",
+    "records": records,
+}
+(archive / "artifact-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+print(f"Collected {len(records)} records; stored bytes: {sum(record['stored_bytes'] for record in records)}")

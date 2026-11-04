@@ -6,7 +6,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-"""使用 CANNBotDSL 实现 OCP MXFP8 向量量化和 NZ 权重投影。"""
+"""使用 CANNBotDSL 实现 OCP/缩放值向上取整的 MXFP8 向量量化和 NZ 权重投影。"""
 
 import cannbotdsl as cb
 from cannbotdsl import reg as rr
@@ -49,6 +49,33 @@ def _quant_row(values, payload, codes, row, width):
         code = rr.vcast(exponent, cb.dtypes.uint8, mask=group_mask)
         offset = (group // 2) * ROW_TILE * 2 + row * 2 + group % 2
         rr.vstore_first(codes, offset, code)
+
+
+@jit
+def _quant_upward_row(values, payload, codes, row, width):
+    """按每组 32 个元素打包 E4M3 数据，使用向上取整到 2 的幂次的 E8M0 缩放值。"""
+    group_mask = rr.update_mask(MX_GROUP, elem_bits=32)[0]
+    for group in range(width // MX_GROUP):
+        value = rr.vload(values, group * MX_GROUP)
+        absolute = rr.vabs(value, mask=group_mask)
+        maximum = rr.vreduce_max(absolute, mask=group_mask)
+        maximum = rr.vmaxs(maximum, 1e-4, mask=group_mask)
+        scaled = rr.vmuls(maximum, 1.0 / 448.0, mask=group_mask)
+        scale_bits = rr.vreinterpret(scaled, cb.dtypes.int32)
+        ceil_bits = rr.vadds(scale_bits, 8388607, mask=group_mask)
+        exponent = rr.vshr(ceil_bits, 23, mask=group_mask)
+        exponent = rr.vdup(exponent, mask=group_mask)
+        inverse_exp = rr.vsub(rr.vdups(254, cb.dtypes.int32, mask=group_mask), exponent, mask=group_mask)
+        inverse_bits = rr.vshl(inverse_exp, 23, mask=group_mask)
+        inverse_scale = rr.vreinterpret(inverse_bits, cb.dtypes.float32)
+        normalized = rr.vmul(value, inverse_scale, mask=group_mask)
+        clipped = rr.vmins(normalized, 448.0, mask=group_mask)
+        clipped = rr.vmaxs(clipped, -448.0, mask=group_mask)
+        quantized = rr.vcast(clipped, cb.dtypes.float8_e4m3fn, mask=group_mask, rounding="rn")
+        rr.vstore_pack(payload, group * MX_GROUP, quantized, group_mask, pack_mode=rr.PackMode.B32_TO_B8)
+        code = rr.vcast(exponent, cb.dtypes.uint8, mask=group_mask)
+        scale_offset = group // 2 * ROW_TILE * 2 + row * 2 + group % 2
+        rr.vstore_first(codes, scale_offset, code)
 
 
 @cb.kernel
@@ -116,11 +143,11 @@ def _mx_project(payload, weight, activation_scale, weight_scale, output, column,
         sb = sb_l1.next_write()
         cb.mem_copy(a, cb.tile_slice(payload, (PADDED_TILE, CUBE_TILE), (0, k)))
         # NZ 权重分块布局：[N/32, K/16, 16, 32]。
-        b_raw = b.reinterpret(layout=cb.make_layout((CUBE_TILE // 32, CUBE_TILE * 32)), data_format="nd")
+        b_raw = cb.from_tensor(b, layout=cb.make_layout((CUBE_TILE // 32, CUBE_TILE * 32)), data_format="nd")
         cb.mem_copy(b_raw, cb.tile_slice(weight_bytes, (CUBE_TILE // 32, CUBE_TILE * 32), (column, k)))
         # MX 缩放值布局：[outer/16, K/64, 16, 2]。
-        sa_raw = sa.reinterpret(dtype=cb.dtypes.uint8, layout=cb.make_layout((PADDED_TILE // ROW_TILE, 64)), data_format="nd")
-        sb_raw = sb.reinterpret(dtype=cb.dtypes.uint8, layout=cb.make_layout((CUBE_TILE // ROW_TILE, 64)), data_format="nd")
+        sa_raw = cb.from_tensor(sa, dtype=cb.dtypes.uint8, layout=cb.make_layout((PADDED_TILE // ROW_TILE, 64)), data_format="nd")
+        sb_raw = cb.from_tensor(sb, dtype=cb.dtypes.uint8, layout=cb.make_layout((CUBE_TILE // ROW_TILE, 64)), data_format="nd")
         cb.mem_copy(sa_raw, cb.tile_slice(sa_bytes, (PADDED_TILE // ROW_TILE, 64), (0, k)))
         cb.mem_copy(sb_raw, cb.tile_slice(sb_bytes, (CUBE_TILE // ROW_TILE, 64), (column, k)))
         a_slot = a_l0.next_write()
@@ -129,7 +156,7 @@ def _mx_project(payload, weight, activation_scale, weight_scale, output, column,
         cb.mem_copy(b_slot, b_l1.next_read().permute(1, 0), options=copy_options(mx_scale=sb_l1.next_read()))
         cb.matmul(accumulator, a_l0.next_read(), b_l0.next_read(), init=k == 0, mx_mode=True)
     result = c_l0.next_read()
-    valid = result.reinterpret(layout=cb.make_layout((valid_rows, CUBE_TILE)), physical_layout=result.physical_layout)
+    valid = cb.from_tensor(result, layout=cb.make_layout((valid_rows, CUBE_TILE)), physical_layout=result.physical_layout)
     cb.mem_copy(output[0:valid_rows, None], valid)
 
 

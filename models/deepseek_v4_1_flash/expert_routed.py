@@ -9,12 +9,10 @@
 """DeepSeek-V4.1 routed expert compute with distributed scatter."""
 
 import argparse
-from pathlib import Path
 
 import torch
 import pypto.language as pl
 import pypto.language.distributed as pld
-from pypto.runtime import pto_isa_include_dir
 
 
 if __name__ == "__main__":
@@ -47,9 +45,10 @@ from config import FLASH as M
 from config import EP_SIZE as EP_WORLD_SIZE, MOE_RECV_MAX as RECV_MAX
 from config import ROUTE_T_DYN, N_LOCAL_EXPERTS
 from quant import pack_mxfp4_weight_tiles, unpack_mxfp4_weight_tiles
+from expert_routed_dsl import routed_ffn
 
 
-# model config
+# 模型配置
 D = M.hidden_size
 MOE_INTER = M.moe_intermediate_size
 SWIGLU_LIMIT = M.swiglu_limit
@@ -60,7 +59,7 @@ H_SCALE = MOE_INTER // MX_GROUP
 # Routed-expert across-layer mean dequantization standard deviations.
 ROUTED_DEQUANT_STD = {"w1": 2.47e-2, "w2": 2.44e-2, "w3": 2.46e-2}
 
-# tiling
+# 分块参数
 MX_M_TILE = 16
 MX_K_TILE = 256
 MX_MM_INTER_TILE = 256
@@ -73,35 +72,6 @@ MX_W2_PACKED_ROWS = (2 * (MOE_INTER // MX_K_TILE) * (D // MX_W2_D_OUT_TILE)) * M
 ROUTED_ROW_CAPACITY = min(N_LOCAL_EXPERTS, M.num_experts_per_tok) * RECV_MAX
 ROUTED_PARTIAL_STRIDE = ((ROUTED_ROW_CAPACITY + 15) // 16 + 1) * 16
 LOCAL_PARTIAL_STRIDE = ((N_LOCAL_EXPERTS * RECV_MAX + MX_M_TILE - 1) // MX_M_TILE + 1) * MX_M_TILE
-
-
-@pl.jit.extern(
-    core_type="mixed",
-    aic_source=Path(__file__).parent / "kernels" / "expert_routed.cpp",
-    aiv_source=Path(__file__).parent / "kernels" / "expert_routed.cpp",
-    dual_aiv_dispatch=True, include_dirs=(pto_isa_include_dir(),),
-)
-def _expert_routed_extern(
-    x: pl.Tensor,
-    x_scale: pl.Tensor,
-    weights: pl.Tensor,
-    counts: pl.Tensor,
-    w1: pl.Tensor,
-    w1_scale: pl.Tensor,
-    w3: pl.Tensor,
-    w3_scale: pl.Tensor,
-    w2: pl.Tensor,
-    w2_scale: pl.Tensor,
-    partial: pl.Out[pl.Tensor],
-    experts: pl.Scalar[pl.INDEX],
-    stride: pl.Scalar[pl.INDEX],
-    width: pl.Scalar[pl.INDEX],
-    hidden: pl.Scalar[pl.INDEX],
-    parts: pl.Scalar[pl.INDEX],
-    partial_stride: pl.Scalar[pl.INDEX],
-) -> pl.Tensor:
-    """Compute compact FP32 W2 partials with on-chip weighted SwiGLU."""
-    ...
 
 
 @pl.jit.inline(auto_scope=False)
@@ -129,13 +99,13 @@ def _expert_routed_partials(
     at most partial_rows. Stride is divisible by 16; width and hidden are
     divisible by 256. Each hidden slice contains 256 to 1280 columns.
     """
-    partial_stride = ((partial_rows + MX_M_TILE - 1) // MX_M_TILE + 1) * MX_M_TILE
-    partial = pl.create_tensor([2 * ((partial_rows + MX_M_TILE - 1) // MX_M_TILE + 1) * MX_M_TILE, width], dtype=pl.FP32)
-    with pl.spmd(32, name_hint="fused_expert_ffn", deps=[input_ready]) as ready:
-        partial = _expert_routed_extern(
-            x, x_scale, weights, counts, w1, w1_scale, w3, w3_scale, w2, w2_scale,
-            partial, experts, stride, width, hidden, 2, partial_stride,
-        )
+    partial = pl.create_tensor([2 * ((partial_rows + MX_M_TILE - 1) // MX_M_TILE + 1) * MX_M_TILE, width], dtype=pl.FP32, manual_dep=True)
+    partial, ready = routed_ffn(
+        x, x_scale, weights, counts,
+        w1, w1_scale, w3, w3_scale, w2, w2_scale,
+        partial, input_ready, experts, width, hidden,
+        (partial_rows + experts * (MX_M_TILE - 1) + MX_M_TILE - 1) // MX_M_TILE * MX_M_TILE,
+    )
     return partial, ready
 
 

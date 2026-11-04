@@ -1,0 +1,63 @@
+{
+  "status": "PASS",
+  "delivery": "Local only; no commit or push",
+  "dsl_revision": "91feb222c59ec3ad1175ba5fd88445c72f8abdff",
+  "model_base": "7431870",
+  "pypto_base": "ae6f6d76",
+  "scope": [
+    "Shared W1/W3 FP32 and W2 BF16 projection from ND weights",
+    "SwiGLU plus upward MXFP8 activation quantization",
+    "PyPTO foreign-dependent call-chain signature specialization"
+  ],
+  "checks": [
+    {
+      "case": "New DSL SWA72 baseline",
+      "result": "PASS",
+      "task": "task_20261104_133435_29169753184"
+    },
+    {
+      "case": "New DSL layer0 EP2 baseline",
+      "result": "PASS",
+      "task": "task_20261104_133435_291718516430"
+    },
+    {
+      "case": "SwiGLU/quantization random and edges at 16/80 rows",
+      "result": "PASS; FP8/E8M0 byte-exact",
+      "task": "task_20261104_133732_29803188498"
+    },
+    {
+      "case": "FP32 gate and BF16 down projections, 17 rows",
+      "result": "PASS; original tolerance",
+      "task": "task_20261104_134041_302457526354"
+    },
+    {
+      "case": "Complete shared FFN, 80 rows",
+      "result": "PASS; original tolerance",
+      "task": "task_20261104_134915_330595029741"
+    },
+    {
+      "case": "Final layer0 EP2 after replacement",
+      "result": "PASS",
+      "outputs": 16,
+      "devices": [
+        0,
+        3
+      ],
+      "task": "task_20261104_134947_33258563424"
+    },
+    {
+      "case": "Adapter and extern unit tests",
+      "result": "40 passed"
+    },
+    {
+      "case": "Existing constexpr/nested/transitive/shared/name-collision JIT regressions",
+      "result": "74 passed"
+    }
+  ],
+  "resolved_failure": "First full FFN reused the W1 static shape/FP32 specialization for W2. Signature-aware foreign call-chain variants now emit separate W1/W3 and W2 leaves; failing/passing compile regression and generated sources are retained.",
+  "limits": [
+    "Validated on A5 using generated inputs and CPU Torch goldens",
+    "No full checkpoint, prefill or other TP configuration validation in this task",
+    "No performance comparison"
+  ]
+}

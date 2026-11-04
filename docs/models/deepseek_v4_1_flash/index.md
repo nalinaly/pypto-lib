@@ -10,14 +10,14 @@
 | --- | --- |
 | Performance target | 72-token decode. Apply optimizations to the existing shared implementation and adapt all affected callers. |
 | Deferred performance work | Prefill and decode with other token counts. Their performance need not be preserved or optimized at this stage; reconsider performance-driven branches or file splits when these become active optimization targets. |
-| Compatibility requirements | Preserve correctness and interface contracts for already supported paths, including prefill and other token counts. Update affected callers to use the revised implementation. The optimized C++ routed FFN requires A5 device execution: the pinned CPU simulator does not model its intra-block events, shared L1 access, or dual-AIV Fixpipe transfers. Simulation requests fail explicitly; they do not select a different numerical implementation. |
+| Compatibility requirements | Preserve correctness and interface contracts for already supported paths, including prefill and other token counts. Update affected callers to use the revised implementation. The DSL routed FFN requires A5 device execution; the CPU simulator is not a supported validation path. |
 
 ## Window KV validation
 
 The shared window-cache publisher uses
 [`window_kv_dsl.py`](../../../models/deepseek_v4_1_flash/window_kv_dsl.py).
-It requires CANNBotDSL device-callable export and the matching PyPTO
-foreign-kernel JIT integration, including BF16, FP8 E4M3FN and INDEX argument
+It requires CANNBotDSL SourceBundle/device ABI generation and the matching
+PyPTO foreign-kernel JIT integration, including BF16, FP8 E4M3FN and INDEX argument
 support. These capabilities are required even when running CPU goldens that
 import the model. See the dependency setup in
 [Installation and Environment](../../get-started/installation.md).
@@ -265,11 +265,11 @@ rounds to BF16 before requantization; WoB stores BF16. Explicit runtime
 valid-row counts protect partial output tiles and zero inactive rows.
 The existing numerical thresholds remain unchanged.
 
-The companion PyPTO adapter owns dtype conversion (including E8M0), device
-export invocation, runtime ABI wrappers and external task configuration.
+The companion PyPTO adapter recognizes `cb.kernel` and owns dtype conversion
+(including E8M0), compiler invocation, runtime ABI wrappers and external task configuration.
 PyPTO JIT also propagates shaped `tensor.view` metadata so packed MX scales
 can cross the DSL boundary as an explicit ND storage view. CANNBotDSL
-retains generic device export and a compatibility forwarder.
+provides generic compilation, SourceBundle output and the device ABI.
 
 With an allocated A5 device in `TASK_DEVICE`, run:
 
@@ -283,6 +283,142 @@ The stage checks compare FP8/E8M0 bytes exactly and test MX projection with
 nonuniform scales at zero tolerance. The composed checks cover empty and
 tail inputs, 72-token output, and a second 80-row chunk with FP32 HC post.
 The SWA and layer-0 entries above exercise the same projection implementation.
+
+## Shared-expert FFN in DSL
+
+[`expert_shared.py`](../../../models/deepseek_v4_1_flash/expert_shared.py)
+schedules W1/W3 projection, SwiGLU with MXFP8 requantization, and W2 projection
+through DSL leaves. PyPTO/simpler owns the task graph and tensor dependencies.
+The existing decode and prefill callers use the same shared-expert interface.
+
+[`expert_shared_projection_dsl.py`](../../../models/deepseek_v4_1_flash/expert_shared_projection_dsl.py)
+consumes ordinary KN weight payloads and the existing MX_A_ZZ/MX_B_NN scale
+bytes. M16/N128 AIC tasks perform consecutive K256 accumulations, including
+the final K256 block of the 2304-wide W2 reduction. W1/W3 retain FP32 outputs;
+W2 writes BF16 and limits stores to valid output rows.
+
+[`expert_shared_dsl.py`](../../../models/deepseek_v4_1_flash/expert_shared_dsl.py)
+rounds gate/up to BF16, applies the existing asymmetric clipping and SwiGLU,
+and rounds the activation to BF16 before requantization. Its group-32 scale
+is `ceil_pow2(max(amax, 1e-4) / 448)`, encoded as E8M0. This retains the
+shared expert's upward scale policy; the attention OCP quantizer is separate.
+
+With an allocated A5 device in `TASK_DEVICE`, run:
+
+```bash
+python models/deepseek_v4_1_flash/expert_shared_dsl.py --rows 16 --case all -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/expert_shared_dsl.py --rows 80 --case all -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/expert_shared_projection_dsl.py --rows 17 --stage all -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/expert_shared.py -d "$TASK_DEVICE"
+```
+
+The vector checks compare FP8 payload and E8M0 scale bytes exactly, including
+zero groups, clipping, BF16 midpoint and scale-transition probes. Projection
+checks cover nonuniform scales, multiple M16 tiles and a partial output row.
+The full FFN retains its existing golden and `ratio_reldiff` thresholds.
+The layer-0 EP2 command above validates its integration with the decode layer.
+
+
+## Local MoE router tasks in DSL
+
+[`gate.py`](../../../models/deepseek_v4_1_flash/gate.py) calls the local leaves in
+[`gate_dsl.py`](../../../models/deepseek_v4_1_flash/gate_dsl.py). The task mapping is:
+
+| Original task | DSL task | Computation |
+| --- | --- | --- |
+| `rms_norm` | `dsl_gate_norm` | FP32 chunked RMSNorm, BF16 rounding, padded FP32 output |
+| `x_norm_mx_quant` | `dsl_gate_quant` | Group-32 upward MXFP8 and paired E8M0 scales |
+| `gate` | `dsl_gate` | FP32 M16/N16/K512 projection and sqrt-softplus scores |
+| `route_sort` | `dsl_route_sort` | Stable TopK and normalization of unbiased scores |
+
+Only tasks without cross-rank operations are replaced. Dispatch, remote stores,
+notifications, deferred waits and the mixed compute/communication
+`ffn_reduce_scatter` task retain their existing implementations. The local
+`gate_pre_route` initialization also remains in PyPTO. PyPTO/simpler owns the
+task graph; each foreign MIX invocation reserves its AIC/AIV participants with
+`sync_start=True`.
+
+The input quantizer and shared expert reuse `_quant_upward_row` in
+[`mxfp8_dsl.py`](../../../models/deepseek_v4_1_flash/mxfp8_dsl.py). They retain
+`ceil_pow2(max(amax, 1e-4) / 448)`, nearest-even E4M3 conversion, and scale storage
+`[M/16, K/64, 16, 2]`. A zero group has scale code 105. The attention OCP helper
+keeps its own scale rule. Router projection uses full FP32 mode. TopK uses
+repeated maximum reductions with the lower expert index winning exact ties;
+correction bias affects selection only. Inactive rows retain zero route ids
+and weights.
+
+With an allocated A5 device in `TASK_DEVICE`, run:
+
+```bash
+python models/deepseek_v4_1_flash/gate_dsl.py -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/gate.py --num-tokens 71 -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/gate.py --num-tokens 0 -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/gate.py --num-tokens 80 --save-data -d "$TASK_DEVICE"
+```
+
+Leaf checks compare quantized bytes and stable route ids exactly, with separate
+unbiased-weight checks. The composed gate retains its original goldens and
+comparators. The shared `gate_normalized` interface uses the same quantization,
+projection and routing leaves for pre-normalized callers.
+
+The official `cann/cannbot-dsl` samples were refreshed to `48fa202` for this work.
+Their `dynamic_mx_quant_sr` sample uses stochastic rounding and a distinct
+all-zero scale rule; `engram_gate` implements residual gating. Neither is a
+drop-in replacement for this router. The execution environment continues to
+use the generic DSL compiler at `91feb22` with PyPTO integration at `4a65a9c`.
+
+## Local routed-expert FFN in DSL
+
+[`expert_routed.py`](../../../models/deepseek_v4_1_flash/expert_routed.py)
+replaces the former `fused_expert_ffn` C++ task through
+[`expert_routed_dsl.py`](../../../models/deepseek_v4_1_flash/expert_routed_dsl.py).
+The replacement has three explicitly joined local compute phases:
+
+| Task | Computation | Engine |
+| --- | --- | --- |
+| `dsl_routed_up` | MXFP4 W1/W3 projections with FP32 outputs | MIX |
+| `dsl_routed_act_quant` | FP32 SwiGLU, route-weight multiplication and upward MXFP8 | AIV |
+| `dsl_routed_down` | MXFP4 W2 projection into two FP32 partial planes | MIX |
+
+All phases consume local tensors. The first phase depends on `input_ready`;
+the returned TaskId joins every final projection worker. The existing
+`ffn_reduce_scatter`, its remote stores and all notification/wait tasks are
+unchanged. The final sum of the two FP32 partials and BF16 rounding remain
+in that existing consumer. The former C++ implementation is removed.
+
+Weights retain the model's 256-by-256 panel order with adjacent N elements
+packed into each byte, unlike the official A8W4 sample's K-adjacent packing.
+Each MIX projection uses two AIVs to widen all 16 E2M1 codes exactly to E4M3
+and publish NZ weight tiles to the AIC. It does not introduce the sample's
+temporary 1/64 weight scaling. Packed MX_A_ZZ/MX_B_NN scale storage is retained;
+the PyPTO bridge receives explicit ND storage views.
+
+The activation remains FP32 through clipping, SwiGLU and route-weight
+multiplication. There is no intermediate BF16 rounding. Quantization reuses
+the shared upward-scale helper and keeps zero padded rows finite. W2 splits
+the 2304-wide hidden reduction at 1024, yielding 1024- and 1280-column
+partials. Their row positions use the original unpadded expert-count prefix
+and the original plane stride.
+
+The compute phases use private M16-aligned expert slabs and explicit
+completion joins. Internal padding does not change receive or return buffers.
+For the current EP2 configuration, the declared intermediate gate/up/payload/
+scale capacity is about 76.2 MiB per rank. This is a correctness-first staged
+implementation; on-chip fusion and performance tuning are deferred.
+
+With an allocated A5 device in `TASK_DEVICE`, run:
+
+```bash
+python models/deepseek_v4_1_flash/expert_routed_dsl.py -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/expert_routed.py --case all -d "$TASK_DEVICE"
+```
+
+The leaf entry checks every FP4 encoding and NZ position, A8W4 projection,
+weighted activation bytes, zero route weights, clipping and poisoned inactive
+rows. The composed entry retains its original goldens and
+`ratio_reldiff(diff_thd=2e-3, pct_thd=0.01)` threshold, with exact preservation
+of inactive output sentinels. Its cases cover empty experts, receive capacity,
+15/16/17 and 63/64/65 rows, and repeated invocations with changed counts.
 
 ## DSL development branch and evidence
 
@@ -305,3 +441,12 @@ The [mHC boundary archive](../../../artifacts/dsv4_1_dsl/2026-11-04-mhc-boundary
 contains collapse/RMSNorm and FP32 residual-expansion validation and generated kernels.
 The [mHC coefficient archive](../../../artifacts/dsv4_1_dsl/2026-11-04-mhc-coefficients/README.txt)
 contains RMS/HF32/Sinkhorn validation, midpoint probes, frozen fixtures and generated kernels.
+The [shared-expert archive](../../../artifacts/dsv4_1_dsl/2026-11-04-shared-expert/README.txt)
+contains the new-DSL baseline, SwiGLU/quantization and projection checks, full FFN
+and layer-0 EP2 validation, and the companion PyPTO call-specialization correction.
+The [local router archive](../../../artifacts/dsv4_1_dsl/2026-11-04-gate/README.txt)
+records the official sample refresh, input and router checks, generated leaves,
+CPU fixtures, and the layer-0 EP2 regression with communication tasks retained.
+The [routed-expert archive](../../../artifacts/dsv4_1_dsl/2026-11-04-routed-expert/README.txt)
+contains the original baseline, leaf checks, full local FFN cases, generated
+compute stages, CPU leaf fixtures, and layer-0 EP2 integration evidence.

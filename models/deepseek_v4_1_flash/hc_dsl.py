@@ -182,7 +182,7 @@ def project_hf32_tile(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor,
         cb.mem_copy(b_l0.next_write(), b_l1.next_read())
         cb.matmul(accumulator, a_l0.next_read(), b_l0.next_read(), init=k == 0)
     result = c_l0.next_read()
-    valid = result.reinterpret(layout=cb.make_layout((active, MIX_HC)), physical_layout=result.physical_layout)
+    valid = cb.from_tensor(result, layout=cb.make_layout((active, MIX_HC)), physical_layout=result.physical_layout)
     cb.mem_copy(output[0:active, 0:MIX_HC], valid)
 
 

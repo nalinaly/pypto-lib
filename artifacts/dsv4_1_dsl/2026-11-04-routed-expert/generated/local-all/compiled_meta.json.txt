@@ -1,0 +1,253 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "recv_x",
+      "direction": "In",
+      "shape": [
+        4,
+        160,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "recv_mx_scale",
+      "direction": "In",
+      "shape": [
+        1,
+        102400
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "recv_weights",
+      "direction": "In",
+      "shape": [
+        4,
+        160
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "recv_expert_count",
+      "direction": "In",
+      "shape": [
+        4,
+        1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "routed_w1_packed",
+      "direction": "In",
+      "shape": [
+        4,
+        46080,
+        128
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "routed_w1_scale",
+      "direction": "In",
+      "shape": [
+        640,
+        2304
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "MX_B_NN"
+    },
+    {
+      "name": "routed_w3_packed",
+      "direction": "In",
+      "shape": [
+        4,
+        46080,
+        128
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "routed_w3_scale",
+      "direction": "In",
+      "shape": [
+        640,
+        2304
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "MX_B_NN"
+    },
+    {
+      "name": "routed_w2_packed",
+      "direction": "In",
+      "shape": [
+        4,
+        46080,
+        128
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "routed_w2_scale",
+      "direction": "In",
+      "shape": [
+        288,
+        5120
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "MX_B_NN"
+    },
+    {
+      "name": "routed_y",
+      "direction": "InOut",
+      "shape": [
+        640,
+        5120
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "recv_x",
+      "direction": "In",
+      "shape": [
+        4,
+        160,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "recv_mx_scale",
+      "direction": "In",
+      "shape": [
+        1,
+        102400
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "recv_weights",
+      "direction": "In",
+      "shape": [
+        4,
+        160
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "recv_expert_count",
+      "direction": "In",
+      "shape": [
+        4,
+        1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "routed_w1_packed",
+      "direction": "In",
+      "shape": [
+        4,
+        46080,
+        128
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "routed_w1_scale",
+      "direction": "In",
+      "shape": [
+        1,
+        144,
+        320,
+        16,
+        2
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "MX_B_NN"
+    },
+    {
+      "name": "routed_w3_packed",
+      "direction": "In",
+      "shape": [
+        4,
+        46080,
+        128
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "routed_w3_scale",
+      "direction": "In",
+      "shape": [
+        1,
+        144,
+        320,
+        16,
+        2
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "MX_B_NN"
+    },
+    {
+      "name": "routed_w2_packed",
+      "direction": "In",
+      "shape": [
+        4,
+        46080,
+        128
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "routed_w2_scale",
+      "direction": "In",
+      "shape": [
+        1,
+        320,
+        144,
+        16,
+        2
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "MX_B_NN"
+    },
+    {
+      "name": "routed_y",
+      "direction": "InOut",
+      "shape": [
+        640,
+        5120
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    }
+  ],
+  "num_return_types": 1,
+  "return_aliases": [
+    10
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

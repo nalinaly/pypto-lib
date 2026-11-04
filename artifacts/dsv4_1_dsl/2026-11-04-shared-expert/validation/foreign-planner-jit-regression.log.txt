@@ -1,0 +1,28 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [ 97%]
+..                                                                       [100%]
+=============================== warnings summary ===============================
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_nested_inline_compiles
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:1916: DeprecationWarning: @pl.jit.inline helper 'leaf' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['out']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_nested_inline_compiles
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:1916: DeprecationWarning: @pl.jit.inline helper 'mid' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['out']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_nested_inline_diamond
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:1916: DeprecationWarning: @pl.jit.inline helper 'shared' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['out']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_nested_inline_diamond
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:1916: DeprecationWarning: @pl.jit.inline helper 'a_helper' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['out']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_nested_inline_diamond
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:1916: DeprecationWarning: @pl.jit.inline helper 'b_helper' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['out']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+74 passed, 5 warnings in 9.56s

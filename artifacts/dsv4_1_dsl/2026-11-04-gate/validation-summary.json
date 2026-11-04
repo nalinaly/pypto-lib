@@ -1,0 +1,58 @@
+{
+  "status": "PASS",
+  "delivery": "Local only on dsv4.1-dsl; no commit or push",
+  "model_base": "7431870928f912e119ec60fec26672c1d2b24a39",
+  "pypto_revision": "4a65a9c79b305aac9cac5a8cd84eef4cc8e4986c",
+  "installed_dsl_source": "91feb222c59ec3ad1175ba5fd88445c72f8abdff",
+  "official_samples_revision": "48fa202201de6e962e6277824de9e8f68b4b9e14",
+  "samples_refresh": "Official shallow checkout updated; execution compiler unchanged",
+  "replaced_tasks": {
+    "rms_norm": "dsl_gate_norm",
+    "x_norm_mx_quant": "dsl_gate_quant",
+    "gate": "dsl_gate",
+    "route_sort": "dsl_route_sort"
+  },
+  "communication_sources_unchanged": true,
+  "communication_sources_reviewed": [
+    "decode_moe.py",
+    "expert_routed.py",
+    "decode_layer.py"
+  ],
+  "checks": [
+    {
+      "case": "Original gate, 71 active tokens",
+      "result": "PASS",
+      "task": "task_20261104_153846_307585432"
+    },
+    {
+      "case": "Normalization/quantization stage, active 71 and 0; shared quantization edges",
+      "result": "PASS",
+      "task": "task_20261104_154429_33386559112"
+    },
+    {
+      "case": "Quantization bytes; stable TopK, unbiased weights, active 7 and 0; full gate active 71 and 0",
+      "result": "PASS",
+      "task": "task_20261104_155102_361947225045"
+    },
+    {
+      "case": "Full gate, 80 active tokens",
+      "result": "PASS",
+      "task": "task_20261104_155326_383299515214"
+    },
+    {
+      "case": "Layer 0, TP1/EP2, 72 active tokens per rank",
+      "result": "PASS",
+      "outputs": 16,
+      "devices": [
+        6,
+        7
+      ],
+      "task": "task_20261104_155325_382860317541"
+    }
+  ],
+  "limits": [
+    "A5, generated inputs and CPU Torch goldens",
+    "No prefill or full-checkpoint validation",
+    "No performance study; original precision thresholds retained"
+  ]
+}

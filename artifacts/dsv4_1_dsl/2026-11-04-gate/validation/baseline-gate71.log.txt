@@ -1,0 +1,53 @@
+任务已提交: task_20261104_153846_307585432 (断开后可用 task-submit --wait task_20261104_153846_307585432 重连)
+等待任务执行: task_20261104_153846_307585432 (Ctrl+C 终止任务)
+[npu-lock] 获取设备 0 的锁 (无超时)...
+[npu-lock] 已获取设备 0 的锁 (pid=3076015)
+[RUN] compile ...
+2026-11-04 15:38:48.673 I | [perf_hint] 3 hints across 3 sites; see <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l2_gate_20261104_153848_mripo1ju/report/perf_hints.log
+[RUN] compile done (0.80s)
+[RUN] generate inputs ...
+[RUN] generate inputs done (0.05s)
+[RUN] compute golden ...
+[RUN] compute golden done (0.02s)
+[RUN] runtime ...
+[mono_ns=95699686046900][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=0 hid=0 depth=0 name=chip.prewarm.build ts=95699663240070 dur=22800590 
+[mono_ns=95699697759680][T0xffff9baeb020][TIMING] log_callable_image: Callable image: device=0 runner=0xaaab092c05c0 chip_hash=0xb717528c73a7b6eb chip_dev=0x12000001c000 upload_bytes=745776 children=6
+[mono_ns=95699697777950][T0xffff9baeb020][TIMING] log_callable_image: Callable code: device=0 runner=0xaaab092c05c0 chip_hash=0xb717528c73a7b6eb chip_dev=0x12000001c000 func_id=0 code_begin=0x1200000cd0a0 code_end_exclusive=0x1200000ce3e0 code_bytes=4928 code_fnv1a64=0xa16852f53d86584a
+[mono_ns=95699697785450][T0xffff9baeb020][TIMING] log_callable_image: Callable code: device=0 runner=0xaaab092c05c0 chip_hash=0xb717528c73a7b6eb chip_dev=0x12000001c000 func_id=1 code_begin=0x1200000ce4a0 code_end_exclusive=0x1200000cf100 code_bytes=3168 code_fnv1a64=0xa2d89362664deefc
+[mono_ns=95699697787460][T0xffff9baeb020][TIMING] log_callable_image: Callable code: device=0 runner=0xaaab092c05c0 chip_hash=0xb717528c73a7b6eb chip_dev=0x12000001c000 func_id=2 code_begin=0x1200000cf1e0 code_end_exclusive=0x1200000cf2e0 code_bytes=256 code_fnv1a64=0x9c5b953c66e1963c
+[mono_ns=95699697792040][T0xffff9baeb020][TIMING] log_callable_image: Callable code: device=0 runner=0xaaab092c05c0 chip_hash=0xb717528c73a7b6eb chip_dev=0x12000001c000 func_id=3 code_begin=0x1200000cf3a0 code_end_exclusive=0x1200000cfaa8 code_bytes=1800 code_fnv1a64=0x2e3b61ddbd92ae42
+[mono_ns=95699697801600][T0xffff9baeb020][TIMING] log_callable_image: Callable code: device=0 runner=0xaaab092c05c0 chip_hash=0xb717528c73a7b6eb chip_dev=0x12000001c000 func_id=4 code_begin=0x1200000cfba0 code_end_exclusive=0x1200000d0dd8 code_bytes=4664 code_fnv1a64=0xb1e5d5b36a890db
+[mono_ns=95699697811070][T0xffff9baeb020][TIMING] log_callable_image: Callable code: device=0 runner=0xaaab092c05c0 chip_hash=0xb717528c73a7b6eb chip_dev=0x12000001c000 func_id=5 code_begin=0x1200000d0ea0 code_end_exclusive=0x1200000d20d0 code_bytes=4656 code_fnv1a64=0x454e453dc38ce6bb
+[mono_ns=95699697816000][T0xffff9baeb020][TIMING] record_device_orch_callable: [device_runner_base.cpp:2432] Callable registration: device=0 runner=0xaaab092c05c0 cid=0 chip_hash=0xb717528c73a7b6eb aicore_image_hash=0xd75c727ec13d0089 orch_hash=0xb1b21993eb6c0b6c orch_bytes=707344
+[mono_ns=95699706530860][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=2 name=chip.run.bind.args ts=95699706526680 dur=1600 
+[mono_ns=95699706541200][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=2 name=chip.run.bind.prebuilt ts=95699706538420 dur=1630 
+[mono_ns=95699706544050][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=1 name=chip.run.bind ts=95699705980620 dur=562320 
+[mono_ns=95699706546460][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=1 name=chip.run.publish_image ts=95699706545310 dur=150 
+[mono_ns=95699710128460][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=1 name=chip.run.stage_inputs ts=95699706547830 dur=3577340 
+[mono_ns=95699734729170][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=1 name=chip.run.prepare_execution ts=95699710137170 dur=24588890 
+[mono_ns=95699735758680][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=2 name=chip.run.runner_run.aicpu_launch ts=95699735755860 dur=0 
+[mono_ns=95699736833630][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=1 name=chip.run.runner_run ts=95699734744140 dur=2086660 
+[mono_ns=95699738165730][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=1 name=chip.run.validate ts=95699737413700 dur=748530 
+[mono_ns=95699738174080][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=2 name=chip.run.runner_run.device_wall ts=0 dur=693466 clk=dev dev_id=0 dev_start_cycle=17300978402687 dev_end_cycle=17300979096153 dev_cnt_hz=1000000000
+[mono_ns=95699738176880][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=3 name=chip.run.runner_run.device_wall.preamble ts=0 dur=399746 clk=dev
+[mono_ns=95699738179050][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=3 name=chip.run.runner_run.device_wall.graph_build ts=27532 dur=644812 clk=dev
+[mono_ns=95699738181220][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=3 name=chip.run.runner_run.device_wall.config_validate ts=35152 dur=8153 clk=dev
+[mono_ns=95699738183270][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=3 name=chip.run.runner_run.device_wall.arena_wire ts=43360 dur=14837 clk=dev
+[mono_ns=95699738185250][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=3 name=chip.run.runner_run.device_wall.sm_reset ts=58242 dur=17813 clk=dev
+[mono_ns=95699738189750][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=3 name=chip.run.runner_run.device_wall.post_orch ts=672692 dur=12126 clk=dev
+[mono_ns=95699738191710][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=3 name=chip.run.runner_run.device_wall.orch ts=77291 dur=53787 clk=dev
+[mono_ns=95699738193660][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=3 name=chip.run.runner_run.device_wall.sched ts=401235 dur=224063 clk=dev
+[mono_ns=95699738202740][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=2 name=chip.run.runner_run.device_boundaries ts=95699738201320 dur=0 clk=dev dev_id=0 aic_start=17300977433 aic_rc=0 wo_end=0 wo_rc=-1000 ts_hz=1000000
+[mono_ns=95699738205650][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=1 name=chip.run.claim_release ts=95699738204400 dur=270 
+[mono_ns=95699738209020][T0xffff9baeb020][TIMING] emit_host_span: [STRACE] v=1 pid=3076071 tid=3076071 inv=1 hid=b1b21993eb6c0b6c depth=0 name=chip.run ts=95699705960220 dur=32247430 run_id=0 dispatch_id=0 slot_id=0 generation=1 run_epoch=1
+[mono_ns=95699744260560][T0xffff9baeb020][TIMING] finalize_common_impl: [device_runner_base.cpp:3022] Callable image freed: device=0 runner=0xaaab092c05c0 chip_hash=0xb717528c73a7b6eb chip_dev=0x12000001c000 upload_bytes=745776
+[RUN] runtime done (10.10s)
+[RUN] validate ...
+[RUN]   'x_norm_mx' PASS  shape=(80, 5120) dtype=torch.float8_e4m3fn (mxfp8_activation_value_compare)
+[RUN]   'x_norm_scale' PASS  shape=(1, 12800) dtype=torch.float8_e8m0fnu (mxfp8_activation_value_compare)
+[RUN]   'indices' PASS  shape=(80, 6) dtype=torch.int32 (gate_indices_compare(score_atol=0.0001,score_rtol=2e-05))
+[RUN]   'weights' PASS  shape=(80, 6) dtype=torch.float32
+[RUN] validate done (0.47s)
+[RUN] PASS (11.43s)
+[npu-lock] 已释放设备 0 的锁
+=== 任务完成 (exit=0) ===

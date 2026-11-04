@@ -1,0 +1,532 @@
+diff --git a/docs/en/dev/language/04-external-kernels.md b/docs/en/dev/language/04-external-kernels.md
+index 221d57ab..53f2cbd8 100644
+--- a/docs/en/dev/language/04-external-kernels.md
++++ b/docs/en/dev/language/04-external-kernels.md
+@@ -164,7 +164,8 @@ though the Python stub is unchanged.
+ ## Calling a Python DSL kernel directly
+ 
+ A Python DSL can implement the lazy `__pypto_jit__()` protocol so callers keep
+-only their operator expressions. With the companion CANNBotDSL device-export
++only their operator expressions. PyPTO also recognizes CANNBotDSL `cb.kernel`
++objects directly, without a producer-side PyPTO hook. With the companion CANNBotDSL
+ integration installed, the A5 example is:
+ 
+ ```python
+@@ -234,11 +235,33 @@ void: using its call as a value is rejected. All call sites of one producer in
+ one program must have the same inferred tensor signature. Foreign calls are
+ supported from chip orchestration and inline orchestration helpers.
+ 
++Unrebound induction variables of `pl.range` and `pl.parallel` with ordinary
++range bounds are inferred as `pl.INDEX` at foreign calls. A producer can use
++them as explicit row or page identifiers without reading hardware launch IDs.
++
+ Builders run before cache lookup; source content, local includes and access/core
+ metadata participate in both cache identities. Generated source is reused within
+ the request. Producers may use content-addressed storage; no captured tensors,
+ addresses or mutable per-request source paths are stored on the JIT dependency.
++The CANNBotDSL adapter lives in `pypto.jit.cannbotdsl`. PyPTO owns kernel
++recognition, tensor/scalar metadata conversion, tracing and lowering through
++the producer's existing compiler APIs, runtime ABI wrapper generation, and
++external task configuration. It consumes the generated SourceBundle and native
++device ABI, including physical parameter order and tensor access effects.
++CANNBotDSL supplies generic compilation and device code generation; it does
++not need an `export_device` entry or a `cannbotdsl.interop.pypto` module for this
++integration. CANNBotDSL is an optional dependency and is imported only when
++this adapter is used.
++
++Calls through nested inline helpers retain separate external specializations
++when tensor shapes, dtypes, layouts, or scalar types differ. Calls with the
++same signature reuse a specialization, including when the producer kernel is
++the same Python object.
++
++The adapter maps PyPTO FP8E8M0 directly to CANNBotDSL's `float8_e8m0` storage
++type. Packed MX scale layouts require an explicit equal-size ND storage view;
++this changes metadata only and preserves the scale bytes without re-encoding.
+ The CANNBotDSL integration currently supports A5/TMR, ND tensors with a contiguous
+ innermost axis, explicit runtime scalars, AIV/AIC/MIX and basic dynamic shapes.
+-The CANN 9.3.0 SDK has a missing CPU-debug-only include which can make the optional
+-persistent cache bypass conservatively; the default in-process cache still works.
++An SDK installation missing optional CPU-debug headers can make the persistent
++cache bypass conservatively; the default in-process cache still works.
+diff --git a/docs/zh/dev/language/04-external-kernels.md b/docs/zh/dev/language/04-external-kernels.md
+index 22262837..b99623df 100644
+--- a/docs/zh/dev/language/04-external-kernels.md
++++ b/docs/zh/dev/language/04-external-kernels.md
+@@ -149,7 +149,8 @@ Python stub 未变，kernel 变更也会触发重新编译。
+ ## 直接调用 Python DSL kernel
+ 
+ Python DSL 可以实现惰性的 `__pypto_jit__()` 协议，使用户只保留原始算子表达。
+-安装配套 CANNBotDSL 设备导出接入后，A5 示例为：
++PyPTO 也会直接识别 CANNBotDSL 的 `cb.kernel` 对象，无需生产者提供 PyPTO hook。
++安装配套 CANNBotDSL 和 PyPTO 适配器后，A5 示例为：
+ 
+ ```python
+ import os
+@@ -212,9 +213,28 @@ Tensor 读写方向和可选的 backend/runtime 要求。生成的完整源码
+ 不能将调用用作值。一个 program 内，同一生产者各调用点必须具有相同的 Tensor 签名。
+ 支持从芯片 orchestration 及其 inline helper 调用。
+ 
++普通范围边界的 `pl.range`、`pl.parallel` 循环变量，在循环体内未被重新赋值时，
++会在外部调用处推导为 `pl.INDEX`。生产者可以直接接收这些行号或页号，
++无需读取硬件启动时的 block ID。
++
+ 构建器在查缓存前运行；源码、局部 include 和读写/core 元数据参与两层缓存身份，
+ 本次请求内复用生成结果。生产者可以采用按内容寻址的存储；JIT 依赖对象不保存调用者的
+-Tensor、地址或本次请求的可变源码路径。CANNBotDSL 接入目前支持 A5/TMR、最内层连续的
++Tensor、地址或本次请求的可变源码路径。
++
++CANNBotDSL 适配器位于 `pypto.jit.cannbotdsl`。识别 kernel、转换 Tensor/Scalar 元数据、
++通过生产者现有编译器 API 完成 tracing/lowering、生成 runtime ABI 包装以及配置外部任务，
++均由 PyPTO 负责。适配器消费生成的 SourceBundle 和原生设备 ABI，包括物理参数顺序和
++Tensor 读写信息。CANNBotDSL 负责通用编译和设备代码生成，此接入无需它提供
++`export_device` 入口或 `cannbotdsl.interop.pypto` 模块。
++CANNBotDSL 是可选依赖，仅在使用此适配器时导入。
++
++通过嵌套 inline helper 调用时，Tensor 形状、dtype、layout 或 Scalar 类型不同的调用
++会保留各自的外部 kernel 特化；签名相同的调用复用同一特化。这也适用于生产者 kernel
++为同一个 Python 对象的情况。
++
++适配器将 PyPTO FP8E8M0 直接映射到 CANNBotDSL 的 `float8_e8m0` 存储类型。
++打包的 MX scale 布局需使用显式、等大小的 ND 存储视图；此操作只改元数据，保留原始
++scale 字节，不重新编码。CANNBotDSL 接入目前支持 A5/TMR、最内层连续的
+ ND Tensor、显式 runtime Scalar、AIV/AIC/MIX 和基本动态形状。
+-CANN 9.3.0 缺少 CPU-debug 条件头文件，可能使可选的持久缓存保守跳过；
++SDK 安装若缺少可选的 CPU-debug 条件头文件，可能使持久缓存保守跳过；
+ 默认的进程内缓存仍可使用。
+diff --git a/python/pypto/jit/_call_binding.py b/python/pypto/jit/_call_binding.py
+index d8ff7ff8..b9d73a8f 100644
+--- a/python/pypto/jit/_call_binding.py
++++ b/python/pypto/jit/_call_binding.py
+@@ -303,10 +303,13 @@ def resolve_call_site_constexpr(
+ # Hashable, so it can stand in the identity of one generated function.
+ _ConstexprBinding = tuple[tuple[str, str], ...]
+ # One generated ``@pl.function``: a Python function plus the compile-time
+-# binding it is compiled against. Everything downstream used to key on
++# binding it is compiled against. Foreign-dependent call chains may append a
++# private signature discriminator to this key, separate from plan.binding.
++# Everything downstream used to key on
+ # ``id(func)`` alone, which is why a dep reached with two different constants
+ # had to be refused -- there was one slot to put it in.
+ VariantKey = tuple[int, _ConstexprBinding]
++_CallVariantKey = Callable[["JITFunction", VariantKey, str, ast.Call, Mapping[str, str]], VariantKey]
+ 
+ 
+ def freeze_binding(values: Mapping[str, str]) -> _ConstexprBinding:
+@@ -378,6 +381,8 @@ def expand_constexpr_variants(
+     deps_topo: "Sequence[JITFunction]",
+     callers_by_id: Mapping[int, Sequence[tuple[Any, str]]],
+     entry_constexpr: Mapping[str, str],
++    *,
++    call_variant_key: _CallVariantKey | None = None,
+ ) -> VariantPlan:
+     """Expand the dep graph into one generated function per compile-time binding.
+ 
+@@ -393,6 +398,9 @@ def expand_constexpr_variants(
+         deps_topo: Every reachable dep, leaf-first
+         callers_by_id: ``id(dep func) -> [(caller func, call name), ...]``
+         entry_constexpr: The entry's own resolved binding
++        call_variant_key: Optional request-local key resolver for call sites
++            needing tensor/scalar specialization in addition to constexprs.
++            The returned key does not change the actual constexpr binding.
+ 
+     Returns:
+         The full :class:`VariantPlan` for this request
+@@ -439,7 +447,11 @@ def expand_constexpr_variants(
+                         if splits
+                         else {}
+                     )
+-                    dep_key: VariantKey = (id(dep._func), freeze_binding(values))
++                    dep_key: VariantKey = (
++                        call_variant_key(dep, caller_key, call_name, call, values)
++                        if call_variant_key is not None
++                        else (id(dep._func), freeze_binding(values))
++                    )
+                     if dep_key not in plan.binding:
+                         plan.order.append(dep_key)
+                         plan.jit_func[dep_key] = dep
+diff --git a/python/pypto/jit/_tensor_meta.py b/python/pypto/jit/_tensor_meta.py
+index 9ba99c1a..7ffa3c5b 100644
+--- a/python/pypto/jit/_tensor_meta.py
++++ b/python/pypto/jit/_tensor_meta.py
+@@ -1207,6 +1207,35 @@ def _drop_dims_is_noop(drop_dims_node: ast.expr | None, scope: _StaticScope) ->
+     )
+ 
+ 
++def _shaped_view_meta(
++    call: ast.Call,
++    target: str | None,
++    local: Mapping[str, TensorMeta],
++    scope: _StaticScope,
++    resolve_shape: Callable[..., tuple[ShapeDim, ...] | None],
++) -> TensorMeta | None:
++    # A shaped view preserves storage dtype and explicitly selects its
++    # layout. In particular, MX scale backing can cross a foreign boundary
++    # as ND bytes without a numerical conversion. IR still validates the
++    # storage size and whether this layout transition is supported.
++    src = _tensor_or_input_operand(call)
++    if not isinstance(src, ast.Name) or src.id not in local:
++        return None
++    src_meta = local[src.id]
++    shape_node = _call_operand(call, 1, "shape")
++    if shape_node is None:
++        return None
++    result_name = f"{target}_l{call.lineno}_c{call.col_offset}" if target is not None else None
++    shape = resolve_shape(shape_node, result_name, dimension_arithmetic=True)
++    layout_node = scope.fold(_call_operand(call, None, "layout"))
++    layout = (src_meta.layout or _ir.TensorLayout.ND) if layout_node is None else scope.value(layout_node)
++    if shape is None or (layout is not None and not isinstance(layout, _ir.TensorLayout)):
++        return None
++    if layout_node is not None and layout is None:
++        return None
++    return TensorMeta(shape=shape, dtype=src_meta.dtype, layout=layout)
++
++
+ def extract_local_tensor_metas(
+     func: Any,
+     seed_meta: dict[str, TensorMeta] | None = None,
+@@ -1514,6 +1543,9 @@ def extract_local_tensor_metas(
+         # Keep it explicit so a dependency's annotation cannot overwrite it.
+         return TensorMeta(shape=shape, dtype=src_meta.dtype, layout=_ir.TensorLayout.ND)
+ 
++    def _view_meta(call: ast.Call, target: str | None = None) -> TensorMeta | None:
++        return _shaped_view_meta(call, target, local, scope, _resolve_shape)
++
+     def _slice_meta(call: ast.Call, target: str | None = None) -> TensorMeta | None:
+         # pl.slice(input, shape, offset, ...) / pl.tensor.slice(tensor, shape,
+         # offset, ...) — shape/offset/drop_dims/etc. share the same names in
+@@ -1566,6 +1598,7 @@ def extract_local_tensor_metas(
+         "slice": _slice_meta,
+         "window": _window_meta,
+         "reshape": _reshape_meta,
++        "view": _view_meta,
+     }
+ 
+     # 3-segment spellings this walker also understands, keyed by the FULL
+@@ -1620,6 +1653,44 @@ def extract_local_tensor_metas(
+     return local if visible_only or stop_at_dep is not None or stop_at_call is not None else collected
+ 
+ 
++def _external_loop_index_dtypes(func: Any, call_name: str, call_node: ast.Call | None) -> dict[str, DataType]:
++    """Type unrebound induction variables at a foreign call inside an ordinary range loop."""
++    body = _ast_analysis.get_func_def(func)
++    if call_node is None:
++        call_node = next(
++            (
++                node
++                for node in ast.walk(body)
++                if isinstance(node, ast.Call)
++                and isinstance(node.func, ast.Name)
++                and node.func.id == call_name
++            ),
++            None,
++        )
++    if call_node is None:
++        return {}
++    indices = {}
++    for loop in ast.walk(body):
++        if not isinstance(loop, ast.For) or not isinstance(loop.target, ast.Name):
++            continue
++        if not isinstance(loop.iter, ast.Call):
++            continue
++        if _flatten_dotted_call(loop.iter.func) not in (("pl", "parallel"), ("pl", "range")):
++            continue
++        # Explicitly typed bound constructors can select a different induction dtype.
++        bounds = [
++            *loop.iter.args,
++            *(kw.value for kw in loop.iter.keywords if kw.arg in ("start", "stop", "step")),
++        ]
++        if any(isinstance(node, ast.Call) for bound in bounds for node in ast.walk(bound)):
++            continue
++        body_nodes = (node for stmt in loop.body for node in ast.walk(stmt))
++        if call_node not in body_nodes or loop.target.id in _body_binding_names(loop.body):
++            continue
++        indices[loop.target.id] = DataType.INDEX
++    return indices
++
++
+ def resolve_dep_call_metadata(
+     dep: "JITFunction",
+     caller_func: Any,
+@@ -1667,6 +1738,7 @@ def resolve_dep_call_metadata(
+     dep with that static extent.
+     """
+     dep_param_names = dep._param_names()
++    call_name = dep_call_name or dep.__name__
+     if dep._external_builder is not None:
+         from pypto.language.typing.scalar import Scalar  # noqa: PLC0415
+ 
+@@ -1678,7 +1750,7 @@ def resolve_dep_call_metadata(
+             dtype = ann.dtype if isinstance(ann, Scalar) else ann
+             if isinstance(dtype, DataType):
+                 caller_scalar_dtypes.setdefault(name, dtype)
+-    call_name = dep_call_name or dep.__name__
++        caller_scalar_dtypes.update(_external_loop_index_dtypes(caller_func, call_name, call_node))
+     call_args = (
+         _call_binding.call_arg_refs(call_node)
+         if call_node is not None
+diff --git a/python/pypto/jit/decorator.py b/python/pypto/jit/decorator.py
+index f360c11d..174b24fc 100644
+--- a/python/pypto/jit/decorator.py
++++ b/python/pypto/jit/decorator.py
+@@ -58,6 +58,7 @@ JITFunction.__call__ flow
+ import ast
+ import copy
+ import functools
++import importlib
+ import inspect
+ import json
+ import os
+@@ -517,11 +518,10 @@ class JITFunction:
+           Recorded in DFS-discovery order; deduplicated within each list. The
+           entry has no caller and does not appear as a key.
+ 
+-          Tensor / scalar metadata for a shared dep is still resolved
+-          through the first-recorded caller — call sites in other branches
+-          must agree on shapes/dtypes (otherwise one specialization would
+-          have to differ from another, which the one-context-per-function
+-          design doesn't support).
++          Ordinary shared deps resolve tensor/scalar metadata through their
++          first-recorded caller and require compatible signatures. Dependencies
++          leading to an external builder are subsequently expanded per resolved
++          call signature by ``_resolve_foreign_variants``.
+         - ``callees_by_func_id``: for each function (entry + every reached
+           dep), the *call names* of the JIT deps it directly calls. Used to
+           set each context's ``dep_names`` so the body transformer rewrites
+@@ -666,6 +666,85 @@ class JITFunction:
+         deps_topo, callers_by_id, _, _ = self._get_dep_graph()
+         return _call_binding.expand_constexpr_variants(self, deps_topo, callers_by_id, entry_constexpr)
+ 
++    def _resolve_foreign_variants(
++        self,
++        tensor_meta: dict[str, TensorMeta],
++        scalar_dtypes: dict[str, DataType],
++        constexpr_values: dict[str, str],
++        per_func_dyn: dict[int, dict[str, dict[int, DynDim]]],
++    ) -> _call_binding.VariantPlan:
++        """Specialize foreign-dependent call chains by their resolved signatures.
++
++        Splitting only the external leaf is insufficient: an inline caller
++        shared by two signatures would already have lost the second call's
++        metadata. Resolve and distinguish those ancestors caller-first, while
++        keeping ordinary JIT dependencies on their existing constexpr keys.
++        """
++        deps, callers_by_id, _, _ = self._get_dep_graph()
++        foreign_chain = {id(dep._func) for dep in deps if dep._external_builder is not None}
++        if not foreign_chain:
++            return self._resolve_constexpr_bindings(constexpr_values)
++        # The graph is leaf-first, so propagating to direct callers also
++        # discovers every ancestor without repeated graph scans.
++        for dep in deps:
++            if id(dep._func) in foreign_chain:
++                foreign_chain.update(id(caller) for caller, _ in callers_by_id.get(id(dep._func), ()))
++        functions = {id(dep._func): dep for dep in [self, *deps]}
++        entry_key = (id(self._func), _call_binding.freeze_binding(constexpr_values))
++        metadata = {entry_key: (tensor_meta, scalar_dtypes)}
++        bindings = {entry_key: constexpr_values}
++
++        def key_for_call(
++            dep: "JITFunction",
++            caller_key: _call_binding.VariantKey,
++            call_name: str,
++            call: ast.Call,
++            values: Mapping[str, str],
++        ) -> _call_binding.VariantKey:
++            key = (id(dep._func), _call_binding.freeze_binding(values))
++            if id(dep._func) not in foreign_chain:
++                return key
++            caller = functions[caller_key[0]]
++            caller_meta, caller_scalars = metadata[caller_key]
++            dep_meta, dep_scalars = _tensor_meta.resolve_dep_call_metadata(
++                dep,
++                caller._func,
++                caller_meta,
++                caller_scalars,
++                per_func_dyn.get(id(dep._func), {}),
++                caller_func_type=caller._func_type,
++                dep_call_name=call_name,
++                call_node=call,
++                caller_constexpr=bindings[caller_key],
++                discover_deps=_discover_dep_bindings,
++            )
++            tensor_signature = tuple(
++                (
++                    name,
++                    tuple(
++                        ("dynamic", dim.name, dim.literal, dim.static_bound, dim.synthesized)
++                        if isinstance(dim, DynDim)
++                        else dim
++                        for dim in meta.shape
++                    ),
++                    str(meta.dtype),
++                    str(meta.layout),
++                )
++                for name, meta in sorted(dep_meta.items())
++            )
++            scalar_signature = tuple((name, str(dtype)) for name, dtype in sorted(dep_scalars.items()))
++            # This discriminator is not a Python parameter and must never
++            # enter ctx.constexpr_values or the provider's device ABI.
++            signature = repr((tensor_signature, scalar_signature))
++            key = (key[0], (*key[1], ("<foreign-signature>", signature)))
++            metadata.setdefault(key, (dep_meta, dep_scalars))
++            bindings.setdefault(key, dict(values))
++            return key
++
++        return _call_binding.expand_constexpr_variants(
++            self, deps, callers_by_id, constexpr_values, call_variant_key=key_for_call
++        )
++
+     def _constexpr_identity_records(self, plan: _call_binding.VariantPlan) -> list[tuple[Any, ...]]:
+         """Flatten a variant plan into deterministic cache-identity records.
+ 
+@@ -1663,11 +1742,12 @@ class JITFunction:
+         # Map each Python function id → its JIT ``_func_type`` so meta
+         # resolution downstream can gate dep discovery on the caller's type
+         # (a host orchestrator additionally admits ``orchestration`` deps).
+-        # Expand the graph into one generated function per compile-time binding.
++        # Expand the graph per compile-time binding and, for foreign-dependent
++        # call chains, per tensor/scalar signature.
+         # A dep called with two different ``pl.constexpr`` values is two
+         # functions here, not an error. The same walk backs the cache key, so
+         # the two cannot disagree.
+-        plan = self._resolve_constexpr_bindings(constexpr_values)
++        plan = self._resolve_foreign_variants(tensor_meta, scalar_dtypes, constexpr_values, per_func_dyn)
+         entry_key: _call_binding.VariantKey = (
+             id(self._func),
+             _call_binding.freeze_binding(constexpr_values),
+@@ -1798,8 +1878,8 @@ class JITFunction:
+                 from .foreign import apply_external_spec  # noqa: PLC0415
+ 
+                 apply_external_spec(contexts[-1], dep._external_builder(contexts[-1]))
+-        # One dependency has one tensor specialization in a program. Check
+-        # every foreign call before exporting a mismatched ABI at another site.
++        # Calls sharing one foreign variant must still have compatible
++        # metadata before exporting its device ABI.
+         for caller_key, targets in plan.call_targets.items():
+             caller = plan.jit_func[caller_key]
+             c_meta, c_sd = resolved[caller_key]
+@@ -1876,6 +1956,13 @@ def _discover_dep_bindings(
+     seen: set[str] = set()
+     for name in called_names:
+         obj = all_vars.get(name)
++        if not isinstance(obj, JITFunction):
++            adapter = importlib.import_module(".cannbotdsl", __package__)
++            provider = adapter.try_bind_kernel(obj)
++            if provider is not None:
++                if caller_func_type not in ("orchestration", "inline"):
++                    raise TypeError(f"External DSL kernel {name!r} must be called from chip orchestration")
++                obj = provider
+         hook = getattr(obj, "__pypto_jit__", None)
+         if hook is not None and not isinstance(obj, JITFunction):
+             obj = hook()
+diff --git a/python/pypto/jit/foreign.py b/python/pypto/jit/foreign.py
+index 893cb5c9..b942bb09 100644
+--- a/python/pypto/jit/foreign.py
++++ b/python/pypto/jit/foreign.py
+@@ -11,8 +11,9 @@
+ 
+ A callable's ``__pypto_jit__()`` hook returns a stable ``JITFunction`` with an
+ ``external_builder``. The builder receives a specialization context and returns
+-this descriptor. PyPTO owns argument binding, task dependencies and compilation;
+-the producer owns device source generation and the runtime ABI wrapper.
++this descriptor. PyPTO owns argument binding, task dependencies and compilation.
++Producers supply device code; provider adapters such as ``jit.cannbotdsl`` may
++also be maintained in PyPTO to own dtype conversion and runtime ABI wrappers.
+ """
+ 
+ from dataclasses import dataclass
+@@ -49,6 +50,14 @@ def apply_external_spec(ctx: SpecializeContext, spec: object) -> None:
+         raise ValueError(f"External kernel {ctx.func_name!r}: invalid core type {spec.core_type!r}")
+     if spec.dual_aiv_dispatch and spec.core_type != "mixed":
+         raise ValueError("dual_aiv_dispatch requires a mixed external kernel")
++    unknown = [
++        name for name in ctx.param_names if name not in ctx.tensor_meta and name not in ctx.scalar_dtypes
++    ]
++    if unknown:
++        raise ValueError(
++            f"External kernel {ctx.func_name!r}: cannot infer parameters {unknown}; "
++            "pass tensors or explicitly typed runtime scalars"
++        )
+     if set(spec.parameter_access) != set(ctx.tensor_meta) or any(
+         access not in ("read", "write", "read_write") for access in spec.parameter_access.values()
+     ):
+diff --git a/tests/ut/jit/test_extern_kernel.py b/tests/ut/jit/test_extern_kernel.py
+index 08a128f2..80819187 100644
+--- a/tests/ut/jit/test_extern_kernel.py
++++ b/tests/ut/jit/test_extern_kernel.py
+@@ -526,7 +526,59 @@ def test_foreign_scalar_argument_inherits_caller_dtype(tmp_path):
+     _generate_external_config(entry, (torch.empty(1, 32), 2.5), tmp_path)
+ 
+ 
+-def test_foreign_different_call_shapes_are_rejected(tmp_path):
++def test_foreign_mx_scale_storage_view_preserves_dtype_and_nd_layout(tmp_path):
++    def foreign_body(scale, out):
++        pass
++
++    leaf = _ForeignKernel(foreign_body, _write_kernel(tmp_path), {"scale": "read", "out": "write"})
++
++    @pl.jit
++    def entry(scale: pl.Tensor[[8, 16], pl.FP8E8M0, pl.MX_B_NN], out: pl.Out[pl.Tensor]):
++        backing = pl.tensor.view(scale, [1, 128], layout=pl.ND)
++        leaf(backing, out)
++        return out
++
++    args = (torch.empty(8, 16, dtype=torch.float8_e8m0fnu), torch.empty(1, 128))
++    source = _specialize(entry, *args)
++    assert "scale: pl.Tensor[[1, 128], pl.FP8E8M0]" in source
++    _generate_external_config(entry, args, tmp_path)
++
++
++def test_foreign_scalar_argument_inherits_loop_index_dtype(tmp_path):
++    def foreign_body(out, page):
++        pass
++
++    leaf = _ForeignKernel(foreign_body, _write_kernel(tmp_path), {"out": "write"})
++
++    @pl.jit
++    def entry(out: pl.Out[pl.Tensor]) -> pl.Tensor:
++        for page in pl.parallel(2):
++            leaf(out, page)
++        return out
++
++    source = _specialize(entry, torch.empty(1, 32))
++    assert "page: pl.Scalar[pl.INDEX]" in source
++    _generate_external_config(entry, (torch.empty(1, 32),), tmp_path)
++
++
++def test_foreign_rebound_loop_index_does_not_keep_index_dtype(tmp_path):
++    def foreign_body(out, page):
++        pass
++
++    leaf = _ForeignKernel(foreign_body, _write_kernel(tmp_path), {"out": "write"})
++
++    @pl.jit
++    def entry(out: pl.Out[pl.Tensor], scale: pl.Scalar[pl.FP32]) -> pl.Tensor:
++        for page in pl.parallel(2):
++            page = scale
++            leaf(out, page)
++        return out
++
++    with pytest.raises(ValueError, match="page"):
++        _specialize(entry, torch.empty(1, 32), 0.5)
++
++
++def test_foreign_different_call_shapes_are_specialized(tmp_path):
+     def foreign_body(out):
+         pass
+ 
+@@ -537,8 +589,13 @@ def test_foreign_different_call_shapes_are_rejected(tmp_path):
+         leaf(x)
+         leaf(y)
+ 
+-    with pytest.raises(ValueError, match="same shapes, dtypes and layouts"):
+-        entry.specialize(torch.empty(1, 32), torch.empty(1, 64))
++    args = (torch.empty(1, 32), torch.empty(1, 64))
++    _, _, tensor_meta, scalars, constexpr, dynamic = entry._bind_args(args, {})
++    contexts = entry._build_contexts(tensor_meta, scalars, constexpr, dynamic)
++    foreign = [ctx for ctx in contexts if ctx.external_parameter_access is not None]
++    assert {ctx.tensor_meta["out"].shape for ctx in foreign} == {(1, 32), (1, 64)}
++    assert len({ctx.func_name for ctx in foreign}) == 2
++    assert pl.parse(Specializer("_jit_foreign_shapes", contexts).specialize()) is not None
+ 
+ 
+ def test_foreign_void_call_cannot_be_used_as_value(tmp_path):

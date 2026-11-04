@@ -1,0 +1,26 @@
+module attributes {pto.target_arch = "a5"} {
+  func.func @gate_pre_route(%arg0: !pto.ptr<i32>, %arg1: !pto.ptr<f32>, %arg2: index) attributes {pto.kernel_kind = #pto.kernel_kind<vector>} {
+  %c80_index = arith.constant 80 : index
+  %c6_index = arith.constant 6 : index
+  %c1_index = arith.constant 1 : index
+  %c0_index = arith.constant 0 : index
+  %c0_i32 = arith.constant 0 : i32
+  %cst_5 = arith.constant 0.00000000000000000e+00 : f32
+  %indices__ssa_v0_view = pto.make_tensor_view %arg0, shape = [%c80_index, %c6_index], strides = [%c6_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xi32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/gate.py":107:5)
+  %weights__ssa_v0_view = pto.make_tensor_view %arg1, shape = [%c80_index, %c6_index], strides = [%c6_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/gate.py":107:5)
+  scf.for %zt_inline90__idx_v0 = %c0_index to %c80_index step %c1_index {
+    %0 = arith.cmpi sle, %arg2, %zt_inline90__idx_v0 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/gate.py":109:13)
+    scf.if %0 {
+      scf.for %zk_inline91__idx_v0 = %c0_index to %c6_index step %c1_index {
+        %flat_offset_mul = arith.muli %zt_inline90__idx_v0, %c6_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/gate.py":112:21)
+        %flat_offset = arith.addi %flat_offset_mul, %zk_inline91__idx_v0 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/gate.py":112:21)
+        pto.store %c0_i32, %arg0[%flat_offset] : !pto.ptr<i32>, i32 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/gate.py":112:21)
+        %2 = arith.muli %zt_inline90__idx_v0, %c6_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/gate.py":114:21)
+        %3 = arith.addi %2, %zk_inline91__idx_v0 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/gate.py":114:21)
+        pto.store %cst_5, %arg1[%3] : !pto.ptr<f32>, f32 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/gate.py":114:21)
+      }
+    }
+  }
+  return
+  }
+}

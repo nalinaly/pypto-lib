@@ -1,0 +1,241 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "x_mixed",
+      "direction": "In",
+      "shape": [
+        80,
+        5120
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "norm_w",
+      "direction": "In",
+      "shape": [
+        5120
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "gate_w",
+      "direction": "In",
+      "shape": [
+        384,
+        5120
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "gate_bias",
+      "direction": "In",
+      "shape": [
+        384
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "layer_id",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    },
+    {
+      "name": "tid2eid",
+      "direction": "In",
+      "shape": [
+        129280,
+        6
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "input_ids",
+      "direction": "In",
+      "shape": [
+        80
+      ],
+      "dtype": "int64",
+      "layout": "ND"
+    },
+    {
+      "name": "x_norm_mx",
+      "direction": "Out",
+      "shape": [
+        80,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "x_norm_scale",
+      "direction": "Out",
+      "shape": [
+        1,
+        12800
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "indices",
+      "direction": "Out",
+      "shape": [
+        80,
+        6
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "weights",
+      "direction": "Out",
+      "shape": [
+        80,
+        6
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "x_mixed",
+      "direction": "In",
+      "shape": [
+        80,
+        5120
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "norm_w",
+      "direction": "In",
+      "shape": [
+        5120
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "gate_w",
+      "direction": "In",
+      "shape": [
+        384,
+        5120
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "gate_bias",
+      "direction": "In",
+      "shape": [
+        384
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "layer_id",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    },
+    {
+      "name": "tid2eid",
+      "direction": "In",
+      "shape": [
+        129280,
+        6
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "input_ids",
+      "direction": "In",
+      "shape": [
+        80
+      ],
+      "dtype": "int64",
+      "layout": "ND"
+    },
+    {
+      "name": "x_norm_mx",
+      "direction": "Out",
+      "shape": [
+        80,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "x_norm_scale",
+      "direction": "Out",
+      "shape": [
+        1,
+        12800
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "indices",
+      "direction": "Out",
+      "shape": [
+        80,
+        6
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "weights",
+      "direction": "Out",
+      "shape": [
+        80,
+        6
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    }
+  ],
+  "num_return_types": 4,
+  "return_aliases": [
+    8,
+    9,
+    10,
+    11
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

@@ -1,0 +1,127 @@
+"""Capture local router validation and generated sources without checksums."""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-gate-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-04-gate"
+archive.mkdir(parents=True, exist_ok=True)
+inventory = []
+
+
+def clean(text):
+    return text.replace(str(workspace), "<workspace>").replace(str(workspace.parent), "<user-home>")
+
+
+def capture(source, target, binary=False):
+    target = archive / target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(target, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        target.write_text(clean(source.read_text()), encoding="utf-8")
+    inventory.append({
+        "path": str(target.relative_to(archive)),
+        "source": str(source.relative_to(workspace)),
+        "bytes": target.stat().st_size,
+        "encoding": "gzip" if binary else "utf-8",
+    })
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        source = directory / name
+        if source.is_file():
+            capture(source, f"generated/{label}/{name}.txt")
+    for folder in ("orchestration", "kernels", "ptoas"):
+        for source in sorted((directory / folder).rglob("*")):
+            if source.is_file() and source.suffix in (".cpp", ".pto", ".h", ".hpp"):
+                capture(source, Path("generated") / label / f"{source.relative_to(directory)}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        seen = set()
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            parent = Path(entry).parent
+            if parent in seen:
+                continue
+            seen.add(parent)
+            for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                source = parent / filename
+                if source.is_file():
+                    capture(source, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+for name in ("baseline-gate71.log", "input-and-shared.log", "router.log", "gate80.log", "layer0-ep2.log",
+             "compile-input.log", "compile-full.log", "static-checks.log"):
+    source = work / name
+    if source.is_file():
+        capture(source, f"validation/{name}.txt")
+for name in ("gate.py", "gate_dsl.py", "mxfp8_dsl.py", "expert_shared_dsl.py"):
+    capture(model / "models/deepseek_v4_1_flash" / name, f"model-snapshot/{name}.txt")
+capture(work / "gate-before.py", "model-snapshot/gate-before.py.txt")
+generated("gate80", model / "build_output/_jit_l2_gate_20261104_155342_kya2cou0", True)
+generated("quant16", model / "build_output/_jit_validate_gate_quant_20261104_155105_m2699k2a", True)
+generated("routes", model / "build_output/_jit_validate_gate_routes_20261104_155111_todu0163", True)
+layer = model / "build_output/_jit_l3_decode_layer_20261104_155533_vmwz7m2u"
+for source in (layer / "kernel_config.py", layer / "orchestration/l3_decode_layer.cpp",
+               layer / "next_levels/l2_decode_layer/kernel_config.py",
+               layer / "next_levels/l2_decode_layer/orchestration/l2_decode_layer.cpp"):
+    if source.is_file():
+        capture(source, Path("generated/layer0-ep2") / f"{source.relative_to(layer)}.txt")
+capture(Path(__file__).resolve(), "workflow/archive.py.txt")
+
+
+def revision(path):
+    return subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
+
+
+communication_files = ["decode_moe.py", "expert_routed.py", "decode_layer.py"]
+unchanged = subprocess.run(
+    ["git", "diff", "--quiet", "HEAD", "--", *[f"models/deepseek_v4_1_flash/{p}" for p in communication_files]],
+    cwd=model,
+).returncode == 0
+layer_text = (work / "layer0-ep2.log").read_text()
+layer_outputs = len(re.findall(r"^\[RUN\]   '[^']+' PASS", layer_text, re.MULTILINE))
+if "[RUN] PASS" not in layer_text or layer_outputs != 16 or not unchanged:
+    raise RuntimeError("The layer regression and communication-source review must pass before capture")
+summary = {
+    "status": "PASS",
+    "delivery": "Local only on dsv4.1-dsl; no commit or push",
+    "model_base": revision(model),
+    "pypto_revision": revision(workspace / "issue75-env/pypto-pr"),
+    "installed_dsl_source": revision(workspace / "cannbot-dsl-dev"),
+    "official_samples_revision": revision(workspace / "cannbot-dsl"),
+    "samples_refresh": "Official shallow checkout updated; execution compiler unchanged",
+    "replaced_tasks": {"rms_norm": "dsl_gate_norm", "x_norm_mx_quant": "dsl_gate_quant",
+                       "gate": "dsl_gate", "route_sort": "dsl_route_sort"},
+    "communication_sources_unchanged": unchanged,
+    "communication_sources_reviewed": communication_files,
+    "checks": [
+        {"case": "Original gate, 71 active tokens", "result": "PASS", "task": "task_20261104_153846_307585432"},
+        {"case": "Normalization/quantization stage, active 71 and 0; shared quantization edges",
+         "result": "PASS", "task": "task_20261104_154429_33386559112"},
+        {"case": "Quantization bytes; stable TopK, unbiased weights, active 7 and 0; full gate active 71 and 0",
+         "result": "PASS", "task": None},
+        {"case": "Full gate, 80 active tokens", "result": "PASS", "task": "task_20261104_155326_383299515214"},
+        {"case": "Layer 0, TP1/EP2, 72 active tokens per rank", "result": "PASS", "outputs": layer_outputs,
+         "devices": [6, 7], "task": "task_20261104_155325_382860317541"},
+    ],
+    "limits": ["A5, generated inputs and CPU Torch goldens", "No prefill or full-checkpoint validation",
+               "No performance study; original precision thresholds retained"],
+}
+match = re.search(r"task_\d+_\d+_\d+", (work / "router.log").read_text())
+summary["checks"][2]["task"] = match.group(0)
+(archive / "validation-summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+(archive / "artifact-manifest.json").write_text(json.dumps(inventory, indent=2) + "\n")
+print(f"Captured {len(inventory)} files, {sum(item['bytes'] for item in inventory)} bytes")

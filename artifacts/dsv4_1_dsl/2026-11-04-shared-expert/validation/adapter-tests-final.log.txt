@@ -1,0 +1,27 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................                                 [100%]
+=============================== warnings summary ===============================
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape0-second_dtype0-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape1-second_dtype1-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape2-second_dtype2-BackendType.Ascend950]
+tests/ut/jit/test_extern_kernel.py::test_single_core_extern_include_dirs_reach_kernel_descriptor
+tests/ut/jit/test_extern_kernel.py::test_mixed_extern_include_dirs_reach_both_kernel_descriptors
+  <string>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape0-second_dtype0-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape1-second_dtype1-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape2-second_dtype2-BackendType.Ascend950]
+  <string>:9: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_cannbotdsl_adapter.py::test_discovery_without_provider_hook[BackendType.Ascend950]
+  <jit:entry>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_extern_kernel.py::test_mixed_extern_include_dirs_reach_both_kernel_descriptors
+tests/ut/jit/test_extern_kernel.py::test_mixed_extern_can_dispatch_both_aiv_lanes
+tests/ut/jit/test_extern_kernel.py::test_foreign_call_infers_outputs_and_emits_task[mixed]
+  <string>:8: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+40 passed, 12 warnings in 5.99s

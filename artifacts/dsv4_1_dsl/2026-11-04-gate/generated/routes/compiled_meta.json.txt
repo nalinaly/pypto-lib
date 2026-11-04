@@ -1,0 +1,111 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "scores",
+      "direction": "In",
+      "shape": [
+        8,
+        384
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "biased",
+      "direction": "In",
+      "shape": [
+        8,
+        384
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "indices",
+      "direction": "Out",
+      "shape": [
+        8,
+        6
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "weights",
+      "direction": "Out",
+      "shape": [
+        8,
+        6
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "scores",
+      "direction": "In",
+      "shape": [
+        8,
+        384
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "biased",
+      "direction": "In",
+      "shape": [
+        8,
+        384
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "indices",
+      "direction": "Out",
+      "shape": [
+        8,
+        6
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "weights",
+      "direction": "Out",
+      "shape": [
+        8,
+        6
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "num_return_types": 2,
+  "return_aliases": [
+    2,
+    3
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}
