@@ -1,0 +1,36 @@
+# Copyright (c) PyPTO Contributors.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
+
+"""保留替换前的 Indexer Key 投影，用于设备结果逐位对照。"""
+
+import pypto.language as pl
+from config import FLASH
+from gemm import gemm_bf16_to_bf16
+
+HEAD_DIM = FLASH.head_dim
+INDEX_DIM = FLASH.index_head_dim
+INDEX_PROJ_N_TILE = 128
+INDEX_PROJ_K_TILE = 256
+
+
+@pl.jit.inline(auto_scope=False)
+def project_index_key(
+    source: pl.Tensor,
+    weight: pl.Tensor[[HEAD_DIM, INDEX_DIM], pl.BF16, pl.NZ],
+    output: pl.Tensor,
+    num_tokens: pl.Scalar[pl.INT32],
+    ready: pl.Scalar[pl.TASK_ID],
+    max_workers: pl.constexpr,
+):
+    result, completed = gemm_bf16_to_bf16(
+        source, weight, output, num_tokens, ready,
+        width=HEAD_DIM, output_width=INDEX_DIM, n_tile=INDEX_PROJ_N_TILE, k_tile=INDEX_PROJ_K_TILE,
+        workers=max_workers, name_hint='proj_idx_k',
+    )
+    return completed

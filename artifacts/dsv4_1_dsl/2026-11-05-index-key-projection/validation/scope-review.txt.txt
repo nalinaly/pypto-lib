@@ -1,0 +1,5 @@
+decode_indexer.py：只移除原 Key 投影和专用分块常量，其他函数体完全不变。
+decode_c1a_full.py：只更新 Key 投影导入，模型函数体和比较器完全不变。
+compressor_dsl.py：仅将设备 GEMM 提取为共用基础实现，调度和所有既有比较器不变。
+通用 PyPTO GEMM 保留给 prefill 的现有调用者，本轮不修改 prefill Indexer。
+整层编排、通信任务及整层验收阈值未修改。

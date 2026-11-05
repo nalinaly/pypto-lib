@@ -1,0 +1,24 @@
+# Kernel and Orchestration Configuration
+
+from pathlib import Path
+
+from simpler.task_interface import ArgDirection as _D
+
+_ROOT_DIR = Path(__file__).parent
+
+# Runtime configuration for tensormap_and_ringbuffer.
+# AICPU thread count 0 selects the runtime's architecture default (a2a3: 4; a5: 5).
+RUNTIME_CONFIG = {
+	"runtime": "tensormap_and_ringbuffer",
+	"aicpu_thread_num": 0,
+}
+
+ORCHESTRATION = {
+	"source": str(_ROOT_DIR / "orchestration" / "validate_projection.cpp"),
+	"function_name": "aicpu_orchestration_entry",
+	"signature": [_D.IN, _D.IN, _D.INOUT],
+}
+
+KERNELS = [
+	{"func_id": 0, "name": "project_index_key_tile", "source": '<workspace>/artifacts/dsv41-semantic-review/jit-cache-0.8.1/42c6e2a53835dc23073de2cdeff8c29e5403d8e430b2ff779b9fe42180f86c89/entry.cpp', "core_type": "aic", "external": True, "extra_include_dirs": ['/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/asc/include', '/usr/local/Ascend/cann-9.3.0/aarch64-linux/include', '<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/include'], "signature": [_D.IN, _D.IN, _D.OUT]},
+]

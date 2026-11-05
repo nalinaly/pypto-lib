@@ -1,0 +1,120 @@
+"""归档 Indexer Key 投影的源码、固定数据、生成代码和验证结果。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-index-key-projection-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-05-index-key-projection"
+inventory = []
+
+
+def capture(source, target, binary=False):
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        value = source.read_text().replace(str(workspace), "<workspace>")
+        value = value.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n")
+    inventory.append({"path": str(destination.relative_to(archive)),
+                      "source": str(source.relative_to(workspace)), "bytes": destination.stat().st_size,
+                      "encoding": "gzip" if binary else "utf-8"})
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        source = directory / name
+        if source.is_file():
+            capture(source, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*.cpp")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    for source in sorted((directory / "kernels").rglob("*.cpp")):
+        if "proj_idx_k" in source.name:
+            capture(source, f"generated/{label}/kernels/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name.startswith(("project_index_key_tile", "project_compressor_tile")):
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+def require_pass(filename, count):
+    text = (work / filename).read_text()
+    if len(re.findall(r"^\[RUN\] PASS", text, re.MULTILINE)) != count:
+        raise RuntimeError(filename + " 的通过数量不符")
+    return text
+
+
+validation = require_pass("projection-validation.log", 15)
+layer_log = require_pass("layer2-ep2.log", 1)
+c1a_log = require_pass("c1a-compile.log", 1)
+prefill_log = require_pass("prefill-compile.log", 1)
+layer_outputs = len(re.findall(r"^\[RUN\]   '[^']+' PASS", layer_log, re.MULTILINE))
+if layer_outputs != 16:
+    raise RuntimeError("整层必须通过全部 16 项输出")
+
+archive.mkdir(parents=True, exist_ok=True)
+for filename in ("projection-validation.log", "layer2-ep2.log", "c1a-compile.log", "prefill-compile.log",
+                 "scope-review.txt", "compile-raw-storage.log", "equivalence-compile.log", "compressor-compile.log"):
+    capture(work / filename, f"validation/{filename}.txt")
+capture(work / "compile.log", "diagnostics/nz-view-contract.log.txt")
+for name in ("bf16_projection_dsl", "index_projection_dsl", "compressor_dsl", "decode_indexer", "decode_c1a_full"):
+    capture(model / "models/deepseek_v4_1_flash" / (name + ".py"), f"model-snapshot/{name}.py.txt")
+for filename in ("baseline_projection.py", "compare_projection.py", "run_layer_frozen.py", "archive.py"):
+    capture(work / filename, f"workflow/{filename}.txt")
+capture(work / "compressor_dsl_before.py", "model-snapshot/compressor_dsl_before.py.txt")
+
+directories = list(dict.fromkeys(re.findall(r"^\[产物\] (.+)$", validation, re.MULTILINE)))
+for index, directory in enumerate(directories):
+    generated(f"case-{index}", Path(directory), fixtures=True)
+layer = Path(re.search(r"see (.+?/_jit_l3_decode_layer_[^/]+)/report/", layer_log)[1])
+generated("layer2-ep2", layer)
+generated("layer2-ep2/chip", layer / "next_levels/l2_decode_layer")
+c1a = Path(re.search(r"see (.+?/_jit_l3_decode_c1a_full_[^/]+)/report/", c1a_log)[1])
+generated("c1a-compile", c1a)
+prefill = Path(re.search(r"see (.+?/_jit_l3_prefill_c2a_full_[^/]+)/report/", prefill_log)[1])
+generated("prefill-compile", prefill)
+
+
+def revision(path):
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=path, text=True).strip()
+
+
+summary = {
+    "状态": "PASS", "分支": "dsv4.1-dsl", "模型基线": revision(model),
+    "PyPTO版本": revision(workspace / "issue75-env/pypto-pr"),
+    "DSL版本": "0.8.1", "DSL源码": revision(workspace / "cannbot-dsl-dev"),
+    "替换任务": "proj_idx_k", "新任务": "dsl_proj_idx_k",
+    "计算契约": "BF16 ND latent [T,512] 与 BF16 NZ 权重 [512,128] 相乘，M16/N128/K256，FP32 顺序累加，最终舍入为 BF16。",
+    "调度": "PyPTO/simpler 派发互不重叠的行块；有界完成句柄池保留输入就绪和后续缓存发布依赖。",
+    "代码复用": "Indexer 和已有 C2A 压缩投影共用 BF16/NZ 设备 GEMM 基础实现，分别保留各自分块和输出类型。",
+    "验证": {
+        "独立投影": "5 组通过：BF16 正负舍入中点、17/15 尾部、17/0、80/72 随机输入、145/143 完成句柄复用。",
+        "原核对照": "相同 5 组输入上，新 DSL 与原 PyPTO 投影逐位一致，含非有效尾部和输出保护行。",
+        "C2A回归": "共用设备实现后的 5 组既有投影校验全部通过，原比较器不变。",
+        "整层": "C2A layer2 EP2 的 16 项输出全部通过原有比较器，复用上一轮固定输入和 CPU 参考输出。",
+        "整层误差": "x_next rel_l2=0.021193206，max_abs=0.65664196，与上一轮一致。",
+        "C1A": "共享 decode 调用方编译通过；本次未运行完整 C1A 设备用例。",
+        "prefill": "受共用 C2A GEMM 提取影响的 TP1 调用方编译通过；本次未运行完整 prefill 设备用例。",
+    },
+    "通信修改": False, "整层阈值修改": False, "量化修改": False, "框架修改": False,
+    "后续范围": "prefill Indexer 仍使用原 PyPTO GEMM；Key 归一化、旋转和索引缓存发布尚未迁移。",
+    "固定整层数据来源": "build_output/_jit_l3_decode_layer_20261105_160121_u27otki0/data；原始数据由 decode_layer.py 的 layer-id=2、seed=0 生成。",
+    "归档范围": "保留全部用例日志、代表性固定数据、生成代码和原核对照脚本；不额外复制整层大规模权重。",
+    "files": inventory,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"归档 {len(inventory)} 项，大小 {sum(item['bytes'] for item in inventory)} 字节")

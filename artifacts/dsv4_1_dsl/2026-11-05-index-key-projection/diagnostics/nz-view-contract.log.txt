@@ -1,0 +1,15 @@
+[INDEX_KEY_DSL] 行数=1 有效行=1 类型=ties
+[RUN] compile ...
+[RUN] compile done (0.66s)
+Error: pl.tensor operation 'view': tensor.view does not support an NZ source: its dims are a fractal decomposition, so re-viewing them would break the fractal addressing. Slice the NZ tensor directly.
+  --> <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/index_projection_dsl.py:53:5
+   |
+51 |     rows = pl.tensor.dim(source, 0)
+52 |     active = pl.min(rows, pl.max(pl.cast(num_tokens, pl.INDEX), 0))
+53 |     raw_weight = pl.tensor.view(weight, [INDEX_DIM // 16, HEAD_DIM * 16], layout=pl.ND)
+   |     ^^^^^^^^^^
+54 |     completed = pl.array.create(max_workers, pl.TASK_ID)
+55 |     for slot in pl.range(max_workers):
+   |
+
+note: run with `PTO_BACKTRACE=1` environment variable to display a backtrace.

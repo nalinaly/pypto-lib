@@ -1,0 +1,11 @@
+[C2A-HC] mode=full tokens=48 requests=6 TP=1 DP=1 case=mixed seed=17 devices=[0]
+[FIXTURE] c2a tokens=48 requests=6 mode=prefill case=mixed lengths=[11, 8, 8, 8, 8, 5] prefixes=[0, 1, 64, 128, 0, 255] max_compressed_len=130 window_pages=19 compressed_pages=25 index_block_table=(6, 4)
+[RUN] compile ...
+2026-11-05 18:36:34.325 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'projected_result' in function 'prefill_index_key_project' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/prefill_indexer.py:1097:5
+2026-11-05 18:36:34.325 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'projected_tid' in function 'prefill_index_key_project' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/prefill_indexer.py:1097:5
+2026-11-05 18:36:34.325 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'projected_result' in function 'project_index_weights' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/prefill_indexer.py:586:5
+2026-11-05 18:36:34.325 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'projected_tid' in function 'project_index_weights' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/prefill_indexer.py:586:5
+2026-11-05 18:36:36.792 I | [perf_hint] 9 hints across 9 sites; see <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_prefill_c2a_full_20261105_183634_oh3ojh70/report/perf_hints.log
+[RUN] compile done (11.41s)
+[RUN] PASS (11.41s)
+[C2A-HC] Compilation passed; device accuracy was NOT validated.

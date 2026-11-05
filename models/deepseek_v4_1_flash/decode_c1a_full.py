@@ -14,8 +14,9 @@ from qkv_proj_rope import quantize_projection_input, q_proj_rope, kv_proj, windo
 from o_proj import o_proj
 from decode_indexer import (
     select_candidate_block_pool, c1a_index, score_select_paged,
-    publish_index_rows, project_index_key,
+    publish_index_rows,
 )
+from index_projection_dsl import project_index_key
 from sparse_attention import attend_packed
 from hc import hc_project, hc_sinkhorn, hc_head_norm, hc_post
 from config import (

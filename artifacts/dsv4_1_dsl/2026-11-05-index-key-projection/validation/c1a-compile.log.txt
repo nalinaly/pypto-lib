@@ -1,0 +1,8 @@
+[RUN] compile ...
+2026-11-05 18:12:54.431 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'attended' in function 'attend_packed' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/sparse_attention.py:1790:9
+2026-11-05 18:12:54.431 W | [warning] [ScalarWriteLineShared] (pipeline_input) pl.write into 'pool_block_counts' from multiple concurrent task instances (dispatched from a multi-instance scope) in function '_publish_candidate_counts': the index is computed at runtime, so the compiler cannot tell whether two task instances share a 64-byte cache line. A scalar write reaches DDR a whole 64-byte line at a time, carrying the neighbouring elements as the writing core last saw them, so two task instances sharing a line silently lose each other's stores. Give each one whole 64-byte lines (16 x INT32), or issue the writes from a single instance (pl.spmd(1)). at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_indexer.py:224:9
+2026-11-05 18:12:55.269 I | [perf_hint] 6 hints across 1 site; see <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_c1a_full_20261105_181254_0dz2pug4/report/perf_hints.log
+2026-11-05 18:12:55.277 I | [perf_hint] 3 hints across 1 site; see <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_c1a_full_20261105_181254_0dz2pug4/report/perf_hints.log
+2026-11-05 18:12:55.409 I | [perf_hint] 3 hints across 3 sites; see <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_c1a_full_20261105_181254_0dz2pug4/report/perf_hints.log
+[RUN] compile done (9.94s)
+[RUN] PASS (9.94s)

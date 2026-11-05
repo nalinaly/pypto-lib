@@ -12,7 +12,7 @@ from pathlib import Path
 
 from pypto.runtime import pto_isa_include_dir
 
-from gemm import gemm_bf16_to_bf16
+from index_projection_dsl import project_index_key
 import pypto.language as pl
 from config import (
     B_DYN, FLASH, INDEX_BLOCKS_DYN, INDEX_CACHE_GROUP, INDEX_POOL_BLOCKS_DYN,
@@ -35,10 +35,8 @@ CANDIDATE_PAIR_WIDTH = 2 * CANDIDATE_TOPK_BLOCKS
 _SCALE_COUNT = INDEX_DIM // INDEX_CACHE_GROUP
 
 # tiling
-INDEX_PROJ_N_TILE = 128
 INDEX_WEIGHT_K_SPLIT_TILE = 4
 INDEX_WEIGHT_K_TILE = 256
-INDEX_PROJ_K_TILE = 256
 
 
 CANDIDATE_WORKER_TILE = 12
@@ -759,23 +757,6 @@ def c1a_index(
     )
     scores = pl.create_tensor([tokens, score_width], dtype=pl.FP32)
     return query, query_scale, weights, scores, query_tid, weights_tid
-
-
-@pl.jit.inline(auto_scope=False)
-def project_index_key(
-    source: pl.Tensor,
-    weight: pl.Tensor[[HEAD_DIM, INDEX_DIM], pl.BF16, pl.NZ],
-    output: pl.Tensor,
-    num_tokens: pl.Scalar[pl.INT32],
-    ready: pl.Scalar[pl.TASK_ID],
-    max_workers: pl.constexpr,
-):
-    result, completed = gemm_bf16_to_bf16(
-        source, weight, output, num_tokens, ready,
-        width=HEAD_DIM, output_width=INDEX_DIM, n_tile=INDEX_PROJ_N_TILE, k_tile=INDEX_PROJ_K_TILE,
-        workers=max_workers, name_hint='proj_idx_k',
-    )
-    return completed
 
 
 @pl.jit.inline(auto_scope=False)

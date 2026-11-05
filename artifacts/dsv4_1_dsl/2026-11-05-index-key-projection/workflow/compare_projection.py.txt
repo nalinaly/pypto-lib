@@ -1,0 +1,57 @@
+"""对相同输入执行原 PyPTO 核与 DSL 核，并逐位比较投影结果。"""
+
+import argparse
+from dataclasses import replace
+
+import pypto.language as pl
+from golden import ratio_allclose, run
+from baseline_projection import project_index_key as baseline
+from index_projection_dsl import HEAD_DIM, INDEX_DIM, build_projection_specs, golden_projection
+from index_projection_dsl import project_index_key, projection_comparator
+
+
+@pl.jit
+def compare_program(
+    source: pl.Tensor, weight: pl.Tensor[[HEAD_DIM, INDEX_DIM], pl.BF16, pl.NZ],
+    output: pl.InOut[pl.Tensor], reference: pl.InOut[pl.Tensor], num_tokens: pl.Scalar[pl.INT32],
+):
+    rows = pl.tensor.dim(source, 0)
+    target = pl.slice(output, [rows, INDEX_DIM], [0, 0])
+    original = pl.slice(reference, [rows, INDEX_DIM], [0, 0])
+    ready = pl.system.task_dummy(deps=[])
+    baseline(source, weight, original, num_tokens, ready, max_workers=8)
+    project_index_key(source, weight, target, num_tokens, ready, max_workers=8)
+    return output, reference
+
+
+def golden(tensors):
+    golden_projection(tensors)
+    tensors["reference"].copy_(tensors["output"])
+
+
+def compare_reference(actual, expected, *, actual_outputs, **kwargs):
+    exact = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
+    return exact(actual, actual_outputs["reference"], actual_outputs=actual_outputs, **kwargs)
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--device", type=int, default=0)
+parser.add_argument("--compile-only", action="store_true")
+args = parser.parse_args()
+exact = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
+for rows, active, kind in ((1, 1, "ties"), (17, 15, "layout"), (17, 0, "layout"), (80, 72, "random"), (145, 143, "layout")):
+    print(f"[INDEX_KEY_原核对照] 行数={rows} 有效行={active} 类型={kind}", flush=True)
+    specs = build_projection_specs(rows, active, kind)
+    specs.insert(3, replace(specs[2], name="reference"))
+    result = run(
+        fn=compare_program,
+        specs=specs,
+        golden_fn=golden,
+        compare_fn={"output": compare_reference, "reference": projection_comparator if kind == "random" else exact},
+        config=dict(backend_type="a5", execution_mode=False, device_id=args.device),
+        compile_only=args.compile_only,
+        save_data=True,
+    )
+    if not result.passed:
+        raise SystemExit(result.error or 1)
+    print(f"[产物] {result.work_dir}", flush=True)

@@ -1,0 +1,114 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "source",
+      "direction": "In",
+      "shape": [
+        145,
+        512
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "weight",
+      "direction": "In",
+      "shape": [
+        512,
+        128
+      ],
+      "dtype": "bfloat16",
+      "layout": "NZ"
+    },
+    {
+      "name": "output",
+      "direction": "InOut",
+      "shape": [
+        146,
+        128
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "reference",
+      "direction": "InOut",
+      "shape": [
+        146,
+        128
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "source",
+      "direction": "In",
+      "shape": [
+        145,
+        512
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "weight",
+      "direction": "In",
+      "shape": [
+        1,
+        8,
+        32,
+        16,
+        16
+      ],
+      "dtype": "bfloat16",
+      "layout": "NZ"
+    },
+    {
+      "name": "output",
+      "direction": "InOut",
+      "shape": [
+        146,
+        128
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "reference",
+      "direction": "InOut",
+      "shape": [
+        146,
+        128
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "num_return_types": 2,
+  "return_aliases": [
+    2,
+    3
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

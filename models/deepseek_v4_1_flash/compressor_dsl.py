@@ -9,9 +9,9 @@
 """使用 CANNBotDSL 实现 BF16 C2A 压缩投影，并以 FP32 累加。"""
 
 import cannbotdsl as cb
-from cannbotdsl.ring_buffer import RingBuffer
 import pypto.language as pl
 
+from bf16_projection_dsl import project_bf16_nz
 from config import FLASH as M
 
 
@@ -32,26 +32,7 @@ def project_compressor_tile(
     column: cb.ScalarValue, active_rows: cb.ScalarValue,
 ):
     """连续执行 K256 BF16 Cube 累加，投影一个 M80/N64 分块。"""
-    a_l1 = RingBuffer(cb.MemLoc.L1, cb.dtypes.bfloat16, cb.make_layout((ROW_TILE, REDUCTION_TILE)), depth=1)
-    b_l1 = RingBuffer(cb.MemLoc.L1, cb.dtypes.bfloat16, cb.make_layout((REDUCTION_TILE, COLUMN_TILE)), depth=1)
-    a_l0 = RingBuffer(cb.MemLoc.L0A, cb.dtypes.bfloat16, cb.make_layout((ROW_TILE, REDUCTION_TILE)), depth=1)
-    b_l0 = RingBuffer(cb.MemLoc.L0B, cb.dtypes.bfloat16, cb.make_layout((COLUMN_TILE, REDUCTION_TILE)), depth=1)
-    c_l0 = RingBuffer(cb.MemLoc.L0C, cb.dtypes.float32, cb.make_layout((ROW_TILE, COLUMN_TILE)), depth=1)
-    accumulator = c_l0.next_write()
-    for k in cb.range(D // REDUCTION_TILE):
-        a = a_l1.next_write()
-        b = b_l1.next_write()
-        cb.mem_copy(a, cb.tile_slice(source[0:active_rows, None], (ROW_TILE, REDUCTION_TILE), (0, k)))
-        # NZ BF16 分块布局：[N/16, K/16, 16, 16]。
-        raw_layout = cb.make_layout((COLUMN_TILE // 16, REDUCTION_TILE * 16))
-        b_raw = cb.from_tensor(b, layout=raw_layout, data_format="nd")
-        cb.mem_copy(b_raw, cb.tile_slice(weight, (COLUMN_TILE // 16, REDUCTION_TILE * 16), (column, k)))
-        cb.mem_copy(a_l0.next_write(), a_l1.next_read())
-        cb.mem_copy(b_l0.next_write(), b_l1.next_read().permute(1, 0))
-        cb.matmul(accumulator, a_l0.next_read(), b_l0.next_read(), init=k == 0)
-    result = c_l0.next_read()
-    valid = cb.from_tensor(result, layout=cb.make_layout((active_rows, COLUMN_TILE)), physical_layout=result.physical_layout)
-    cb.mem_copy(output[0:active_rows, None], valid)
+    project_bf16_nz(source, weight, output, column, active_rows, ROW_TILE, COLUMN_TILE, REDUCTION_TILE)
 
 
 @pl.jit.inline(auto_scope=False)
