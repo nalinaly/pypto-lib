@@ -1,0 +1,33 @@
+[RUN] compile ...
+[RUN] compile done (2.00s)
+Traceback (most recent call last):
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_c1a_full.py", line 646, in <module>
+    result = run(
+             ^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1565, in _run_pipeline
+    compiled = compile_step(cfg, compile_state)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1741, in _compile
+    return fn.compile(*dummy_args, config=cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1432, in compile
+    compiled, _ordered_args, _run_config = self._resolve_compiled(args, kwargs, allow_signature_mode=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1168, in _resolve_compiled
+    prepared_contexts = self._build_contexts(
+                        ^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1870, in _build_contexts
+    apply_external_spec(contexts[-1], dep._external_builder(contexts[-1]))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 266, in build
+    return _build(target, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 209, in _build
+    raise TypeError(
+TypeError: Cannot infer PyPTO DSL parameter 'weight_scale'; pass a tensor or typed runtime scalar

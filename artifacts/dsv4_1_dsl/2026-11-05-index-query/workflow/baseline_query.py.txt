@@ -1,0 +1,29 @@
+"""保留迁移前的原生 Query MIX 核及十六分块调度，用于设备对照。"""
+
+from pathlib import Path
+
+import pypto.language as pl
+from pypto.runtime import pto_isa_include_dir
+
+
+@pl.jit.extern(core_type="mixed", aic_source=Path(__file__).parent / "idx_q.cpp",
+               aiv_source=Path(__file__).parent / "idx_q.cpp", dual_aiv_dispatch=True,
+               include_dirs=(pto_isa_include_dir(),))
+def native_query(
+    payload: pl.Tensor, weight: pl.Tensor, activation_scale: pl.Tensor, weight_scale: pl.Tensor,
+    cosine: pl.Tensor, sine: pl.Tensor, output: pl.Out[pl.Tensor], output_scale: pl.Out[pl.Tensor],
+    num_tokens: pl.Scalar[pl.INT32],
+) -> pl.Tensor:
+    """原生 AIC 投影后经片上传递，由两个 AIV 执行 RoPE 和量化。"""
+    ...
+
+
+@pl.jit.inline(auto_scope=False)
+def project_index_query(
+    payload: pl.Tensor, weight: pl.Tensor, activation_scale: pl.Tensor, weight_scale: pl.Tensor,
+    cosine: pl.Tensor, sine: pl.Tensor, output: pl.Tensor, output_scale: pl.Tensor,
+    num_tokens: pl.Scalar[pl.INT32], ready: pl.Scalar[pl.TASK_ID],
+):
+    with pl.spmd(16, name_hint="idx_q", deps=[ready]) as done:
+        native_query(payload, weight, activation_scale, weight_scale, cosine, sine, output, output_scale, num_tokens)
+    return done

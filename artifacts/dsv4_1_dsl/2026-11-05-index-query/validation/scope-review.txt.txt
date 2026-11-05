@@ -1,0 +1,11 @@
+替换范围：C1A、C2A decode 共用的 idx_q Query 投影、RoPE 和 FP4 量化。
+融合方式：每个 M80 × 单 head 分块使用一个 cb.kernel；simpler 一次 rt_submit_task(MixedKernels{aic,aiv,aiv}) 绑定一个 AIC 和两个 AIV，两个 AIV 各接收 40 行。生成代码中的 AIC/AIV 入口属于同一个 MIX 任务，未拆成投影与后处理两个任务。
+片上数据流：MXFP8/E8M0 从 GM 到 L1/L0A/L0B；K128 顺序累加在 FP32 L0C；通过 partition(dim=0) 直接分送到两份 UB；两次 BF16 舍入、相邻对 RoPE 及 group-32 E8M0/最近偶数 FP4 编码都在 AIV 内完成。没有 GM 投影中间张量。
+调度：PyPTO/simpler 调度独立的行和 head 分块，并用有界句柄池保留输入就绪与下游 Query 完成依赖；每个 M80 行块的 head 粒度由原生两个 head 调整为一个 head，均为完整的融合分块。
+同步：短尾和零有效行的 AIV 仍通过 DSL 自动同步协议完成片上交接；不涉及跨卡通信，现有通信任务和通知/等待契约不变。
+复用：从现有 _mx_project 提取 _mx_accumulate，原 QA/KV/QB 等 GM 投影包装继续使用；Key 与 Query 共用 index_vector_dsl.rope_quantize_row，保持 Key 原有 RMSNorm 和页内写入策略。
+视图：权重缩放值 MX_B_NN 使用 pl.tensor.view(..., layout=pl.ND) 形成原始存储视图；首版误用普通 reshape 导致整层类型推导失败，已按既有 Q 分支改正，未修改框架。
+验证：五组融合用例及相同五组原核逐字节对照；含量化正负中点、只有一个 AIV 有效的短尾、零有效 token、72 个有效 token、跨 M80 及句柄复用。payload、E8M0 scale、非有效尾部及保护行均精确比较。
+共享回归：Key 发布五组用例；QA/KV 投影三组既有用例，原比较器不变。C1A 编译；C2A layer2 EP2 固定数据与原比较器整层回归。
+依赖：沿用官方 CANNBotDSL 0.8.1 / 8274a38b 与配套 PyPTO e0c2eaa0。无需 DSL 通用能力补丁或 PyPTO 修改。
+未覆盖：完整 C1A 设备回归、整网、真实 checkpoint 和正式性能 A/B。

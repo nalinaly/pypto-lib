@@ -1,0 +1,131 @@
+"""归档 单个 DSL MIX Query 任务的源码、生成物、固定数据和校验结果。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-index-query-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-05-index-query"
+inventory = []
+
+
+def capture(source, target, binary=False):
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        value = source.read_text().replace(str(workspace), "<workspace>")
+        value = value.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n")
+    inventory.append({"path": str(destination.relative_to(archive)),
+                      "source": str(source.relative_to(workspace)), "bytes": destination.stat().st_size,
+                      "encoding": "gzip" if binary else "utf-8"})
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        source = directory / name
+        if source.is_file():
+            capture(source, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*.cpp")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    for source in sorted((directory / "kernels").rglob("*.cpp")):
+        if source.stem.startswith("native_query"):
+            capture(source, f"generated/{label}/kernels/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        saved = set()
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name.startswith(("project_query_mix", "publish_index_page", "project_q_a", "project_kv")) and entry not in saved:
+                saved.add(entry)
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+def require_pass(filename, count):
+    value = (work / filename).read_text()
+    if len(re.findall(r"^\[RUN\] PASS", value, re.MULTILINE)) != count:
+        raise RuntimeError(filename + " 的通过数量不符")
+    return value
+
+
+validation = require_pass("final-query-validation.log", 10)
+regressions = require_pass("regression-validation.log", 13)
+layer_log = require_pass("layer2-ep2.log", 1)
+c1a_log = require_pass("c1a-compile.log", 1)
+layer_outputs = len(re.findall(r"^\[RUN\]   '[^']+' PASS", layer_log, re.MULTILINE))
+if layer_outputs != 16:
+    raise RuntimeError("整层必须通过全部 16 项输出")
+
+archive.mkdir(parents=True, exist_ok=True)
+for filename in ("final-query-validation.log", "regression-validation.log", "layer2-ep2.log", "c1a-compile.log",
+                 "scope-review.txt", "pre-commit.log", "fusion-check.json"):
+    capture(work / filename, f"validation/{filename}.txt")
+capture(work / "mx-scale-view-diagnostic.log", "diagnostics/mx-scale-view.log.txt")
+for name in ("index_query_dsl", "index_vector_dsl", "index_key_dsl", "mxfp8_dsl", "decode_indexer"):
+    capture(model / "models/deepseek_v4_1_flash" / (name + ".py"), f"model-snapshot/{name}.py.txt")
+for filename in ("baseline_query.py", "compare_query.py", "idx_q.cpp", "mxfp8_projection.hpp",
+                 "run_layer_frozen.py", "archive.py", "run-case.sh", "run-regressions.sh",
+                 "run-followup.sh", "run-final-query.sh"):
+    capture(work / filename, f"workflow/{filename}.txt")
+
+directories = list(dict.fromkeys(re.findall(r"^\[产物\] (.+)$", validation, re.MULTILINE)))
+for index, directory in enumerate(directories):
+    generated(f"query-{index}", Path(directory), fixtures=True)
+key_directories = list(dict.fromkeys(re.findall(r"^\[产物\] (.+)$", regressions, re.MULTILINE)))
+for index, directory in enumerate(key_directories):
+    if "validate_publication" in directory:
+        generated(f"key-regression-{index}", Path(directory))
+layer = Path(re.search(r"see (.+?/_jit_l3_decode_layer_[^/]+)/report/", layer_log)[1])
+generated("layer2-ep2", layer)
+generated("layer2-ep2/chip", layer / "next_levels/l2_decode_layer")
+c1a = Path(re.search(r"see (.+?/_jit_l3_decode_c1a_full_[^/]+)/report/", c1a_log)[1])
+generated("c1a-compile", c1a)
+for child in sorted((c1a / "next_levels").glob("*")):
+    generated("c1a-compile/" + child.name, child)
+
+
+def revision(path):
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=path, text=True).strip()
+
+
+summary = {
+    "状态": "PASS", "分支": "dsv4.1-dsl", "模型基线": revision(model),
+    "PyPTO版本": revision(workspace / "issue75-env/pypto-pr"),
+    "DSL版本": "0.8.1", "DSL源码": revision(workspace / "cannbot-dsl-dev"),
+    "替换任务": "idx_q", "新任务": "dsl_idx_q",
+    "融合契约": "每个 M80 × 单 head 分块只有一次 MIX 任务提交，绑定一个 AIC 和两个 AIV；AIC/AIV 两份入口是同一个任务的组成部分，未拆为投影和后处理两个任务。",
+    "片上路径": "MXFP8/E8M0 -> L1/L0A/L0B -> FP32 L0C -> 双 AIV UB -> BF16 舍入、相邻对 RoPE、BF16 舍入、group-32 E8M0/最近偶数 FP4。没有 GM 投影中间张量。",
+    "调度": "每个 M80 行块按 32 个 head 分发完整融合任务；原生每个分块处理两个 head。simpler 管理分块依赖和有界完成句柄。",
+    "复用": "提取共用 MX 累加器实现，保持现有 GM 投影接口；Key/Query 共用 RoPE 与 E8M0/FP4 向量实现。",
+    "验证": {
+        "融合设备用例": "5 组全部精确通过：1/1 正负量化中点、17/15 单 AIV 短尾、17/0、80/72 双 AIV、83/81 跨 M80。",
+        "原核对照": "相同 5 组输入上，payload、E8M0 scale、非有效尾部和保护行与原生 MIX 核逐字节一致；原核同时通过 CPU 参考。",
+        "实际布局": "最终独立入口与整层均使用 MX_B_NN 权重缩放参数，并由 PyPTO 显式转为 ND 原始存储视图。",
+        "共享回归": "Key 发布 5 组和 QA/KV 输入投影 3 组通过原比较器；13 项回归日志还包含较早的 5 组原核对照。",
+        "整层": "C2A layer2 EP2 全部 16 项输出通过当前原比较器与阈值，使用此前固定输入及 CPU 参考。",
+        "整层误差": re.search(r"\[PRECISION\] composed x_next (.+)", layer_log)[1],
+        "整层设备": [int(device) for device in re.findall(r"已获取设备 (\d+) 的锁", layer_log)],
+        "C1A": "共享 decode 入口编译通过；本次未运行完整 C1A 设备用例。",
+        "预提交": "四项检查全部通过。",
+        "未执行": "整网、真实 checkpoint 和正式性能 A/B。",
+    },
+    "通信修改": False, "整层阈值修改": False, "量化契约修改": False, "框架修改": False,
+    "模型适配修正": "首版误用 reshape 处理 MX_B_NN 权重缩放布局，导致整层类型推导失败；已按既有 Q 分支使用 tensor.view(layout=ND)，无需框架改动。",
+    "固定整层数据来源": "build_output/_jit_l3_decode_layer_20261105_160121_u27otki0/data，layer-id=2、seed=0。",
+    "归档说明": "保存全部结果日志、生成代码、原核对照脚本和代表性固定数据；相同编译目录的连续用例保留最后一次数据，不重复复制整层权重。",
+    "files": inventory,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"归档 {len(inventory)} 项，大小 {sum(item['bytes'] for item in inventory)} 字节")

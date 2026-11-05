@@ -15,6 +15,7 @@ from pypto.runtime import pto_isa_include_dir
 from index_projection_dsl import project_index_key
 from index_key_dsl import publish_index_rows
 from index_weight_dsl import project_index_weights
+from index_query_dsl import project_index_query
 import pypto.language as pl
 from config import (
     B_DYN, FLASH, INDEX_BLOCKS_DYN, INDEX_CACHE_GROUP, INDEX_POOL_BLOCKS_DYN,
@@ -43,24 +44,6 @@ CANDIDATE_LEAF_TILE = 8192
 CANDIDATE_SHORT_LEAF_TILE = 2048
 CANDIDATE_MAX_LEAVES = (FLASH.max_position_embeddings // CANDIDATE_BLOCK_SIZE - 1) // CANDIDATE_LEAF_TILE + 1
 INDEX_SCORE_POSITIONS_DYN = pl.dynamic("V41_INDEX_SCORE_POSITIONS_DYN")
-
-@pl.jit.extern(core_type="mixed", aic_source=Path(__file__).parent / "kernels" / "idx_q.cpp",
-               aiv_source=Path(__file__).parent / "kernels" / "idx_q.cpp", dual_aiv_dispatch=True,
-               include_dirs=(pto_isa_include_dir(),))
-def _idx_q(
-    payload: pl.Tensor,
-    weight: pl.Tensor,
-    activation_scale: pl.Tensor,
-    weight_scale: pl.Tensor,
-    cos: pl.Tensor,
-    sin: pl.Tensor,
-    output: pl.Out[pl.Tensor],
-    output_scale: pl.Out[pl.Tensor],
-    num_tokens: pl.Scalar[pl.INT32],
-) -> pl.Tensor:
-    """Project and quantize query heads with two C-to-V transfers per cube worker."""
-    ...
-
 
 @pl.jit.extern(core_type="mixed", aic_source=Path(__file__).parent / "kernels" / "index_score_topk.cpp",
                aiv_source=Path(__file__).parent / "kernels" / "index_score_topk.cpp", dual_aiv_dispatch=True,
@@ -664,11 +647,10 @@ def c1a_index(
     tokens = pl.tensor.dim(x, 0)
     query = pl.create_tensor([tokens, INDEX_H * INDEX_DIM // 2], dtype=pl.UINT8)
     query_scale = pl.create_tensor([tokens, INDEX_H * (INDEX_DIM // INDEX_CACHE_GROUP)], dtype=pl.FP8E8M0)
-    with pl.spmd(16, name_hint="idx_q", deps=[entry_ready]) as query_tid:
-        query = _idx_q(
-            projection_payload, index_wq_b, projection_scale_backing, index_wq_b_scale,
-            cos, sin, query, query_scale, num_tokens,
-        )
+    query_tid = project_index_query(
+        projection_payload, index_wq_b, projection_scale_backing, index_wq_b_scale,
+        cos, sin, query, query_scale, num_tokens, entry_ready,
+    )
     weights = pl.create_tensor([tokens, INDEX_H], dtype=pl.BF16)
     weights_tid = project_index_weights(
         x, index_weights_proj, weights, num_tokens, entry_ready

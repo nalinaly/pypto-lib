@@ -1,0 +1,69 @@
+"""在相同 MX 数据和输出哨兵值上对照原生与 DSL Query MIX 任务。"""
+
+import argparse
+from dataclasses import replace
+
+import pypto.language as pl
+from golden import run
+
+from baseline_query import project_index_query as baseline
+from index_query_dsl import CACHE_GROUP, INDEX_DIM, INDEX_H, Q_LORA
+from index_query_dsl import build_query_specs, golden_query, project_index_query
+from index_key_dsl import compare_bytes
+
+
+@pl.jit
+def compare_program(
+    payload: pl.Tensor, weight: pl.Tensor, activation_scale: pl.Tensor,
+    weight_scale: pl.Tensor[[Q_LORA // CACHE_GROUP, INDEX_H * INDEX_DIM], pl.FP8E8M0, pl.MX_B_NN],
+    cosine: pl.Tensor, sine: pl.Tensor, output: pl.InOut[pl.Tensor], output_scale: pl.InOut[pl.Tensor],
+    num_tokens: pl.Scalar[pl.INT32], reference: pl.InOut[pl.Tensor], reference_scale: pl.InOut[pl.Tensor],
+):
+    rows = pl.tensor.dim(cosine, 0)
+    target = output[:rows, :]
+    factors = output_scale[:rows, :]
+    original = reference[:rows, :]
+    original_scale = reference_scale[:rows, :]
+    ready = pl.system.task_dummy(deps=[])
+    baseline(payload, weight, activation_scale, weight_scale,
+             cosine, sine, original, original_scale, num_tokens, ready)
+    project_index_query(payload, weight, activation_scale, weight_scale,
+                        cosine, sine, target, factors, num_tokens, ready)
+    return output, output_scale, reference, reference_scale
+
+
+def golden(tensors):
+    golden_query(tensors)
+    tensors["reference"].copy_(tensors["output"])
+    tensors["reference_scale"].copy_(tensors["output_scale"])
+
+
+def same_as_native(reference):
+    def compare(actual, expected, *, actual_outputs, **kwargs):
+        return compare_bytes(actual, actual_outputs[reference], actual_outputs=actual_outputs, **kwargs)
+    return compare
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--device", type=int, default=0)
+parser.add_argument("--compile-only", action="store_true")
+args = parser.parse_args()
+for rows, active, kind in ((1, 1, "ties"), (17, 15, "random"), (17, 0, "random"),
+                          (80, 72, "random"), (83, 81, "random")):
+    print(f"[原核对照] 行数={rows} 有效行={active} 类型={kind}", flush=True)
+    specs = build_query_specs(rows, active, kind)
+    names = {spec.name: spec for spec in specs}
+    specs += [replace(names["output"], name="reference"), replace(names["output_scale"], name="reference_scale")]
+    result = run(
+        fn=compare_program,
+        specs=specs,
+        golden_fn=golden,
+        compare_fn={"output": same_as_native("reference"), "output_scale": same_as_native("reference_scale"),
+                    "reference": compare_bytes, "reference_scale": compare_bytes},
+        config=dict(backend_type="a5", execution_mode=False, device_id=args.device),
+        compile_only=args.compile_only,
+        save_data=True,
+    )
+    if not result.passed:
+        raise SystemExit(result.error or 1)
+    print(f"[产物] {result.work_dir}", flush=True)

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+RUNNER=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+bash "$RUNNER/run-case.sh" models/deepseek_v4_1_flash/index_query_dsl.py
+bash "$RUNNER/run-case.sh" "$RUNNER/compare_query.py"
+bash "$RUNNER/run-case.sh" models/deepseek_v4_1_flash/index_key_dsl.py
+bash "$RUNNER/run-case.sh" models/deepseek_v4_1_flash/qkv_proj_dsl.py --case all

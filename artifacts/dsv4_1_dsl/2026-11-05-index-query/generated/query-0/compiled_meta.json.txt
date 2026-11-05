@@ -1,0 +1,194 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "payload",
+      "direction": "In",
+      "shape": [
+        80,
+        1280
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "weight",
+      "direction": "In",
+      "shape": [
+        1280,
+        4096
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "activation_scale",
+      "direction": "In",
+      "shape": [
+        1,
+        3200
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "weight_scale",
+      "direction": "In",
+      "shape": [
+        40,
+        4096
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "MX_B_NN"
+    },
+    {
+      "name": "cosine",
+      "direction": "In",
+      "shape": [
+        1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "sine",
+      "direction": "In",
+      "shape": [
+        1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "output",
+      "direction": "InOut",
+      "shape": [
+        2,
+        2048
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "output_scale",
+      "direction": "InOut",
+      "shape": [
+        2,
+        128
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "payload",
+      "direction": "In",
+      "shape": [
+        80,
+        1280
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "weight",
+      "direction": "In",
+      "shape": [
+        1280,
+        4096
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "activation_scale",
+      "direction": "In",
+      "shape": [
+        1,
+        3200
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "weight_scale",
+      "direction": "In",
+      "shape": [
+        1,
+        256,
+        20,
+        16,
+        2
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "MX_B_NN"
+    },
+    {
+      "name": "cosine",
+      "direction": "In",
+      "shape": [
+        1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "sine",
+      "direction": "In",
+      "shape": [
+        1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "output",
+      "direction": "InOut",
+      "shape": [
+        2,
+        2048
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "output_scale",
+      "direction": "InOut",
+      "shape": [
+        2,
+        128
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "num_return_types": 2,
+  "return_aliases": [
+    6,
+    7
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

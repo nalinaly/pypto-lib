@@ -113,7 +113,7 @@ def quantize_bf16_tile(
 
 
 @jit
-def _mx_project(payload, weight, activation_scale, weight_scale, output, column, valid_rows):
+def _mx_accumulate(payload, weight, activation_scale, weight_scale, column):
     """将 M80 ND 激活与原始 NZ 权重相乘，使用打包后的 MX 缩放值。"""
     reduction = payload.shape[1]
     columns = weight.shape[1] // reduction
@@ -155,7 +155,13 @@ def _mx_project(payload, weight, activation_scale, weight_scale, output, column,
         cb.mem_copy(a_slot, a_l1.next_read(), options=copy_options(mx_scale=sa_l1.next_read().permute(1, 0)))
         cb.mem_copy(b_slot, b_l1.next_read().permute(1, 0), options=copy_options(mx_scale=sb_l1.next_read()))
         cb.matmul(accumulator, a_l0.next_read(), b_l0.next_read(), init=k == 0, mx_mode=True)
-    result = c_l0.next_read()
+    return c_l0.next_read()
+
+
+@jit
+def _mx_project(payload, weight, activation_scale, weight_scale, output, column, valid_rows):
+    """将 MXFP8 的 L0C 累加结果写入 GM 的有效行。"""
+    result = _mx_accumulate(payload, weight, activation_scale, weight_scale, column)
     valid = cb.from_tensor(result, layout=cb.make_layout((valid_rows, CUBE_TILE)), physical_layout=result.physical_layout)
     cb.mem_copy(output[0:valid_rows, None], valid)
 
