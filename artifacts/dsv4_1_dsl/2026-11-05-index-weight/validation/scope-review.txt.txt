@@ -1,0 +1,11 @@
+替换范围：decode Indexer 的 proj_idx_w（AIC）与 reduce_idx_w（AIV），均为本卡计算任务。
+调用路径：C1A 与 C2A decode 共用 c1a_index -> project_index_weights，外部接口及返回 TaskId 保持兼容。
+计算契约：BF16 ND 输入 [T,5120] 与 BF16 NZ 权重 [5120,32]；K 维固定分成四段，每段 1280；段内按 K256 顺序累加为 FP32，最终按 ((P0+P1)+P2)+P3 合并，只在末尾舍入一次为 BF16。
+DSL 复用：直接调用现有 bf16_projection_dsl.project_bf16_nz，不复制矩阵核，也不修改此共用实现。
+调度：由 simpler 派发 M80 的四路 AIC 分块，完成后派发 M16 的 AIV 合并；有界完成句柄池保留输入、投影与消费者依赖。
+边界：保留非有效输出行和额外保护行；无有效 token 时不执行投影或合并；输入尾部使用 NaN 哨兵检查越界消费。
+验证：五组独立用例，以及相同输入上的原 PyPTO 对照；包含 BF16 正负中点、FP32 大数抵消、禁止部分和提前舍入、M80 边界及完成句柄复用；原实现与 DSL 输出按原始字节比较。
+共用调用方：C1A decode 编译验证，C2A layer2 EP2 保留原比较器和阈值执行整层回归。
+剩余实现：prefill_indexer.project_index_weights 有独立的投影后缩放和第二次 BF16 舍入，仍由现有 prefill 计算路径消费；后续评估 prefill 迁移时处理。
+修改边界：不涉及跨卡通信、缓存量化、DSL 框架或 PyPTO 桥接；使用官方 DSL 0.8.1 / 8274a38b 与现有配套 PyPTO e0c2eaa0。
+未覆盖：完整 C1A 设备回归、整网、真实 checkpoint 和正式性能 A/B。

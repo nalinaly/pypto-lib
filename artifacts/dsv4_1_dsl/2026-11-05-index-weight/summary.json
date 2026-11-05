@@ -1,0 +1,996 @@
+{
+  "状态": "PASS",
+  "分支": "dsv4.1-dsl",
+  "模型基线": "6cd28d0b86b04b8201c5b68949c0c5bb1241a8ad",
+  "PyPTO版本": "e0c2eaa0b12067ad011222a0a5c269f0f29db6d6",
+  "DSL版本": "0.8.1",
+  "DSL源码": "8274a38bfec2a0090c059eb1bce6d189712ae338",
+  "替换任务": [
+    "proj_idx_w",
+    "reduce_idx_w"
+  ],
+  "新任务": [
+    "dsl_proj_idx_w",
+    "dsl_reduce_idx_w"
+  ],
+  "计算契约": "BF16 ND 输入 [T,5120] 与 BF16 NZ 权重 [5120,32]；四路 K1280、段内 K256 FP32 累加；按 ((P0+P1)+P2)+P3 合并，最后一次 BF16 最近偶数舍入。",
+  "调度": "PyPTO/simpler 派发 M80 AIC 投影分块，完成后派发 M16 AIV 合并；有界任务池保留输入就绪及消费者依赖。",
+  "复用": "直接复用 bf16_projection_dsl.project_bf16_nz；共用矩阵实现无需修改。",
+  "验证": {
+    "独立用例": "5 组通过：1/1 正负 BF16 中点、大数抵消及部分和舍入边界；17/15 NZ 布局；17/0；80/72 随机；201/199 跨 M80 与完成句柄复用。",
+    "原实现对照": "相同 5 组输入上，新 DSL 与原 PyPTO 结果逐字节一致，包含非有效尾部和额外输出保护行。",
+    "CPU参考": "结构化输入零容差；随机有效行使用 BF16 的 1/128 相对误差与 1e-4 绝对误差，所有尾部精确比较，原 PyPTO 同样通过。",
+    "整层": "C2A layer2 EP2 全部 16 项输出通过当前原比较器与阈值，使用此前固定输入及 CPU 参考。",
+    "整层误差": "rel_l2=0.021193206 max_abs=0.65664196",
+    "整层设备": [
+      0,
+      2
+    ],
+    "C1A": "共享 decode 入口编译通过；本次未运行完整 C1A 设备用例。",
+    "预提交": "四项检查全部通过。",
+    "未执行": "整网、真实 checkpoint 和正式性能 A/B。"
+  },
+  "通信修改": false,
+  "整层阈值修改": false,
+  "缓存量化修改": false,
+  "框架修改": false,
+  "剩余实现": "prefill 的同名投影包含额外缩放和第二次 BF16 舍入，保留其独立实现，后续评估 prefill 迁移时处理。",
+  "固定整层数据来源": "build_output/_jit_l3_decode_layer_20261105_160121_u27otki0/data，layer-id=2、seed=0。",
+  "归档说明": "保存全部结果日志、生成代码、原实现对照脚本和代表性固定数据；相同编译目录的连续用例保留最后一次数据，不重复复制整层权重。",
+  "files": [
+    {
+      "path": "validation/projection-validation.log.txt",
+      "source": "artifacts/dsv41-index-weight-dsl/projection-validation.log",
+      "bytes": 70631,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "validation/layer2-ep2.log.txt",
+      "source": "artifacts/dsv41-index-weight-dsl/layer2-ep2.log",
+      "bytes": 65620,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "validation/c1a-compile.log.txt",
+      "source": "artifacts/dsv41-index-weight-dsl/c1a-compile.log",
+      "bytes": 1253,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "validation/compile.log.txt",
+      "source": "artifacts/dsv41-index-weight-dsl/compile.log",
+      "bytes": 1182,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "validation/scope-review.txt.txt",
+      "source": "artifacts/dsv41-index-weight-dsl/scope-review.txt",
+      "bytes": 1648,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "validation/pre-commit.log.txt",
+      "source": "artifacts/dsv41-index-weight-dsl/pre-commit.log",
+      "bytes": 320,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "model-snapshot/index_weight_dsl.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/index_weight_dsl.py",
+      "bytes": 11842,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "model-snapshot/bf16_projection_dsl.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/bf16_projection_dsl.py",
+      "bytes": 2759,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "model-snapshot/decode_indexer.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_indexer.py",
+      "bytes": 51263,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "workflow/baseline_weights.py.txt",
+      "source": "artifacts/dsv41-index-weight-dsl/baseline_weights.py",
+      "bytes": 3552,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "workflow/compare_weights.py.txt",
+      "source": "artifacts/dsv41-index-weight-dsl/compare_weights.py",
+      "bytes": 2479,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "workflow/run_layer_frozen.py.txt",
+      "source": "artifacts/dsv41-index-weight-dsl/run_layer_frozen.py",
+      "bytes": 1477,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "workflow/archive.py.txt",
+      "source": "artifacts/dsv41-index-weight-dsl/archive.py",
+      "bytes": 7053,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "workflow/run-case.sh.txt",
+      "source": "artifacts/dsv41-index-weight-dsl/run-case.sh",
+      "bytes": 379,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "workflow/run-regressions.sh.txt",
+      "source": "artifacts/dsv41-index-weight-dsl/run-regressions.sh",
+      "bytes": 227,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-0/kernel_config.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194040_lum8h105/kernel_config.py",
+      "bytes": 1677,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-0/compiled_meta.json.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194040_lum8h105/compiled_meta.json",
+      "bytes": 1484,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-0/orchestration/validate_projection.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194040_lum8h105/orchestration/validate_projection.cpp",
+      "bytes": 13816,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-0/foreign/project_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/entry.cpp",
+      "bytes": 2675,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-0/foreign/project_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/device_source.hpp",
+      "bytes": 31545,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-0/foreign/project_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/manifest.json",
+      "bytes": 1698,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-0/foreign/reduce_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/069811a6aa46ef75610d3d9762b454ed2836bc1342c37a6405b528f3cc4558d8/entry.cpp",
+      "bytes": 2513,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-0/foreign/reduce_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/069811a6aa46ef75610d3d9762b454ed2836bc1342c37a6405b528f3cc4558d8/device_source.hpp",
+      "bytes": 30261,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-0/foreign/reduce_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/069811a6aa46ef75610d3d9762b454ed2836bc1342c37a6405b528f3cc4558d8/manifest.json",
+      "bytes": 1520,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "fixtures/case-0/in/num_tokens.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194040_lum8h105/data/in/num_tokens.pt",
+      "bytes": 596,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-0/in/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194040_lum8h105/data/in/output.pt",
+      "bytes": 607,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-0/in/source.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194040_lum8h105/data/in/source.pt",
+      "bytes": 667,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-0/in/weight.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194040_lum8h105/data/in/weight.pt",
+      "bytes": 1195,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-0/out/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194040_lum8h105/data/out/output.pt",
+      "bytes": 624,
+      "encoding": "gzip"
+    },
+    {
+      "path": "generated/case-1/kernel_config.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194052_9zztcsw2/kernel_config.py",
+      "bytes": 1677,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-1/compiled_meta.json.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194052_9zztcsw2/compiled_meta.json",
+      "bytes": 1488,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-1/orchestration/validate_projection.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194052_9zztcsw2/orchestration/validate_projection.cpp",
+      "bytes": 13881,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-1/foreign/project_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/entry.cpp",
+      "bytes": 2675,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-1/foreign/project_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/device_source.hpp",
+      "bytes": 31545,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-1/foreign/project_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/manifest.json",
+      "bytes": 1698,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-1/foreign/reduce_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/0289590f30fe7cb74eda7c7d45b92008896e01de59ed2e0976c93a0c044eb3d0/entry.cpp",
+      "bytes": 2513,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-1/foreign/reduce_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/0289590f30fe7cb74eda7c7d45b92008896e01de59ed2e0976c93a0c044eb3d0/device_source.hpp",
+      "bytes": 30264,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-1/foreign/reduce_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/0289590f30fe7cb74eda7c7d45b92008896e01de59ed2e0976c93a0c044eb3d0/manifest.json",
+      "bytes": 1520,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "fixtures/case-1/in/num_tokens.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194052_9zztcsw2/data/in/num_tokens.pt",
+      "bytes": 594,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-1/in/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194052_9zztcsw2/data/in/output.pt",
+      "bytes": 621,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-1/in/source.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194052_9zztcsw2/data/in/source.pt",
+      "bytes": 938,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-1/in/weight.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194052_9zztcsw2/data/in/weight.pt",
+      "bytes": 2165,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-1/out/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194052_9zztcsw2/data/out/output.pt",
+      "bytes": 621,
+      "encoding": "gzip"
+    },
+    {
+      "path": "generated/case-2/kernel_config.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194059_9u53lpdk/kernel_config.py",
+      "bytes": 1677,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-2/compiled_meta.json.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194059_9u53lpdk/compiled_meta.json",
+      "bytes": 1488,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-2/orchestration/validate_projection.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194059_9u53lpdk/orchestration/validate_projection.cpp",
+      "bytes": 13881,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-2/foreign/project_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/entry.cpp",
+      "bytes": 2675,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-2/foreign/project_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/device_source.hpp",
+      "bytes": 31545,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-2/foreign/project_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/manifest.json",
+      "bytes": 1698,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-2/foreign/reduce_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/f6550907ca28d2579e7ec1855d25fe8b6fcde4dd61309157248a104ffd478614/entry.cpp",
+      "bytes": 2513,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-2/foreign/reduce_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/f6550907ca28d2579e7ec1855d25fe8b6fcde4dd61309157248a104ffd478614/device_source.hpp",
+      "bytes": 30266,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-2/foreign/reduce_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/f6550907ca28d2579e7ec1855d25fe8b6fcde4dd61309157248a104ffd478614/manifest.json",
+      "bytes": 1520,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "fixtures/case-2/in/num_tokens.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194059_9u53lpdk/data/in/num_tokens.pt",
+      "bytes": 598,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-2/in/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194059_9u53lpdk/data/in/output.pt",
+      "bytes": 646,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-2/in/source.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194059_9u53lpdk/data/in/source.pt",
+      "bytes": 585579,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-2/in/weight.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194059_9u53lpdk/data/in/weight.pt",
+      "bytes": 259971,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-2/out/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194059_9u53lpdk/data/out/output.pt",
+      "bytes": 4418,
+      "encoding": "gzip"
+    },
+    {
+      "path": "generated/case-3/kernel_config.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194105_281w7g82/kernel_config.py",
+      "bytes": 1677,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-3/compiled_meta.json.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194105_281w7g82/compiled_meta.json",
+      "bytes": 1492,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-3/orchestration/validate_projection.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194105_281w7g82/orchestration/validate_projection.cpp",
+      "bytes": 14085,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-3/foreign/project_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/entry.cpp",
+      "bytes": 2675,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-3/foreign/project_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/device_source.hpp",
+      "bytes": 31545,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-3/foreign/project_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/manifest.json",
+      "bytes": 1698,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-3/foreign/reduce_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/f42b6bffad1ea7b595f3377b819d884d92c4ede330a5fec7fa5126a34ad74165/entry.cpp",
+      "bytes": 2513,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-3/foreign/reduce_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/f42b6bffad1ea7b595f3377b819d884d92c4ede330a5fec7fa5126a34ad74165/device_source.hpp",
+      "bytes": 30267,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-3/foreign/reduce_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/f42b6bffad1ea7b595f3377b819d884d92c4ede330a5fec7fa5126a34ad74165/manifest.json",
+      "bytes": 1520,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "fixtures/case-3/in/num_tokens.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194105_281w7g82/data/in/num_tokens.pt",
+      "bytes": 597,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-3/in/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194105_281w7g82/data/in/output.pt",
+      "bytes": 668,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-3/in/source.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194105_281w7g82/data/in/source.pt",
+      "bytes": 6813,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-3/in/weight.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194105_281w7g82/data/in/weight.pt",
+      "bytes": 2165,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-3/out/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_projection_20261105_194105_281w7g82/data/out/output.pt",
+      "bytes": 708,
+      "encoding": "gzip"
+    },
+    {
+      "path": "generated/case-4/kernel_config.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194119_e7dk4ti7/kernel_config.py",
+      "bytes": 2058,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-4/compiled_meta.json.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194119_e7dk4ti7/compiled_meta.json",
+      "bytes": 1819,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-4/orchestration/compare_program.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194119_e7dk4ti7/orchestration/compare_program.cpp",
+      "bytes": 16263,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-4/kernels/proj_idx_w.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194119_e7dk4ti7/kernels/aic/proj_idx_w.cpp",
+      "bytes": 37374,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-4/kernels/reduce_idx_w.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194119_e7dk4ti7/kernels/aiv/reduce_idx_w.cpp",
+      "bytes": 12265,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-4/foreign/project_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/entry.cpp",
+      "bytes": 2675,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-4/foreign/project_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/device_source.hpp",
+      "bytes": 31545,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-4/foreign/project_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/manifest.json",
+      "bytes": 1698,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-4/foreign/reduce_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/069811a6aa46ef75610d3d9762b454ed2836bc1342c37a6405b528f3cc4558d8/entry.cpp",
+      "bytes": 2513,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-4/foreign/reduce_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/069811a6aa46ef75610d3d9762b454ed2836bc1342c37a6405b528f3cc4558d8/device_source.hpp",
+      "bytes": 30261,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-4/foreign/reduce_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/069811a6aa46ef75610d3d9762b454ed2836bc1342c37a6405b528f3cc4558d8/manifest.json",
+      "bytes": 1520,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "fixtures/case-4/in/num_tokens.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194119_e7dk4ti7/data/in/num_tokens.pt",
+      "bytes": 596,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-4/in/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194119_e7dk4ti7/data/in/output.pt",
+      "bytes": 607,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-4/in/reference.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194119_e7dk4ti7/data/in/reference.pt",
+      "bytes": 613,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-4/in/source.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194119_e7dk4ti7/data/in/source.pt",
+      "bytes": 667,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-4/in/weight.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194119_e7dk4ti7/data/in/weight.pt",
+      "bytes": 1195,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-4/out/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194119_e7dk4ti7/data/out/output.pt",
+      "bytes": 624,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-4/out/reference.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194119_e7dk4ti7/data/out/reference.pt",
+      "bytes": 630,
+      "encoding": "gzip"
+    },
+    {
+      "path": "generated/case-5/kernel_config.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194129_ds_gd2lm/kernel_config.py",
+      "bytes": 2058,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-5/compiled_meta.json.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194129_ds_gd2lm/compiled_meta.json",
+      "bytes": 1825,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-5/orchestration/compare_program.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194129_ds_gd2lm/orchestration/compare_program.cpp",
+      "bytes": 16370,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-5/kernels/proj_idx_w.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194129_ds_gd2lm/kernels/aic/proj_idx_w.cpp",
+      "bytes": 37460,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-5/kernels/reduce_idx_w.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194129_ds_gd2lm/kernels/aiv/reduce_idx_w.cpp",
+      "bytes": 12295,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-5/foreign/project_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/entry.cpp",
+      "bytes": 2675,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-5/foreign/project_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/device_source.hpp",
+      "bytes": 31545,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-5/foreign/project_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/manifest.json",
+      "bytes": 1698,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-5/foreign/reduce_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/0289590f30fe7cb74eda7c7d45b92008896e01de59ed2e0976c93a0c044eb3d0/entry.cpp",
+      "bytes": 2513,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-5/foreign/reduce_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/0289590f30fe7cb74eda7c7d45b92008896e01de59ed2e0976c93a0c044eb3d0/device_source.hpp",
+      "bytes": 30264,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-5/foreign/reduce_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/0289590f30fe7cb74eda7c7d45b92008896e01de59ed2e0976c93a0c044eb3d0/manifest.json",
+      "bytes": 1520,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "fixtures/case-5/in/num_tokens.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194129_ds_gd2lm/data/in/num_tokens.pt",
+      "bytes": 594,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-5/in/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194129_ds_gd2lm/data/in/output.pt",
+      "bytes": 621,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-5/in/reference.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194129_ds_gd2lm/data/in/reference.pt",
+      "bytes": 628,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-5/in/source.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194129_ds_gd2lm/data/in/source.pt",
+      "bytes": 938,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-5/in/weight.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194129_ds_gd2lm/data/in/weight.pt",
+      "bytes": 2165,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-5/out/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194129_ds_gd2lm/data/out/output.pt",
+      "bytes": 621,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-5/out/reference.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194129_ds_gd2lm/data/out/reference.pt",
+      "bytes": 628,
+      "encoding": "gzip"
+    },
+    {
+      "path": "generated/case-6/kernel_config.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194138_np8bb8o9/kernel_config.py",
+      "bytes": 2058,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-6/compiled_meta.json.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194138_np8bb8o9/compiled_meta.json",
+      "bytes": 1825,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-6/orchestration/compare_program.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194138_np8bb8o9/orchestration/compare_program.cpp",
+      "bytes": 16498,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-6/kernels/proj_idx_w.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194138_np8bb8o9/kernels/aic/proj_idx_w.cpp",
+      "bytes": 37468,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-6/kernels/reduce_idx_w.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194138_np8bb8o9/kernels/aiv/reduce_idx_w.cpp",
+      "bytes": 12335,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-6/foreign/project_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/entry.cpp",
+      "bytes": 2675,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-6/foreign/project_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/device_source.hpp",
+      "bytes": 31545,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-6/foreign/project_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/manifest.json",
+      "bytes": 1698,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-6/foreign/reduce_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/f6550907ca28d2579e7ec1855d25fe8b6fcde4dd61309157248a104ffd478614/entry.cpp",
+      "bytes": 2513,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-6/foreign/reduce_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/f6550907ca28d2579e7ec1855d25fe8b6fcde4dd61309157248a104ffd478614/device_source.hpp",
+      "bytes": 30266,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-6/foreign/reduce_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/f6550907ca28d2579e7ec1855d25fe8b6fcde4dd61309157248a104ffd478614/manifest.json",
+      "bytes": 1520,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "fixtures/case-6/in/num_tokens.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194138_np8bb8o9/data/in/num_tokens.pt",
+      "bytes": 598,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-6/in/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194138_np8bb8o9/data/in/output.pt",
+      "bytes": 646,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-6/in/reference.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194138_np8bb8o9/data/in/reference.pt",
+      "bytes": 653,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-6/in/source.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194138_np8bb8o9/data/in/source.pt",
+      "bytes": 585579,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-6/in/weight.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194138_np8bb8o9/data/in/weight.pt",
+      "bytes": 259971,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-6/out/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194138_np8bb8o9/data/out/output.pt",
+      "bytes": 4418,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-6/out/reference.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194138_np8bb8o9/data/out/reference.pt",
+      "bytes": 4430,
+      "encoding": "gzip"
+    },
+    {
+      "path": "generated/case-7/kernel_config.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194146_h0rjujm9/kernel_config.py",
+      "bytes": 2058,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-7/compiled_meta.json.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194146_h0rjujm9/compiled_meta.json",
+      "bytes": 1831,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-7/orchestration/compare_program.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194146_h0rjujm9/orchestration/compare_program.cpp",
+      "bytes": 16501,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-7/kernels/proj_idx_w.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194146_h0rjujm9/kernels/aic/proj_idx_w.cpp",
+      "bytes": 37519,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-7/kernels/reduce_idx_w.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194146_h0rjujm9/kernels/aiv/reduce_idx_w.cpp",
+      "bytes": 12335,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-7/foreign/project_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/entry.cpp",
+      "bytes": 2675,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-7/foreign/project_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/device_source.hpp",
+      "bytes": 31545,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-7/foreign/project_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/manifest.json",
+      "bytes": 1698,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-7/foreign/reduce_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/f42b6bffad1ea7b595f3377b819d884d92c4ede330a5fec7fa5126a34ad74165/entry.cpp",
+      "bytes": 2513,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-7/foreign/reduce_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/f42b6bffad1ea7b595f3377b819d884d92c4ede330a5fec7fa5126a34ad74165/device_source.hpp",
+      "bytes": 30267,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/case-7/foreign/reduce_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/f42b6bffad1ea7b595f3377b819d884d92c4ede330a5fec7fa5126a34ad74165/manifest.json",
+      "bytes": 1520,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "fixtures/case-7/in/num_tokens.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194146_h0rjujm9/data/in/num_tokens.pt",
+      "bytes": 597,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-7/in/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194146_h0rjujm9/data/in/output.pt",
+      "bytes": 668,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-7/in/reference.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194146_h0rjujm9/data/in/reference.pt",
+      "bytes": 673,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-7/in/source.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194146_h0rjujm9/data/in/source.pt",
+      "bytes": 6813,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-7/in/weight.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194146_h0rjujm9/data/in/weight.pt",
+      "bytes": 2165,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-7/out/output.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194146_h0rjujm9/data/out/output.pt",
+      "bytes": 708,
+      "encoding": "gzip"
+    },
+    {
+      "path": "fixtures/case-7/out/reference.pt.gz",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_compare_program_20261105_194146_h0rjujm9/data/out/reference.pt",
+      "bytes": 717,
+      "encoding": "gzip"
+    },
+    {
+      "path": "generated/layer2-ep2/chip/kernel_config.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_layer_20261105_194502_be6jq37s/next_levels/l2_decode_layer/kernel_config.py",
+      "bytes": 35413,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/layer2-ep2/chip/orchestration/l2_decode_layer.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_layer_20261105_194502_be6jq37s/next_levels/l2_decode_layer/orchestration/l2_decode_layer.cpp",
+      "bytes": 1151947,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/layer2-ep2/chip/foreign/project_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/entry.cpp",
+      "bytes": 2675,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/layer2-ep2/chip/foreign/project_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/device_source.hpp",
+      "bytes": 31545,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/layer2-ep2/chip/foreign/project_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/manifest.json",
+      "bytes": 1698,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/layer2-ep2/chip/foreign/reduce_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/40a60f20c85c12d109a40308950def17642e3ff96dcb10164d4c056a189d311e/entry.cpp",
+      "bytes": 2548,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/layer2-ep2/chip/foreign/reduce_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/40a60f20c85c12d109a40308950def17642e3ff96dcb10164d4c056a189d311e/device_source.hpp",
+      "bytes": 30702,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/layer2-ep2/chip/foreign/reduce_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/40a60f20c85c12d109a40308950def17642e3ff96dcb10164d4c056a189d311e/manifest.json",
+      "bytes": 1615,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/c1a-compile/l2_decode_c1a_full/kernel_config.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_c1a_full_20261105_194100_mvyp21_o/next_levels/l2_decode_c1a_full/kernel_config.py",
+      "bytes": 15394,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/c1a-compile/l2_decode_c1a_full/orchestration/l2_decode_c1a_full.cpp.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_c1a_full_20261105_194100_mvyp21_o/next_levels/l2_decode_c1a_full/orchestration/l2_decode_c1a_full.cpp",
+      "bytes": 162480,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/c1a-compile/l2_decode_c1a_full/foreign/project_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/entry.cpp",
+      "bytes": 2675,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/c1a-compile/l2_decode_c1a_full/foreign/project_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/device_source.hpp",
+      "bytes": 31545,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/c1a-compile/l2_decode_c1a_full/foreign/project_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/b122d8f4547a9e7dc1740fd1adbda1a3cf510114aaf2814d7efa7012348f45e7/manifest.json",
+      "bytes": 1698,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/c1a-compile/l2_decode_c1a_full/foreign/reduce_index_weight_tile/entry.cpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/40a60f20c85c12d109a40308950def17642e3ff96dcb10164d4c056a189d311e/entry.cpp",
+      "bytes": 2548,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/c1a-compile/l2_decode_c1a_full/foreign/reduce_index_weight_tile/device_source.hpp.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/40a60f20c85c12d109a40308950def17642e3ff96dcb10164d4c056a189d311e/device_source.hpp",
+      "bytes": 30702,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "generated/c1a-compile/l2_decode_c1a_full/foreign/reduce_index_weight_tile/manifest.json.txt",
+      "source": "artifacts/dsv41-semantic-review/jit-cache-0.8.1/40a60f20c85c12d109a40308950def17642e3ff96dcb10164d4c056a189d311e/manifest.json",
+      "bytes": 1615,
+      "encoding": "utf-8"
+    }
+  ]
+}

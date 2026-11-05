@@ -1,0 +1,62 @@
+"""逐字节对照原 PyPTO 与 DSL 的四路 Indexer head 权重投影。"""
+
+import argparse
+from dataclasses import replace
+
+import pypto.language as pl
+import torch
+from golden import ratio_allclose, run
+
+from baseline_weights import project_index_weights as baseline
+from index_weight_dsl import D, INDEX_H, build_projection_specs, golden_projection
+from index_weight_dsl import project_index_weights, projection_comparator
+
+
+@pl.jit
+def compare_program(
+    source: pl.Tensor, weight: pl.Tensor[[D, INDEX_H], pl.BF16, pl.NZ],
+    output: pl.InOut[pl.Tensor], num_tokens: pl.Scalar[pl.INT32], reference: pl.InOut[pl.Tensor],
+):
+    rows = pl.tensor.dim(source, 0)
+    target = output[:rows, :]
+    original = reference[:rows, :]
+    ready = pl.system.task_dummy(deps=[])
+    baseline(source, weight, original, num_tokens, ready)
+    project_index_weights(source, weight, target, num_tokens, ready)
+    return output, reference
+
+
+def golden(tensors):
+    golden_projection(tensors)
+    tensors["reference"].copy_(tensors["output"])
+
+
+def same_as_original(actual, expected, *, actual_outputs, **kwargs):
+    exact = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
+    original = actual_outputs["reference"]
+    return exact(actual.view(torch.uint8), original.view(torch.uint8), actual_outputs=actual_outputs, **kwargs)
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--device", type=int, default=0)
+parser.add_argument("--compile-only", action="store_true")
+args = parser.parse_args()
+exact = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
+for rows, active, kind in ((1, 1, "ties"), (17, 15, "layout"), (17, 0, "layout"),
+                          (80, 72, "random"), (201, 199, "layout")):
+    print(f"[原实现对照] 行数={rows} 有效行={active} 类型={kind}", flush=True)
+    specs = build_projection_specs(rows, active, kind)
+    output = next(spec for spec in specs if spec.name == "output")
+    specs.append(replace(output, name="reference"))
+    result = run(
+        fn=compare_program,
+        specs=specs,
+        golden_fn=golden,
+        compare_fn={"output": same_as_original, "reference": projection_comparator if kind == "random" else exact},
+        config=dict(backend_type="a5", execution_mode=False, device_id=args.device),
+        compile_only=args.compile_only,
+        save_data=True,
+    )
+    if not result.passed:
+        raise SystemExit(result.error or 1)
+    print(f"[产物] {result.work_dir}", flush=True)

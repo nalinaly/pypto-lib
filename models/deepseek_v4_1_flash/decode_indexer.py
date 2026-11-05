@@ -14,6 +14,7 @@ from pypto.runtime import pto_isa_include_dir
 
 from index_projection_dsl import project_index_key
 from index_key_dsl import publish_index_rows
+from index_weight_dsl import project_index_weights
 import pypto.language as pl
 from config import (
     B_DYN, FLASH, INDEX_BLOCKS_DYN, INDEX_CACHE_GROUP, INDEX_POOL_BLOCKS_DYN,
@@ -36,10 +37,6 @@ CANDIDATE_PAIR_WIDTH = 2 * CANDIDATE_TOPK_BLOCKS
 _SCALE_COUNT = INDEX_DIM // INDEX_CACHE_GROUP
 
 # tiling
-INDEX_WEIGHT_K_SPLIT_TILE = 4
-INDEX_WEIGHT_K_TILE = 256
-
-
 CANDIDATE_WORKER_TILE = 12
 CANDIDATE_SCORE_TILE = 1024
 CANDIDATE_LEAF_TILE = 8192
@@ -646,50 +643,6 @@ def score_select_paged(
             emit_scores, shards, direct_short,
         )
     return mix_tid, mix_tid
-
-
-@pl.jit.inline(auto_scope=False)
-def project_index_weights(
-    source: pl.Tensor,
-    weight: pl.Tensor[[D, INDEX_H], pl.BF16, pl.NZ],
-    output: pl.Tensor,
-    num_tokens: pl.Scalar[pl.INT32],
-    ready: pl.Scalar[pl.TASK_ID],
-):
-    tokens = pl.tensor.dim(source, 0)
-    partials = pl.create_tensor([INDEX_WEIGHT_K_SPLIT_TILE * tokens, INDEX_H], dtype=pl.FP32)
-    blocks = (num_tokens + 79) // 80
-    with pl.spmd(INDEX_WEIGHT_K_SPLIT_TILE, name_hint="proj_idx_w", deps=[ready]) as cube_tid:
-        split = pl.tile.get_block_idx()
-        begin = split * (D // INDEX_WEIGHT_K_SPLIT_TILE)
-        for block in pl.range(blocks):
-            row = block * 80
-            rows = pl.min(80, num_tokens - row)
-            a = pl.load(source, [row, begin], [80, INDEX_WEIGHT_K_TILE], valid_shape=[rows, INDEX_WEIGHT_K_TILE], target_memory=pl.MemorySpace.Mat)
-            w = pl.load(weight, [begin, 0], [INDEX_WEIGHT_K_TILE, INDEX_H], target_memory=pl.MemorySpace.Mat)
-            full_a = pl.set_validshape(a, 80, INDEX_WEIGHT_K_TILE)
-            acc = pl.matmul(full_a, w)
-            k_begin = begin + INDEX_WEIGHT_K_TILE
-            k_end = begin + D // INDEX_WEIGHT_K_SPLIT_TILE
-            for k in pl.pipeline(k_begin, k_end, INDEX_WEIGHT_K_TILE, stage=2):
-                a = pl.load(source, [row, k], [80, INDEX_WEIGHT_K_TILE], valid_shape=[rows, INDEX_WEIGHT_K_TILE], target_memory=pl.MemorySpace.Mat)
-                w = pl.load(weight, [k, 0], [INDEX_WEIGHT_K_TILE, INDEX_H], target_memory=pl.MemorySpace.Mat)
-                full_a = pl.set_validshape(a, 80, INDEX_WEIGHT_K_TILE)
-                acc = pl.matmul_acc(acc, full_a, w)
-            value = pl.set_validshape(acc, rows, INDEX_H)
-            partials = pl.store(value, [split * tokens + row, 0], partials)
-    with pl.spmd(pl.max(pl.min((num_tokens + 15) // 16, 8), 1), name_hint="reduce_idx_w", deps=[cube_tid]) as completed:
-        worker = pl.tile.get_block_idx()
-        workers = pl.tile.get_block_num()
-        for row in pl.range(worker * 16, num_tokens, workers * 16):
-            rows = pl.min(16, num_tokens - row)
-            reduced = pl.load(partials, [row, 0], [16, INDEX_H], valid_shape=[rows, INDEX_H])
-            for split in pl.range(1, INDEX_WEIGHT_K_SPLIT_TILE):
-                partial_value = pl.load(partials, [split * tokens + row, 0], [16, INDEX_H], valid_shape=[rows, INDEX_H])
-                reduced = pl.add(reduced, partial_value)
-            rounded = pl.cast(reduced, pl.BF16, mode="rint")
-            output = pl.store(rounded, [row, 0], output)
-    return completed
 
 
 @pl.jit.inline(auto_scope=False)

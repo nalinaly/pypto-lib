@@ -1,0 +1,121 @@
+"""归档 Indexer head 权重投影的源码、生成物、固定数据和校验结果。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-index-weight-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-05-index-weight"
+inventory = []
+
+
+def capture(source, target, binary=False):
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        value = source.read_text().replace(str(workspace), "<workspace>")
+        value = value.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n")
+    inventory.append({"path": str(destination.relative_to(archive)),
+                      "source": str(source.relative_to(workspace)), "bytes": destination.stat().st_size,
+                      "encoding": "gzip" if binary else "utf-8"})
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        source = directory / name
+        if source.is_file():
+            capture(source, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*.cpp")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    for source in sorted((directory / "kernels").rglob("*.cpp")):
+        if source.stem in ("proj_idx_w", "reduce_idx_w"):
+            capture(source, f"generated/{label}/kernels/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name.startswith(("project_index_weight_tile", "reduce_index_weight_tile")):
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+def require_pass(filename, count):
+    value = (work / filename).read_text()
+    if len(re.findall(r"^\[RUN\] PASS", value, re.MULTILINE)) != count:
+        raise RuntimeError(filename + " 的通过数量不符")
+    return value
+
+
+validation = require_pass("projection-validation.log", 10)
+layer_log = require_pass("layer2-ep2.log", 1)
+c1a_log = require_pass("c1a-compile.log", 1)
+layer_outputs = len(re.findall(r"^\[RUN\]   '[^']+' PASS", layer_log, re.MULTILINE))
+if layer_outputs != 16:
+    raise RuntimeError("整层必须通过全部 16 项输出")
+
+archive.mkdir(parents=True, exist_ok=True)
+for filename in ("projection-validation.log", "layer2-ep2.log", "c1a-compile.log", "compile.log",
+                 "scope-review.txt", "pre-commit.log"):
+    capture(work / filename, f"validation/{filename}.txt")
+for name in ("index_weight_dsl", "bf16_projection_dsl", "decode_indexer"):
+    capture(model / "models/deepseek_v4_1_flash" / (name + ".py"), f"model-snapshot/{name}.py.txt")
+for filename in ("baseline_weights.py", "compare_weights.py", "run_layer_frozen.py", "archive.py",
+                 "run-case.sh", "run-regressions.sh"):
+    capture(work / filename, f"workflow/{filename}.txt")
+
+directories = list(dict.fromkeys(re.findall(r"^\[产物\] (.+)$", validation, re.MULTILINE)))
+for index, directory in enumerate(directories):
+    generated(f"case-{index}", Path(directory), fixtures=True)
+layer = Path(re.search(r"see (.+?/_jit_l3_decode_layer_[^/]+)/report/", layer_log)[1])
+generated("layer2-ep2", layer)
+generated("layer2-ep2/chip", layer / "next_levels/l2_decode_layer")
+c1a = Path(re.search(r"see (.+?/_jit_l3_decode_c1a_full_[^/]+)/report/", c1a_log)[1])
+generated("c1a-compile", c1a)
+for child in sorted((c1a / "next_levels").glob("*")):
+    generated("c1a-compile/" + child.name, child)
+
+
+def revision(path):
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=path, text=True).strip()
+
+
+precision = re.search(r"\[PRECISION\] composed x_next (.+)", layer_log)[1]
+summary = {
+    "状态": "PASS", "分支": "dsv4.1-dsl", "模型基线": revision(model),
+    "PyPTO版本": revision(workspace / "issue75-env/pypto-pr"),
+    "DSL版本": "0.8.1", "DSL源码": revision(workspace / "cannbot-dsl-dev"),
+    "替换任务": ["proj_idx_w", "reduce_idx_w"], "新任务": ["dsl_proj_idx_w", "dsl_reduce_idx_w"],
+    "计算契约": "BF16 ND 输入 [T,5120] 与 BF16 NZ 权重 [5120,32]；四路 K1280、段内 K256 FP32 累加；按 ((P0+P1)+P2)+P3 合并，最后一次 BF16 最近偶数舍入。",
+    "调度": "PyPTO/simpler 派发 M80 AIC 投影分块，完成后派发 M16 AIV 合并；有界任务池保留输入就绪及消费者依赖。",
+    "复用": "直接复用 bf16_projection_dsl.project_bf16_nz；共用矩阵实现无需修改。",
+    "验证": {
+        "独立用例": "5 组通过：1/1 正负 BF16 中点、大数抵消及部分和舍入边界；17/15 NZ 布局；17/0；80/72 随机；201/199 跨 M80 与完成句柄复用。",
+        "原实现对照": "相同 5 组输入上，新 DSL 与原 PyPTO 结果逐字节一致，包含非有效尾部和额外输出保护行。",
+        "CPU参考": "结构化输入零容差；随机有效行使用 BF16 的 1/128 相对误差与 1e-4 绝对误差，所有尾部精确比较，原 PyPTO 同样通过。",
+        "整层": "C2A layer2 EP2 全部 16 项输出通过当前原比较器与阈值，使用此前固定输入及 CPU 参考。",
+        "整层误差": precision,
+        "整层设备": [int(device) for device in re.findall(r"已获取设备 (\d+) 的锁", layer_log)],
+        "C1A": "共享 decode 入口编译通过；本次未运行完整 C1A 设备用例。",
+        "预提交": "四项检查全部通过。",
+        "未执行": "整网、真实 checkpoint 和正式性能 A/B。",
+    },
+    "通信修改": False, "整层阈值修改": False, "缓存量化修改": False, "框架修改": False,
+    "剩余实现": "prefill 的同名投影包含额外缩放和第二次 BF16 舍入，保留其独立实现，后续评估 prefill 迁移时处理。",
+    "固定整层数据来源": "build_output/_jit_l3_decode_layer_20261105_160121_u27otki0/data，layer-id=2、seed=0。",
+    "归档说明": "保存全部结果日志、生成代码、原实现对照脚本和代表性固定数据；相同编译目录的连续用例保留最后一次数据，不重复复制整层权重。",
+    "files": inventory,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"归档 {len(inventory)} 项，大小 {sum(item['bytes'] for item in inventory)} 字节")
