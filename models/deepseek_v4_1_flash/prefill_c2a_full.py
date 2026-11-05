@@ -34,7 +34,8 @@ from config import (
     STATE_BLOCKS_DYN, TP_SIZE, COMPRESSED_CACHE_GROUP, INDEX_CACHE_GROUP, MAX_BATCH_PER_DP,
     PREFILL_MAX_TOKENS, STATE_CAPACITY, WINDOW_CACHE_GROUP, SP_T_DYN, BLOCK_SIZE,
 )
-from compressor import STATE_WIDTH, c2a_compressor_publish
+from compressor import STATE_WIDTH
+from compressor_pool_dsl import c2a_compressor_publish
 from compressor_dsl import c2a_compressor_project
 from prefill_cp_allgather import prefill_sp_input_allgather
 from o_proj import (

@@ -15,9 +15,8 @@ from config import (
     Q_START_DYN, STATE_BLOCKS_DYN, COMPRESSED_CACHE_GROUP, INDEX_CACHE_GROUP, STATE_CAPACITY,
     WINDOW_CACHE_GROUP,
 )
-from compressor import (
-    c2a_compressor_publish, STATE_WIDTH,
-)
+from compressor import STATE_WIDTH
+from compressor_pool_dsl import c2a_compressor_publish
 from hc import hc_head_norm, hc_project, hc_sinkhorn, hc_post
 from qkv_proj_rope import quantize_projection_input, q_proj_rope, kv_proj, window_publish
 from sparse_attention import attend_packed

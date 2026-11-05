@@ -1,0 +1,122 @@
+"""归档 C2A DSL 池化的源码、固定数据、生成代码和验证记录。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-c2a-pool-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-05-c2a-pool"
+inventory = []
+
+
+def capture(source, target, binary=False):
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        value = source.read_text().replace(str(workspace), "<workspace>")
+        value = value.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n")
+    inventory.append({"path": str(destination.relative_to(archive)),
+                      "source": str(source.relative_to(workspace)), "bytes": destination.stat().st_size,
+                      "encoding": "gzip" if binary else "utf-8"})
+
+
+def generated(label, directory, fixtures=False):
+    for filename in ("kernel_config.py", "compiled_meta.json"):
+        source = directory / filename
+        if source.is_file():
+            capture(source, f"generated/{label}/{filename}.txt")
+    for source in sorted((directory / "orchestration").glob("*.cpp")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    for source in sorted((directory / "kernels").rglob("*.cpp")):
+        if "consume_c2a_state" in source.name:
+            capture(source, f"generated/{label}/kernels/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name.startswith(("clear_latent", "pool_state_block", "publish_compressed_page")):
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+def require_pass(filename, count):
+    text = (work / filename).read_text()
+    if len(re.findall(r"^\[RUN\] PASS", text, re.MULTILINE)) != count:
+        raise RuntimeError(filename + " 的通过数量不符")
+    return text
+
+
+validation = require_pass("validation-final.log", 6)
+equivalence = require_pass("equivalence-checked.log", 2)
+layer_log = require_pass("layer2-ep2.log", 1)
+require_pass("prefill-compile.log", 1)
+layer_outputs = len(re.findall(r"^\[RUN\]   '[^']+' PASS", layer_log, re.MULTILINE))
+if layer_outputs != 16:
+    raise RuntimeError("整层必须通过全部 16 项输出")
+
+archive.mkdir(parents=True, exist_ok=True)
+for filename in ("validation-final.log", "equivalence-checked.log", "layer2-ep2.log",
+                 "prefill-compile.log", "scope-review.txt"):
+    capture(work / filename, f"validation/{filename}.txt")
+for filename in ("initial-compile.log", "compile.log", "all-device.log", "equivalence.log"):
+    capture(work / filename, f"diagnostics/{filename}.txt")
+for name in ("compressor_pool_dsl", "compressor", "decode_c2a_full", "prefill_c2a_full"):
+    capture(model / "models/deepseek_v4_1_flash" / (name + ".py"), f"model-snapshot/{name}.py.txt")
+for filename in ("baseline_pool.py", "compressor_pool_before.cpp", "compare_pool.py", "archive.py"):
+    capture(work / filename, f"workflow/{filename}.txt")
+capture(model / "models/deepseek_v4_1_flash/kernels/compressor_publish.h", "workflow/compressor_publish.h.txt")
+
+validation_dirs = list(dict.fromkeys(re.findall(r"^\[产物\] (.+)$", validation, re.MULTILINE)))
+for index, path in enumerate(validation_dirs):
+    directory = Path(path)
+    generated(f"case-{index}", directory, fixtures=True)
+for index, path in enumerate(re.findall(r"^\[产物\] (.+)$", equivalence, re.MULTILINE)):
+    generated(f"native-comparison-{index}", Path(path), fixtures=True)
+layer = re.search(r"see (.+?/_jit_l3_decode_layer_[^/]+)/report/", layer_log)[1]
+generated("layer2-ep2", Path(layer))
+generated("layer2-ep2/chip", Path(layer) / "next_levels/l2_decode_layer")
+
+
+def revision(path):
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=path, text=True).strip()
+
+
+summary = {
+    "状态": "PASS", "分支": "dsv4.1-dsl", "模型基线": revision(model),
+    "PyPTO版本": revision(workspace / "issue75-env/pypto-pr"),
+    "DSL版本": revision(workspace / "cannbot-dsl-dev"),
+    "替换任务": "c2a_compress", "新任务": ["dsl_c2a_clear", "dsl_c2a_pool_state", "dsl_c2a_publish"],
+    "职责": "DSL 实现核内计算；PyPTO/simpler 调度状态块、缓存页及完成依赖。",
+    "契约": [
+        "双 token 按 FP32 分数做逐通道 softmax 加权池化，先舍入 BF16 再做 RMSNorm。",
+        "保留未旋转 BF16 latent；相邻元素对 RoPE 后舍入 BF16。",
+        "压缩缓存使用 group-16 E2M1 字节和 BF16 缩放值，中点向零舍入。",
+        "同一物理状态块全部历史读取完成后，才按请求及 token 顺序更新最后一个环形周期。",
+        "按物理缓存页调度并递增处理 token；重复槽位的最后一个有效 token 生效。",
+    ],
+    "验证": {
+        "独立用例": "5 组通过：17/15、17/0、1/1、80/72 随机分数、共享状态块。",
+        "连续两步": "8 项输出和逐步快照均以零容差通过。",
+        "原核对照": "2 组通过；state、latent、压缩字节、缩放值全部逐位一致。",
+        "CPU舍入说明": "80/72 随机分数的原核和 DSL 均有 2 个 latent 元素不同于 CPU，最大绝对误差 0.0078125。随机池化按现有整层 BF16 预算校验，尾部和保护行仍为零容差；原核对照始终为零容差。",
+        "整层": f"C2A layer2 EP2 的 {layer_outputs} 项输出全部通过原有比较器。",
+        "prefill": "TP1 编译通过；本次未验证完整 prefill 设备执行。",
+    },
+    "通信修改": False, "整层阈值修改": False, "框架修改": False,
+    "归档范围": "保留独立及原核对照固定数据、生成源码、整层编排与日志；整层大规模随机权重由入口 seed=0 复现。",
+    "files": inventory,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"归档 {len(inventory)} 项，大小 {sum(item['bytes'] for item in inventory)} 字节")

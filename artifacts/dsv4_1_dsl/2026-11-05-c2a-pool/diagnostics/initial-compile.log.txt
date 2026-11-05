@@ -1,0 +1,98 @@
+[C2A_POOL_DSL] 行数=17 有效行=15 随机分数=False 共享状态块=False
+[RUN] compile ...
+[RUN] compile done (0.07s)
+Traceback (most recent call last):
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/compressor_pool_dsl.py", line 409, in <module>
+    result = run(
+             ^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1565, in _run_pipeline
+    compiled = compile_step(cfg, compile_state)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1741, in _compile
+    return fn.compile(*dummy_args, config=cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1432, in compile
+    compiled, _ordered_args, _run_config = self._resolve_compiled(args, kwargs, allow_signature_mode=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1168, in _resolve_compiled
+    prepared_contexts = self._build_contexts(
+                        ^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1870, in _build_contexts
+    apply_external_spec(contexts[-1], dep._external_builder(contexts[-1]))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 266, in build
+    return _build(target, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 213, in _build
+    exported = exporter.export_source_bundle(kernel, arguments)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/_cannbotdsl_source.py", line 181, in export_source_bundle
+    device, debug, _ = kernel_materialize._materialize_device_function(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/kernel_materialize.py", line 350, in _materialize_device_function
+    frontend_artifact = compile_function(
+                        ^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/compiler.py", line 139, in compile_function
+    return compile_frontend(fn, options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/compiler.py", line 92, in compile_frontend
+    return FrontendCompiler().compile(fn, options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/compiler.py", line 50, in compile
+    plan = analyze(source)
+           ^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 986, in analyze
+    planner.visit(statement)
+  File "/home/server-toolkits/miniconda3/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 782, in visit_For
+    self._visit_dynamic_loop(node)
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 972, in _visit_dynamic_loop
+    self.visit(statement)
+  File "/home/server-toolkits/miniconda3/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 730, in visit_If
+    self.visit(statement)
+  File "/home/server-toolkits/miniconda3/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 730, in visit_If
+    self.visit(statement)
+  File "/home/server-toolkits/miniconda3/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 730, in visit_If
+    self.visit(statement)
+  File "/home/server-toolkits/miniconda3/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 868, in generic_visit
+    super().generic_visit(node)
+  File "/home/server-toolkits/miniconda3/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/home/server-toolkits/miniconda3/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 782, in visit_For
+    self._visit_dynamic_loop(node)
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 972, in _visit_dynamic_loop
+    self.visit(statement)
+  File "/home/server-toolkits/miniconda3/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 764, in visit_For
+    self._unsupported(
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 412, in _unsupported
+    raise self.source.error(
+cannbotdsl.core.frontend.diagnostics.FrontendError: <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/compressor_pool_dsl.py:191:52: FE101_UNSUPPORTED_SYNTAX: Only recognized dynamic ranges and fixed Python tuple/list iteration are supported inside a dynamic region.
+191 |                             for code, threshold in enumerate((0.25, 0.75, 1.25, 1.75, 2.5, 3.5, 5.0)):
+    |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+hint: Use range_constexpr, tuple(range(...)), a tuple/list literal, or a recognized range for SCF.

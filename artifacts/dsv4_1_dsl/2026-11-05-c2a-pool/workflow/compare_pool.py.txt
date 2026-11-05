@@ -1,0 +1,90 @@
+"""在相同输入上对比原生 C2A 任务与 DSL 任务，逐位校验四项输出。"""
+
+import argparse
+from dataclasses import replace
+from pathlib import Path
+
+import pypto.language as pl
+import torch
+from golden import ratio_allclose, run
+
+from baseline_pool import c2a_compressor_publish as baseline
+from compressor_pool_dsl import build_compression_specs, c2a_compressor_publish, compare_latent, golden_compression
+
+
+@pl.jit
+def compare_program(
+    kv_proj: pl.Tensor, score_proj: pl.Tensor, query_start_loc: pl.Tensor, position_ids: pl.Tensor,
+    token_to_req_indices: pl.Tensor, state_block_table: pl.Tensor, state_cache: pl.InOut[pl.Tensor],
+    norm_weight: pl.Tensor, latent: pl.InOut[pl.Tensor], num_tokens: pl.Scalar[pl.INT32],
+    cosine: pl.Tensor, sine: pl.Tensor, slots: pl.Tensor, cache: pl.InOut[pl.Tensor], scales: pl.InOut[pl.Tensor],
+    reference_state: pl.InOut[pl.Tensor], reference_latent: pl.InOut[pl.Tensor],
+    reference_cache: pl.InOut[pl.Tensor], reference_scales: pl.InOut[pl.Tensor],
+):
+    ready = pl.system.task_dummy(deps=[])
+    baseline(kv_proj, score_proj, query_start_loc, position_ids, token_to_req_indices,
+             state_block_table, reference_state, norm_weight, reference_latent, num_tokens, ready,
+             cosine, sine, slots, reference_cache, reference_scales)
+    c2a_compressor_publish(kv_proj, score_proj, query_start_loc, position_ids, token_to_req_indices,
+                           state_block_table, state_cache, norm_weight, latent, num_tokens, ready,
+                           cosine, sine, slots, cache, scales)
+    return state_cache, latent, cache, scales, reference_state, reference_latent, reference_cache, reference_scales
+
+
+names = dict(state_cache="reference_state", latent="reference_latent", cache="reference_cache", scales="reference_scales")
+
+
+def golden(tensors):
+    golden_compression(tensors)
+    for output, reference in names.items():
+        tensors[reference].copy_(tensors[output])
+
+
+def same_as_native(reference):
+    exact = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
+
+    def compare(actual, expected, *, actual_outputs, **kwargs):
+        return exact(actual, actual_outputs[reference], actual_outputs=actual_outputs, **kwargs)
+
+    return compare
+
+
+def diagnose_native(actual, expected, **kwargs):
+    # 原核按现有 BF16 预算对照 CPU；新旧核另行逐位比较。
+    count = int((actual != expected).sum())
+    error = float((actual.float() - expected.float()).abs().max())
+    print(f"[原核与CPU] 不同元素={count} 最大绝对误差={error}", flush=True)
+    torch.save(actual, Path(__file__).parent / f"native-latent-{actual.shape[0]}.pt")
+    return compare_latent(actual, expected, **kwargs)
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--device", type=int, default=0)
+parser.add_argument("--compile-only", action="store_true")
+args = parser.parse_args()
+exact = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
+for rows, active, shared in ((80, 72, False), (17, 15, True)):
+    print(f"[C2A新旧核对照] 行数={rows} 有效行={active} 共享状态={shared}", flush=True)
+    specs = build_compression_specs(rows, active, random_scores=True, shared_block=shared)
+    by_name = {spec.name: spec for spec in specs}
+    # 原生实现要求正槽位不越界；额外的越界槽位保护仅由新实现的独立用例覆盖。
+    slots = by_name["slots"].init_value.clone()
+    slots[slots >= 256] = -1
+    by_name["slots"].init_value = slots
+    specs += [replace(by_name[output], name=reference, init_value=by_name[output].init_value.clone())
+              for output, reference in names.items()]
+    comparators = {output: same_as_native(reference) for output, reference in names.items()}
+    comparators.update({reference: exact for reference in names.values()})
+    comparators["reference_latent"] = diagnose_native
+    result = run(
+        fn=compare_program,
+        specs=specs,
+        golden_fn=golden,
+        compare_fn=comparators,
+        config=dict(backend_type="a5", execution_mode=False, device_id=args.device),
+        compile_only=args.compile_only,
+        save_data=True,
+    )
+    if not result.passed:
+        raise SystemExit(result.error or 1)
+    print(f"[产物] {result.work_dir}", flush=True)
