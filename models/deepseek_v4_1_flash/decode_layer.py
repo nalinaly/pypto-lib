@@ -31,7 +31,7 @@ from decode_moe import (
 )
 
 
-# model config
+# 模型配置
 LOCAL_H = M.num_attention_heads
 LOCAL_O_GROUPS = M.o_groups
 LOCAL_O_WIDTH = M.o_groups * M.o_lora_rank
@@ -51,6 +51,10 @@ N_EXPERTS = M.n_routed_experts
 TOPK = M.num_experts_per_tok
 MOE_INTER = M.moe_intermediate_size
 MX_GROUP = M.weight_block_size[0]
+
+
+# 分块参数
+OUTPUT_INIT_ROW_TILE = 8
 
 
 @pl.jit
@@ -159,6 +163,15 @@ def l2_decode_layer(
     next_pre_mix.bind_dynamic(0, LOCAL_T_DYN)
     x_mixed.bind_dynamic(0, LOCAL_T_DYN)
     x_next.bind_dynamic(0, LOCAL_T_DYN)
+
+    if layer_id >= 2:
+        output_rows = pl.tensor.dim(attention_output, 0)
+        for row in pl.parallel(0, output_rows, OUTPUT_INIT_ROW_TILE):
+            with pl.at(level=pl.Level.CORE_GROUP, name_hint="unused_attention_output"):
+                live_rows = pl.min(OUTPUT_INIT_ROW_TILE, output_rows - row)
+                zeros = pl.tile.full([OUTPUT_INIT_ROW_TILE, D], dtype=pl.BF16, value=0.0)
+                valid = pl.tile.set_validshape(zeros, live_rows, D)
+                attention_output = pl.store(valid, [row, 0], attention_output)
 
     if layer_id < 2:
         decode_swa(
@@ -734,15 +747,17 @@ def _fixture_extent(dim, global_tokens):
 
 
 def build_tensor_specs(layer_id=0, seed=0):
-    """Build an L3 SWA decode block fixture with mHC and EP MoE."""
-    if decode_layer_kind(layer_id) != DecodeLayerKind.SWA:
-        raise ValueError("the complete-layer fixture currently supports SWA layers 0 and 1")
+    """构造包含 mHC 和 EP MoE 的 L3 SWA 或 C2A 完整 decode 数据集。"""
+    kind = decode_layer_kind(layer_id)
+    if kind not in (DecodeLayerKind.SWA, DecodeLayerKind.C2A_FULL):
+        raise ValueError("the complete-layer fixture supports SWA and C2A full source layers")
 
     from dataclasses import replace
     from types import SimpleNamespace
 
     from golden import ScalarSpec, TensorSpec
     import decode_swa
+    from decode_c2a_full import build_c2a_specs
     from decode_moe import build_moe_specs
 
     global_tokens = DECODE_MAX_TOKENS
@@ -751,12 +766,30 @@ def build_tensor_specs(layer_id=0, seed=0):
         requests=min(global_tokens, 8), dp=1,
         seed=seed, epochs=1, bench=False, pages=1, case="mixed",
     )
-    rank_specs = [
-        {spec.name: spec for spec in decode_swa.build_swa_specs(SimpleNamespace(**dict(vars(args), seed=seed + rank)))}
-        for rank in range(EP_SIZE)
-    ]
+    rank_specs = []
+    for rank in range(EP_SIZE):
+        if kind == DecodeLayerKind.SWA:
+            attention_specs = decode_swa.build_swa_specs(SimpleNamespace(**dict(vars(args), seed=seed + rank)))
+        else:
+            attention_specs = build_c2a_specs("full", global_tokens, min(global_tokens, 12), seed + rank, "mixed")
+            padded_specs = []
+            for spec in attention_specs:
+                if isinstance(spec, TensorSpec) and spec.name in {"x_hc", "pre_mix"}:
+                    shape = [MOE_TOKENS, *spec.shape[1:]]
+
+                    def pad_boundary(source=spec, shape=shape):
+                        value = source.create_tensor()
+                        padded = torch.zeros(shape, dtype=value.dtype)
+                        padded[:value.shape[0]].copy_(value)
+                        return padded
+
+                    name = "incoming_pre_mix" if spec.name == "pre_mix" else spec.name
+                    spec = replace(spec, name=name, shape=shape, init_value=pad_boundary)
+                padded_specs.append(spec)
+            attention_specs = padded_specs
+        rank_specs.append({spec.name: spec for spec in attention_specs})
     by_name = {}
-    attention_outputs = {"attention_output", "attention_hidden", "attention_pre_mix", "num_tokens"}
+    attention_outputs = {"attention_output", "attention_hidden", "attention_pre_mix", "num_tokens", "output", "next_pre_mix"}
     boundary_inputs = {"x_hc", "incoming_pre_mix", "hc_attn_fn", "hc_attn_scale", "hc_attn_base", "attn_norm_weight"}
     for name, spec in rank_specs[0].items():
         if not isinstance(spec, TensorSpec) or name in attention_outputs:
@@ -844,6 +877,7 @@ def _fixture_moe_counts():
 def golden_l3_decode_layer(tensors):
     """Run the local Attention golden, then the distributed MoE golden."""
     import decode_swa
+    from decode_c2a_full import golden_c2a
     from decode_moe import golden_moe
 
     global_tokens = int(tensors["attention_num_tokens"])
@@ -860,7 +894,15 @@ def golden_l3_decode_layer(tensors):
         group["attention_hidden"] = attention_hidden[group_base]
         group["attention_pre_mix"] = attention_pre_mix[group_base]
         group["num_tokens"] = global_tokens
-        decode_swa.golden_swa(group)
+        if decode_layer_kind(int(tensors["layer_id"])) == DecodeLayerKind.SWA:
+            decode_swa.golden_swa(group)
+        else:
+            group["x_hc"] = group["x_hc"][:global_tokens]
+            group["pre_mix"] = group["incoming_pre_mix"][:global_tokens]
+            group["output"] = attention_hidden[group_base, :global_tokens]
+            group["next_pre_mix"] = attention_pre_mix[group_base, :global_tokens]
+            golden_c2a(group)
+            tensors["attention_output"][group_base].zero_()
 
     moe_tensors = dict(tensors)
     moe_tensors["x_hc"] = attention_hidden
@@ -882,6 +924,26 @@ def _compare_active_rows_per_rank(compare, counts):
         return True, "every EP rank's active rows pass"
 
     return compare_active
+
+
+def _compare_c2a_per_rank(compare, *, active_rows=None):
+    """对每个 EP rank 及其映射分别应用现有 C2A 校验策略。"""
+    def compare_rank(actual, expected, *, inputs, **kwargs):
+        for rank in range(EP_SIZE):
+            local_inputs = {}
+            for name, value in inputs.items():
+                ranked = isinstance(value, torch.Tensor) and value.ndim and value.shape[0] == EP_SIZE
+                local_inputs[name] = value[rank] if ranked else value
+            local_inputs["num_tokens"] = inputs["attention_num_tokens"]
+            a, e = actual[rank], expected[rank]
+            if active_rows is not None:
+                a, e = a[:active_rows], e[:active_rows]
+            ok, detail = compare(a, e, inputs=local_inputs, **kwargs)
+            if not ok:
+                return False, f"rank {rank}: {detail}"
+        return True, "every EP rank passes the C2A policy"
+
+    return compare_rank
 
 
 def _compare_moe_from_actual_attention(counts):
@@ -1134,6 +1196,51 @@ if __name__ == "__main__":
     specs = build_tensor_specs(args.layer_id, args.seed)
     counts = _fixture_moe_counts()
     exact = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
+    comparators = {
+        # Window-cache payload and scale tolerances on mapped attention rows.
+        "window_cache": mapped_pool_ratio_allclose(
+            "window_slots", pool_name="window cache", mapping_shape=(EP_SIZE, DECODE_MAX_TOKENS),
+            block_size=128, leading_rank_axis=True,
+            atol=2 ** -9, rtol=2 ** -3, max_error_ratio=0.01,
+        ),
+        "window_cache_scale": mapped_pool_ratio_allclose(
+            "window_slots", pool_name="window cache scale", mapping_shape=(EP_SIZE, DECODE_MAX_TOKENS),
+            block_size=128, leading_rank_axis=True,
+            atol=0.0, rtol=0.02, max_error_ratio=0.01,
+        ),
+        "compressed_cache": exact,
+        "compressed_cache_scale": exact,
+        "index_cache": exact,
+        "index_cache_scale": exact,
+        "state_cache": exact,
+        "topk_indices": exact,
+        "pool_block_ids": exact,
+        "pool_block_counts": exact,
+        # Layer integration budget: at most 1.5% outliers per rank.
+        "attention_output": _compare_active_rows_per_rank(
+            ratio_allclose(atol=1e-2, rtol=1.0 / 128, max_error_ratio=0.015),
+            counts,
+        ),
+        "attention_hidden": _compare_active_rows_per_rank(
+            ratio_allclose(atol=1e-2, rtol=1.0 / 128, max_error_ratio=0.015),
+            counts,
+        ),
+        "attention_pre_mix": ratio_allclose(atol=1e-4, rtol=1e-4),
+        "next_pre_mix": _compare_next_pre_mix_from_actual_attention(counts),
+        "x_mixed": _compare_active_rows_per_rank(
+            ratio_reldiff(diff_thd=0.01, pct_thd=0.05),
+            counts,
+        ),
+        "x_next": _compare_moe_from_actual_attention(counts),
+    }
+    if decode_layer_kind(args.layer_id) == DecodeLayerKind.C2A_FULL:
+        from decode_c2a_full import c2a_comparators
+
+        for name, compare in c2a_comparators(DECODE_MAX_TOKENS).items():
+            output_name = {"output": "attention_hidden", "next_pre_mix": "attention_pre_mix"}.get(name, name)
+            active_rows = DECODE_MAX_TOKENS if name in {"output", "next_pre_mix"} else None
+            comparators[output_name] = _compare_c2a_per_rank(compare, active_rows=active_rows)
+        comparators["attention_output"] = exact
     result = run(
         fn=l3_decode_layer,
         specs=specs,
@@ -1151,43 +1258,7 @@ if __name__ == "__main__":
             # Attention and the packed EP MoE keep intermediate tensors live together.
             ring_heap=1073741824,
         ),
-        compare_fn={
-            # Window-cache payload and scale tolerances on mapped attention rows.
-            "window_cache": mapped_pool_ratio_allclose(
-                "window_slots", pool_name="window cache", mapping_shape=(EP_SIZE, DECODE_MAX_TOKENS),
-                block_size=128, leading_rank_axis=True,
-                atol=2 ** -9, rtol=2 ** -3, max_error_ratio=0.01,
-            ),
-            "window_cache_scale": mapped_pool_ratio_allclose(
-                "window_slots", pool_name="window cache scale", mapping_shape=(EP_SIZE, DECODE_MAX_TOKENS),
-                block_size=128, leading_rank_axis=True,
-                atol=0.0, rtol=0.02, max_error_ratio=0.01,
-            ),
-            "compressed_cache": exact,
-            "compressed_cache_scale": exact,
-            "index_cache": exact,
-            "index_cache_scale": exact,
-            "state_cache": exact,
-            "topk_indices": exact,
-            "pool_block_ids": exact,
-            "pool_block_counts": exact,
-            # Layer integration budget: at most 1.5% outliers per rank.
-            "attention_output": _compare_active_rows_per_rank(
-                ratio_allclose(atol=1e-2, rtol=1.0 / 128, max_error_ratio=0.015),
-                counts,
-            ),
-            "attention_hidden": _compare_active_rows_per_rank(
-                ratio_allclose(atol=1e-2, rtol=1.0 / 128, max_error_ratio=0.015),
-                counts,
-            ),
-            "attention_pre_mix": ratio_allclose(atol=1e-4, rtol=1e-4),
-            "next_pre_mix": _compare_next_pre_mix_from_actual_attention(counts),
-            "x_mixed": _compare_active_rows_per_rank(
-                ratio_reldiff(diff_thd=0.01, pct_thd=0.05),
-                counts,
-            ),
-            "x_next": _compare_moe_from_actual_attention(counts),
-        },
+        compare_fn=comparators,
     )
     if result is not None and not result.passed:
         raise SystemExit(result.error or 1)

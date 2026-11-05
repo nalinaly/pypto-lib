@@ -517,6 +517,52 @@ extra output guard tile. Fixtures exercise all 256 payload and scale byte codes
 and signed-zero route weights. The four-source case is a local data-layout
 test; distributed integration is validated by the existing EP2 layer entry.
 
+## C2A compressor projections in DSL
+
+[`compressor_dsl.py`](../../../models/deepseek_v4_1_flash/compressor_dsl.py)
+provides the shared C2A KV and gate projections used by decode and prefill.
+Each `dsl_proj_cmp` AIC task retains the original M80/N64 tile and consecutive
+K256 BF16 multiplications with FP32 accumulation and output. NZ weights retain
+their original bytes; whole-tensor flattening exposes their physical storage
+before the DSL loads the existing `[N/16, K/16, 16, 16]` faces.
+
+KV and gate tasks are independent. PyPTO preserves the caller's readiness
+dependency, bounds the completion pool, and joins both projections before
+pooling or cache publication. C1A projections, C2A pooling, ring state,
+quantization and communication kernels retain their implementations. The
+obsolete PyPTO C2A projection body and tiling constants are removed. Neither
+PyPTO nor CANNBotDSL requires a framework change.
+
+With one A5 device allocated through the site's task queue:
+
+```bash
+python models/deepseek_v4_1_flash/compressor_dsl.py -d "$TASK_DEVICE"
+```
+
+The bounded cases cover NZ face coordinates, zero tokens, partial row tiles,
+72 active rows, and completion-pool reuse across 321 rows. Structured cases
+compare exactly with the CPU reference; the random BF16 case uses FP32
+`atol=rtol=1e-4` with no allowed outliers. Every inactive output and guard row
+must remain exact. The evidence archive additionally compares the original
+PyPTO projection with the production DSL projection on identical A5 inputs
+at zero numerical tolerance.
+
+The complete-layer fixture now supports C2A full source layers, including
+`--layer-id 2`, using the existing C2A fixture builder and acceptance policy
+independently for each EP rank. The SWA acceptance policy is unchanged. The
+common interface's SWA-only `attention_output` port is explicitly zeroed on
+other attention branches; C2A's numerical attention boundary remains
+`attention_hidden`, which is validated before the EP MoE comparison.
+
+With two allocated A5 devices:
+
+```bash
+python models/deepseek_v4_1_flash/decode_layer.py --ep 2 --layer-id 2 -d "$TASK_DEVICE"
+```
+
+The shared prefill caller is compiled with the new interface. Its complete
+device execution is outside this decode validation scope.
+
 ## DSL development branch and evidence
 
 Continue DSL implementation and evidence collection on
@@ -556,3 +602,6 @@ review, generated code, CPU fixtures and the layer-0 EP2 regression.
 The [send-staging archive](../../../artifacts/dsv4_1_dsl/2026-11-05-dispatch-stage/README.txt)
 contains byte-exact staging and gather regressions, unchanged communication
 review, generated code, CPU fixtures and the layer-0 EP2 regression.
+The [C2A projection archive](../../../artifacts/dsv4_1_dsl/2026-11-05-c2a-projection/README.txt)
+contains the original projection comparison, complete-layer fixture support,
+generated sources, CPU references and the layer-2 EP2 regression.

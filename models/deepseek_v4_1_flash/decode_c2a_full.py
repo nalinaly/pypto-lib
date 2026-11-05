@@ -16,12 +16,13 @@ from config import (
     WINDOW_CACHE_GROUP,
 )
 from compressor import (
-    c2a_compressor_publish, STATE_WIDTH, c2a_compressor_project,
+    c2a_compressor_publish, STATE_WIDTH,
 )
 from hc import hc_head_norm, hc_project, hc_sinkhorn, hc_post
 from qkv_proj_rope import quantize_projection_input, q_proj_rope, kv_proj, window_publish
 from sparse_attention import attend_packed
 from decode_indexer import decode_c2a_indexer
+from compressor_dsl import c2a_compressor_project
 from o_proj import o_proj
 
 # 模型配置
@@ -127,11 +128,14 @@ def decode_c2a_full(
 
     compressor_kv = pl.create_tensor([tokens, HEAD_DIM], dtype=pl.FP32)
     compressor_score = pl.create_tensor([tokens, HEAD_DIM], dtype=pl.FP32)
-    c2a_compressor_project(x_norm, compressor_wkv, compressor_wgate, compressor_kv, compressor_score, num_tokens)
+    compressor_kv, compressor_score, projection_ready = c2a_compressor_project(
+        x_norm, compressor_wkv, compressor_wgate, compressor_kv, compressor_score, num_tokens, cache_ready,
+    )
+    compressor_ready = pl.system.task_dummy(deps=[cache_ready, projection_ready])
     latent = pl.create_tensor([tokens, HEAD_DIM], dtype=pl.BF16)
     compressed_publish_tid = c2a_compressor_publish(
         compressor_kv, compressor_score, query_start_loc, position_ids, token_to_req_indices,
-        state_block_table, state_cache, compressor_norm_weight, latent, num_tokens, cache_ready,
+        state_block_table, state_cache, compressor_norm_weight, latent, num_tokens, compressor_ready,
         compressed_rope_cos, compressed_rope_sin, compressed_slots, compressed_cache, compressed_cache_scale,
     )
 
@@ -678,12 +682,59 @@ def build_c2a_specs(
     return specs
 
 
-if __name__ == "__main__":
+def c2a_comparators(tokens):
+    """返回组件校验和整层校验共用的 C2A 完整路径验收策略。"""
     from config import BLOCK_SIZE
-
-    from golden import ratio_allclose, mapped_pool_ratio_allclose, run
-
+    from golden import mapped_pool_ratio_allclose, ratio_allclose
     from decode_indexer import mapped_fp4_cache_compare
+
+    return {
+        "output": ratio_allclose(atol=1e-2, rtol=1.0 / 128),
+        "next_pre_mix": ratio_allclose(atol=2.5e-5, rtol=5e-3),
+        "window_cache": mapped_pool_ratio_allclose(
+            "window_slots", pool_name="window_cache",
+            mapping_shape=(tokens,),
+            block_size=BLOCK_SIZE, leading_rank_axis=False,
+            atol=2 ** -9, rtol=2 ** -3, max_error_ratio=0.0,
+        ),
+        "window_cache_scale": mapped_pool_ratio_allclose(
+            "window_slots", pool_name="window_cache_scale",
+            mapping_shape=(tokens,),
+            block_size=BLOCK_SIZE, leading_rank_axis=False,
+            atol=0.0, rtol=0.0, max_error_ratio=0.0,
+        ),
+        "compressed_cache": mapped_fp4_cache_compare(
+            "compressed_slots", pool_name="compressed_cache",
+            mapping_shape=(tokens,),
+            block_size=BLOCK_SIZE, leading_rank_axis=False,
+            max_error_ratio=0.005,
+        ),
+        "compressed_cache_scale": mapped_pool_ratio_allclose(
+            "compressed_slots", pool_name="compressed_cache_scale",
+            mapping_shape=(tokens,),
+            block_size=BLOCK_SIZE, leading_rank_axis=False,
+            atol=0.0, rtol=2 ** -7, max_error_ratio=0.0,
+        ),
+        "index_cache": mapped_fp4_cache_compare(
+            "compressed_slots", pool_name="index_cache",
+            mapping_shape=(tokens,),
+            block_size=BLOCK_SIZE, leading_rank_axis=False,
+            max_error_ratio=0.005,
+        ),
+        "index_cache_scale": mapped_pool_ratio_allclose(
+            "compressed_slots", pool_name="index_cache_scale",
+            mapping_shape=(tokens,),
+            block_size=BLOCK_SIZE, leading_rank_axis=False,
+            atol=0.0, rtol=0.0, max_error_ratio=0.0,
+        ),
+        "state_cache": ratio_allclose(atol=1e-3, rtol=1e-3),
+        "topk_indices": ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.02),
+    }
+
+
+if __name__ == "__main__":
+    from golden import run
+
     from utils import configure_decode_workload, parse_decode_query_lens, parse_decode_startpos
 
     import argparse
@@ -719,48 +770,7 @@ if __name__ == "__main__":
         fn=host,
         specs=specs,
         golden_fn=golden_c2a,
-        compare_fn={
-            "output": ratio_allclose(atol=1e-2, rtol=1.0 / 128),
-            "next_pre_mix": ratio_allclose(atol=2.5e-5, rtol=5e-3),
-            "window_cache": mapped_pool_ratio_allclose(
-                "window_slots", pool_name="window_cache",
-                mapping_shape=(args.tokens,),
-                block_size=BLOCK_SIZE, leading_rank_axis=False,
-                atol=2 ** -9, rtol=2 ** -3, max_error_ratio=0.0,
-            ),
-            "window_cache_scale": mapped_pool_ratio_allclose(
-                "window_slots", pool_name="window_cache_scale",
-                mapping_shape=(args.tokens,),
-                block_size=BLOCK_SIZE, leading_rank_axis=False,
-                atol=0.0, rtol=0.0, max_error_ratio=0.0,
-            ),
-            "compressed_cache": mapped_fp4_cache_compare(
-                "compressed_slots", pool_name="compressed_cache",
-                mapping_shape=(args.tokens,),
-                block_size=BLOCK_SIZE, leading_rank_axis=False,
-                max_error_ratio=0.005,
-            ),
-            "compressed_cache_scale": mapped_pool_ratio_allclose(
-                "compressed_slots", pool_name="compressed_cache_scale",
-                mapping_shape=(args.tokens,),
-                block_size=BLOCK_SIZE, leading_rank_axis=False,
-                atol=0.0, rtol=2 ** -7, max_error_ratio=0.0,
-            ),
-            "index_cache": mapped_fp4_cache_compare(
-                "compressed_slots", pool_name="index_cache",
-                mapping_shape=(args.tokens,),
-                block_size=BLOCK_SIZE, leading_rank_axis=False,
-                max_error_ratio=0.005,
-            ),
-            "index_cache_scale": mapped_pool_ratio_allclose(
-                "compressed_slots", pool_name="index_cache_scale",
-                mapping_shape=(args.tokens,),
-                block_size=BLOCK_SIZE, leading_rank_axis=False,
-                atol=0.0, rtol=0.0, max_error_ratio=0.0,
-            ),
-            "state_cache": ratio_allclose(atol=1e-3, rtol=1e-3),
-            "topk_indices": ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.02),
-        },
+        compare_fn=c2a_comparators(args.tokens),
         compile_only=args.compile_only,
         save_data=args.save_data,
         golden_data=args.golden_data,

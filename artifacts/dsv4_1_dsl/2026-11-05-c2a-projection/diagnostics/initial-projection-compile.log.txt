@@ -1,0 +1,15 @@
+[C2A_PROJECTION_DSL] rows=17 active=15 layout_case=True
+[RUN] compile ...
+[RUN] compile done (0.59s)
+Error: pl.tensor operation 'view': tensor.view does not support an NZ source: its dims are a fractal decomposition, so re-viewing them would break the fractal addressing. Slice the NZ tensor directly.
+  --> <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/compressor_dsl.py:76:5
+   |
+74 |     rows = pl.tensor.dim(x, 0)
+75 |     active = pl.min(rows, pl.max(pl.cast(num_tokens, pl.INDEX), 0))
+76 |     kv_weight = pl.tensor.view(wkv, [HEAD_DIM // 16, D * 16], layout=pl.ND)
+   |     ^^^^^^^^^
+77 |     gate_weight = pl.tensor.view(wgate, [HEAD_DIM // 16, D * 16], layout=pl.ND)
+78 |     ready = pl.system.task_dummy(deps=[])
+   |
+
+note: run with `PTO_BACKTRACE=1` environment variable to display a backtrace.

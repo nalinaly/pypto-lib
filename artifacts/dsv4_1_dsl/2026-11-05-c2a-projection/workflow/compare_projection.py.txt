@@ -1,0 +1,65 @@
+"""Compare the original projection and production DSL projection on identical inputs."""
+
+import argparse
+from dataclasses import replace
+import pypto.language as pl
+from golden import ratio_allclose, run
+from baseline_projection import c2a_compressor_project as baseline
+from compressor_dsl import D, HEAD_DIM, build_projection_specs, c2a_compressor_project
+from compressor_dsl import golden_projection, projection_comparator
+
+
+@pl.jit
+def validate_equivalence(
+    source: pl.Tensor,
+    wkv: pl.Tensor[[D, HEAD_DIM], pl.BF16, pl.NZ],
+    wgate: pl.Tensor[[D, HEAD_DIM], pl.BF16, pl.NZ],
+    reference_kv: pl.InOut[pl.Tensor], reference_score: pl.InOut[pl.Tensor],
+    kv_out: pl.InOut[pl.Tensor], score_out: pl.InOut[pl.Tensor], num_tokens: pl.Scalar[pl.INT32],
+):
+    rows = pl.tensor.dim(source, 0)
+    old_kv = pl.slice(reference_kv, [rows, HEAD_DIM], [0, 0])
+    old_score = pl.slice(reference_score, [rows, HEAD_DIM], [0, 0])
+    new_kv = pl.slice(kv_out, [rows, HEAD_DIM], [0, 0])
+    new_score = pl.slice(score_out, [rows, HEAD_DIM], [0, 0])
+    baseline(source, wkv, wgate, old_kv, old_score, num_tokens)
+    ready = pl.system.task_dummy(deps=[])
+    c2a_compressor_project(source, wkv, wgate, new_kv, new_score, num_tokens, ready)
+    return reference_kv, reference_score, kv_out, score_out
+
+
+def golden(tensors):
+    golden_projection(tensors)
+    tensors["reference_kv"].copy_(tensors["kv_out"])
+    tensors["reference_score"].copy_(tensors["score_out"])
+
+
+def exact_reference(name):
+    exact = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
+
+    def compare(actual, expected, *, actual_outputs, **kwargs):
+        return exact(actual, actual_outputs[name], actual_outputs=actual_outputs, **kwargs)
+
+    return compare
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--device", type=int, default=0)
+args = parser.parse_args()
+for rows, active, layout in ((17, 15, True), (17, 0, True), (80, 72, False), (81, 81, True), (321, 321, True)):
+    print(f"[PROJECTION_EQUIVALENCE] rows={rows} active={active} layout={layout}", flush=True)
+    specs = build_projection_specs(rows, active, layout)
+    refs = [replace(specs[3], name="reference_kv"), replace(specs[4], name="reference_score")]
+    specs = specs[:3] + refs + specs[3:]
+    cpu_compare = projection_comparator(0.0 if layout else 1e-4)
+    result = run(
+        fn=validate_equivalence,
+        specs=specs,
+        golden_fn=golden,
+        compare_fn={"reference_kv": cpu_compare, "reference_score": cpu_compare,
+                    "kv_out": exact_reference("reference_kv"), "score_out": exact_reference("reference_score")},
+        config=dict(backend_type="a5", execution_mode=False, device_id=args.device),
+        save_data=True,
+    )
+    if not result.passed:
+        raise SystemExit(result.error or 1)

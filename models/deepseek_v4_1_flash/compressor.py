@@ -22,20 +22,17 @@ from quant import unpack_bf16_nz
 from rmsnorm import golden_rms_norm
 
 
-# model config
+# 模型配置
 D = M.hidden_size
 HEAD_DIM = M.head_dim
 ROPE_DIM = M.qk_rope_head_dim
 EPS = M.rms_norm_eps
 STATE_WIDTH = 2 * M.head_dim
 
-# tiling
+# 分块参数
 C1A_PROJ_M_TILE = 48
 C1A_PROJ_N_TILE = 64
 C1A_PROJ_K_TILE = 512
-C2A_PROJ_M_TILE = 80
-C2A_PROJ_N_TILE = 64
-C2A_PROJ_K_TILE = 256
 
 
 @pl.jit.inline(auto_scope=False)
@@ -106,53 +103,6 @@ def c1a_compressor_publish(
     with pl.spmd(workers, name_hint="c1a_compress", deps=[cache_ready, source_ready]) as published:
         cache = _c1a_compress(source, slots, cache, scales, cosine, sine, norm_weight, latent, active_tokens)
     return published
-
-
-@pl.jit.inline
-def _c2a_compressor_project_tile(
-    x: pl.Tensor[[T_DYN, D], pl.BF16],
-    weight: pl.Tensor[[D, HEAD_DIM], pl.BF16, pl.NZ],
-    output: pl.Tensor[[T_DYN, HEAD_DIM], pl.FP32],
-    row: pl.Scalar[pl.INDEX],
-    col: pl.Scalar[pl.INDEX],
-    rows: pl.Scalar[pl.INDEX],
-):
-    a = pl.load(x, [row, 0], [C2A_PROJ_M_TILE, C2A_PROJ_K_TILE], valid_shape=[rows, C2A_PROJ_K_TILE], target_memory=pl.Mem.Mat)
-    b = pl.load(weight, [0, col], [C2A_PROJ_K_TILE, C2A_PROJ_N_TILE], target_memory=pl.Mem.Mat)
-    a_full = pl.set_validshape(a, C2A_PROJ_M_TILE, C2A_PROJ_K_TILE)
-    acc = pl.matmul(a_full, b)
-    for k in pl.pipeline(C2A_PROJ_K_TILE, D, C2A_PROJ_K_TILE, stage=2):
-        a = pl.load(x, [row, k], [C2A_PROJ_M_TILE, C2A_PROJ_K_TILE], valid_shape=[rows, C2A_PROJ_K_TILE], target_memory=pl.Mem.Mat)
-        b = pl.load(weight, [k, col], [C2A_PROJ_K_TILE, C2A_PROJ_N_TILE], target_memory=pl.Mem.Mat)
-        a_full = pl.set_validshape(a, C2A_PROJ_M_TILE, C2A_PROJ_K_TILE)
-        acc = pl.matmul_acc(acc, a_full, b)
-    value = pl.set_validshape(acc, rows, C2A_PROJ_N_TILE)
-    output = pl.store(value, [row, col], output)
-    return output
-
-
-@pl.jit.inline
-def c2a_compressor_project(
-    x: pl.Tensor[[T_DYN, D], pl.BF16],
-    wkv: pl.Tensor[[D, HEAD_DIM], pl.BF16, pl.NZ],
-    wgate: pl.Tensor[[D, HEAD_DIM], pl.BF16, pl.NZ],
-    kv_out: pl.Tensor[[T_DYN, HEAD_DIM], pl.FP32],
-    score_out: pl.Tensor[[T_DYN, HEAD_DIM], pl.FP32],
-    num_tokens: pl.Scalar[pl.INT32],
-):
-    """Project KV and gate with NZ BF16 weights and FP32 Cube output."""
-    blocks = (num_tokens + C2A_PROJ_M_TILE - 1) // C2A_PROJ_M_TILE * (2 * HEAD_DIM // C2A_PROJ_N_TILE)
-    with pl.spmd(pl.max(blocks, 1), name_hint="proj_cmp"):
-        with pl.at(level=pl.Level.CORE_GROUP, name_hint="proj_cmp"):
-            block = pl.tile.get_block_idx()
-            row = block // (2 * HEAD_DIM // C2A_PROJ_N_TILE) * C2A_PROJ_M_TILE
-            col = block % (HEAD_DIM // C2A_PROJ_N_TILE) * C2A_PROJ_N_TILE
-            rows = pl.max(pl.min(C2A_PROJ_M_TILE, num_tokens - row), 0)
-            if block % (2 * HEAD_DIM // C2A_PROJ_N_TILE) < HEAD_DIM // C2A_PROJ_N_TILE:
-                kv_out = _c2a_compressor_project_tile(x, wkv, kv_out, row, col, rows)
-            else:
-                score_out = _c2a_compressor_project_tile(x, wgate, score_out, row, col, rows)
-    return kv_out, score_out
 
 
 @pl.jit.extern(core_type="aiv", source=Path(__file__).parent / "kernels" / "compressor_pool.cpp",

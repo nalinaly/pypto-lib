@@ -1,0 +1,52 @@
+{
+  "status": "PASS",
+  "branch": "dsv4.1-dsl",
+  "model_base": "e9371e6662b323684fde03a05199c1c7848909c3",
+  "pypto_revision": "4a65a9c79b305aac9cac5a8cd84eef4cc8e4986c",
+  "dsl_revision": "91feb222c59ec3ad1175ba5fd88445c72f8abdff",
+  "replaced_task": "C2A proj_cmp",
+  "replacement_task": "dsl_proj_cmp",
+  "communication_unchanged": true,
+  "pooling_and_cache_publication_unchanged": true,
+  "baseline_component": "PASS",
+  "baseline_ep2": "15 numerical/state outputs PASS; only the previously undefined SWA-only port failed",
+  "auxiliary_port_fix": "Explicit zero initialization for attention_output on non-SWA branches",
+  "projection_cases": [
+    {
+      "rows": 17,
+      "active": 15
+    },
+    {
+      "rows": 17,
+      "active": 0
+    },
+    {
+      "rows": 80,
+      "active": 72
+    },
+    {
+      "rows": 81,
+      "active": 81
+    },
+    {
+      "rows": 321,
+      "active": 321
+    }
+  ],
+  "projection_equivalence": "Both FP32 projections equal the original implementation at zero numerical tolerance",
+  "local_task": "task_20261105_112235_146407414959",
+  "ep2_task": "task_20261105_113033_181343513362",
+  "ep2_devices": [
+    2,
+    7
+  ],
+  "layer_id": 2,
+  "layer_outputs": 16,
+  "prefill": "TP1 compile-only PASS",
+  "limits": [
+    "A5 with generated CPU fixtures",
+    "No checkpoint, whole-network or performance claim",
+    "Full prefill device execution is not validated",
+    "Original C2A and SWA thresholds retained"
+  ]
+}

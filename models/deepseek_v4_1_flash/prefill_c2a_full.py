@@ -34,7 +34,8 @@ from config import (
     STATE_BLOCKS_DYN, TP_SIZE, COMPRESSED_CACHE_GROUP, INDEX_CACHE_GROUP, MAX_BATCH_PER_DP,
     PREFILL_MAX_TOKENS, STATE_CAPACITY, WINDOW_CACHE_GROUP, SP_T_DYN, BLOCK_SIZE,
 )
-from compressor import STATE_WIDTH, c2a_compressor_project, c2a_compressor_publish
+from compressor import STATE_WIDTH, c2a_compressor_publish
+from compressor_dsl import c2a_compressor_project
 from prefill_cp_allgather import prefill_sp_input_allgather
 from o_proj import (
     retire_prefill_signals,
@@ -161,11 +162,14 @@ def prefill_c2a_full_attention(
 
     compressor_kv = pl.create_tensor([tokens, HEAD_DIM], dtype=pl.FP32)
     compressor_score = pl.create_tensor([tokens, HEAD_DIM], dtype=pl.FP32)
-    c2a_compressor_project(x, compressor_wkv, compressor_wgate, compressor_kv, compressor_score, num_tokens)
+    compressor_kv, compressor_score, projection_ready = c2a_compressor_project(
+        x, compressor_wkv, compressor_wgate, compressor_kv, compressor_score, num_tokens, cache_ready,
+    )
+    compressor_ready = pl.system.task_dummy(deps=[cache_ready, projection_ready])
     latent = pl.create_tensor([tokens, HEAD_DIM], dtype=pl.BF16)
     compressed_publish_tid = c2a_compressor_publish(
         compressor_kv, compressor_score, query_start_loc, position_ids, token_to_req_indices,
-        state_block_table, state_cache, compressor_norm_weight, latent, num_tokens, cache_ready,
+        state_block_table, state_cache, compressor_norm_weight, latent, num_tokens, compressor_ready,
         compressed_rope_cos, compressed_rope_sin, compressed_slots, compressed_cache, compressed_cache_scale,
     )
 

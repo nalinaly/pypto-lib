@@ -1,0 +1,20 @@
+任务已提交: task_20261105_104228_37480808259 (断开后可用 task-submit --wait task_20261105_104228_37480808259 重连)
+等待任务执行: task_20261105_104228_37480808259 (Ctrl+C 终止任务)
+[npu-lock] 获取设备 5 的锁 (无超时)...
+[npu-lock] 已获取设备 5 的锁 (pid=3750749)
+[npu-lock] 获取设备 7 的锁 (无超时)...
+[npu-lock] 已获取设备 7 的锁 (pid=3750749)
+Traceback (most recent call last):
+  File "<workspace>/artifacts/dsv41-semantic-review/run_case.py", line 21, in <module>
+    runpy.run_path(str(entry), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_layer.py", line 1134, in <module>
+    specs = build_tensor_specs(args.layer_id, args.seed)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_layer.py", line 739, in build_tensor_specs
+    raise ValueError("the complete-layer fixture currently supports SWA layers 0 and 1")
+ValueError: the complete-layer fixture currently supports SWA layers 0 and 1
+[npu-lock] 已释放设备 5 7 的锁
+=== 任务失败 (exit=1) ===
