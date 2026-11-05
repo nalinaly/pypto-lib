@@ -8,14 +8,11 @@
 # -----------------------------------------------------------------------------------------------------------
 """Decode indexer query preparation, key publication, scoring, and TopK."""
 
-from pathlib import Path
-
-from pypto.runtime import pto_isa_include_dir
-
 from index_projection_dsl import project_index_key
 from index_key_dsl import publish_index_rows
 from index_weight_dsl import project_index_weights
 from index_query_dsl import project_index_query
+from index_score_dsl import dispatch_score_topk
 import pypto.language as pl
 from config import (
     B_DYN, FLASH, INDEX_BLOCKS_DYN, INDEX_CACHE_GROUP, INDEX_POOL_BLOCKS_DYN,
@@ -44,70 +41,6 @@ CANDIDATE_LEAF_TILE = 8192
 CANDIDATE_SHORT_LEAF_TILE = 2048
 CANDIDATE_MAX_LEAVES = (FLASH.max_position_embeddings // CANDIDATE_BLOCK_SIZE - 1) // CANDIDATE_LEAF_TILE + 1
 INDEX_SCORE_POSITIONS_DYN = pl.dynamic("V41_INDEX_SCORE_POSITIONS_DYN")
-
-@pl.jit.extern(core_type="mixed", aic_source=Path(__file__).parent / "kernels" / "index_score_topk.cpp",
-               aiv_source=Path(__file__).parent / "kernels" / "index_score_topk.cpp", dual_aiv_dispatch=True,
-               include_dirs=(pto_isa_include_dir(),))
-def _idx_score_topk(
-    query: pl.Tensor,
-    query_scale: pl.Tensor,
-    weights: pl.Tensor,
-    index_cache: pl.Tensor,
-    index_cache_scale: pl.Tensor,
-    block_table: pl.Tensor,
-    request_ids: pl.Tensor,
-    lengths: pl.Tensor,
-    output: pl.Out[pl.Tensor],
-    runs: pl.Tensor,
-    candidate_keys: pl.Out[pl.Tensor],
-    candidate_indices: pl.Out[pl.Tensor],
-    valid: pl.Tensor,
-    physical: pl.Tensor,
-    scores: pl.Out[pl.Tensor],
-    width: pl.Scalar[pl.INDEX],
-    run_stride: pl.Scalar[pl.INDEX],
-    table_width: pl.Scalar[pl.INDEX],
-    num_tokens: pl.Scalar[pl.INT32],
-    gathered_rows: pl.Scalar[pl.INDEX],
-    emit_scores: pl.Scalar[pl.INT32],
-    shards: pl.Scalar[pl.INDEX],
-    direct_short: pl.Scalar[pl.INT32],
-) -> pl.Tensor:
-    """Score history shards and merge local TopK candidates within one MIX."""
-    ...
-
-
-@pl.jit.extern(core_type="mixed", aic_source=Path(__file__).parent / "kernels" / "index_score_topk.cpp",
-               aiv_source=Path(__file__).parent / "kernels" / "index_score_topk.cpp", dual_aiv_dispatch=True,
-               include_dirs=(pto_isa_include_dir(),))
-def _idx_pool_score_topk(
-    query: pl.Tensor,
-    query_scale: pl.Tensor,
-    weights: pl.Tensor,
-    index_cache: pl.Tensor,
-    index_cache_scale: pl.Tensor,
-    block_table: pl.Tensor,
-    request_ids: pl.Tensor,
-    lengths: pl.Tensor,
-    output: pl.Out[pl.Tensor],
-    runs: pl.Tensor,
-    candidate_keys: pl.Out[pl.Tensor],
-    candidate_indices: pl.Out[pl.Tensor],
-    valid: pl.Tensor,
-    physical: pl.Tensor,
-    scores: pl.Out[pl.Tensor],
-    width: pl.Scalar[pl.INDEX],
-    run_stride: pl.Scalar[pl.INDEX],
-    table_width: pl.Scalar[pl.INDEX],
-    num_tokens: pl.Scalar[pl.INT32],
-    gathered_rows: pl.Scalar[pl.INDEX],
-    emit_scores: pl.Scalar[pl.INT32],
-    shards: pl.Scalar[pl.INDEX],
-    direct_short: pl.Scalar[pl.INT32],
-) -> pl.Tensor:
-    """Score gathered pool shards and merge local TopK candidates within one MIX."""
-    ...
-
 
 @pl.jit.inline
 def _merge_candidate_pairs(
@@ -487,7 +420,7 @@ def _score_select_pool(
     cache_flat = pl.reshape(index_cache, [cache_rows, INDEX_DIM // 2])
     scale_flat = pl.reshape(index_cache_scale, [cache_rows // 8, 32])
     payloads = pl.create_tensor([total_rows, INDEX_DIM // 2], dtype=pl.UINT8)
-    scales = pl.create_tensor([1, total_scales], dtype=pl.UINT8)
+    scales = pl.create_tensor([1, total_scales], dtype=pl.FP8E8M0)
     valid = pl.create_tensor([1, total_rows], dtype=pl.INT32)
     physical = pl.create_tensor([1, total_rows], dtype=pl.INT32)
     runs = pl.create_tensor([4, tokens + 1], dtype=pl.INT32)
@@ -536,7 +469,8 @@ def _score_select_pool(
             packed_bytes = pl.reinterpret_view(packed, pl.UINT8)
             pl.store(packed_bytes, [row_offset, 0], payloads)
             scale_bytes = pl.reinterpret_view(raw_scale, pl.UINT8)
-            pl.store(scale_bytes, [0, row_offset * _SCALE_COUNT], scales)
+            scale_storage = pl.reinterpret_view(scale_bytes, pl.FP8E8M0)
+            pl.store(scale_storage, [0, row_offset * _SCALE_COUNT], scales)
             pl.store(valid_lanes, [0, row_offset], valid)
             pl.store(physical_lanes, [0, row_offset], physical)
     with pl.at(level=pl.Level.CORE_GROUP, name_hint="idx_plan_pool_runs", deps=[pool_ready]) as runs_tid:
@@ -547,10 +481,9 @@ def _score_select_pool(
             pl.write(runs, [2, token], pl.cast(count * 8, pl.INT32))
             pl.write(runs, [3, token + 1], pl.cast(token, pl.INT32))
         pl.write(runs, [3, 0], num_tokens)
-    workers = pl.max(1, pl.min(32, pl.system.available_cluster_count()))
+    workers = pl.cast(pl.system.available_cluster_count(), pl.INDEX)
     candidate_keys = pl.create_tensor([tokens, workers * INDEX_TOPK], dtype=pl.UINT16)
     candidate_indices = pl.create_tensor([tokens, workers * INDEX_TOPK], dtype=pl.INT32)
-    run_stride = pl.tensor.dim(runs, 1)
     query_rows = pl.slice(query, [tokens, INDEX_H * INDEX_DIM // 2], [0, 0])
     scale_rows = pl.slice(query_scale, [tokens, INDEX_H * _SCALE_COUNT], [0, 0])
     weight_rows = pl.slice(weights, [tokens, INDEX_H], [0, 0])
@@ -558,13 +491,18 @@ def _score_select_pool(
     length_rows = pl.reshape(lengths, [tokens])
     output_rows = pl.reshape(output, [tokens, INDEX_TOPK])
     score_rows = pl.slice(scores, [tokens, width], [0, 0])
-    with pl.spmd(workers, name_hint="idx_score_topk", sync_start=True, deps=[gather_tid, runs_tid, query_ready, weights_ready]) as mix_tid:
-        _idx_pool_score_topk(
-            query_rows, scale_rows, weight_rows, payloads, scales,
-            block_table, request_rows, length_rows, output_rows, runs, candidate_keys, candidate_indices,
-            valid, physical, score_rows, width, run_stride, table_width, num_tokens, gathered_rows,
-            pl.cast(0, pl.INT32), workers, pl.cast(0, pl.INT32),
-        )
+    payload_pages = pl.reshape(payloads, [total_rows // 128, 128, 1, INDEX_DIM // 2])
+    scale_pages = pl.reshape(scales, [total_rows // 128, 128, 1, _SCALE_COUNT])
+    active_tokens = pl.cast(num_tokens, pl.INT32)
+    no_scores = pl.cast(0, pl.INT32)
+    no_shortcut = pl.cast(0, pl.INT32)
+    mix_tid = dispatch_score_topk(
+        query_rows, scale_rows, weight_rows, payload_pages, scale_pages,
+        block_table, request_rows, length_rows, output_rows, runs, candidate_keys, candidate_indices,
+        valid, physical, score_rows, active_tokens, gathered_rows,
+        no_scores, workers, no_shortcut,
+        gather_tid, query_ready, weights_ready, runs_tid,
+    )
     return mix_tid
 
 
@@ -587,13 +525,13 @@ def score_select_paged(
     pool_capacity: pl.Scalar[pl.INDEX],
     c2a: pl.constexpr,
 ):
-    """Score history shards and merge their TopK within one MIX."""
+    """由 simpler 全核同步启动一个 DSL MIX，完成分片打分、屏障和稳定 TopK 归并。"""
     width = pl.tensor.dim(scores, 1)
     capacity = pl.tensor.dim(output, 0)
     runs = pl.create_tensor([4, capacity + 1], dtype=pl.INT32)
     plan_tid = _plan_index_runs(request_ids, lengths, runs, num_tokens, width, c2a)
     run_count = pl.read(runs, [3, 0])
-    workers = pl.max(1, pl.min(32, pl.system.available_cluster_count()))
+    workers = pl.cast(pl.system.available_cluster_count(), pl.INDEX)
     panels = (width + 255) // 256
     shards = workers
     if panels > 100:
@@ -603,9 +541,8 @@ def score_select_paged(
     if not c2a:
         if block_count > pl.min(pool_capacity, CANDIDATE_TOPK_BLOCKS):
             emit_scores = pl.cast(1, pl.INT32)
-    run_stride = pl.tensor.dim(runs, 1)
-    table_width = pl.tensor.dim(block_table, 1)
     active_tokens = pl.cast(num_tokens, pl.INT32)
+    gathered_rows = pl.cast(0, pl.INDEX)
     direct_short = pl.cast(0, pl.INT32)
     if c2a:
         direct_short = pl.cast(1, pl.INT32)
@@ -618,13 +555,13 @@ def score_select_paged(
     score_rows = pl.slice(scores, [capacity, width], [0, 0])
     candidate_keys = pl.create_tensor([capacity, shards * INDEX_TOPK], dtype=pl.UINT16)
     candidate_indices = pl.create_tensor([capacity, shards * INDEX_TOPK], dtype=pl.INT32)
-    with pl.spmd(workers, name_hint="idx_score_topk", sync_start=True, deps=[cache_ready, query_ready, weights_ready, plan_tid]) as mix_tid:
-        mixed_output = _idx_score_topk(
-            query_rows, scale_rows, weight_rows, index_cache, index_cache_scale,
-            block_table, request_rows, length_rows, mixed_output, runs, candidate_keys, candidate_indices,
-            block_table, block_table, score_rows, width, run_stride, table_width, active_tokens, 0,
-            emit_scores, shards, direct_short,
-        )
+    mix_tid = dispatch_score_topk(
+        query_rows, scale_rows, weight_rows, index_cache, index_cache_scale,
+        block_table, request_rows, length_rows, mixed_output, runs, candidate_keys, candidate_indices,
+        block_table, block_table, score_rows, active_tokens, gathered_rows,
+        emit_scores, shards, direct_short,
+        cache_ready, query_ready, weights_ready, plan_tid,
+    )
     return mix_tid, mix_tid
 
 

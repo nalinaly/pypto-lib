@@ -1,0 +1,249 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [ 35%]
+........................................................................ [ 71%]
+........F.....FFF.....F....F....F....F...................                [100%]
+=================================== FAILURES ===================================
+_ test_call_return_type_solves_single_variable_integer_affine_extents[signed_shift-21] _
+[gw1] linux -- Python 3.12.15 <workspace>/issue75-env/pypto-pr/.venv/bin/python
+
+expression = 'signed_shift', extent = 21
+
+    @pytest.mark.parametrize(
+        "expression, extent", [("signed_shift", 21), ("same_symbol", 16), ("constant_actual", 16)]
+    )
+    def test_call_return_type_solves_single_variable_integer_affine_extents(expression, extent):
+        """Infer a concrete return extent through signed offsets or repeated uses of one symbol."""
+        span = ir.Span.unknown()
+        rows = ir.Var("rows", ir.ScalarType(pl.INDEX), span)
+        if expression == "signed_shift":
+            scaled = ir.Mul(ir.ConstInt(2, pl.INDEX, span), rows, pl.INDEX, span)
+            pattern = ir.Sub(ir.ConstInt(5, pl.INDEX, span), ir.Neg(scaled, pl.INDEX, span), pl.INDEX, span)
+        else:
+            pattern = ir.Add(rows, rows, pl.INDEX, span)
+>       param = ir.Var("tile", ir.TileType([pattern, 64], pl.FP32), span)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: __init__(): incompatible function arguments. The following argument types are supported:
+E           1. __init__(self, shape: collections.abc.Sequence[pypto.pypto_core.ir.Expr], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E           2. __init__(self, shape: collections.abc.Sequence[int], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E
+E       Invoked with types: pypto.pypto_core.ir.TileType, list, pypto.pypto_core.DataType
+
+tests/ut/ir/parser/test_cross_function_call_return_type.py:720: TypeError
+_ test_call_return_type_solves_single_variable_integer_affine_extents[same_symbol-16] _
+[gw1] linux -- Python 3.12.15 <workspace>/issue75-env/pypto-pr/.venv/bin/python
+
+expression = 'same_symbol', extent = 16
+
+    @pytest.mark.parametrize(
+        "expression, extent", [("signed_shift", 21), ("same_symbol", 16), ("constant_actual", 16)]
+    )
+    def test_call_return_type_solves_single_variable_integer_affine_extents(expression, extent):
+        """Infer a concrete return extent through signed offsets or repeated uses of one symbol."""
+        span = ir.Span.unknown()
+        rows = ir.Var("rows", ir.ScalarType(pl.INDEX), span)
+        if expression == "signed_shift":
+            scaled = ir.Mul(ir.ConstInt(2, pl.INDEX, span), rows, pl.INDEX, span)
+            pattern = ir.Sub(ir.ConstInt(5, pl.INDEX, span), ir.Neg(scaled, pl.INDEX, span), pl.INDEX, span)
+        else:
+            pattern = ir.Add(rows, rows, pl.INDEX, span)
+>       param = ir.Var("tile", ir.TileType([pattern, 64], pl.FP32), span)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: __init__(): incompatible function arguments. The following argument types are supported:
+E           1. __init__(self, shape: collections.abc.Sequence[pypto.pypto_core.ir.Expr], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E           2. __init__(self, shape: collections.abc.Sequence[int], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E
+E       Invoked with types: pypto.pypto_core.ir.TileType, list, pypto.pypto_core.DataType
+
+tests/ut/ir/parser/test_cross_function_call_return_type.py:720: TypeError
+_ test_call_return_type_does_not_invent_unsafe_affine_bindings[multiple_symbols] _
+[gw0] linux -- Python 3.12.15 <workspace>/issue75-env/pypto-pr/.venv/bin/python
+
+expression = 'multiple_symbols'
+
+    @pytest.mark.parametrize("expression", ["multiple_symbols", "nonlinear", "narrow_overflow"])
+    def test_call_return_type_does_not_invent_unsafe_affine_bindings(expression):
+        """Ambiguous, nonlinear, and out-of-range solutions leave the return symbol unbound."""
+        span = ir.Span.unknown()
+        dtype = pl.INT8 if expression == "narrow_overflow" else pl.INDEX
+        rows = ir.Var("rows", ir.ScalarType(dtype), span)
+        if expression == "multiple_symbols":
+            other = ir.Var("other", ir.ScalarType(dtype), span)
+            pattern = ir.Add(rows, other, dtype, span)
+        elif expression == "nonlinear":
+            pattern = ir.Mul(rows, rows, dtype, span)
+        else:
+            pattern = ir.Mul(ir.ConstInt(2, dtype, span), rows, dtype, span)
+        extent = 256 if expression == "narrow_overflow" else 16
+>       param = ir.Var("tile", ir.TileType([pattern, 64], pl.FP32), span)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: __init__(): incompatible function arguments. The following argument types are supported:
+E           1. __init__(self, shape: collections.abc.Sequence[pypto.pypto_core.ir.Expr], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E           2. __init__(self, shape: collections.abc.Sequence[int], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E
+E       Invoked with types: pypto.pypto_core.ir.TileType, list, pypto.pypto_core.DataType
+
+tests/ut/ir/parser/test_cross_function_call_return_type.py:773: TypeError
+_ test_call_return_type_solves_single_variable_integer_affine_extents[constant_actual-16] _
+[gw1] linux -- Python 3.12.15 <workspace>/issue75-env/pypto-pr/.venv/bin/python
+
+expression = 'constant_actual', extent = 16
+
+    @pytest.mark.parametrize(
+        "expression, extent", [("signed_shift", 21), ("same_symbol", 16), ("constant_actual", 16)]
+    )
+    def test_call_return_type_solves_single_variable_integer_affine_extents(expression, extent):
+        """Infer a concrete return extent through signed offsets or repeated uses of one symbol."""
+        span = ir.Span.unknown()
+        rows = ir.Var("rows", ir.ScalarType(pl.INDEX), span)
+        if expression == "signed_shift":
+            scaled = ir.Mul(ir.ConstInt(2, pl.INDEX, span), rows, pl.INDEX, span)
+            pattern = ir.Sub(ir.ConstInt(5, pl.INDEX, span), ir.Neg(scaled, pl.INDEX, span), pl.INDEX, span)
+        else:
+            pattern = ir.Add(rows, rows, pl.INDEX, span)
+>       param = ir.Var("tile", ir.TileType([pattern, 64], pl.FP32), span)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: __init__(): incompatible function arguments. The following argument types are supported:
+E           1. __init__(self, shape: collections.abc.Sequence[pypto.pypto_core.ir.Expr], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E           2. __init__(self, shape: collections.abc.Sequence[int], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E
+E       Invoked with types: pypto.pypto_core.ir.TileType, list, pypto.pypto_core.DataType
+
+tests/ut/ir/parser/test_cross_function_call_return_type.py:720: TypeError
+___ test_call_return_type_does_not_invent_unsafe_affine_bindings[nonlinear] ____
+[gw0] linux -- Python 3.12.15 <workspace>/issue75-env/pypto-pr/.venv/bin/python
+
+expression = 'nonlinear'
+
+    @pytest.mark.parametrize("expression", ["multiple_symbols", "nonlinear", "narrow_overflow"])
+    def test_call_return_type_does_not_invent_unsafe_affine_bindings(expression):
+        """Ambiguous, nonlinear, and out-of-range solutions leave the return symbol unbound."""
+        span = ir.Span.unknown()
+        dtype = pl.INT8 if expression == "narrow_overflow" else pl.INDEX
+        rows = ir.Var("rows", ir.ScalarType(dtype), span)
+        if expression == "multiple_symbols":
+            other = ir.Var("other", ir.ScalarType(dtype), span)
+            pattern = ir.Add(rows, other, dtype, span)
+        elif expression == "nonlinear":
+            pattern = ir.Mul(rows, rows, dtype, span)
+        else:
+            pattern = ir.Mul(ir.ConstInt(2, dtype, span), rows, dtype, span)
+        extent = 256 if expression == "narrow_overflow" else 16
+>       param = ir.Var("tile", ir.TileType([pattern, 64], pl.FP32), span)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: __init__(): incompatible function arguments. The following argument types are supported:
+E           1. __init__(self, shape: collections.abc.Sequence[pypto.pypto_core.ir.Expr], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E           2. __init__(self, shape: collections.abc.Sequence[int], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E
+E       Invoked with types: pypto.pypto_core.ir.TileType, list, pypto.pypto_core.DataType
+
+tests/ut/ir/parser/test_cross_function_call_return_type.py:773: TypeError
+_ test_call_return_type_does_not_invent_unsafe_affine_bindings[narrow_overflow] _
+[gw0] linux -- Python 3.12.15 <workspace>/issue75-env/pypto-pr/.venv/bin/python
+
+expression = 'narrow_overflow'
+
+    @pytest.mark.parametrize("expression", ["multiple_symbols", "nonlinear", "narrow_overflow"])
+    def test_call_return_type_does_not_invent_unsafe_affine_bindings(expression):
+        """Ambiguous, nonlinear, and out-of-range solutions leave the return symbol unbound."""
+        span = ir.Span.unknown()
+        dtype = pl.INT8 if expression == "narrow_overflow" else pl.INDEX
+        rows = ir.Var("rows", ir.ScalarType(dtype), span)
+        if expression == "multiple_symbols":
+            other = ir.Var("other", ir.ScalarType(dtype), span)
+            pattern = ir.Add(rows, other, dtype, span)
+        elif expression == "nonlinear":
+            pattern = ir.Mul(rows, rows, dtype, span)
+        else:
+            pattern = ir.Mul(ir.ConstInt(2, dtype, span), rows, dtype, span)
+        extent = 256 if expression == "narrow_overflow" else 16
+>       param = ir.Var("tile", ir.TileType([pattern, 64], pl.FP32), span)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: __init__(): incompatible function arguments. The following argument types are supported:
+E           1. __init__(self, shape: collections.abc.Sequence[pypto.pypto_core.ir.Expr], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E           2. __init__(self, shape: collections.abc.Sequence[int], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E
+E       Invoked with types: pypto.pypto_core.ir.TileType, list, pypto.pypto_core.DataType
+
+tests/ut/ir/parser/test_cross_function_call_return_type.py:773: TypeError
+__ test_call_return_type_keeps_shared_shape_contracts_strict[surviving_tile] ___
+[gw0] linux -- Python 3.12.15 <workspace>/issue75-env/pypto-pr/.venv/bin/python
+
+contract = 'surviving_tile'
+
+    @pytest.mark.parametrize("contract", ["surviving_tile", "inline_tensor", "inline_explicit_tile_view"])
+    def test_call_return_type_keeps_shared_shape_contracts_strict(contract):
+        """Inline physical placeholders do not relax surviving calls or explicit shared metadata."""
+        span = ir.Span.unknown()
+        rows = ir.Var("rows", ir.ScalarType(pl.INDEX), span)
+        pattern = ir.Mul(ir.ConstInt(2, pl.INDEX, span), rows, pl.INDEX, span)
+        if contract == "inline_explicit_tile_view":
+            formal_type = ir.TileType([64, 64], pl.FP32, tile_view=ir.TileView(valid_shape=[rows, 64]))
+            first_type = ir.TileType([64, 64], pl.FP32, tile_view=ir.TileView(valid_shape=[16, 64]))
+            second_type = ir.TileType([64, 64], pl.FP32, tile_view=ir.TileView(valid_shape=[32, 64]))
+        else:
+            shaped_type = ir.TensorType if contract == "inline_tensor" else ir.TileType
+>           formal_type = shaped_type([pattern, 64], pl.FP32)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: __init__(): incompatible function arguments. The following argument types are supported:
+E               1. __init__(self, shape: collections.abc.Sequence[pypto.pypto_core.ir.Expr], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E               2. __init__(self, shape: collections.abc.Sequence[int], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tile_view: pypto.pypto_core.ir.TileView | None = None, memory_space: pypto.pypto_core.ir.MemorySpace | None = None) -> None
+E
+E           Invoked with types: pypto.pypto_core.ir.TileType, list, pypto.pypto_core.DataType
+
+tests/ut/ir/parser/test_cross_function_call_return_type.py:794: TypeError
+___ test_call_return_type_keeps_shared_shape_contracts_strict[inline_tensor] ___
+[gw0] linux -- Python 3.12.15 <workspace>/issue75-env/pypto-pr/.venv/bin/python
+
+contract = 'inline_tensor'
+
+    @pytest.mark.parametrize("contract", ["surviving_tile", "inline_tensor", "inline_explicit_tile_view"])
+    def test_call_return_type_keeps_shared_shape_contracts_strict(contract):
+        """Inline physical placeholders do not relax surviving calls or explicit shared metadata."""
+        span = ir.Span.unknown()
+        rows = ir.Var("rows", ir.ScalarType(pl.INDEX), span)
+        pattern = ir.Mul(ir.ConstInt(2, pl.INDEX, span), rows, pl.INDEX, span)
+        if contract == "inline_explicit_tile_view":
+            formal_type = ir.TileType([64, 64], pl.FP32, tile_view=ir.TileView(valid_shape=[rows, 64]))
+            first_type = ir.TileType([64, 64], pl.FP32, tile_view=ir.TileView(valid_shape=[16, 64]))
+            second_type = ir.TileType([64, 64], pl.FP32, tile_view=ir.TileView(valid_shape=[32, 64]))
+        else:
+            shaped_type = ir.TensorType if contract == "inline_tensor" else ir.TileType
+>           formal_type = shaped_type([pattern, 64], pl.FP32)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: __init__(): incompatible function arguments. The following argument types are supported:
+E               1. __init__(self, shape: collections.abc.Sequence[pypto.pypto_core.ir.Expr], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None) -> None
+E               2. __init__(self, shape: collections.abc.Sequence[int], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None) -> None
+E               3. __init__(self, shape: collections.abc.Sequence[pypto.pypto_core.ir.Expr], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tensor_view: pypto.pypto_core.ir.TensorView | None = None) -> None
+E               4. __init__(self, shape: collections.abc.Sequence[int], dtype: pypto.pypto_core.DataType, memref: pypto.pypto_core.ir.MemRef | None = None, tensor_view: pypto.pypto_core.ir.TensorView | None = None) -> None
+E
+E           Invoked with types: pypto.pypto_core.ir.TensorType, list, pypto.pypto_core.DataType
+
+tests/ut/ir/parser/test_cross_function_call_return_type.py:794: TypeError
+=============================== warnings summary ===============================
+tests/ut/jit/test_extern_kernel.py: 11 warnings
+  <string>:8: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_extern_kernel.py: 23 warnings
+  <string>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/codegen/test_external_kernel.py::test_external_mixed_kernel_codegen
+  <workspace>/issue75-env/pypto-pr/tests/ut/codegen/test_external_kernel.py:100: DeprecationWarning: ir.compile(platform=...) is deprecated; use backend_type and execution_mode instead.
+    ir_compile(program, skip_ptoas=False, platform="a2a3", output_dir=str(out_dir))
+
+tests/ut/codegen/test_external_kernel.py::test_all_external_graph_emits_manifest_when_ptoas_is_skipped
+  <workspace>/issue75-env/pypto-pr/tests/ut/codegen/test_external_kernel.py:132: DeprecationWarning: ir.compile(platform=...) is deprecated; use backend_type and execution_mode instead.
+    ir_compile(program, skip_ptoas=True, platform="a2a3", output_dir=str(out_dir))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/ut/ir/parser/test_cross_function_call_return_type.py::test_call_return_type_solves_single_variable_integer_affine_extents[signed_shift-21]
+FAILED tests/ut/ir/parser/test_cross_function_call_return_type.py::test_call_return_type_solves_single_variable_integer_affine_extents[same_symbol-16]
+FAILED tests/ut/ir/parser/test_cross_function_call_return_type.py::test_call_return_type_does_not_invent_unsafe_affine_bindings[multiple_symbols]
+FAILED tests/ut/ir/parser/test_cross_function_call_return_type.py::test_call_return_type_solves_single_variable_integer_affine_extents[constant_actual-16]
+FAILED tests/ut/ir/parser/test_cross_function_call_return_type.py::test_call_return_type_does_not_invent_unsafe_affine_bindings[nonlinear]
+FAILED tests/ut/ir/parser/test_cross_function_call_return_type.py::test_call_return_type_does_not_invent_unsafe_affine_bindings[narrow_overflow]
+FAILED tests/ut/ir/parser/test_cross_function_call_return_type.py::test_call_return_type_keeps_shared_shape_contracts_strict[surviving_tile]
+FAILED tests/ut/ir/parser/test_cross_function_call_return_type.py::test_call_return_type_keeps_shared_shape_contracts_strict[inline_tensor]
+8 failed, 193 passed, 36 warnings in 14.48s

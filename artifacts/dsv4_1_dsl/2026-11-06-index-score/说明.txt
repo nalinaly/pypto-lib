@@ -1,0 +1,39 @@
+本轮替换：DSV4.1 Indexer 打分与稳定 TopK
+======================================
+
+实现位于 models/deepseek_v4_1_flash/index_score_dsl.py 和 index_topk_dsl.py。
+decode_indexer.py 的分页历史和候选池调用共用一个 DSL MIX 任务。
+原 kernels/index_score_topk.cpp 已移除，原代码保存在 workflow/ 中供对照。
+
+simpler 使用全部可用 cluster、sync_start=True 和原有四条前置依赖。
+任务内部完成 MXFP4 打分、逐 head BF16 累加、局部稳定 TopK、
+global_sync_all、候选归并及物理行映射。AIC/AIV 两个入口是同一任务的组成部分。
+没有拆出独立归并任务，也没有修改跨卡通信任务。
+
+验证结果
+--------
+- 8 组独立 A5 用例：打分和物理索引全部逐元素精确一致，rtol=0、atol=0。
+- C2A 第 2 层 EP2：固定输入、原比较器、全部 16 项输出通过。
+  x_next rel_l2=0.021193206，max_abs=0.65664196，与原基线一致。
+- C1A 共用模型入口编译通过；独立候选池打分已上卡。
+- PyPTO 定向回归 104 项通过，完整预提交检查通过。
+- 未执行完整 C1A 设备模型、整网、真实 checkpoint 或正式性能 A/B。
+
+环境与职责
+----------
+使用官方 CANNBotDSL 0.8.1，DSL 仓库没有改动。
+PyPTO 增补工作区形状回写修正：外部核返回输入工作区时保留调用方的形状表达式。
+该修正已推送到原 PR：https://github.com/hw-native-sys/pypto/pull/3231
+具体版本、文件清单和验证范围见 summary.json。
+
+复现独立验证
+------------
+在配置好上述 PyPTO、CANNBotDSL 和 A5 环境后，经设备队列运行：
+task-submit --device auto --max-time 600 --run 'python models/deepseek_v4_1_flash/index_score_dsl.py --case all -d "$TASK_DEVICE"'
+通过 --compile-only 可以仅验证编译。
+Torch 仅负责 CPU 数据准备与参考计算。
+
+generated/ 保存设备代码、PyPTO 包装与编排代码；fixtures/ 保存代表性小用例输入输出。
+同一编译目录被多个用例复用时，fixtures 保留最后一组数据；全部用例可用源码中的固定种子重建。
+整层固定数据沿用此前本地验证输入，没有重复归档大体积权重。
+validation/ 是最终通过记录；diagnostics/ 保留扩展 IR 测试中独立于本次改动的构造器失败。

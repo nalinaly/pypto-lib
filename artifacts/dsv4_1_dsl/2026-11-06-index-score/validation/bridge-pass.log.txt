@@ -1,0 +1,26 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [ 69%]
+................................                                         [100%]
+=============================== warnings summary ===============================
+tests/ut/jit/test_extern_kernel.py: 11 warnings
+  <string>:8: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_extern_kernel.py: 23 warnings
+  <string>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/codegen/test_external_kernel.py::test_external_mixed_kernel_codegen
+  <workspace>/issue75-env/pypto-pr/tests/ut/codegen/test_external_kernel.py:100: DeprecationWarning: ir.compile(platform=...) is deprecated; use backend_type and execution_mode instead.
+    ir_compile(program, skip_ptoas=False, platform="a2a3", output_dir=str(out_dir))
+
+tests/ut/codegen/test_external_kernel.py::test_all_external_graph_emits_manifest_when_ptoas_is_skipped
+  <workspace>/issue75-env/pypto-pr/tests/ut/codegen/test_external_kernel.py:132: DeprecationWarning: ir.compile(platform=...) is deprecated; use backend_type and execution_mode instead.
+    ir_compile(program, skip_ptoas=True, platform="a2a3", output_dir=str(out_dir))
+
+tests/ut/jit/test_spmd.py::test_inline_spmd_reads_loop_carried_tensor
+  <workspace>/issue75-env/pypto-pr/tests/ut/jit/test_spmd.py:343: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    compiled = repro.compile(config=RunConfig(platform="a5", save_kernels_dir=str(tmp_path / "compiled")))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+104 passed, 37 warnings in 27.00s

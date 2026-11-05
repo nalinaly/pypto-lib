@@ -563,6 +563,47 @@ python models/deepseek_v4_1_flash/decode_layer.py --ep 2 --layer-id 2 -d "$TASK_
 The shared prefill caller is compiled with the new interface. Its complete
 device execution is outside this decode validation scope.
 
+## Indexer scoring and stable TopK in one DSL MIX task
+
+`score_select_paged` and the candidate-pool path `_score_select_pool` share
+[`index_score_dsl.py`](../../../models/deepseek_v4_1_flash/index_score_dsl.py).
+The PyPTO `dispatch_score_topk` entry declares runtime scalar types and four
+prerequisite dependencies. It launches all resident clusters with
+`pl.spmd(pl.system.available_cluster_count(), sync_start=True)`.
+Each block binds one AIC and two AIVs. Scoring, local TopK, the grid barrier
+and final merging remain inside one `score_topk_mix` task.
+
+The AIC computes MXFP4/E8M0 QK and sends BF16 results separately to each AIV.
+The numerical contract is unchanged: weights are multiplied by `1/64` and
+rounded to BF16; QK is rounded to BF16 before ReLU; each fused head accumulation
+is also rounded to BF16. Local selection precedes `cb.global_sync_all()`, after
+which each output owner reads and merges the shards' candidates.
+[`index_topk_dsl.py`](../../../models/deepseek_v4_1_flash/index_topk_dsl.py)
+provides an inlined stable radix selector. Equal scores prefer earlier logical
+positions. Selected positions are returned in ascending logical order and then
+mapped to physical cache rows, with unused slots filled with `-1`.
+
+C2A retains direct mapping for lengths up to 512. C1A retains optional score
+publication and the candidate pool's validity and physical-row mapping.
+Pool scales use E8M0 storage with byte reinterpretation inside the gather task,
+preserving every scale byte. The grid barrier synchronizes participating cores
+within one device; cross-device communication tasks are unchanged.
+
+The standalone checks cover random inputs, negative weights, page holes, ties,
+short histories, candidate pools, tails, local TopK, multiple merge batches and
+zero active tokens. After acquiring an A5 device through the task queue, run:
+
+```bash
+python models/deepseek_v4_1_flash/index_score_dsl.py --case all -d "$TASK_DEVICE"
+```
+
+All eight cases compare both scores and physical indices with `rtol=0, atol=0`.
+The complete model retains its existing comparators. This path requires
+CANNBotDSL 0.8.1 and the
+[PyPTO MIX/SPMD integration](https://github.com/hw-native-sys/pypto/pull/3231).
+See the [validation and generated-code archive](../../../artifacts/dsv4_1_dsl/2026-11-06-index-score/summary.json)
+for the device checks and layer-2 EP2 regression.
+
 ## DSL development branch and evidence
 
 Continue DSL implementation and evidence collection on

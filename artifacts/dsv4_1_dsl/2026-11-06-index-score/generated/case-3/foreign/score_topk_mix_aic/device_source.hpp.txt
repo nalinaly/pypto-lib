@@ -1,0 +1,2796 @@
+// CANNBOTDSL_HOST_ABI_VERSION=9
+#include "c_api/asc_simd.h"
+#include "acl/acl_rt.h"
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+
+#if defined(__NPU_ARCH__) && (__NPU_ARCH__ == 3510)
+namespace cannbotdsl_92 {
+
+__aicore__ inline int8_t cannbotdsl_load_dev(__gm__ int8_t* addr)
+{
+    return ld_dev(reinterpret_cast<__gm__ uint8_t*>(addr), 0);
+}
+
+__aicore__ inline uint8_t cannbotdsl_load_dev(__gm__ uint8_t* addr)
+{
+    return ld_dev(addr, 0);
+}
+
+__aicore__ inline int16_t cannbotdsl_load_dev(__gm__ int16_t* addr)
+{
+    return ld_dev(reinterpret_cast<__gm__ uint16_t*>(addr), 0);
+}
+
+__aicore__ inline uint16_t cannbotdsl_load_dev(__gm__ uint16_t* addr)
+{
+    return ld_dev(addr, 0);
+}
+
+__aicore__ inline int32_t cannbotdsl_load_dev(__gm__ int32_t* addr)
+{
+    return ld_dev(reinterpret_cast<__gm__ uint32_t*>(addr), 0);
+}
+
+__aicore__ inline uint32_t cannbotdsl_load_dev(__gm__ uint32_t* addr)
+{
+    return ld_dev(addr, 0);
+}
+
+__aicore__ inline int64_t cannbotdsl_load_dev(__gm__ int64_t* addr)
+{
+    return static_cast<int64_t>(ld_dev(reinterpret_cast<__gm__ uint64_t*>(addr), 0));
+}
+
+__aicore__ inline uint64_t cannbotdsl_load_dev(__gm__ uint64_t* addr)
+{
+    return ld_dev(addr, 0);
+}
+
+__aicore__ inline int64_t cannbotdsl_get_squeeze_status()
+{
+    return get_ar();
+}
+
+__aicore__ inline bool cannbotdsl_is_aic()
+{
+    if ASC_IS_AIC { return true; }
+    return false;
+}
+
+__aicore__ inline bool cannbotdsl_is_aiv()
+{
+    if ASC_IS_AIV { return true; }
+    return false;
+}
+
+__aicore__ inline void cannbotdsl_set_atomic_add_int32()
+{
+    set_atomic_add();
+    set_atomic_s32();
+}
+
+__aicore__ inline void cannbotdsl_set_l0c_copy_nz_para(
+    uint16_t matrix_num, uint16_t src_nz_matrix_stride, uint32_t dst_matrix_stride)
+{
+    if ASC_IS_AIC {
+        uint64_t config = (static_cast<uint64_t>(dst_matrix_stride) << 32) |
+                          (static_cast<uint64_t>(src_nz_matrix_stride) << 16) | matrix_num;
+        set_loop3_para(config);
+    }
+}
+
+__aicore__ inline void cannbotdsl_set_l0c_copy_channel_para(uint16_t src_nz_fractal_stride)
+{
+    if ASC_IS_AIC {
+        set_channel_para(static_cast<uint64_t>(src_nz_fractal_stride) << 48);
+    }
+}
+
+__aicore__ inline void cannbotdsl_set_l12l0a_3d_padding(uint64_t config)
+{
+    if ASC_IS_AIC {
+        set_padding(config);
+    }
+}
+
+#define CANNBOTDSL_DEFINE_UPDATE_ADDR_REG(BXX)                                                        \
+    __simd_callee__ inline auto cannbotdsl_update_addr_reg_##BXX(uint32_t offset)                    \
+    {                                                                                                 \
+        if ASC_IS_AIV { return vag_##BXX(offset); }                                                   \
+        return decltype(vag_##BXX(offset)){};                                                         \
+    }                                                                                                 \
+    __simd_callee__ inline auto cannbotdsl_update_addr_reg_##BXX(                                    \
+        uint32_t offset0, uint32_t offset1)                                                           \
+    {                                                                                                 \
+        if ASC_IS_AIV { return vag_##BXX(offset0, offset1); }                                         \
+        return decltype(vag_##BXX(offset0, offset1)){};                                               \
+    }                                                                                                 \
+    __simd_callee__ inline auto cannbotdsl_update_addr_reg_##BXX(                                    \
+        uint32_t offset0, uint32_t offset1, uint32_t offset2)                                         \
+    {                                                                                                 \
+        if ASC_IS_AIV { return vag_##BXX(offset0, offset1, offset2); }                                \
+        return decltype(vag_##BXX(offset0, offset1, offset2)){};                                      \
+    }                                                                                                 \
+    __simd_callee__ inline auto cannbotdsl_update_addr_reg_##BXX(                                    \
+        uint32_t offset0, uint32_t offset1, uint32_t offset2, uint32_t offset3)                       \
+    {                                                                                                 \
+        if ASC_IS_AIV { return vag_##BXX(offset0, offset1, offset2, offset3); }                       \
+        return decltype(vag_##BXX(offset0, offset1, offset2, offset3)){};                             \
+    }
+
+CANNBOTDSL_DEFINE_UPDATE_ADDR_REG(b8)
+CANNBOTDSL_DEFINE_UPDATE_ADDR_REG(b16)
+CANNBOTDSL_DEFINE_UPDATE_ADDR_REG(b32)
+#undef CANNBOTDSL_DEFINE_UPDATE_ADDR_REG
+
+#define CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(VECTOR_TYPE)                                               \
+    __simd_callee__ inline void cannbotdsl_duplicate_highest(                                         \
+        VECTOR_TYPE& dst, VECTOR_TYPE src, vector_bool mask)                                         \
+    {                                                                                                 \
+        if ASC_IS_AIV { vdup(dst, src, mask, POS_HIGHEST, MODE_ZEROING); }                            \
+    }                                                                                                 \
+    __simd_callee__ inline void cannbotdsl_duplicate_merge(                                           \
+        VECTOR_TYPE& dst, VECTOR_TYPE src, vector_bool mask)                                         \
+    {                                                                                                 \
+        if ASC_IS_AIV { vdup(dst, src, mask, POS_LOWEST, MODE_MERGING); }                             \
+    }                                                                                                 \
+    __simd_callee__ inline void cannbotdsl_duplicate_highest_merge(                                   \
+        VECTOR_TYPE& dst, VECTOR_TYPE src, vector_bool mask)                                         \
+    {                                                                                                 \
+        if ASC_IS_AIV { vdup(dst, src, mask, POS_HIGHEST, MODE_MERGING); }                            \
+    }
+
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_uint8_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_int8_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_fp8_e4m3fn_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_fp8_e5m2_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_fp8_e8m0_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_uint16_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_int16_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_half)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_bfloat16_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_uint32_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_int32_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_float)
+#undef CANNBOTDSL_DEFINE_DUPLICATE_VECTOR
+
+#define CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(VECTOR_TYPE, SCALAR_TYPE)                                  \
+    __simd_callee__ inline void cannbotdsl_duplicate_scalar_merge(                                    \
+        VECTOR_TYPE& dst, SCALAR_TYPE value, vector_bool mask)                                       \
+    {                                                                                                 \
+        if ASC_IS_AIV { vdup(dst, value, mask, MODE_MERGING); }                                       \
+    }
+
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_uint8_t, uint8_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_int8_t, int8_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_fp8_e4m3fn_t, fp8_e4m3fn_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_fp8_e5m2_t, fp8_e5m2_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_fp8_e8m0_t, fp8_e8m0_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_uint16_t, uint16_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_int16_t, int16_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_half, half)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_bfloat16_t, bfloat16_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_uint32_t, uint32_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_int32_t, int32_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_float, float)
+#undef CANNBOTDSL_DEFINE_DUPLICATE_SCALAR
+
+__simd_callee__ inline void cannbotdsl_pack_to_low(vector_uint8_t& dst, vector_uint16_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, LOWER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_low(vector_uint8_t& dst, vector_int16_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, LOWER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_low(vector_uint16_t& dst, vector_uint32_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, LOWER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_low(vector_uint16_t& dst, vector_int32_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, LOWER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_low(vector_bool& dst, vector_bool src)
+{
+    if ASC_IS_AIV { ppack(dst, src, LOWER); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_high(vector_uint8_t& dst, vector_uint16_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, HIGHER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_high(vector_uint8_t& dst, vector_int16_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, HIGHER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_high(vector_uint16_t& dst, vector_uint32_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, HIGHER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_high(vector_uint16_t& dst, vector_int32_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, HIGHER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_high(vector_bool& dst, vector_bool src)
+{
+    if ASC_IS_AIV { ppack(dst, src, HIGHER); }
+}
+
+// Stable bfloat16 multiply-add. CANN 9.1 and 9.2 declare asc_madd only for
+// half/float while newer SDKs add the bfloat16 overload. All versions lower
+// to the same dav-3510 vmadd primitive, so generated kernels call this
+// compatibility layer instead of the version-specific public ABI.
+__simd_callee__ inline void cannbotdsl_madd_bfloat16(
+    vector_bfloat16_t& dst, vector_bfloat16_t src0, vector_bfloat16_t src1, vector_bool mask)
+{
+    if ASC_IS_AIV { vmadd(dst, src0, src1, mask, MODE_ZEROING); }
+}
+
+__simd_callee__ inline void cannbotdsl_loadalign_unpack4(
+    vector_uint8_t& dst, __ubuf__ uint8_t* src)
+{
+    if ASC_IS_AIV { vlds(dst, src, 0, UNPK4_B8); }
+}
+
+__simd_callee__ inline void cannbotdsl_storealign_pack_quarter(
+    __ubuf__ float* dst, vector_float src, vector_bool mask)
+{
+    if ASC_IS_AIV { vsts(src, dst, 0, PK4_B32, mask); }
+}
+
+__simd_callee__ inline void cannbotdsl_storealign_squeeze_status_postupdate(
+    __ubuf__ uint32_t*& dst, int32_t offset)
+{
+    if ASC_IS_AIV { sprsts(SPR_AR, dst, offset, POST_UPDATE); }
+}
+
+__simd_callee__ inline void cannbotdsl_squeeze_store_init()
+{
+    if ASC_IS_AIV { sprclr(SPR_AR); }
+}
+
+#define CANNBOTDSL_DEFINE_SQUEEZE_STORE(SCALAR_TYPE, VECTOR_TYPE)                                     \
+    __simd_callee__ inline void cannbotdsl_squeeze_store(                                            \
+        __ubuf__ SCALAR_TYPE* dst_addr, VECTOR_TYPE& dst, vector_store_unalign& cursor,               \
+        VECTOR_TYPE src, vector_bool mask)                                                            \
+    {                                                                                                 \
+        if ASC_IS_AIV {                                                                               \
+            vsqz(dst, src, mask, MODE_STORED);                                                        \
+            vstur(cursor, dst, dst_addr, POST_UPDATE);                                                \
+        }                                                                                             \
+    }                                                                                                 \
+    __simd_callee__ inline void cannbotdsl_squeeze_store_finalize(                                   \
+        __ubuf__ SCALAR_TYPE* dst, vector_store_unalign cursor)                                       \
+    {                                                                                                 \
+        if ASC_IS_AIV { vstar(cursor, dst); }                                                         \
+    }
+
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(int8_t, vector_int8_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(uint8_t, vector_uint8_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(int16_t, vector_int16_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(uint16_t, vector_uint16_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(int32_t, vector_int32_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(uint32_t, vector_uint32_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(half, vector_half)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(float, vector_float)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(bfloat16_t, vector_bfloat16_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(fp8_e4m3fn_t, vector_fp8_e4m3fn_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(fp8_e5m2_t, vector_fp8_e5m2_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(fp8_e8m0_t, vector_fp8_e8m0_t)
+#undef CANNBOTDSL_DEFINE_SQUEEZE_STORE
+
+__simd_callee__ inline void cannbotdsl_squeeze_store(
+    __ubuf__ fp4x2_e2m1_t* dst_addr, vector_fp4x2_e2m1_t& dst,
+    vector_store_unalign& cursor, vector_fp4x2_e2m1_t src, vector_bool mask)
+{
+    if ASC_IS_AIV {
+        vsqz(reinterpret_cast<vector_int8_t&>(dst), reinterpret_cast<vector_int8_t&>(src),
+             mask, MODE_STORED);
+        vstur(cursor, dst, dst_addr, POST_UPDATE);
+    }
+}
+
+__simd_callee__ inline void cannbotdsl_squeeze_store_finalize(
+    __ubuf__ fp4x2_e2m1_t* dst, vector_store_unalign cursor)
+{
+    if ASC_IS_AIV { vstar(cursor, dst); }
+}
+
+template <typename T>
+__aicore__ inline void cannbotdsl_copy_gm2ub_align(
+    __ubuf__ T* dst, __gm__ T* src, uint32_t burst_count, uint32_t burst_len,
+    uint8_t left_padding_num, uint8_t right_padding_num, bool enable_constant_pad,
+    uint8_t l2_cache_mode, uint64_t src_stride, uint32_t dst_stride)
+{
+    if ASC_IS_AIV {
+        if constexpr (sizeof(T) == 8) {
+            copy_gm_to_ubuf_align_v2(
+                (__ubuf__ uint8_t*)dst, (__gm__ uint8_t*)src, 0, burst_count, burst_len,
+                left_padding_num * 8, right_padding_num * 8,
+                enable_constant_pad, l2_cache_mode, src_stride, dst_stride);
+        } else {
+            copy_gm_to_ubuf_align_v2(
+                dst, src, 0, burst_count, burst_len, left_padding_num, right_padding_num,
+                enable_constant_pad, l2_cache_mode, src_stride, dst_stride);
+        }
+    }
+}
+
+template <typename T>
+__aicore__ inline void cannbotdsl_copy_ub2gm_align(
+    __gm__ T* dst, __ubuf__ T* src, uint32_t burst_count, uint32_t burst_len,
+    uint8_t l2_cache_mode, uint64_t dst_stride, uint32_t src_stride)
+{
+    if ASC_IS_AIV {
+        copy_ubuf_to_gm_align_v2(
+            (__gm__ void*)dst, (__ubuf__ void*)src, 0, burst_count, burst_len,
+            l2_cache_mode, dst_stride, src_stride);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ int8_t* dst, __gm__ int8_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ uint8_t* dst, __gm__ uint8_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ fp4x2_e2m1_t* dst, __gm__ fp4x2_e2m1_t* src, uint32_t loop0_size, uint32_t loop1_size,
+    uint32_t loop2_size, uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count,
+    bool padding_mode, uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ fp4x2_e1m2_t* dst, __gm__ fp4x2_e1m2_t* src, uint32_t loop0_size, uint32_t loop1_size,
+    uint32_t loop2_size, uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count,
+    bool padding_mode, uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ fp8_e8m0_t* dst, __gm__ fp8_e8m0_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ fp8_e5m2_t* dst, __gm__ fp8_e5m2_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ fp8_e4m3fn_t* dst, __gm__ fp8_e4m3fn_t* src, uint32_t loop0_size, uint32_t loop1_size,
+    uint32_t loop2_size, uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count,
+    bool padding_mode, uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ int16_t* dst, __gm__ int16_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b16(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ uint16_t* dst, __gm__ uint16_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b16(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ half* dst, __gm__ half* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b16(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ bfloat16_t* dst, __gm__ bfloat16_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b16(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ int32_t* dst, __gm__ int32_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b32(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ uint32_t* dst, __gm__ uint32_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b32(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ float* dst, __gm__ float* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b32(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+template <typename DstT, typename SrcT>
+__aicore__ inline void cannbotdsl_copy_l0c2l1(
+    __cbuf__ DstT* dst, __cc__ SrcT* src, uint16_t n_size, uint16_t m_size,
+    uint32_t dst_stride, uint16_t src_stride, uint8_t enable_clip_relu_pre,
+    uint8_t unit_flag_mode, uint64_t quant_pre_mode, uint8_t relu_pre_mode,
+    bool enable_channel_split, bool enable_nz2nd, uint64_t quant_post,
+    uint8_t relu_post, bool clip_relu_post, uint8_t eltwise_op,
+    uint8_t eltwise_antq_en, bool c0_pad_en)
+{
+    if ASC_IS_AIC {
+        copy_matrix_cc_to_cbuf(
+            dst, src, 0, n_size, m_size, dst_stride, src_stride, 0,
+            enable_clip_relu_pre, unit_flag_mode,
+            static_cast<QuantMode_t>(quant_pre_mode), relu_pre_mode,
+            enable_channel_split, enable_nz2nd,
+            static_cast<QuantMode_post>(quant_post), relu_post, clip_relu_post,
+            false, eltwise_op, eltwise_antq_en, false, c0_pad_en, false, false,
+            false);
+    }
+}
+
+} // namespace cannbotdsl_92
+#endif
+
+__aicore__ inline uint16_t cannbotdsl_get_ffts_config(uint16_t flagId, uint16_t mode)
+{
+    constexpr uint16_t SYNC_MODE_SHIFT_VALUE = 4;
+    constexpr uint16_t SYNC_FLAG_SHIFT_VALUE = 8;
+    return 0x1 + ((mode & 0x3) << SYNC_MODE_SHIFT_VALUE) + ((flagId & 0xf) << SYNC_FLAG_SHIFT_VALUE);
+}
+
+struct KernelArgTensor_uint8_t_2d {
+    __gm__ uint8_t* ptr;
+    int64_t shape[2];
+    int64_t stride[2];
+};
+
+struct KernelArgTensor_fp8_e8m0_t_2d {
+    __gm__ fp8_e8m0_t* ptr;
+    int64_t shape[2];
+    int64_t stride[2];
+};
+
+struct KernelArgTensor_bfloat16_t_2d {
+    __gm__ bfloat16_t* ptr;
+    int64_t shape[2];
+    int64_t stride[2];
+};
+
+struct KernelArgTensor_uint8_t_4d {
+    __gm__ uint8_t* ptr;
+    int64_t shape[4];
+    int64_t stride[4];
+};
+
+struct KernelArgTensor_fp8_e8m0_t_4d {
+    __gm__ fp8_e8m0_t* ptr;
+    int64_t shape[4];
+    int64_t stride[4];
+};
+
+struct KernelArgTensor_int32_t_2d {
+    __gm__ int32_t* ptr;
+    int64_t shape[2];
+    int64_t stride[2];
+};
+
+struct KernelArgTensor_int32_t_1d {
+    __gm__ int32_t* ptr;
+    int64_t shape[1];
+    int64_t stride[1];
+};
+
+struct KernelArgTensor_uint16_t_2d {
+    __gm__ uint16_t* ptr;
+    int64_t shape[2];
+    int64_t stride[2];
+};
+
+struct KernelArgTensor_float_2d {
+    __gm__ float* ptr;
+    int64_t shape[2];
+    int64_t stride[2];
+};
+
+struct KernelArgTensor_uint8_t_2d_Device_ss_ds {
+    __gm__ uint8_t* ptr;
+    int64_t stride[1];
+};
+static inline KernelArgTensor_uint8_t_2d_Device_ss_ds cannbotdsl_pack_KernelArgTensor_uint8_t_2d_Device_ss_ds(const KernelArgTensor_uint8_t_2d& src) {
+    return {src.ptr, {src.stride[0]}};
+}
+
+struct KernelArgTensor_fp8_e8m0_t_2d_Device_ss_ds {
+    __gm__ fp8_e8m0_t* ptr;
+    int64_t stride[1];
+};
+static inline KernelArgTensor_fp8_e8m0_t_2d_Device_ss_ds cannbotdsl_pack_KernelArgTensor_fp8_e8m0_t_2d_Device_ss_ds(const KernelArgTensor_fp8_e8m0_t_2d& src) {
+    return {src.ptr, {src.stride[0]}};
+}
+
+struct KernelArgTensor_bfloat16_t_2d_Device_ss_ds {
+    __gm__ bfloat16_t* ptr;
+    int64_t stride[1];
+};
+static inline KernelArgTensor_bfloat16_t_2d_Device_ss_ds cannbotdsl_pack_KernelArgTensor_bfloat16_t_2d_Device_ss_ds(const KernelArgTensor_bfloat16_t_2d& src) {
+    return {src.ptr, {src.stride[0]}};
+}
+
+struct KernelArgTensor_uint8_t_4d_Device_ssss_ddds {
+    __gm__ uint8_t* ptr;
+    int64_t stride[3];
+};
+static inline KernelArgTensor_uint8_t_4d_Device_ssss_ddds cannbotdsl_pack_KernelArgTensor_uint8_t_4d_Device_ssss_ddds(const KernelArgTensor_uint8_t_4d& src) {
+    return {src.ptr, {src.stride[0], src.stride[1], src.stride[2]}};
+}
+
+struct KernelArgTensor_fp8_e8m0_t_4d_Device_ssss_ddds {
+    __gm__ fp8_e8m0_t* ptr;
+    int64_t stride[3];
+};
+static inline KernelArgTensor_fp8_e8m0_t_4d_Device_ssss_ddds cannbotdsl_pack_KernelArgTensor_fp8_e8m0_t_4d_Device_ssss_ddds(const KernelArgTensor_fp8_e8m0_t_4d& src) {
+    return {src.ptr, {src.stride[0], src.stride[1], src.stride[2]}};
+}
+
+struct KernelArgTensor_int32_t_2d_Device_ss_ds {
+    __gm__ int32_t* ptr;
+    int64_t stride[1];
+};
+static inline KernelArgTensor_int32_t_2d_Device_ss_ds cannbotdsl_pack_KernelArgTensor_int32_t_2d_Device_ss_ds(const KernelArgTensor_int32_t_2d& src) {
+    return {src.ptr, {src.stride[0]}};
+}
+
+struct KernelArgTensor_int32_t_1d_Device_s_s {
+    __gm__ int32_t* ptr;
+};
+static inline KernelArgTensor_int32_t_1d_Device_s_s cannbotdsl_pack_KernelArgTensor_int32_t_1d_Device_s_s(const KernelArgTensor_int32_t_1d& src) {
+    return {src.ptr};
+}
+
+struct KernelArgTensor_uint16_t_2d_Device_sd_ds {
+    __gm__ uint16_t* ptr;
+    int64_t shape[1];
+    int64_t stride[1];
+};
+static inline KernelArgTensor_uint16_t_2d_Device_sd_ds cannbotdsl_pack_KernelArgTensor_uint16_t_2d_Device_sd_ds(const KernelArgTensor_uint16_t_2d& src) {
+    return {src.ptr, {src.shape[1]}, {src.stride[0]}};
+}
+
+struct KernelArgTensor_int32_t_2d_Device_sd_ds {
+    __gm__ int32_t* ptr;
+    int64_t shape[1];
+    int64_t stride[1];
+};
+static inline KernelArgTensor_int32_t_2d_Device_sd_ds cannbotdsl_pack_KernelArgTensor_int32_t_2d_Device_sd_ds(const KernelArgTensor_int32_t_2d& src) {
+    return {src.ptr, {src.shape[1]}, {src.stride[0]}};
+}
+
+struct KernelArgTensor_float_2d_Device_ss_ds {
+    __gm__ float* ptr;
+    int64_t stride[1];
+};
+static inline KernelArgTensor_float_2d_Device_ss_ds cannbotdsl_pack_KernelArgTensor_float_2d_Device_ss_ds(const KernelArgTensor_float_2d& src) {
+    return {src.ptr, {src.stride[0]}};
+}
+
+static_assert(sizeof(KernelArgTensor_uint8_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_uint8_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_fp8_e8m0_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_fp8_e8m0_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_bfloat16_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_bfloat16_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_uint8_t_4d_Device_ssss_ddds) == 32 && alignof(KernelArgTensor_uint8_t_4d_Device_ssss_ddds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_fp8_e8m0_t_4d_Device_ssss_ddds) == 32 && alignof(KernelArgTensor_fp8_e8m0_t_4d_Device_ssss_ddds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_int32_t_1d_Device_s_s) == 8 && alignof(KernelArgTensor_int32_t_1d_Device_s_s) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_int32_t_1d_Device_s_s) == 8 && alignof(KernelArgTensor_int32_t_1d_Device_s_s) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_uint16_t_2d_Device_sd_ds) == 24 && alignof(KernelArgTensor_uint16_t_2d_Device_sd_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_int32_t_2d_Device_sd_ds) == 24 && alignof(KernelArgTensor_int32_t_2d_Device_sd_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_float_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_float_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(int64_t) == 8 && alignof(int64_t) == 8, "device argument ABI mismatch");
+static_assert(sizeof(int64_t) == 8 && alignof(int64_t) == 8, "device argument ABI mismatch");
+static_assert(sizeof(int64_t) == 8 && alignof(int64_t) == 8, "device argument ABI mismatch");
+static_assert(sizeof(int64_t) == 8 && alignof(int64_t) == 8, "device argument ABI mismatch");
+static_assert(sizeof(int64_t) == 8 && alignof(int64_t) == 8, "device argument ABI mismatch");
+static_assert(sizeof(int32_t) == 4 && alignof(int32_t) == 4, "device argument ABI mismatch");
+static_assert(sizeof(int32_t) == 4 && alignof(int32_t) == 4, "device argument ABI mismatch");
+static_assert(sizeof(int32_t) == 4 && alignof(int32_t) == 4, "device argument ABI mismatch");
+__simd_vf__ inline void kernel_score_topk_mix_vf0(__ubuf__ bfloat16_t* buf23)
+{
+    vector_bool vmask;
+    bfloat16_t c24 = __builtin_bit_cast(bfloat16_t, (uint16_t)0);
+    for (int32_t i25 = 0; i25 < 1; i25 = (int32_t)((uint32_t)i25 + (uint32_t)1)) {
+        uint32_t rem27 = 128;
+        vector_bool mask26 = asc_update_mask_b16(rem27);
+        vector_bfloat16_t v28;
+        asc_duplicate_scalar(v28, c24, mask26);
+        asc_storealign(buf23 + 110080, v28, mask26);
+        asc_storealign(buf23 + 110208, v28, mask26);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf1(__ubuf__ bfloat16_t* buf29, __ubuf__ bfloat16_t* buf30)
+{
+    vector_bool vmask;
+    float c31 = 0.015625f;
+    uint32_t rem33 = 32;
+    vector_bool mask32 = asc_update_mask_b32(rem33);
+    uint32_t rem35 = 32;
+    vector_bool mask34 = asc_update_mask_b16(rem35);
+    for (int32_t i36 = 0; i36 < 6; i36 = (int32_t)((uint32_t)i36 + (uint32_t)1)) {
+        int32_t t37 = i36 * 32;
+        int32_t t38 = t37;
+        int32_t t39 = (int32_t)((uint32_t)t38 + (uint32_t)110080);
+        vector_float v40;
+        asc_loadalign_unpack(*(vector_bfloat16_t*)&v40, (__ubuf__ bfloat16_t*)(buf29 + t39));
+        vector_float v41;
+        asc_bfloat162float(v41, *(vector_bfloat16_t*)&v40, mask32);
+        vector_float v42;
+        asc_mul_scalar(v42, v41, c31, mask32);
+        vector_bfloat16_t v43;
+        asc_float2bfloat16_rn(v43, v42, mask32, ASC_POSITION_EVEN);
+        vector_uint32_t &r44 = (vector_uint32_t &)v43;
+        vector_uint16_t v45;
+        cannbotdsl_92::cannbotdsl_pack_to_low(*(vector_uint16_t*)&v45, *(vector_uint32_t*)&r44);
+        int32_t t46 = i36 * 128;
+        vector_bfloat16_t &r47 = (vector_bfloat16_t &)v45;
+        int32_t t48 = t46;
+        int32_t t49 = (int32_t)((uint32_t)t48 + (uint32_t)110336);
+        asc_storealign(buf30 + t49, r47, mask34);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf2(__ubuf__ int32_t* buf50, __ubuf__ uint16_t* buf51)
+{
+    vector_bool vmask;
+    uint32_t rem53 = 64;
+    vector_bool mask52 = asc_update_mask_b16(rem53);
+    for (int32_t i54 = 0; i54 < 4; i54 = (int32_t)((uint32_t)i54 + (uint32_t)1)) {
+        int32_t t55 = i54 * 64;
+        int32_t t56 = t55;
+        int32_t t57 = (int32_t)((uint32_t)t56 + (uint32_t)55808);
+        vector_int32_t v58;
+        asc_loadalign(v58, buf50 + t57);
+        vector_uint32_t &r59 = (vector_uint32_t &)v58;
+        vector_uint16_t v60;
+        cannbotdsl_92::cannbotdsl_pack_to_low(*(vector_uint16_t*)&v60, *(vector_uint32_t*)&r59);
+        int32_t t61 = (int32_t)((uint32_t)t56 + (uint32_t)112128);
+        asc_storealign(buf51 + t61, v60, mask52);
+    }
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf3(__ubuf__ bfloat16_t* buf62, int32_t arg63, int64_t arg64, int64_t arg65, __ubuf__ bfloat16_t* buf66, __ubuf__ uint16_t* buf67, bool arg68, int32_t arg69, __ubuf__ uint16_t* buf70, int32_t arg71)
+{
+    vector_bool vmask;
+    bfloat16_t c72 = __builtin_bit_cast(bfloat16_t, (uint16_t)0);
+    uint32_t rem74 = 128;
+    vector_bool mask73 = asc_update_mask_b16(rem74);
+    vector_uint16_t v75;
+    asc_duplicate_scalar(v75, 127, mask73);
+    vector_bfloat16_t v76;
+    asc_duplicate_scalar(v76, c72, mask73);
+    int32_t t77 = (int32_t)((uint32_t)arg63 + (uint32_t)110336);
+    vector_bfloat16_t v78;
+    asc_loadalign(v78, buf62 + t77);
+    vector_bfloat16_t iter79 = v76;
+    #pragma unroll(1)
+    for (int32_t i80 = 0; i80 < 32; i80 = (int32_t)((uint32_t)i80 + (uint32_t)1)) {
+        int16_t t81 = (int16_t)i80;
+        vector_uint16_t v82;
+        asc_duplicate_scalar(v82, t81, mask73);
+        vector_bfloat16_t v83;
+        asc_gather(v83, v78, v82);
+        int32_t t84 = (int32_t)arg64;
+        int32_t t85 = (int32_t)((uint32_t)t84 * (uint32_t)32);
+        int32_t t86 = (int32_t)((uint32_t)t85 + (uint32_t)i80);
+        int32_t t87 = (int32_t)((uint32_t)t86 * (uint32_t)256);
+        int32_t t88 = (int32_t)arg65;
+        int32_t t89 = (int32_t)((uint32_t)t88 * (uint32_t)128);
+        int32_t t90 = (int32_t)((uint32_t)t87 + (uint32_t)t89);
+        int32_t t91 = t90;
+        vector_bfloat16_t v92;
+        asc_loadalign(v92, buf66 + t91);
+        vector_bfloat16_t v93;
+        asc_max_scalar(v93, v92, c72, mask73);
+        cannbotdsl_92::cannbotdsl_madd_bfloat16(v93, v83, iter79, mask73);
+        iter79 = v93;
+    }
+    vector_uint16_t v94;
+    asc_duplicate_scalar(v94, 1, mask73);
+    vector_uint16_t ifr95;
+    if (arg68) {
+        int32_t t96 = (int32_t)arg65;
+        int32_t t97 = (int32_t)((uint32_t)t96 * (uint32_t)128);
+        int32_t t98 = t97;
+        int32_t t99 = (int32_t)((uint32_t)t98 + (uint32_t)112128);
+        vector_uint16_t v100;
+        asc_loadalign(v100, buf67 + t99);
+        ifr95 = v100;
+    } else {
+        ifr95 = v94;
+    }
+    uint32_t rem102 = arg69;
+    vector_bool mask101 = asc_update_mask_b16(rem102);
+    vector_bool m103;
+    asc_eq_scalar(m103, ifr95, 1, mask73);
+    vector_bool m104;
+    asc_and(m104, mask101, m103, mask73);
+    vector_bfloat16_t v105;
+    asc_add_scalar(v105, iter79, c72, mask73);
+    vector_uint16_t &r106 = (vector_uint16_t &)v105;
+    vector_uint16_t v107;
+    asc_duplicate_scalar(v107, -32768, mask73);
+    vector_uint16_t v108;
+    asc_xor(v108, r106, v107, mask73);
+    vector_uint16_t v109;
+    asc_duplicate_scalar(v109, -1, mask73);
+    vector_uint16_t v110;
+    asc_xor(v110, r106, v109, mask73);
+    vector_int16_t &r111 = (vector_int16_t &)r106;
+    vector_bool m112;
+    asc_lt_scalar(m112, r111, 0, mask73);
+    vector_uint16_t v113;
+    asc_select(v113, v110, v108, m112);
+    vector_uint16_t v114;
+    asc_select(v114, v113, v75, m104);
+    int32_t t115 = (int32_t)((uint32_t)arg71 + (uint32_t)32768);
+    for (int32_t i116 = 0; i116 < 1; i116 = (int32_t)((uint32_t)i116 + (uint32_t)1)) {
+        asc_storealign(buf70 + t115, v114, mask73);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf4(int64_t arg117, __ubuf__ uint16_t* buf118, bool arg119, int32_t arg120, __ubuf__ uint16_t* buf121, int32_t arg122)
+{
+    vector_bool vmask;
+    bfloat16_t c123 = __builtin_bit_cast(bfloat16_t, (uint16_t)0);
+    uint32_t rem125 = 128;
+    vector_bool mask124 = asc_update_mask_b16(rem125);
+    vector_uint16_t v126;
+    asc_duplicate_scalar(v126, 127, mask124);
+    vector_bfloat16_t v127;
+    asc_duplicate_scalar(v127, c123, mask124);
+    vector_uint16_t v128;
+    asc_duplicate_scalar(v128, 1, mask124);
+    vector_uint16_t ifr129;
+    if (arg119) {
+        int32_t t130 = (int32_t)arg117;
+        int32_t t131 = (int32_t)((uint32_t)t130 * (uint32_t)128);
+        int32_t t132 = t131;
+        int32_t t133 = (int32_t)((uint32_t)t132 + (uint32_t)112128);
+        vector_uint16_t v134;
+        asc_loadalign(v134, buf118 + t133);
+        ifr129 = v134;
+    } else {
+        ifr129 = v128;
+    }
+    uint32_t rem136 = arg120;
+    vector_bool mask135 = asc_update_mask_b16(rem136);
+    vector_bool m137;
+    asc_eq_scalar(m137, ifr129, 1, mask124);
+    vector_bool m138;
+    asc_and(m138, mask135, m137, mask124);
+    vector_bfloat16_t v139;
+    asc_add_scalar(v139, v127, c123, mask124);
+    vector_uint16_t &r140 = (vector_uint16_t &)v139;
+    vector_uint16_t v141;
+    asc_duplicate_scalar(v141, -32768, mask124);
+    vector_uint16_t v142;
+    asc_xor(v142, r140, v141, mask124);
+    vector_uint16_t v143;
+    asc_duplicate_scalar(v143, -1, mask124);
+    vector_uint16_t v144;
+    asc_xor(v144, r140, v143, mask124);
+    vector_int16_t &r145 = (vector_int16_t &)r140;
+    vector_bool m146;
+    asc_lt_scalar(m146, r145, 0, mask124);
+    vector_uint16_t v147;
+    asc_select(v147, v144, v142, m146);
+    vector_uint16_t v148;
+    asc_select(v148, v147, v126, m138);
+    int32_t t149 = (int32_t)((uint32_t)arg122 + (uint32_t)32768);
+    for (int32_t i150 = 0; i150 < 1; i150 = (int32_t)((uint32_t)i150 + (uint32_t)1)) {
+        asc_storealign(buf121 + t149, v148, mask124);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf5(int64_t arg151, __ubuf__ uint16_t* buf152, int32_t arg153, int64_t arg154, __ubuf__ uint16_t* buf155)
+{
+    vector_bool vmask;
+    uint32_t rem157 = 128;
+    vector_bool mask156 = asc_update_mask_b16(rem157);
+    vector_uint16_t v158;
+    asc_duplicate_scalar(v158, 0, mask156);
+    vector_uint16_t iter159 = v158;
+    vector_uint16_t iter160 = v158;
+    #pragma unroll(1)
+    for (int64_t i161 = 0; i161 < arg154; i161 = (int64_t)((uint64_t)i161 + (uint64_t)1)) {
+        int64_t t162 = (int64_t)((uint64_t)i161 * (uint64_t)256);
+        int64_t t163 = (int64_t)((uint64_t)arg151 - (uint64_t)t162);
+        int32_t t164 = (int32_t)t163;
+        uint32_t rem166 = t164;
+        vector_bool mask165 = asc_update_mask_b8(rem166);
+        int32_t t167 = t162;
+        int32_t t168 = (int32_t)((uint32_t)arg153 + (uint32_t)t167);
+        vector_uint8_t v169;
+        vector_uint8_t v170;
+        asc_loadalign_deintlv(v169, v170, (__ubuf__ uint8_t*)(buf152 + t168));
+        vector_uint16_t v171 = iter159;
+        asc_cumulative_histogram_bin0(v171, v170, mask165);
+        vector_uint16_t v172 = iter160;
+        asc_cumulative_histogram_bin1(v172, v170, mask165);
+        iter159 = v171;
+        iter160 = v172;
+    }
+    for (int32_t i173 = 0; i173 < 1; i173 = (int32_t)((uint32_t)i173 + (uint32_t)1)) {
+        asc_storealign(buf155 + 28160, iter159, mask156);
+        asc_storealign(buf155 + 28288, iter160, mask156);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf6(int64_t arg174, __ubuf__ uint16_t* buf175, int32_t arg176, int32_t arg177, int64_t arg178, __ubuf__ uint16_t* buf179)
+{
+    vector_bool vmask;
+    uint32_t rem181 = 128;
+    vector_bool mask180 = asc_update_mask_b16(rem181);
+    vector_uint16_t v182;
+    asc_duplicate_scalar(v182, 0, mask180);
+    vector_uint16_t iter183 = v182;
+    vector_uint16_t iter184 = v182;
+    #pragma unroll(1)
+    for (int64_t i185 = 0; i185 < arg178; i185 = (int64_t)((uint64_t)i185 + (uint64_t)1)) {
+        int64_t t186 = (int64_t)((uint64_t)i185 * (uint64_t)256);
+        int64_t t187 = (int64_t)((uint64_t)arg174 - (uint64_t)t186);
+        int32_t t188 = (int32_t)t187;
+        uint32_t rem190 = t188;
+        vector_bool mask189 = asc_update_mask_b8(rem190);
+        int32_t t191 = t186;
+        int32_t t192 = (int32_t)((uint32_t)arg176 + (uint32_t)t191);
+        vector_uint8_t v193;
+        vector_uint8_t v194;
+        asc_loadalign_deintlv(v193, v194, (__ubuf__ uint8_t*)(buf175 + t192));
+        bool cmp195 = arg177 < 0;
+        vector_uint16_t ifr196;
+        vector_uint16_t ifr197;
+        if (cmp195) {
+            vector_uint16_t v198 = iter183;
+            asc_cumulative_histogram_bin0(v198, v194, mask189);
+            vector_uint16_t v199 = iter184;
+            asc_cumulative_histogram_bin1(v199, v194, mask189);
+            ifr196 = v198;
+            ifr197 = v199;
+        } else {
+            int8_t t200 = (int8_t)arg177;
+            vector_bool m201;
+            asc_eq_scalar(m201, v194, t200, mask189);
+            vector_uint16_t v202 = iter183;
+            asc_cumulative_histogram_bin0(v202, v193, m201);
+            vector_uint16_t v203 = iter184;
+            asc_cumulative_histogram_bin1(v203, v193, m201);
+            ifr196 = v202;
+            ifr197 = v203;
+        }
+        iter183 = ifr196;
+        iter184 = ifr197;
+    }
+    for (int32_t i204 = 0; i204 < 1; i204 = (int32_t)((uint32_t)i204 + (uint32_t)1)) {
+        asc_storealign(buf179 + 28160, iter183, mask180);
+        asc_storealign(buf179 + 28288, iter184, mask180);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf7(__ubuf__ uint16_t* buf205, int64_t arg206, __ubuf__ uint16_t* buf207, int32_t arg208, int32_t arg209, int64_t arg210)
+{
+    vector_bool vmask;
+    vector_store_unalign _sua_buf205;
+    for (int32_t i211 = 0; i211 < 1; i211 = (int32_t)((uint32_t)i211 + (uint32_t)1)) {
+        cannbotdsl_92::cannbotdsl_squeeze_store_init();
+    }
+    #pragma unroll(1)
+    for (int64_t i212 = 0; i212 < arg210; i212 = (int64_t)((uint64_t)i212 + (uint64_t)1)) {
+        int64_t t213 = (int64_t)((uint64_t)i212 * (uint64_t)128);
+        int64_t t214 = (int64_t)((uint64_t)arg206 - (uint64_t)t213);
+        int32_t t215 = (int32_t)t214;
+        uint32_t rem217 = t215;
+        vector_bool mask216 = asc_update_mask_b16(rem217);
+        int32_t t218 = t213;
+        int32_t t219 = (int32_t)((uint32_t)arg208 + (uint32_t)t218);
+        vector_uint16_t v220;
+        asc_loadalign(v220, buf207 + t219);
+        int16_t t221 = (int16_t)t213;
+        vector_uint16_t v222;
+        asc_arange(*(vector_int16_t*)&v222, static_cast<int16_t>(t221));
+        int16_t t223 = (int16_t)arg209;
+        vector_bool m224;
+        asc_eq_scalar(m224, v220, t223, mask216);
+        vector_uint16_t v225;
+        cannbotdsl_92::cannbotdsl_squeeze_store(buf205 + 0, v225, _sua_buf205, v222, m224);
+    }
+    for (int32_t i226 = 0; i226 < 1; i226 = (int32_t)((uint32_t)i226 + (uint32_t)1)) {
+        cannbotdsl_92::cannbotdsl_squeeze_store_finalize(buf205 + 0, _sua_buf205);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf8(__ubuf__ int32_t* buf227, int64_t arg228, __ubuf__ uint16_t* buf229, int32_t arg230, int32_t arg231, int32_t arg232, int64_t arg233)
+{
+    vector_bool vmask;
+    vector_store_unalign _sua_buf227;
+    uint32_t rem235 = 64;
+    vector_bool mask234 = asc_update_mask_b32(rem235);
+    vector_int32_t v236;
+    asc_duplicate_scalar(v236, -1, mask234);
+    for (int32_t i237 = 0; i237 < 8; i237 = (int32_t)((uint32_t)i237 + (uint32_t)1)) {
+        int32_t t238 = i237 * 64;
+        int32_t t239 = t238;
+        int32_t t240 = (int32_t)((uint32_t)t239 + (uint32_t)13568);
+        asc_storealign(buf227 + t240, v236, mask234);
+    }
+    asc_mem_bar(VST_VST);
+    for (int32_t i241 = 0; i241 < 1; i241 = (int32_t)((uint32_t)i241 + (uint32_t)1)) {
+        cannbotdsl_92::cannbotdsl_squeeze_store_init();
+    }
+    #pragma unroll(1)
+    for (int64_t i242 = 0; i242 < arg233; i242 = (int64_t)((uint64_t)i242 + (uint64_t)1)) {
+        int64_t t243 = (int64_t)((uint64_t)i242 * (uint64_t)64);
+        int64_t t244 = (int64_t)((uint64_t)arg228 - (uint64_t)t243);
+        int32_t t245 = (int32_t)t244;
+        uint32_t rem247 = t245;
+        vector_bool mask246 = asc_update_mask_b32(rem247);
+        int32_t t248 = t243;
+        int32_t t249 = (int32_t)((uint32_t)arg230 + (uint32_t)t248);
+        vector_uint16_t v250;
+        asc_loadalign(v250, buf229 + t249);
+        vector_uint32_t v251;
+        asc_unpack_lower(v251, v250);
+        int32_t t252 = (int32_t)t243;
+        vector_int32_t v253;
+        asc_arange(v253, t252);
+        vector_bool m254;
+        asc_gt_scalar(m254, v251, arg231, mask246);
+        vector_bool m255;
+        asc_eq_scalar(m255, v251, arg231, mask246);
+        vector_bool m256;
+        asc_le_scalar(m256, v253, arg232, mask246);
+        vector_bool m257;
+        asc_and(m257, m255, m256, mask246);
+        vector_bool m258;
+        asc_or(m258, m254, m257, mask246);
+        vector_bool m259;
+        asc_gt_scalar(m259, v251, 127, mask246);
+        vector_bool m260;
+        asc_and(m260, m258, m259, mask246);
+        vector_int32_t v261;
+        cannbotdsl_92::cannbotdsl_squeeze_store(buf227 + 13568, v261, _sua_buf227, v253, m260);
+    }
+    for (int32_t i262 = 0; i262 < 1; i262 = (int32_t)((uint32_t)i262 + (uint32_t)1)) {
+        cannbotdsl_92::cannbotdsl_squeeze_store_finalize(buf227 + 13568, _sua_buf227);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf9(__ubuf__ int32_t* buf263, __ubuf__ uint16_t* buf264, int32_t arg265, __ubuf__ uint16_t* buf266, int64_t arg267, __ubuf__ int32_t* buf268)
+{
+    vector_bool vmask;
+    uint32_t rem270 = 64;
+    vector_bool mask269 = asc_update_mask_b32(rem270);
+    uint32_t rem272 = 64;
+    vector_bool mask271 = asc_update_mask_b16(rem272);
+    for (int32_t i273 = 0; i273 < 8; i273 = (int32_t)((uint32_t)i273 + (uint32_t)1)) {
+        int32_t t274 = i273 * 64;
+        int32_t t275 = t274;
+        int32_t t276 = (int32_t)((uint32_t)t275 + (uint32_t)13568);
+        vector_int32_t v277;
+        asc_loadalign(v277, buf263 + t276);
+        vector_bool m278;
+        asc_ge_scalar(m278, v277, 0, mask269);
+        vector_int32_t v279;
+        asc_max_scalar(v279, v277, 0, mask269);
+        vector_uint32_t &r280 = (vector_uint32_t &)v279;
+        vector_uint16_t v281;
+        cannbotdsl_92::cannbotdsl_pack_to_low(*(vector_uint16_t*)&v281, *(vector_uint32_t*)&r280);
+        vector_uint16_t v282;
+        asc_gather(v282, (__ubuf__ uint16_t*)(buf264 + arg265), v281, mask271);
+        vector_int32_t v283;
+        asc_duplicate_scalar(v283, 0, mask269);
+        vector_int32_t v284;
+        asc_duplicate_scalar(v284, 1, mask269);
+        vector_int32_t v285;
+        asc_select(v285, v284, v283, m278);
+        vector_uint32_t &r286 = (vector_uint32_t &)v285;
+        vector_uint16_t v287;
+        cannbotdsl_92::cannbotdsl_pack_to_low(*(vector_uint16_t*)&v287, *(vector_uint32_t*)&r286);
+        vector_bool m288;
+        asc_eq_scalar(m288, v287, 1, mask271);
+        vector_uint16_t v289;
+        asc_duplicate_scalar(v289, 0, mask271);
+        vector_uint16_t v290;
+        asc_select(v290, v282, v289, m288);
+        int32_t t291 = (int32_t)((uint32_t)t275 + (uint32_t)25600);
+        asc_storealign(buf266 + t291, v290, mask271);
+        int32_t t292 = (int32_t)arg267;
+        vector_int32_t v293;
+        asc_add_scalar(v293, v277, t292, mask269);
+        vector_int32_t v294;
+        asc_duplicate_scalar(v294, -1, mask269);
+        vector_int32_t v295;
+        asc_select(v295, v293, v294, m278);
+        int32_t t296 = (int32_t)((uint32_t)t275 + (uint32_t)13056);
+        asc_storealign(buf268 + t296, v295, mask269);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf10(__ubuf__ uint16_t* buf297, int32_t arg298, __ubuf__ float* buf299)
+{
+    vector_bool vmask;
+    uint32_t rem301 = 128;
+    vector_bool mask300 = asc_update_mask_b16(rem301);
+    int32_t t302 = (int32_t)((uint32_t)arg298 + (uint32_t)32768);
+    for (int32_t i303 = 0; i303 < 1; i303 = (int32_t)((uint32_t)i303 + (uint32_t)1)) {
+        vector_uint16_t v304;
+        asc_loadalign(v304, buf297 + t302);
+        vector_uint16_t v305;
+        asc_duplicate_scalar(v305, -32768, mask300);
+        vector_uint16_t v306;
+        asc_xor(v306, v304, v305, mask300);
+        vector_uint16_t v307;
+        asc_duplicate_scalar(v307, -1, mask300);
+        vector_uint16_t v308;
+        asc_xor(v308, v304, v307, mask300);
+        vector_bool m309;
+        asc_ge_scalar(m309, v304, -32768, mask300);
+        vector_uint16_t v310;
+        asc_select(v310, v306, v308, m309);
+        vector_bfloat16_t &r311 = (vector_bfloat16_t &)v310;
+        uint32_t rem313 = 64;
+        vector_bool mask312 = asc_update_mask_b32(rem313);
+        vector_uint16_t &r314 = (vector_uint16_t &)r311;
+        vector_uint32_t v315;
+        asc_unpack_lower(v315, r314);
+        vector_uint32_t v316;
+        asc_shiftleft_scalar(v316, v315, 16, mask312);
+        vector_float &r317 = (vector_float &)v316;
+        asc_storealign(buf299 + 56320, r317, mask312);
+        uint32_t rem319 = 64;
+        vector_bool mask318 = asc_update_mask_b32(rem319);
+        vector_uint32_t v320;
+        asc_unpack_upper(v320, r314);
+        vector_uint32_t v321;
+        asc_shiftleft_scalar(v321, v320, 16, mask318);
+        vector_float &r322 = (vector_float &)v321;
+        asc_storealign(buf299 + 56384, r322, mask318);
+    }
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf11(int32_t arg323, int64_t arg324, int64_t arg325, __ubuf__ int32_t* buf326)
+{
+    vector_bool vmask;
+    uint32_t rem328 = 64;
+    vector_bool mask327 = asc_update_mask_b32(rem328);
+    for (int32_t i329 = 0; i329 < 2; i329 = (int32_t)((uint32_t)i329 + (uint32_t)1)) {
+        int32_t t330 = i329 * 64;
+        vector_int32_t v331;
+        asc_arange(v331, t330);
+        int32_t t332 = (int32_t)((uint32_t)arg323 * (uint32_t)128);
+        vector_int32_t v333;
+        asc_add_scalar(v333, v331, t332, mask327);
+        int32_t t334 = (int32_t)arg324;
+        vector_bool m335;
+        asc_lt_scalar(m335, v331, t334, mask327);
+        vector_int32_t v336;
+        asc_duplicate_scalar(v336, -1, mask327);
+        vector_int32_t v337;
+        asc_select(v337, v333, v336, m335);
+        int32_t t338 = (int32_t)arg325;
+        int32_t t339 = (int32_t)((uint32_t)t338 * (uint32_t)128);
+        int32_t t340 = (int32_t)((uint32_t)t339 + (uint32_t)t330);
+        int32_t t341 = t340;
+        int32_t t342 = (int32_t)((uint32_t)t341 + (uint32_t)33152);
+        asc_storealign(buf326 + t342, v337, mask327);
+    }
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf12(__ubuf__ int32_t* buf343)
+{
+    vector_bool vmask;
+    uint32_t rem345 = 64;
+    vector_bool mask344 = asc_update_mask_b32(rem345);
+    for (int32_t i346 = 0; i346 < 8; i346 = (int32_t)((uint32_t)i346 + (uint32_t)1)) {
+        int32_t t347 = i346 * 64;
+        vector_int32_t v348;
+        asc_duplicate_scalar(v348, -1, mask344);
+        int32_t t349 = t347;
+        int32_t t350 = (int32_t)((uint32_t)t349 + (uint32_t)33152);
+        asc_storealign(buf343 + t350, v348, mask344);
+    }
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf13(int64_t arg351, __ubuf__ uint16_t* buf352, int64_t arg353, __ubuf__ uint16_t* buf354)
+{
+    vector_bool vmask;
+    uint32_t rem356 = 128;
+    vector_bool mask355 = asc_update_mask_b16(rem356);
+    vector_uint16_t v357;
+    asc_duplicate_scalar(v357, 0, mask355);
+    vector_uint16_t iter358 = v357;
+    vector_uint16_t iter359 = v357;
+    #pragma unroll(1)
+    for (int64_t i360 = 0; i360 < arg353; i360 = (int64_t)((uint64_t)i360 + (uint64_t)1)) {
+        int64_t t361 = (int64_t)((uint64_t)i360 * (uint64_t)256);
+        int64_t t362 = (int64_t)((uint64_t)arg351 - (uint64_t)t361);
+        int32_t t363 = (int32_t)t362;
+        uint32_t rem365 = t363;
+        vector_bool mask364 = asc_update_mask_b8(rem365);
+        int32_t t366 = t361;
+        vector_uint8_t v367;
+        vector_uint8_t v368;
+        asc_loadalign_deintlv(v367, v368, (__ubuf__ uint8_t*)(buf352 + t366));
+        vector_uint16_t v369 = iter358;
+        asc_cumulative_histogram_bin0(v369, v368, mask364);
+        vector_uint16_t v370 = iter359;
+        asc_cumulative_histogram_bin1(v370, v368, mask364);
+        iter358 = v369;
+        iter359 = v370;
+    }
+    for (int32_t i371 = 0; i371 < 1; i371 = (int32_t)((uint32_t)i371 + (uint32_t)1)) {
+        asc_storealign(buf354 + 65536, iter358, mask355);
+        asc_storealign(buf354 + 65664, iter359, mask355);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf14(int64_t arg372, __ubuf__ uint16_t* buf373, int32_t arg374, int64_t arg375, __ubuf__ uint16_t* buf376)
+{
+    vector_bool vmask;
+    uint32_t rem378 = 128;
+    vector_bool mask377 = asc_update_mask_b16(rem378);
+    vector_uint16_t v379;
+    asc_duplicate_scalar(v379, 0, mask377);
+    vector_uint16_t iter380 = v379;
+    vector_uint16_t iter381 = v379;
+    #pragma unroll(1)
+    for (int64_t i382 = 0; i382 < arg375; i382 = (int64_t)((uint64_t)i382 + (uint64_t)1)) {
+        int64_t t383 = (int64_t)((uint64_t)i382 * (uint64_t)256);
+        int64_t t384 = (int64_t)((uint64_t)arg372 - (uint64_t)t383);
+        int32_t t385 = (int32_t)t384;
+        uint32_t rem387 = t385;
+        vector_bool mask386 = asc_update_mask_b8(rem387);
+        int32_t t388 = t383;
+        vector_uint8_t v389;
+        vector_uint8_t v390;
+        asc_loadalign_deintlv(v389, v390, (__ubuf__ uint8_t*)(buf373 + t388));
+        bool cmp391 = arg374 < 0;
+        vector_uint16_t ifr392;
+        vector_uint16_t ifr393;
+        if (cmp391) {
+            vector_uint16_t v394 = iter380;
+            asc_cumulative_histogram_bin0(v394, v390, mask386);
+            vector_uint16_t v395 = iter381;
+            asc_cumulative_histogram_bin1(v395, v390, mask386);
+            ifr392 = v394;
+            ifr393 = v395;
+        } else {
+            int8_t t396 = (int8_t)arg374;
+            vector_bool m397;
+            asc_eq_scalar(m397, v390, t396, mask386);
+            vector_uint16_t v398 = iter380;
+            asc_cumulative_histogram_bin0(v398, v389, m397);
+            vector_uint16_t v399 = iter381;
+            asc_cumulative_histogram_bin1(v399, v389, m397);
+            ifr392 = v398;
+            ifr393 = v399;
+        }
+        iter380 = ifr392;
+        iter381 = ifr393;
+    }
+    for (int32_t i400 = 0; i400 < 1; i400 = (int32_t)((uint32_t)i400 + (uint32_t)1)) {
+        asc_storealign(buf376 + 65536, iter380, mask377);
+        asc_storealign(buf376 + 65664, iter381, mask377);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf15(__ubuf__ uint16_t* buf401, int64_t arg402, __ubuf__ uint16_t* buf403, int32_t arg404, int64_t arg405)
+{
+    vector_bool vmask;
+    vector_store_unalign _sua_buf401;
+    for (int32_t i406 = 0; i406 < 1; i406 = (int32_t)((uint32_t)i406 + (uint32_t)1)) {
+        cannbotdsl_92::cannbotdsl_squeeze_store_init();
+    }
+    #pragma unroll(1)
+    for (int64_t i407 = 0; i407 < arg405; i407 = (int64_t)((uint64_t)i407 + (uint64_t)1)) {
+        int64_t t408 = (int64_t)((uint64_t)i407 * (uint64_t)128);
+        int64_t t409 = (int64_t)((uint64_t)arg402 - (uint64_t)t408);
+        int32_t t410 = (int32_t)t409;
+        uint32_t rem412 = t410;
+        vector_bool mask411 = asc_update_mask_b16(rem412);
+        int32_t t413 = t408;
+        vector_uint16_t v414;
+        asc_loadalign(v414, buf403 + t413);
+        int16_t t415 = (int16_t)t408;
+        vector_uint16_t v416;
+        asc_arange(*(vector_int16_t*)&v416, static_cast<int16_t>(t415));
+        int16_t t417 = (int16_t)arg404;
+        vector_bool m418;
+        asc_eq_scalar(m418, v414, t417, mask411);
+        vector_uint16_t v419;
+        cannbotdsl_92::cannbotdsl_squeeze_store(buf401 + 16384, v419, _sua_buf401, v416, m418);
+    }
+    for (int32_t i420 = 0; i420 < 1; i420 = (int32_t)((uint32_t)i420 + (uint32_t)1)) {
+        cannbotdsl_92::cannbotdsl_squeeze_store_finalize(buf401 + 16384, _sua_buf401);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf16(__ubuf__ int32_t* buf421, int64_t arg422, __ubuf__ uint16_t* buf423, int32_t arg424, int32_t arg425, int64_t arg426)
+{
+    vector_bool vmask;
+    vector_store_unalign _sua_buf421;
+    uint32_t rem428 = 64;
+    vector_bool mask427 = asc_update_mask_b32(rem428);
+    vector_int32_t v429;
+    asc_duplicate_scalar(v429, -1, mask427);
+    for (int32_t i430 = 0; i430 < 8; i430 = (int32_t)((uint32_t)i430 + (uint32_t)1)) {
+        int32_t t431 = i430 * 64;
+        int32_t t432 = t431;
+        int32_t t433 = (int32_t)((uint32_t)t432 + (uint32_t)55296);
+        asc_storealign(buf421 + t433, v429, mask427);
+    }
+    asc_mem_bar(VST_VST);
+    for (int32_t i434 = 0; i434 < 1; i434 = (int32_t)((uint32_t)i434 + (uint32_t)1)) {
+        cannbotdsl_92::cannbotdsl_squeeze_store_init();
+    }
+    #pragma unroll(1)
+    for (int64_t i435 = 0; i435 < arg426; i435 = (int64_t)((uint64_t)i435 + (uint64_t)1)) {
+        int64_t t436 = (int64_t)((uint64_t)i435 * (uint64_t)64);
+        int64_t t437 = (int64_t)((uint64_t)arg422 - (uint64_t)t436);
+        int32_t t438 = (int32_t)t437;
+        uint32_t rem440 = t438;
+        vector_bool mask439 = asc_update_mask_b32(rem440);
+        int32_t t441 = t436;
+        vector_uint16_t v442;
+        asc_loadalign(v442, buf423 + t441);
+        vector_uint32_t v443;
+        asc_unpack_lower(v443, v442);
+        int32_t t444 = (int32_t)t436;
+        vector_int32_t v445;
+        asc_arange(v445, t444);
+        vector_bool m446;
+        asc_gt_scalar(m446, v443, arg424, mask439);
+        vector_bool m447;
+        asc_eq_scalar(m447, v443, arg424, mask439);
+        vector_bool m448;
+        asc_le_scalar(m448, v445, arg425, mask439);
+        vector_bool m449;
+        asc_and(m449, m447, m448, mask439);
+        vector_bool m450;
+        asc_or(m450, m446, m449, mask439);
+        vector_bool m451;
+        asc_gt_scalar(m451, v443, 127, mask439);
+        vector_bool m452;
+        asc_and(m452, m450, m451, mask439);
+        vector_int32_t v453;
+        cannbotdsl_92::cannbotdsl_squeeze_store(buf421 + 55296, v453, _sua_buf421, v445, m452);
+    }
+    for (int32_t i454 = 0; i454 < 1; i454 = (int32_t)((uint32_t)i454 + (uint32_t)1)) {
+        cannbotdsl_92::cannbotdsl_squeeze_store_finalize(buf421 + 55296, _sua_buf421);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf17(__ubuf__ int32_t* buf455, __ubuf__ uint16_t* buf456, __ubuf__ uint16_t* buf457, __ubuf__ int32_t* buf458, __ubuf__ int32_t* buf459)
+{
+    vector_bool vmask;
+    uint32_t rem461 = 64;
+    vector_bool mask460 = asc_update_mask_b32(rem461);
+    uint32_t rem463 = 64;
+    vector_bool mask462 = asc_update_mask_b16(rem463);
+    for (int32_t i464 = 0; i464 < 8; i464 = (int32_t)((uint32_t)i464 + (uint32_t)1)) {
+        int32_t t465 = i464 * 64;
+        int32_t t466 = t465;
+        int32_t t467 = (int32_t)((uint32_t)t466 + (uint32_t)55296);
+        vector_int32_t v468;
+        asc_loadalign(v468, buf455 + t467);
+        vector_bool m469;
+        asc_ge_scalar(m469, v468, 0, mask460);
+        vector_int32_t v470;
+        asc_max_scalar(v470, v468, 0, mask460);
+        vector_uint32_t &r471 = (vector_uint32_t &)v470;
+        vector_uint16_t v472;
+        cannbotdsl_92::cannbotdsl_pack_to_low(*(vector_uint16_t*)&v472, *(vector_uint32_t*)&r471);
+        vector_uint16_t v473;
+        asc_gather(v473, (__ubuf__ uint16_t*)(buf456 + 0), v472, mask462);
+        vector_int32_t v474;
+        asc_duplicate_scalar(v474, 0, mask460);
+        vector_int32_t v475;
+        asc_duplicate_scalar(v475, 1, mask460);
+        vector_int32_t v476;
+        asc_select(v476, v475, v474, m469);
+        vector_uint32_t &r477 = (vector_uint32_t &)v476;
+        vector_uint16_t v478;
+        cannbotdsl_92::cannbotdsl_pack_to_low(*(vector_uint16_t*)&v478, *(vector_uint32_t*)&r477);
+        vector_bool m479;
+        asc_eq_scalar(m479, v478, 1, mask462);
+        vector_uint16_t v480;
+        asc_duplicate_scalar(v480, 0, mask462);
+        vector_uint16_t v481;
+        asc_select(v481, v473, v480, m479);
+        int32_t t482 = (int32_t)((uint32_t)t466 + (uint32_t)65792);
+        asc_storealign(buf457 + t482, v481, mask462);
+        vector_int32_t v483;
+        asc_gather(v483, (__ubuf__ int32_t*)(buf458 + 16384), r471, mask460);
+        vector_int32_t v484;
+        asc_duplicate_scalar(v484, -1, mask460);
+        vector_int32_t v485;
+        asc_select(v485, v483, v484, m469);
+        int32_t t486 = (int32_t)((uint32_t)t466 + (uint32_t)33152);
+        asc_storealign(buf459 + t486, v485, mask460);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf18(__ubuf__ int32_t* buf487, __ubuf__ int32_t* buf488, bool arg489)
+{
+    vector_bool vmask;
+    uint32_t rem491 = 64;
+    vector_bool mask490 = asc_update_mask_b32(rem491);
+    for (int32_t i492 = 0; i492 < 8; i492 = (int32_t)((uint32_t)i492 + (uint32_t)1)) {
+        int32_t t493 = i492 * 64;
+        int32_t t494 = t493;
+        int32_t t495 = (int32_t)((uint32_t)t494 + (uint32_t)33152);
+        vector_int32_t v496;
+        asc_loadalign(v496, buf487 + t495);
+        vector_bool m497;
+        asc_ge_scalar(m497, v496, 0, mask490);
+        vector_int32_t v498;
+        asc_max_scalar(v498, v496, 0, mask490);
+        vector_int32_t ifr499;
+        if (arg489) {
+            vector_uint32_t &r500 = (vector_uint32_t &)v498;
+            vector_int32_t v501;
+            asc_gather(v501, (__ubuf__ int32_t*)(buf488 + 33664), r500, mask490);
+            ifr499 = v501;
+        } else {
+            vector_int32_t v502;
+            asc_shiftright_scalar(v502, v498, 7, mask490);
+            vector_uint32_t &r503 = (vector_uint32_t &)v502;
+            vector_int32_t v504;
+            asc_gather(v504, (__ubuf__ int32_t*)(buf488 + 33664), r503, mask490);
+            vector_int32_t v505;
+            asc_duplicate_scalar(v505, 127, mask490);
+            vector_int32_t v506;
+            asc_and(v506, v498, v505, mask490);
+            vector_int32_t v507;
+            asc_shiftleft_scalar(v507, v504, 7, mask490);
+            vector_int32_t v508;
+            asc_add(v508, v507, v506, mask490);
+            ifr499 = v508;
+        }
+        vector_int32_t v509;
+        asc_duplicate_scalar(v509, -1, mask490);
+        vector_int32_t v510;
+        asc_select(v510, ifr499, v509, m497);
+        asc_storealign(buf487 + t495, v510, mask490);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf19(__ubuf__ uint16_t* buf511, __ubuf__ uint16_t* buf512)
+{
+    vector_bool vmask;
+}
+
+__simd_vf__ inline void kernel_score_topk_mix_vf20(__ubuf__ int32_t* buf513, __ubuf__ int32_t* buf514)
+{
+    vector_bool vmask;
+}
+
+__global__ __aicore__ void kernel_score_topk_mix(KernelArgTensor_uint8_t_2d_Device_ss_ds gm0_arg, KernelArgTensor_fp8_e8m0_t_2d_Device_ss_ds gm1_arg, KernelArgTensor_bfloat16_t_2d_Device_ss_ds gm7_arg, KernelArgTensor_uint8_t_4d_Device_ssss_ddds gm2_arg, KernelArgTensor_fp8_e8m0_t_4d_Device_ssss_ddds gm3_arg, KernelArgTensor_int32_t_2d_Device_ss_ds gm4_arg, KernelArgTensor_int32_t_1d_Device_s_s gm5_arg, KernelArgTensor_int32_t_1d_Device_s_s gm8_arg, KernelArgTensor_int32_t_2d_Device_ss_ds gm9_arg, KernelArgTensor_int32_t_2d_Device_ss_ds gm6_arg, KernelArgTensor_uint16_t_2d_Device_sd_ds gm10_arg, KernelArgTensor_int32_t_2d_Device_sd_ds gm11_arg, KernelArgTensor_int32_t_2d_Device_ss_ds gm12_arg, KernelArgTensor_int32_t_2d_Device_ss_ds gm13_arg, KernelArgTensor_float_2d_Device_ss_ds gm14_arg, int64_t arg15, int64_t arg16, int64_t arg17, int64_t arg18, int64_t arg19, int32_t arg20, int32_t arg21, int32_t arg22)
+{
+    KERNEL_TASK_TYPE_DEFAULT(KERNEL_TYPE_MIX_AIC_1_2);
+    __gm__ uint8_t* gm0 = gm0_arg.ptr;
+    __gm__ fp8_e8m0_t* gm1 = gm1_arg.ptr;
+    __gm__ bfloat16_t* gm7 = gm7_arg.ptr;
+    __gm__ uint8_t* gm2 = gm2_arg.ptr;
+    __gm__ fp8_e8m0_t* gm3 = gm3_arg.ptr;
+    __gm__ int32_t* gm4 = gm4_arg.ptr;
+    __gm__ int32_t* gm5 = gm5_arg.ptr;
+    __gm__ int32_t* gm8 = gm8_arg.ptr;
+    __gm__ int32_t* gm9 = gm9_arg.ptr;
+    __gm__ int32_t* gm6 = gm6_arg.ptr;
+    __gm__ uint16_t* gm10 = gm10_arg.ptr;
+    __gm__ int32_t* gm11 = gm11_arg.ptr;
+    __gm__ int32_t* gm12 = gm12_arg.ptr;
+    __gm__ int32_t* gm13 = gm13_arg.ptr;
+    __gm__ float* gm14 = gm14_arg.ptr;
+    asc_init();
+    asc_set_ctrl(0x1000000000000008ULL | (asc_get_ctrl() & (1ULL << 48)));  // reset CTRL like AscendC InitSocState
+    asc_set_gm2l1_loop_size(1, 1);
+    asc_set_gm2ub_loop_size(1, 1);
+    asc_set_ub2gm_loop_size(1, 1);
+    asc_set_l0c2gm_config(0, 0, false);
+    asc_set_l0c2gm_nz2nd(0, 0, 0);
+    asc_set_l0c_copy_prequant(0);
+    asc_set_l0c2gm_quant_post(0);
+    asc_set_l0c2gm_relu_alpha(0);
+    float cannbotdsl_lrelu_alpha = 0.0f;
+    asc_set_l0c2gm_lrelu_alpha(cannbotdsl_lrelu_alpha);
+    asc_set_l0c2gm_channel_para(0);
+    asc_set_copy_pad_val(static_cast<uint32_t>(0));
+    asc_set_ndim_pad_value(static_cast<uint32_t>(0));
+    asc_set_gm2l1_pad(static_cast<uint32_t>(0));
+    asc_set_l13d_padding(static_cast<uint64_t>(0));
+    asc_set_l12l0_padding_val(static_cast<uint64_t>(0));
+
+    __ubuf__ uint8_t* buf515 = (__ubuf__ uint8_t*)(uintptr_t)(uint64_t)(0);
+    __cc__ float* buf516 = (__cc__ float*)(uintptr_t)(uint64_t)(0);
+    __ca__ fp4x2_e2m1_t* buf517 = (__ca__ fp4x2_e2m1_t*)(uintptr_t)(uint64_t)(0);
+    __cb__ fp4x2_e2m1_t* buf518 = (__cb__ fp4x2_e2m1_t*)(uintptr_t)(uint64_t)(0);
+    __cbuf__ fp8_e8m0_t* buf519 = (__cbuf__ fp8_e8m0_t*)(uintptr_t)(uint64_t)(29696);
+    __cbuf__ fp4x2_e2m1_t* buf520 = (__cbuf__ fp4x2_e2m1_t*)(uintptr_t)(uint64_t)(12288);
+    __cbuf__ fp8_e8m0_t* buf521 = (__cbuf__ fp8_e8m0_t*)(uintptr_t)(uint64_t)(28672);
+    __cbuf__ fp4x2_e2m1_t* buf522 = (__cbuf__ fp4x2_e2m1_t*)(uintptr_t)(uint64_t)(0);
+    __ubuf__ uint8_t* buf523 = (__ubuf__ uint8_t*)(uintptr_t)(uint64_t)(0);
+
+    if ASCEND_IS_AIC {
+        int64_t dim524 = gm6_arg.stride[0];
+        int64_t t525 = dim524;
+        int64_t t526 = t525 * 3;
+        int32_t ld527 = gm6[t526];
+        int64_t t528 = (int64_t)ld527;
+        int64_t t529 = (int64_t)((uint64_t)t528 * (uint64_t)3);
+        int64_t t530 = (arg16 < t529 ? arg16 : t529);
+        for (int64_t i531 = arg17; i531 < t530; i531 = (int64_t)((uint64_t)i531 + (uint64_t)arg18)) {
+            int64_t t532 = (int64_t)((uint64_t)t529 * (uint64_t)i531);
+            int64_t t533 = t532 % t530;
+            bool cmp534 = t533 != 0;
+            bool cmp535 = t533 < 0;
+            bool cmp536 = t530 < 0;
+            bool t537 = cmp535 ^ cmp536;
+            bool t538 = cmp534 & t537;
+            int64_t t539 = t532 / t530;
+            int64_t t540 = (int64_t)(uint8_t)t538;
+            int64_t t541 = (int64_t)((uint64_t)t539 - (uint64_t)t540);
+            int64_t t542 = (int64_t)((uint64_t)i531 + (uint64_t)1);
+            int64_t t543 = (int64_t)((uint64_t)t529 * (uint64_t)t542);
+            int64_t t544 = t543 % t530;
+            bool cmp545 = t544 != 0;
+            bool cmp546 = t544 < 0;
+            bool t547 = cmp546 ^ cmp536;
+            bool t548 = cmp545 & t547;
+            int64_t t549 = t543 / t530;
+            int64_t t550 = (int64_t)(uint8_t)t548;
+            int64_t t551 = (int64_t)((uint64_t)t549 - (uint64_t)t550);
+            int64_t wh552 = t541;
+            int64_t wh_result553;
+            while (true) {
+                bool cmp554 = wh552 < t551;
+                wh_result553 = wh552;
+                if (!cmp554) break;
+                int64_t t555 = wh_result553 % 3;
+                bool cmp556 = t555 != 0;
+                bool cmp557 = t555 < 0;
+                bool t558 = cmp556 & cmp557;
+                int64_t t559 = wh_result553 / 3;
+                int64_t t560 = (int64_t)(uint8_t)t558;
+                int64_t t561 = (int64_t)((uint64_t)t559 - (uint64_t)t560);
+                int64_t t562 = (int64_t)((uint64_t)t561 + (uint64_t)1);
+                int64_t t563 = (int64_t)((uint64_t)t562 * (uint64_t)3);
+                int64_t t564 = (t551 < t563 ? t551 : t563);
+                int64_t sel565 = t558 ? 3 : 0;
+                int64_t t566 = t555 + sel565;
+                int64_t t567 = (int64_t)((uint64_t)t564 - (uint64_t)wh_result553);
+                int64_t t568 = t561;
+                int32_t ld569 = gm6[t568];
+                int64_t t570 = (int64_t)ld569;
+                int64_t t571 = t525 * 2;
+                int64_t t572 = t571 + t568;
+                int32_t ld573 = gm6[t572];
+                int64_t t574 = (int64_t)ld573;
+                int64_t t575 = ld569;
+                int32_t ld576 = gm5[t575];
+                int64_t t577 = (int64_t)ld576;
+                int64_t t578 = (int64_t)((uint64_t)t570 * (uint64_t)32);
+                int64_t t579 = (int64_t)((uint64_t)t578 + (uint64_t)192);
+                int64_t t580 = (t579 < 96 ? t579 : 96);
+                int64_t t581 = (int64_t)((uint64_t)t580 - (uint64_t)t578);
+                __cbuf__ fp4x2_e2m1_t* view_root582 = reinterpret_cast<__cbuf__ fp4x2_e2m1_t*>(reinterpret_cast<__cbuf__ uint8_t*>(buf522) + 0);
+                int64_t t583 = (int64_t)((uint64_t)t578 / (uint64_t)4);
+                int64_t t584 = (int64_t)((uint64_t)t583 * (uint64_t)512);
+                __gm__ fp4x2_e2m1_t* view_root585 = reinterpret_cast<__gm__ fp4x2_e2m1_t*>(reinterpret_cast<__gm__ uint8_t*>(gm0) + 0);
+                bool cmp586 = (uint64_t)t581 > (uint64_t)0;
+                if (cmp586) {
+                    int64_t t587 = t584;
+                    int32_t t588 = (int32_t)t581;
+                    set_mte2_nz_para(((uint64_t)(0) << 48) | ((uint64_t)(192) << 32) | ((uint64_t)(1) << 16) | (uint64_t)(1));
+                    asc_copy_gm2l1_nd2nz((__cbuf__ int8_t*)(view_root582 + (0) / 2), (__gm__ int8_t*)(view_root585 + (t587) / 2), 64, 0, t588, 64, 0, false);
+                }
+                int64_t t589 = (int64_t)((uint64_t)t570 * (uint64_t)128);
+                __cbuf__ fp8_e8m0_t* view_root590 = reinterpret_cast<__cbuf__ fp8_e8m0_t*>(reinterpret_cast<__cbuf__ uint8_t*>(buf521) + 0);
+                asc_lock(PIPE_MTE2, 2);
+                if (cmp586) {
+                    int64_t t591 = t589;
+                    int32_t t592 = (int32_t)t581;
+                    set_mte2_nz_para(((uint64_t)(0) << 48) | ((uint64_t)(2) << 32) | ((uint64_t)(1) << 16) | (uint64_t)(1));
+                    asc_copy_gm2l1_dn2nz((__cbuf__ int16_t*)(view_root590 + 0), (__gm__ int16_t*)(gm1 + t591), 4, 0, 2, t592, 0, false);
+                }
+                asc_unlock(PIPE_MTE2, 2);
+                __ca__ fp4x2_e2m1_t* view_root593 = reinterpret_cast<__ca__ fp4x2_e2m1_t*>(reinterpret_cast<__ca__ uint8_t*>(buf517) + 0);
+                uint64_t selected_root594 = static_cast<uint64_t>(reinterpret_cast<uint64_t>(view_root593)) / 16;
+                asc_lock(PIPE_MTE1, 2);
+                asc_copy_l12l0a(view_root593 + (0) / 2, view_root582 + (0) / 2, 0, 0, 12, 2, 12, 12);
+                asc_copy_l12l0a_mx(selected_root594, (__cbuf__ fp8_e8m0_t*)(view_root590 + 0), 0, 0, 12, 2, 2, 2);
+                asc_unlock(PIPE_MTE1, 2);
+                __ubuf__ bfloat16_t* view_root595 = reinterpret_cast<__ubuf__ bfloat16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf515) + 0);
+                for (int64_t i596 = 0; i596 < t567; i596 = (int64_t)((uint64_t)i596 + (uint64_t)1)) {
+                    int64_t t597 = (int64_t)((uint64_t)t566 + (uint64_t)i596);
+                    int64_t t598 = (int64_t)((uint64_t)t597 * (uint64_t)256);
+                    bool cmp599 = arg15 > 0;
+                    int64_t ifr600;
+                    int64_t ifr601;
+                    if (cmp599) {
+                        bool cmp602 = t598 < t574;
+                        int64_t ifr603;
+                        if (cmp602) {
+                            int64_t t604 = (int64_t)((uint64_t)t570 * (uint64_t)arg15);
+                            int64_t t605 = (int64_t)((uint64_t)t604 + (uint64_t)t598);
+                            int64_t t606 = t605 % 128;
+                            bool cmp607 = t606 != 0;
+                            bool cmp608 = t606 < 0;
+                            bool t609 = cmp607 & cmp608;
+                            int64_t t610 = t605 / 128;
+                            int64_t t611 = (int64_t)(uint8_t)t609;
+                            int64_t t612 = (int64_t)((uint64_t)t610 - (uint64_t)t611);
+                            ifr603 = t612;
+                        } else {
+                            ifr603 = -1;
+                        }
+                        int64_t t613 = (int64_t)((uint64_t)t598 + (uint64_t)128);
+                        bool cmp614 = t613 < t574;
+                        int64_t ifr615;
+                        if (cmp614) {
+                            int64_t t616 = (int64_t)((uint64_t)t570 * (uint64_t)arg15);
+                            int64_t t617 = (int64_t)((uint64_t)t616 + (uint64_t)t598);
+                            int64_t t618 = t617 % 128;
+                            bool cmp619 = t618 != 0;
+                            bool cmp620 = t618 < 0;
+                            bool t621 = cmp619 & cmp620;
+                            int64_t t622 = t617 / 128;
+                            int64_t t623 = (int64_t)(uint8_t)t621;
+                            int64_t t624 = (int64_t)((uint64_t)t622 - (uint64_t)t623);
+                            int64_t t625 = (int64_t)((uint64_t)t624 + (uint64_t)1);
+                            ifr615 = t625;
+                        } else {
+                            ifr615 = -1;
+                        }
+                        ifr600 = ifr603;
+                        ifr601 = ifr615;
+                    } else {
+                        bool cmp626 = t577 >= 0;
+                        bool cmp627 = t577 < 1;
+                        bool sel628 = cmp626 ? cmp627 : false;
+                        int64_t ifr629;
+                        int64_t ifr630;
+                        if (sel628) {
+                            bool cmp631 = t598 < t574;
+                            int64_t t632 = t598 % 128;
+                            bool cmp633 = t632 != 0;
+                            bool cmp634 = t632 < 0;
+                            bool t635 = cmp633 & cmp634;
+                            int64_t t636 = t598 / 128;
+                            int64_t t637 = (int64_t)(uint8_t)t635;
+                            int64_t t638 = (int64_t)((uint64_t)t636 - (uint64_t)t637);
+                            bool cmp639 = t638 < 6;
+                            bool sel640 = cmp631 ? cmp639 : false;
+                            int64_t ifr641;
+                            if (sel640) {
+                                int64_t dim642 = gm4_arg.stride[0];
+                                int64_t t643 = dim642;
+                                int64_t t644 = ld576;
+                                int64_t t645 = t638;
+                                int64_t t646 = t644 * t643;
+                                int64_t t647 = t646 + t645;
+                                int32_t ld648 = gm4[t647];
+                                int64_t t649 = (int64_t)ld648;
+                                ifr641 = t649;
+                            } else {
+                                ifr641 = -1;
+                            }
+                            int64_t t650 = (int64_t)((uint64_t)t598 + (uint64_t)128);
+                            bool cmp651 = t650 < t574;
+                            bool ifr652;
+                            if (cmp651) {
+                                int64_t t653 = (int64_t)((uint64_t)t638 + (uint64_t)1);
+                                bool cmp654 = t653 < 6;
+                                ifr652 = cmp654;
+                            } else {
+                                ifr652 = false;
+                            }
+                            int64_t ifr655;
+                            if (ifr652) {
+                                int64_t t656 = (int64_t)((uint64_t)t638 + (uint64_t)1);
+                                int64_t dim657 = gm4_arg.stride[0];
+                                int64_t t658 = dim657;
+                                int64_t t659 = ld576;
+                                int64_t t660 = t656;
+                                int64_t t661 = t659 * t658;
+                                int64_t t662 = t661 + t660;
+                                int32_t ld663 = gm4[t662];
+                                int64_t t664 = (int64_t)ld663;
+                                ifr655 = t664;
+                            } else {
+                                ifr655 = -1;
+                            }
+                            ifr629 = ifr641;
+                            ifr630 = ifr655;
+                        } else {
+                            ifr629 = -1;
+                            ifr630 = -1;
+                        }
+                        bool cmp665 = ifr629 >= 18;
+                        int64_t sel666 = cmp665 ? -1 : ifr629;
+                        bool cmp667 = ifr630 >= 18;
+                        int64_t sel668 = cmp667 ? -1 : ifr630;
+                        ifr600 = sel666;
+                        ifr601 = sel668;
+                    }
+                    bool cmp669 = ifr600 >= 0;
+                    bool cmp670 = ifr601 >= 0;
+                    bool sel671 = cmp669 ? true : cmp670;
+                    if (sel671) {
+                        for (int64_t i672 = 0; i672 < 2; i672 = (int64_t)((uint64_t)i672 + (uint64_t)1)) {
+                            bool cmp673 = i672 == 0;
+                            int64_t sel674 = cmp673 ? ifr600 : ifr601;
+                            bool cmp675 = sel674 < 0;
+                            int64_t sel676 = cmp669 ? ifr600 : ifr601;
+                            int64_t sel677 = cmp675 ? sel676 : sel674;
+                            int64_t t678 = (int64_t)((uint64_t)sel677 * (uint64_t)128);
+                            __cbuf__ fp4x2_e2m1_t* view_root679 = reinterpret_cast<__cbuf__ fp4x2_e2m1_t*>(reinterpret_cast<__cbuf__ uint8_t*>(buf520) + 0);
+                            int64_t t680 = (int64_t)((uint64_t)t678 / (uint64_t)4);
+                            int64_t t681 = (int64_t)((uint64_t)t680 * (uint64_t)512);
+                            int64_t t682 = i672 * 8192;
+                            asc_lock(PIPE_MTE2, 1);
+                            __gm__ fp4x2_e2m1_t* view_root683 = reinterpret_cast<__gm__ fp4x2_e2m1_t*>(reinterpret_cast<__gm__ uint8_t*>(gm2) + 0);
+                            int64_t t684 = t682;
+                            int64_t t685 = t681;
+                            set_mte2_nz_para(((uint64_t)(0) << 48) | ((uint64_t)(256) << 32) | ((uint64_t)(1) << 16) | (uint64_t)(1));
+                            asc_copy_gm2l1_nd2nz((__cbuf__ int8_t*)(view_root679 + (t684) / 2), (__gm__ int8_t*)(view_root683 + (t685) / 2), 64, 0, 128, 64, 0, false);
+                            asc_unlock(PIPE_MTE2, 1);
+                            int64_t t686 = (int64_t)((uint64_t)sel677 * (uint64_t)512);
+                            int64_t t687 = i672 * 128;
+                            int64_t t688 = t687 / 16;
+                            int64_t t689 = t688 * 64;
+                            int64_t t690 = t687 % 16;
+                            int64_t t691 = t690 * 2;
+                            int64_t t692 = t689 + t691;
+                            int64_t t693 = t692 * 8;
+                            int64_t t694 = (int64_t)((uint64_t)t693 / (uint64_t)8);
+                            int64_t t695 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(buf519) + (uint64_t)t694);
+                            __cbuf__ fp8_e8m0_t* selected_root696 = (__cbuf__ fp8_e8m0_t*)(uintptr_t)(uint64_t)(t695);
+                            asc_lock(PIPE_MTE2, 3);
+                            int64_t t697 = t686;
+                            set_mte2_nz_para(((uint64_t)(0) << 48) | ((uint64_t)(2) << 32) | ((uint64_t)(1) << 16) | (uint64_t)(1));
+                            asc_copy_gm2l1_dn2nz((__cbuf__ int16_t*)(selected_root696 + 0), (__gm__ int16_t*)(gm3 + t697), 4, 0, 2, 128, 0, false);
+                            asc_unlock(PIPE_MTE2, 3);
+                        }
+                        __cb__ fp4x2_e2m1_t* view_root698 = reinterpret_cast<__cb__ fp4x2_e2m1_t*>(reinterpret_cast<__cb__ uint8_t*>(buf518) + 0);
+                        __cbuf__ fp4x2_e2m1_t* view_root699 = reinterpret_cast<__cbuf__ fp4x2_e2m1_t*>(reinterpret_cast<__cbuf__ uint8_t*>(buf520) + 0);
+                        __cbuf__ fp8_e8m0_t* view_root700 = reinterpret_cast<__cbuf__ fp8_e8m0_t*>(reinterpret_cast<__cbuf__ uint8_t*>(buf519) + 0);
+                        uint64_t selected_root701 = static_cast<uint64_t>(reinterpret_cast<uint64_t>(view_root698)) / 16;
+                        asc_lock(PIPE_MTE1, 5);
+                        asc_lock(PIPE_MTE1, 1);
+                        asc_lock(PIPE_MTE1, 3);
+                        asc_copy_l12l0b(view_root698 + (0) / 2, view_root699 + (0) / 2, 0, 0, 16, 2, 16, 16);
+                        asc_copy_l12l0b_mx(selected_root701, (__cbuf__ fp8_e8m0_t*)(view_root700 + 0), 0, 0, 16, 2, 2, 2);
+                        asc_unlock(PIPE_MTE1, 3);
+                        asc_unlock(PIPE_MTE1, 1);
+                        asc_unlock(PIPE_MTE1, 5);
+                        __cc__ float* view_root702 = reinterpret_cast<__cc__ float*>(reinterpret_cast<__cc__ uint8_t*>(buf516) + 0);
+                        asc_lock(PIPE_M, 6);
+                        asc_lock(PIPE_M, 5);
+                        asc_mmad_mx(view_root702 + 0, view_root593, view_root698, 192, 128, 256, 0, true, false, true);
+                        asc_unlock(PIPE_M, 5);
+                        asc_unlock(PIPE_M, 6);
+                        asc_sync_intra_wait(PIPE_FIX, 0);
+                        asc_sync_intra_wait(PIPE_FIX, 16);
+                        asc_lock(PIPE_FIX, 6);
+                        asc_set_l0c2gm_nz2nd(1, 0, 0);
+                        asc_copy_l0c2ub((__ubuf__ bfloat16_t*)view_root595 + 0, view_root702, 256, 96, 256, 192, 0, static_cast<bool>(0), 0, 0, QuantMode_t::F322BF16, 0, false, true, 0, 0, false, 0, false, false, false, false);
+                        asc_set_l0c2gm_nz2nd(1, 0, 0);
+                        asc_copy_l0c2ub((__ubuf__ bfloat16_t*)view_root595 + 0, view_root702 + 1536, 256, 96, 256, 192, 0, static_cast<bool>(1), 0, 0, QuantMode_t::F322BF16, 0, false, true, 0, 0, false, 0, false, false, false, false);
+                        asc_unlock(PIPE_FIX, 6);
+                        asc_sync_intra_arrive(PIPE_FIX, 0);
+                        asc_sync_intra_arrive(PIPE_FIX, 16);
+                    }
+                }
+                asc_sync();
+                asc_sync_block_wait(PIPE_S, 5);
+                ffts_cross_core_sync(PIPE_MTE3, cannbotdsl_get_ffts_config(6, 2));
+                wh552 = t564;
+            }
+        }
+        asc_sync_intra_wait(PIPE_FIX, 0);
+        asc_sync_intra_wait(PIPE_FIX, 16);
+        asc_sync();
+        asc_sync_block_wait(PIPE_S, 0);
+        ffts_cross_core_sync(PIPE_FIX, cannbotdsl_get_ffts_config(1, 0));
+        asc_sync_block_wait(PIPE_S, 1);
+        ffts_cross_core_sync(PIPE_MTE3, cannbotdsl_get_ffts_config(2, 2));
+    }
+
+    if ASCEND_IS_AIV {
+        asc_sync_intra_arrive(PIPE_V, 0);
+        int64_t dim703 = gm6_arg.stride[0];
+        int64_t t704 = dim703;
+        int64_t t705 = t704 * 3;
+        int32_t ld706 = gm6[t705];
+        int64_t t707 = (int64_t)ld706;
+        int64_t t708 = (int64_t)((uint64_t)t707 * (uint64_t)3);
+        int64_t t709 = (arg16 < t708 ? arg16 : t708);
+        for (int64_t i710 = arg17; i710 < t709; i710 = (int64_t)((uint64_t)i710 + (uint64_t)arg18)) {
+            int64_t t711 = (int64_t)((uint64_t)t708 * (uint64_t)i710);
+            int64_t t712 = t711 % t709;
+            bool cmp713 = t712 != 0;
+            bool cmp714 = t712 < 0;
+            bool cmp715 = t709 < 0;
+            bool t716 = cmp714 ^ cmp715;
+            bool t717 = cmp713 & t716;
+            int64_t t718 = t711 / t709;
+            int64_t t719 = (int64_t)(uint8_t)t717;
+            int64_t t720 = (int64_t)((uint64_t)t718 - (uint64_t)t719);
+            int64_t t721 = (int64_t)((uint64_t)i710 + (uint64_t)1);
+            int64_t t722 = (int64_t)((uint64_t)t708 * (uint64_t)t721);
+            int64_t t723 = t722 % t709;
+            bool cmp724 = t723 != 0;
+            bool cmp725 = t723 < 0;
+            bool t726 = cmp725 ^ cmp715;
+            bool t727 = cmp724 & t726;
+            int64_t t728 = t722 / t709;
+            int64_t t729 = (int64_t)(uint8_t)t727;
+            int64_t t730 = (int64_t)((uint64_t)t728 - (uint64_t)t729);
+            int64_t wh731 = t720;
+            int64_t wh_result732;
+            while (true) {
+                bool cmp733 = wh731 < t730;
+                wh_result732 = wh731;
+                if (!cmp733) break;
+                int64_t t734 = wh_result732 % 3;
+                bool cmp735 = t734 != 0;
+                bool cmp736 = t734 < 0;
+                bool t737 = cmp735 & cmp736;
+                int64_t t738 = wh_result732 / 3;
+                int64_t t739 = (int64_t)(uint8_t)t737;
+                int64_t t740 = (int64_t)((uint64_t)t738 - (uint64_t)t739);
+                int64_t t741 = (int64_t)((uint64_t)t740 + (uint64_t)1);
+                int64_t t742 = (int64_t)((uint64_t)t741 * (uint64_t)3);
+                int64_t t743 = (t730 < t742 ? t730 : t742);
+                int64_t sel744 = t737 ? 3 : 0;
+                int64_t t745 = t734 + sel744;
+                int64_t t746 = (int64_t)((uint64_t)t743 - (uint64_t)wh_result732);
+                int64_t t747 = t740;
+                int32_t ld748 = gm6[t747];
+                int64_t t749 = (int64_t)ld748;
+                int64_t t750 = t704 + t747;
+                int32_t ld751 = gm6[t750];
+                int64_t t752 = (int64_t)ld751;
+                int64_t t753 = (int64_t)((uint64_t)t752 - (uint64_t)t749);
+                int64_t t754 = t704 * 2;
+                int64_t t755 = t754 + t747;
+                int32_t ld756 = gm6[t755];
+                int64_t t757 = (int64_t)ld756;
+                int64_t t758 = ld748;
+                int32_t ld759 = gm5[t758];
+                int64_t t760 = (int64_t)ld759;
+                asc_lock(PIPE_V, 4);
+                __ubuf__ bfloat16_t* view_root761 = reinterpret_cast<__ubuf__ bfloat16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                kernel_score_topk_mix_vf0((__ubuf__ bfloat16_t*)view_root761);
+                asc_unlock(PIPE_V, 4);
+                int64_t dim762 = gm7_arg.stride[0];
+                int64_t t763 = (int64_t)((uint64_t)dim762 * (uint64_t)2);
+                int64_t t764 = (int64_t)((uint64_t)t749 * (uint64_t)dim762);
+                int64_t t765 = (int64_t)((uint64_t)t764 * (uint64_t)2);
+                asc_lock(PIPE_MTE2, 4);
+                {
+                    cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ bfloat16_t*)((__ubuf__ uint8_t*)buf523 + 220160), (__gm__ bfloat16_t*)((__gm__ uint8_t*)gm7 + t765), t753, 64, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)t763, 64);
+                }
+                asc_unlock(PIPE_MTE2, 4);
+                asc_lock(PIPE_V, 4);
+                kernel_score_topk_mix_vf1((__ubuf__ bfloat16_t*)view_root761, (__ubuf__ bfloat16_t*)view_root761);
+                asc_unlock(PIPE_V, 4);
+                for (int64_t i766 = 0; i766 < t746; i766 = (int64_t)((uint64_t)i766 + (uint64_t)1)) {
+                    int64_t t767 = (int64_t)((uint64_t)t745 + (uint64_t)i766);
+                    int64_t t768 = (int64_t)((uint64_t)t767 * (uint64_t)256);
+                    bool cmp769 = arg15 > 0;
+                    int64_t ifr770;
+                    int64_t ifr771;
+                    if (cmp769) {
+                        bool cmp772 = t768 < t757;
+                        int64_t ifr773;
+                        if (cmp772) {
+                            int64_t t774 = (int64_t)((uint64_t)t749 * (uint64_t)arg15);
+                            int64_t t775 = (int64_t)((uint64_t)t774 + (uint64_t)t768);
+                            int64_t t776 = t775 % 128;
+                            bool cmp777 = t776 != 0;
+                            bool cmp778 = t776 < 0;
+                            bool t779 = cmp777 & cmp778;
+                            int64_t t780 = t775 / 128;
+                            int64_t t781 = (int64_t)(uint8_t)t779;
+                            int64_t t782 = (int64_t)((uint64_t)t780 - (uint64_t)t781);
+                            ifr773 = t782;
+                        } else {
+                            ifr773 = -1;
+                        }
+                        int64_t t783 = (int64_t)((uint64_t)t768 + (uint64_t)128);
+                        bool cmp784 = t783 < t757;
+                        int64_t ifr785;
+                        if (cmp784) {
+                            int64_t t786 = (int64_t)((uint64_t)t749 * (uint64_t)arg15);
+                            int64_t t787 = (int64_t)((uint64_t)t786 + (uint64_t)t768);
+                            int64_t t788 = t787 % 128;
+                            bool cmp789 = t788 != 0;
+                            bool cmp790 = t788 < 0;
+                            bool t791 = cmp789 & cmp790;
+                            int64_t t792 = t787 / 128;
+                            int64_t t793 = (int64_t)(uint8_t)t791;
+                            int64_t t794 = (int64_t)((uint64_t)t792 - (uint64_t)t793);
+                            int64_t t795 = (int64_t)((uint64_t)t794 + (uint64_t)1);
+                            ifr785 = t795;
+                        } else {
+                            ifr785 = -1;
+                        }
+                        ifr770 = ifr773;
+                        ifr771 = ifr785;
+                    } else {
+                        bool cmp796 = t760 >= 0;
+                        bool cmp797 = t760 < 1;
+                        bool sel798 = cmp796 ? cmp797 : false;
+                        int64_t ifr799;
+                        int64_t ifr800;
+                        if (sel798) {
+                            bool cmp801 = t768 < t757;
+                            int64_t t802 = t768 % 128;
+                            bool cmp803 = t802 != 0;
+                            bool cmp804 = t802 < 0;
+                            bool t805 = cmp803 & cmp804;
+                            int64_t t806 = t768 / 128;
+                            int64_t t807 = (int64_t)(uint8_t)t805;
+                            int64_t t808 = (int64_t)((uint64_t)t806 - (uint64_t)t807);
+                            bool cmp809 = t808 < 6;
+                            bool sel810 = cmp801 ? cmp809 : false;
+                            int64_t ifr811;
+                            if (sel810) {
+                                int64_t dim812 = gm4_arg.stride[0];
+                                int64_t t813 = dim812;
+                                int64_t t814 = ld759;
+                                int64_t t815 = t808;
+                                int64_t t816 = t814 * t813;
+                                int64_t t817 = t816 + t815;
+                                int32_t ld818 = gm4[t817];
+                                int64_t t819 = (int64_t)ld818;
+                                ifr811 = t819;
+                            } else {
+                                ifr811 = -1;
+                            }
+                            int64_t t820 = (int64_t)((uint64_t)t768 + (uint64_t)128);
+                            bool cmp821 = t820 < t757;
+                            bool ifr822;
+                            if (cmp821) {
+                                int64_t t823 = (int64_t)((uint64_t)t808 + (uint64_t)1);
+                                bool cmp824 = t823 < 6;
+                                ifr822 = cmp824;
+                            } else {
+                                ifr822 = false;
+                            }
+                            int64_t ifr825;
+                            if (ifr822) {
+                                int64_t t826 = (int64_t)((uint64_t)t808 + (uint64_t)1);
+                                int64_t dim827 = gm4_arg.stride[0];
+                                int64_t t828 = dim827;
+                                int64_t t829 = ld759;
+                                int64_t t830 = t826;
+                                int64_t t831 = t829 * t828;
+                                int64_t t832 = t831 + t830;
+                                int32_t ld833 = gm4[t832];
+                                int64_t t834 = (int64_t)ld833;
+                                ifr825 = t834;
+                            } else {
+                                ifr825 = -1;
+                            }
+                            ifr799 = ifr811;
+                            ifr800 = ifr825;
+                        } else {
+                            ifr799 = -1;
+                            ifr800 = -1;
+                        }
+                        bool cmp835 = ifr799 >= 18;
+                        int64_t sel836 = cmp835 ? -1 : ifr799;
+                        bool cmp837 = ifr800 >= 18;
+                        int64_t sel838 = cmp837 ? -1 : ifr800;
+                        ifr770 = sel836;
+                        ifr771 = sel838;
+                    }
+                    bool cmp839 = ifr770 >= 0;
+                    bool cmp840 = ifr771 >= 0;
+                    bool sel841 = cmp839 ? true : cmp840;
+                    if (cmp769) {
+                        int64_t t842 = (int64_t)((uint64_t)t749 * (uint64_t)arg15);
+                        int64_t t843 = (int64_t)((uint64_t)t842 + (uint64_t)t768);
+                        int64_t t844 = (int64_t)((uint64_t)2304 - (uint64_t)t843);
+                        int64_t t845 = (t844 < 256 ? t844 : 256);
+                        int64_t t846 = (int64_t)((uint64_t)t843 * (uint64_t)4);
+                        int64_t t847 = (int64_t)((uint64_t)t845 * (uint64_t)4);
+                        bool cmp848 = t847 == 0;
+                        bool cmp849 = t847 != 0;
+                        int64_t t850 = (int64_t)(uint8_t)cmp849;
+                        int64_t sel851 = cmp848 ? 4 : t847;
+                        asc_lock(PIPE_MTE2, 5);
+                        {
+                            cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ int32_t*)((__ubuf__ uint8_t*)buf523 + 223232), (__gm__ int32_t*)((__gm__ uint8_t*)gm12 + t846), t850, sel851, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                        }
+                        asc_unlock(PIPE_MTE2, 5);
+                        asc_lock(PIPE_V, 5);
+                        __ubuf__ int32_t* view_root852 = reinterpret_cast<__ubuf__ int32_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                        __ubuf__ uint16_t* view_root853 = reinterpret_cast<__ubuf__ uint16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                        kernel_score_topk_mix_vf2((__ubuf__ int32_t*)view_root852, (__ubuf__ uint16_t*)view_root853);
+                        asc_unlock(PIPE_V, 5);
+                    }
+                    if (sel841) {
+                        asc_sync_intra_wait(PIPE_V, 0);
+                        #pragma unroll(1)
+                        for (int64_t i854 = 0; i854 < 3; i854 = (int64_t)((uint64_t)i854 + (uint64_t)1)) {
+                            int64_t t855 = (int64_t)((uint64_t)arg19 * (uint64_t)3);
+                            int64_t t856 = (int64_t)((uint64_t)t855 + (uint64_t)i854);
+                            bool cmp857 = t856 < t753;
+                            int32_t ifr858;
+                            if (cmp857) {
+                                int64_t ifr859;
+                                if (cmp769) {
+                                    ifr859 = t757;
+                                } else {
+                                    int64_t t860 = (int64_t)((uint64_t)t749 + (uint64_t)t856);
+                                    int64_t t861 = t860;
+                                    int32_t ld862 = gm8[t861];
+                                    int32_t t863 = (ld862 < 768 ? ld862 : 768);
+                                    int64_t t864 = (int64_t)t863;
+                                    ifr859 = t864;
+                                }
+                                int32_t t865 = (int32_t)ifr859;
+                                ifr858 = t865;
+                            } else {
+                                ifr858 = 0;
+                            }
+                            #pragma unroll(1)
+                            for (int64_t i866 = 0; i866 < 2; i866 = (int64_t)((uint64_t)i866 + (uint64_t)1)) {
+                                int64_t t867 = (int64_t)ifr858;
+                                int64_t t868 = (int64_t)((uint64_t)t867 - (uint64_t)t768);
+                                int64_t t869 = i866 * 128;
+                                int64_t t870 = (int64_t)((uint64_t)t868 - (uint64_t)t869);
+                                int64_t t871 = (t870 < 128 ? t870 : 128);
+                                int64_t t872 = (t871 > 0 ? t871 : 0);
+                                bool cmp873 = i866 == 0;
+                                bool cmp874 = ifr770 < 0;
+                                bool sel875 = cmp873 ? cmp874 : false;
+                                bool cmp876 = i866 == 1;
+                                bool cmp877 = ifr771 < 0;
+                                bool sel878 = cmp876 ? cmp877 : false;
+                                bool sel879 = sel875 ? true : sel878;
+                                int64_t sel880 = sel879 ? 0 : t872;
+                                int32_t t881 = (int32_t)t856;
+                                int32_t t882 = (int32_t)((uint32_t)t881 * (uint32_t)128);
+                                int64_t t883 = t882;
+                                int32_t t884 = (int32_t)sel880;
+                                int32_t t885 = (int32_t)i854;
+                                int32_t t886 = t885 * 25600;
+                                int64_t t887 = (int64_t)((uint64_t)i766 * (uint64_t)256);
+                                int64_t t888 = (int64_t)t886;
+                                int64_t t889 = (int64_t)((uint64_t)t888 + (uint64_t)t887);
+                                int32_t t890 = (int32_t)i866;
+                                int32_t t891 = t890 * 128;
+                                int64_t t892 = (int64_t)t891;
+                                int64_t t893 = (int64_t)((uint64_t)t889 + (uint64_t)t892);
+                                int64_t t894 = t893;
+                                __ubuf__ uint16_t* view_root895 = reinterpret_cast<__ubuf__ uint16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                                kernel_score_topk_mix_vf3((__ubuf__ bfloat16_t*)view_root761, (int32_t)t883, i854, i866, (__ubuf__ bfloat16_t*)view_root761, (__ubuf__ uint16_t*)view_root895, cmp769, t884, (__ubuf__ uint16_t*)view_root895, (int32_t)t894);
+                            }
+                        }
+                        asc_sync_intra_arrive(PIPE_V, 0);
+                    } else {
+                        #pragma unroll(1)
+                        for (int64_t i896 = 0; i896 < 3; i896 = (int64_t)((uint64_t)i896 + (uint64_t)1)) {
+                            int64_t t897 = (int64_t)((uint64_t)arg19 * (uint64_t)3);
+                            int64_t t898 = (int64_t)((uint64_t)t897 + (uint64_t)i896);
+                            bool cmp899 = t898 < t753;
+                            int32_t ifr900;
+                            if (cmp899) {
+                                int64_t ifr901;
+                                if (cmp769) {
+                                    ifr901 = t757;
+                                } else {
+                                    int64_t t902 = (int64_t)((uint64_t)t749 + (uint64_t)t898);
+                                    int64_t t903 = t902;
+                                    int32_t ld904 = gm8[t903];
+                                    int32_t t905 = (ld904 < 768 ? ld904 : 768);
+                                    int64_t t906 = (int64_t)t905;
+                                    ifr901 = t906;
+                                }
+                                int32_t t907 = (int32_t)ifr901;
+                                ifr900 = t907;
+                            } else {
+                                ifr900 = 0;
+                            }
+                            #pragma unroll(1)
+                            for (int64_t i908 = 0; i908 < 2; i908 = (int64_t)((uint64_t)i908 + (uint64_t)1)) {
+                                int64_t t909 = (int64_t)ifr900;
+                                int64_t t910 = (int64_t)((uint64_t)t909 - (uint64_t)t768);
+                                int64_t t911 = i908 * 128;
+                                int64_t t912 = (int64_t)((uint64_t)t910 - (uint64_t)t911);
+                                int64_t t913 = (t912 < 128 ? t912 : 128);
+                                int64_t t914 = (t913 > 0 ? t913 : 0);
+                                bool cmp915 = i908 == 0;
+                                bool cmp916 = i908 == 1;
+                                bool sel917 = cmp915 ? true : cmp916;
+                                int64_t sel918 = sel917 ? 0 : t914;
+                                int32_t t919 = (int32_t)sel918;
+                                int32_t t920 = (int32_t)i896;
+                                int32_t t921 = t920 * 25600;
+                                int64_t t922 = (int64_t)((uint64_t)i766 * (uint64_t)256);
+                                int64_t t923 = (int64_t)t921;
+                                int64_t t924 = (int64_t)((uint64_t)t923 + (uint64_t)t922);
+                                int32_t t925 = (int32_t)i908;
+                                int32_t t926 = t925 * 128;
+                                int64_t t927 = (int64_t)t926;
+                                int64_t t928 = (int64_t)((uint64_t)t924 + (uint64_t)t927);
+                                int64_t t929 = t928;
+                                __ubuf__ uint16_t* view_root930 = reinterpret_cast<__ubuf__ uint16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                                kernel_score_topk_mix_vf4(i908, (__ubuf__ uint16_t*)view_root930, cmp769, t919, (__ubuf__ uint16_t*)view_root930, (int32_t)t929);
+                            }
+                        }
+                    }
+                }
+                int64_t t931 = (int64_t)((uint64_t)t746 * (uint64_t)256);
+                int64_t t932 = t745 * 256;
+                int64_t t933 = 768 - t932;
+                int64_t t934 = (t931 < t933 ? t931 : t933);
+                for (int64_t i935 = 0; i935 < 3; i935 = (int64_t)((uint64_t)i935 + (uint64_t)1)) {
+                    int64_t t936 = (int64_t)((uint64_t)arg19 * (uint64_t)3);
+                    int64_t t937 = (int64_t)((uint64_t)t936 + (uint64_t)i935);
+                    bool cmp938 = t937 < t753;
+                    if (cmp938) {
+                        bool cmp939 = t934 > 512;
+                        int32_t ifr940;
+                        int32_t ifr941;
+                        if (cmp939) {
+                            int64_t t942 = (int64_t)((uint64_t)t934 + (uint64_t)255);
+                            int64_t t943 = t942 % 256;
+                            bool cmp944 = t943 != 0;
+                            bool cmp945 = t943 < 0;
+                            bool t946 = cmp944 & cmp945;
+                            int64_t t947 = t942 / 256;
+                            int64_t t948 = (int64_t)(uint8_t)t946;
+                            int64_t t949 = (int64_t)((uint64_t)t947 - (uint64_t)t948);
+                            int64_t t950 = i935 * 25600;
+                            int64_t t951 = t950;
+                            int64_t t952 = t951 + 32768;
+                            __ubuf__ uint16_t* view_root953 = reinterpret_cast<__ubuf__ uint16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                            kernel_score_topk_mix_vf5(t934, (__ubuf__ uint16_t*)view_root953, (int32_t)t952, t949, (__ubuf__ uint16_t*)view_root953);
+                            asc_sync();
+                            int64_t t954 = (int64_t)((uint64_t)t934 + (uint64_t)-511);
+                            int32_t t955 = (int32_t)t954;
+                            int32_t iter956 = 255;
+                            int32_t iter957 = 0;
+                            for (int64_t i958 = 0; i958 < 8; i958 = (int64_t)((uint64_t)i958 + (uint64_t)1)) {
+                                int32_t t959 = (int32_t)((uint32_t)iter957 + (uint32_t)iter956);
+                                int32_t t960 = t959 % 2;
+                                bool cmp961 = t960 != 0;
+                                bool cmp962 = t960 < 0;
+                                bool t963 = cmp961 & cmp962;
+                                int32_t t964 = t959 / 2;
+                                int32_t t965 = (int32_t)(uint8_t)t963;
+                                int32_t t966 = (int32_t)((uint32_t)t964 - (uint32_t)t965);
+                                asc_lock(PIPE_S, 3);
+                                int64_t t967 = t966;
+                                int64_t t968 = t967 + 28160;
+                                uint16_t ld969 = view_root953[t968];
+                                asc_unlock(PIPE_S, 3);
+                                int16_t scalar970 = (int16_t)ld969;
+                                int32_t t971 = (int32_t)(uint16_t)scalar970;
+                                bool cmp972 = t971 >= t955;
+                                int32_t sel973 = cmp972 ? t966 : iter956;
+                                int32_t t974 = (int32_t)((uint32_t)t966 + (uint32_t)1);
+                                int32_t sel975 = cmp972 ? iter957 : t974;
+                                iter956 = sel973;
+                                iter957 = sel975;
+                            }
+                            bool cmp976 = iter957 > 0;
+                            int32_t ifr977;
+                            if (cmp976) {
+                                int32_t t978 = (int32_t)((uint32_t)iter957 - (uint32_t)1);
+                                asc_lock(PIPE_S, 3);
+                                int64_t t979 = t978;
+                                int64_t t980 = t979 + 28160;
+                                uint16_t ld981 = view_root953[t980];
+                                asc_unlock(PIPE_S, 3);
+                                int16_t scalar982 = (int16_t)ld981;
+                                int32_t t983 = (int32_t)(uint16_t)scalar982;
+                                ifr977 = t983;
+                            } else {
+                                ifr977 = 0;
+                            }
+                            int32_t t984 = (int32_t)((uint32_t)t955 - (uint32_t)ifr977);
+                            asc_lock(PIPE_V, 3);
+                            kernel_score_topk_mix_vf6(t934, (__ubuf__ uint16_t*)view_root953, (int32_t)t952, iter957, t949, (__ubuf__ uint16_t*)view_root953);
+                            asc_unlock(PIPE_V, 3);
+                            asc_sync();
+                            int32_t iter985 = 255;
+                            int32_t iter986 = 0;
+                            for (int64_t i987 = 0; i987 < 8; i987 = (int64_t)((uint64_t)i987 + (uint64_t)1)) {
+                                int32_t t988 = (int32_t)((uint32_t)iter986 + (uint32_t)iter985);
+                                int32_t t989 = t988 % 2;
+                                bool cmp990 = t989 != 0;
+                                bool cmp991 = t989 < 0;
+                                bool t992 = cmp990 & cmp991;
+                                int32_t t993 = t988 / 2;
+                                int32_t t994 = (int32_t)(uint8_t)t992;
+                                int32_t t995 = (int32_t)((uint32_t)t993 - (uint32_t)t994);
+                                int64_t t996 = t995;
+                                int64_t t997 = t996 + 28160;
+                                uint16_t ld998 = view_root953[t997];
+                                int16_t scalar999 = (int16_t)ld998;
+                                int32_t t1000 = (int32_t)(uint16_t)scalar999;
+                                bool cmp1001 = t1000 >= t984;
+                                int32_t sel1002 = cmp1001 ? t995 : iter985;
+                                int32_t t1003 = (int32_t)((uint32_t)t995 + (uint32_t)1);
+                                int32_t sel1004 = cmp1001 ? iter986 : t1003;
+                                iter985 = sel1002;
+                                iter986 = sel1004;
+                            }
+                            bool cmp1005 = iter986 > 0;
+                            int32_t ifr1006;
+                            if (cmp1005) {
+                                int32_t t1007 = (int32_t)((uint32_t)iter986 - (uint32_t)1);
+                                int64_t t1008 = t1007;
+                                int64_t t1009 = t1008 + 28160;
+                                uint16_t ld1010 = view_root953[t1009];
+                                int16_t scalar1011 = (int16_t)ld1010;
+                                int32_t t1012 = (int32_t)(uint16_t)scalar1011;
+                                ifr1006 = t1012;
+                            } else {
+                                ifr1006 = 0;
+                            }
+                            int64_t t1013 = iter986;
+                            int64_t t1014 = t1013 + 28160;
+                            uint16_t ld1015 = view_root953[t1014];
+                            int16_t scalar1016 = (int16_t)ld1015;
+                            int32_t t1017 = (int32_t)(uint16_t)scalar1016;
+                            int32_t t1018 = (int32_t)((uint32_t)t1017 - (uint32_t)ifr1006);
+                            int32_t t1019 = (int32_t)((uint32_t)t984 - (uint32_t)ifr1006);
+                            int32_t t1020 = (int32_t)((uint32_t)iter957 * (uint32_t)256);
+                            int32_t t1021 = (int32_t)((uint32_t)t1020 + (uint32_t)iter986);
+                            int64_t t1022 = (int64_t)((uint64_t)t934 + (uint64_t)127);
+                            int64_t t1023 = t1022 % 128;
+                            bool cmp1024 = t1023 != 0;
+                            bool cmp1025 = t1023 < 0;
+                            bool t1026 = cmp1024 & cmp1025;
+                            int64_t t1027 = t1022 / 128;
+                            int64_t t1028 = (int64_t)(uint8_t)t1026;
+                            int64_t t1029 = (int64_t)((uint64_t)t1027 - (uint64_t)t1028);
+                            kernel_score_topk_mix_vf7((__ubuf__ uint16_t*)view_root953, t934, (__ubuf__ uint16_t*)view_root953, (int32_t)t952, t1021, t1029);
+                            asc_sync();
+                            int32_t t1030 = (int32_t)((uint32_t)t1018 - (uint32_t)t1019);
+                            int64_t t1031 = t1030;
+                            uint16_t ld1032 = view_root953[t1031];
+                            int16_t scalar1033 = (int16_t)ld1032;
+                            int32_t t1034 = (int32_t)(uint16_t)scalar1033;
+                            ifr940 = t1021;
+                            ifr941 = t1034;
+                        } else {
+                            ifr940 = 127;
+                            ifr941 = -1;
+                        }
+                        int64_t t1035 = (int64_t)((uint64_t)t934 + (uint64_t)63);
+                        int64_t t1036 = t1035 % 64;
+                        bool cmp1037 = t1036 != 0;
+                        bool cmp1038 = t1036 < 0;
+                        bool t1039 = cmp1037 & cmp1038;
+                        int64_t t1040 = t1035 / 64;
+                        int64_t t1041 = (int64_t)(uint8_t)t1039;
+                        int64_t t1042 = (int64_t)((uint64_t)t1040 - (uint64_t)t1041);
+                        __ubuf__ int32_t* view_root1043 = reinterpret_cast<__ubuf__ int32_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                        int64_t t1044 = i935 * 25600;
+                        int64_t t1045 = t1044;
+                        int64_t t1046 = t1045 + 32768;
+                        __ubuf__ uint16_t* view_root1047 = reinterpret_cast<__ubuf__ uint16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                        kernel_score_topk_mix_vf8((__ubuf__ int32_t*)view_root1043, t934, (__ubuf__ uint16_t*)view_root1047, (int32_t)t1046, ifr940, ifr941, t1042);
+                        asc_lock(PIPE_V, 1);
+                        asc_lock(PIPE_V, 2);
+                        kernel_score_topk_mix_vf9((__ubuf__ int32_t*)view_root1043, (__ubuf__ uint16_t*)view_root1047, (int32_t)t1046, (__ubuf__ uint16_t*)view_root1047, t932, (__ubuf__ int32_t*)view_root1043);
+                        asc_unlock(PIPE_V, 2);
+                        asc_unlock(PIPE_V, 1);
+                        int64_t t1048 = (int64_t)((uint64_t)i710 * (uint64_t)512);
+                        int64_t t1049 = (int64_t)((uint64_t)t749 + (uint64_t)t937);
+                        int64_t dim1050 = gm10_arg.stride[0];
+                        int64_t t1051 = (int64_t)((uint64_t)t1049 * (uint64_t)dim1050);
+                        int64_t t1052 = (int64_t)((uint64_t)t1051 + (uint64_t)t1048);
+                        int64_t t1053 = (int64_t)((uint64_t)t1052 * (uint64_t)16);
+                        int64_t t1054 = (int64_t)((uint64_t)t1053 / (uint64_t)8);
+                        int64_t t1055 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(gm10) + (uint64_t)t1054);
+                        __gm__ uint16_t* root1056 = (__gm__ uint16_t*)(uintptr_t)(uint64_t)(t1055);
+                        int64_t t1057 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(buf523) + (uint64_t)51200);
+                        __ubuf__ uint16_t* selected_root1058 = (__ubuf__ uint16_t*)(uintptr_t)(uint64_t)(t1057);
+                        int64_t dim1059 = gm10_arg.stride[0];
+                        int64_t t1060 = dim1059;
+                        int64_t t1061 = t1060 * 2;
+                        int64_t t1062 = t1061;
+                        asc_lock(PIPE_MTE3, 1);
+                        cannbotdsl_92::cannbotdsl_copy_ub2gm_align((__gm__ uint16_t*)root1056 + 0, (__ubuf__ uint16_t*)selected_root1058 + 0, 1, 1024, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                        asc_unlock(PIPE_MTE3, 1);
+                        int64_t dim1063 = gm11_arg.stride[0];
+                        int64_t t1064 = (int64_t)((uint64_t)t1049 * (uint64_t)dim1063);
+                        int64_t t1065 = (int64_t)((uint64_t)t1064 + (uint64_t)t1048);
+                        int64_t t1066 = (int64_t)((uint64_t)t1065 * (uint64_t)32);
+                        int64_t t1067 = (int64_t)((uint64_t)t1066 / (uint64_t)8);
+                        int64_t t1068 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(gm11) + (uint64_t)t1067);
+                        __gm__ int32_t* root1069 = (__gm__ int32_t*)(uintptr_t)(uint64_t)(t1068);
+                        int64_t t1070 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(buf523) + (uint64_t)52224);
+                        __ubuf__ int32_t* selected_root1071 = (__ubuf__ int32_t*)(uintptr_t)(uint64_t)(t1070);
+                        int64_t dim1072 = gm11_arg.stride[0];
+                        int64_t t1073 = dim1072;
+                        int64_t t1074 = t1073 * 4;
+                        int64_t t1075 = t1074;
+                        asc_lock(PIPE_MTE3, 2);
+                        cannbotdsl_92::cannbotdsl_copy_ub2gm_align((__gm__ int32_t*)root1069 + 0, (__ubuf__ int32_t*)selected_root1071 + 0, 1, 2048, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                        asc_unlock(PIPE_MTE3, 2);
+                        bool cmp1076 = arg21 != 0;
+                        if (cmp1076) {
+                            for (int64_t i1077 = 0; i1077 < t934; i1077 = (int64_t)((uint64_t)i1077 + (uint64_t)128)) {
+                                int64_t t1078 = (int64_t)((uint64_t)t934 - (uint64_t)i1077);
+                                int64_t t1079 = (t1078 < 128 ? t1078 : 128);
+                                int32_t t1080 = (int32_t)i935;
+                                int32_t t1081 = t1080 * 25600;
+                                int64_t t1082 = (int64_t)t1081;
+                                int64_t t1083 = (int64_t)((uint64_t)t1082 + (uint64_t)i1077);
+                                int64_t t1084 = t1083;
+                                asc_lock(PIPE_V, 6);
+                                __ubuf__ float* view_root1085 = reinterpret_cast<__ubuf__ float*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                                kernel_score_topk_mix_vf10((__ubuf__ uint16_t*)view_root1047, (int32_t)t1084, (__ubuf__ float*)view_root1085);
+                                asc_unlock(PIPE_V, 6);
+                                int64_t t1086 = (int64_t)((uint64_t)t932 + (uint64_t)i1077);
+                                int64_t dim1087 = gm14_arg.stride[0];
+                                int64_t t1088 = (int64_t)((uint64_t)t1049 * (uint64_t)dim1087);
+                                int64_t t1089 = (int64_t)((uint64_t)t1088 + (uint64_t)t1086);
+                                int64_t t1090 = (int64_t)((uint64_t)t1089 * (uint64_t)32);
+                                int64_t t1091 = (int64_t)((uint64_t)t1090 / (uint64_t)8);
+                                int64_t t1092 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(gm14) + (uint64_t)t1091);
+                                __gm__ float* root1093 = (__gm__ float*)(uintptr_t)(uint64_t)(t1092);
+                                int64_t t1094 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(buf523) + (uint64_t)225280);
+                                __ubuf__ float* selected_root1095 = (__ubuf__ float*)(uintptr_t)(uint64_t)(t1094);
+                                int64_t t1096 = t1079;
+                                int64_t dim1097 = gm14_arg.stride[0];
+                                int64_t t1098 = dim1097;
+                                int64_t t1099 = t1096 * 4;
+                                int64_t t1100 = t1098 * 4;
+                                bool cmp1101 = (uint64_t)t1079 > (uint64_t)0;
+                                if (cmp1101) {
+                                    int64_t t1102 = t1099;
+                                    int64_t t1103 = t1100;
+                                    asc_lock(PIPE_MTE3, 6);
+                                    int32_t t1104 = (int32_t)t1102;
+                                    cannbotdsl_92::cannbotdsl_copy_ub2gm_align((__gm__ float*)root1093 + 0, (__ubuf__ float*)selected_root1095 + 0, 1, t1104, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                                    asc_unlock(PIPE_MTE3, 6);
+                                }
+                            }
+                        }
+                    }
+                }
+                asc_sync();
+                ffts_cross_core_sync(PIPE_MTE3, cannbotdsl_get_ffts_config(5, 2));
+                asc_sync_block_wait(PIPE_S, 6);
+                wh731 = t743;
+            }
+        }
+        asc_sync();
+        ffts_cross_core_sync(PIPE_MTE3, cannbotdsl_get_ffts_config(0, 2));
+        ffts_cross_core_sync(PIPE_MTE3, cannbotdsl_get_ffts_config(1, 0));
+        asc_sync_block_wait(PIPE_S, 1);
+        asc_sync_block_wait(PIPE_S, 2);
+        int64_t t1105 = (int64_t)((uint64_t)arg17 * (uint64_t)2);
+        int64_t t1106 = (int64_t)((uint64_t)t1105 + (uint64_t)arg19);
+        int64_t t1107 = (int64_t)((uint64_t)arg18 * (uint64_t)2);
+        int64_t t1108 = (int64_t)arg20;
+        for (int64_t i1109 = t1106; i1109 < t1108; i1109 = (int64_t)((uint64_t)i1109 + (uint64_t)t1107)) {
+            bool cmp1110 = arg22 != 0;
+            bool ifr1111;
+            if (cmp1110) {
+                int64_t t1112 = i1109;
+                int32_t ld1113 = gm8[t1112];
+                bool cmp1114 = ld1113 <= 512;
+                ifr1111 = cmp1114;
+            } else {
+                ifr1111 = false;
+            }
+            if (ifr1111) {
+                int64_t t1115 = i1109;
+                int32_t ld1116 = gm8[t1115];
+                int64_t t1117 = (int64_t)ld1116;
+                int64_t t1118 = (t1117 < 512 ? t1117 : 512);
+                int64_t t1119 = (t1118 > 0 ? t1118 : 0);
+                int32_t ld1120 = gm5[t1115];
+                for (int64_t i1121 = 0; i1121 < 4; i1121 = (int64_t)((uint64_t)i1121 + (uint64_t)1)) {
+                    int64_t t1122 = i1121 * 128;
+                    int64_t t1123 = (int64_t)((uint64_t)t1119 - (uint64_t)t1122);
+                    int64_t t1124 = (t1123 > 0 ? t1123 : 0);
+                    int64_t t1125 = (t1124 < 128 ? t1124 : 128);
+                    bool cmp1126 = t1125 > 0;
+                    int32_t ifr1127;
+                    if (cmp1126) {
+                        int64_t dim1128 = gm4_arg.stride[0];
+                        int64_t t1129 = dim1128;
+                        int64_t t1130 = ld1120;
+                        int64_t t1131 = i1121;
+                        int64_t t1132 = t1130 * t1129;
+                        int64_t t1133 = t1132 + t1131;
+                        int32_t ld1134 = gm4[t1133];
+                        ifr1127 = ld1134;
+                    } else {
+                        ifr1127 = -1;
+                    }
+                    bool cmp1135 = ifr1127 < 0;
+                    bool cmp1136 = ifr1127 >= 18;
+                    bool sel1137 = cmp1135 ? true : cmp1136;
+                    int32_t sel1138 = sel1137 ? 0 : ifr1127;
+                    int64_t sel1139 = sel1137 ? 0 : t1125;
+                    asc_lock(PIPE_V, 11);
+                    __ubuf__ int32_t* view_root1140 = reinterpret_cast<__ubuf__ int32_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                    kernel_score_topk_mix_vf11(sel1138, sel1139, i1121, (__ubuf__ int32_t*)view_root1140);
+                    asc_unlock(PIPE_V, 11);
+                }
+                int64_t dim1141 = gm9_arg.stride[0];
+                int64_t t1142 = (int64_t)((uint64_t)i1109 * (uint64_t)dim1141);
+                int64_t t1143 = (int64_t)((uint64_t)t1142 * (uint64_t)32);
+                int64_t t1144 = (int64_t)((uint64_t)t1143 / (uint64_t)8);
+                int64_t t1145 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(gm9) + (uint64_t)t1144);
+                __gm__ int32_t* root1146 = (__gm__ int32_t*)(uintptr_t)(uint64_t)(t1145);
+                int64_t t1147 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(buf523) + (uint64_t)132608);
+                __ubuf__ int32_t* selected_root1148 = (__ubuf__ int32_t*)(uintptr_t)(uint64_t)(t1147);
+                int64_t dim1149 = gm9_arg.stride[0];
+                int64_t t1150 = dim1149;
+                int64_t t1151 = t1150 * 4;
+                int64_t t1152 = t1151;
+                asc_lock(PIPE_MTE3, 11);
+                cannbotdsl_92::cannbotdsl_copy_ub2gm_align((__gm__ int32_t*)root1146 + 0, (__ubuf__ int32_t*)selected_root1148 + 0, 1, 2048, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                asc_unlock(PIPE_MTE3, 11);
+            } else {
+                bool cmp1153 = t709 == 0;
+                if (cmp1153) {
+                    asc_lock(PIPE_V, 11);
+                    __ubuf__ int32_t* view_root1154 = reinterpret_cast<__ubuf__ int32_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                    kernel_score_topk_mix_vf12((__ubuf__ int32_t*)view_root1154);
+                    asc_unlock(PIPE_V, 11);
+                    int64_t dim1155 = gm9_arg.stride[0];
+                    int64_t t1156 = (int64_t)((uint64_t)i1109 * (uint64_t)dim1155);
+                    int64_t t1157 = (int64_t)((uint64_t)t1156 * (uint64_t)32);
+                    int64_t t1158 = (int64_t)((uint64_t)t1157 / (uint64_t)8);
+                    int64_t t1159 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(gm9) + (uint64_t)t1158);
+                    __gm__ int32_t* root1160 = (__gm__ int32_t*)(uintptr_t)(uint64_t)(t1159);
+                    int64_t t1161 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(buf523) + (uint64_t)132608);
+                    __ubuf__ int32_t* selected_root1162 = (__ubuf__ int32_t*)(uintptr_t)(uint64_t)(t1161);
+                    int64_t dim1163 = gm9_arg.stride[0];
+                    int64_t t1164 = dim1163;
+                    int64_t t1165 = t1164 * 4;
+                    int64_t t1166 = t1165;
+                    asc_lock(PIPE_MTE3, 11);
+                    cannbotdsl_92::cannbotdsl_copy_ub2gm_align((__gm__ int32_t*)root1160 + 0, (__ubuf__ int32_t*)selected_root1162 + 0, 1, 2048, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                    asc_unlock(PIPE_MTE3, 11);
+                } else {
+                    int64_t t1167 = (int64_t)((uint64_t)i1109 + (uint64_t)1);
+                    int64_t t1168 = t1167;
+                    int64_t t1169 = t705 + t1168;
+                    int32_t ld1170 = gm6[t1169];
+                    int64_t t1171 = (int64_t)ld1170;
+                    int64_t t1172 = (int64_t)((uint64_t)t1171 * (uint64_t)3);
+                    int64_t t1173 = (int64_t)((uint64_t)t1172 + (uint64_t)1);
+                    int64_t t1174 = (int64_t)((uint64_t)t1173 * (uint64_t)t709);
+                    int64_t t1175 = (int64_t)((uint64_t)t1174 - (uint64_t)1);
+                    int64_t t1176 = t1175 % t708;
+                    bool cmp1177 = t1176 != 0;
+                    bool cmp1178 = t1176 < 0;
+                    bool cmp1179 = t708 < 0;
+                    bool t1180 = cmp1178 ^ cmp1179;
+                    bool t1181 = cmp1177 & t1180;
+                    int64_t t1182 = t1175 / t708;
+                    int64_t t1183 = (int64_t)(uint8_t)t1181;
+                    int64_t t1184 = (int64_t)((uint64_t)t1182 - (uint64_t)t1183);
+                    int64_t t1185 = (int64_t)((uint64_t)t1171 + (uint64_t)1);
+                    int64_t t1186 = (int64_t)((uint64_t)t1185 * (uint64_t)3);
+                    int64_t t1187 = (int64_t)((uint64_t)t1186 * (uint64_t)t709);
+                    int64_t t1188 = (int64_t)((uint64_t)t1187 - (uint64_t)1);
+                    int64_t t1189 = t1188 % t708;
+                    bool cmp1190 = t1189 != 0;
+                    bool cmp1191 = t1189 < 0;
+                    bool t1192 = cmp1191 ^ cmp1179;
+                    bool t1193 = cmp1190 & t1192;
+                    int64_t t1194 = t1188 / t708;
+                    int64_t t1195 = (int64_t)(uint8_t)t1193;
+                    int64_t t1196 = (int64_t)((uint64_t)t1194 - (uint64_t)t1195);
+                    int64_t wh1197 = 0;
+                    int64_t wh1198 = t1184;
+                    int64_t wh_result1199;
+                    int64_t wh_result1200;
+                    while (true) {
+                        bool cmp1201 = wh1198 <= t1196;
+                        wh_result1199 = wh1197;
+                        wh_result1200 = wh1198;
+                        if (!cmp1201) break;
+                        int64_t t1202 = (int64_t)((uint64_t)t1196 - (uint64_t)wh_result1200);
+                        int64_t t1203 = (int64_t)((uint64_t)t1202 + (uint64_t)1);
+                        int64_t t1204 = wh_result1199 % 512;
+                        bool cmp1205 = t1204 != 0;
+                        bool cmp1206 = t1204 < 0;
+                        bool t1207 = cmp1205 & cmp1206;
+                        int64_t t1208 = wh_result1199 / 512;
+                        int64_t t1209 = (int64_t)(uint8_t)t1207;
+                        int64_t t1210 = (int64_t)((uint64_t)t1208 - (uint64_t)t1209);
+                        int64_t t1211 = (int64_t)((uint64_t)32 - (uint64_t)t1210);
+                        int64_t t1212 = (t1203 < t1211 ? t1203 : t1211);
+                        int64_t t1213 = (int64_t)((uint64_t)t1212 * (uint64_t)512);
+                        int64_t dim1214 = gm10_arg.stride[0];
+                        int64_t t1215 = (int64_t)((uint64_t)i1109 * (uint64_t)dim1214);
+                        int64_t t1216 = (int64_t)((uint64_t)t1215 * (uint64_t)2);
+                        int64_t t1217 = (int64_t)((uint64_t)wh_result1200 * (uint64_t)1024);
+                        int64_t t1218 = (int64_t)((uint64_t)t1216 + (uint64_t)t1217);
+                        int64_t t1219 = wh_result1199 * 2;
+                        int64_t t1220 = (int64_t)((uint64_t)t1212 * (uint64_t)1024);
+                        bool cmp1221 = t1220 == 0;
+                        bool cmp1222 = t1220 != 0;
+                        int64_t t1223 = (int64_t)(uint8_t)cmp1222;
+                        int64_t sel1224 = cmp1221 ? 2 : t1220;
+                        asc_lock(PIPE_MTE2, 7);
+                        {
+                            cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ uint16_t*)((__ubuf__ uint8_t*)buf523 + t1219), (__gm__ uint16_t*)((__gm__ uint8_t*)gm10 + t1218), t1223, sel1224, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                        }
+                        asc_unlock(PIPE_MTE2, 7);
+                        int64_t dim1225 = gm11_arg.stride[0];
+                        int64_t t1226 = (int64_t)((uint64_t)i1109 * (uint64_t)dim1225);
+                        int64_t t1227 = (int64_t)((uint64_t)t1226 * (uint64_t)4);
+                        int64_t t1228 = (int64_t)((uint64_t)wh_result1200 * (uint64_t)2048);
+                        int64_t t1229 = (int64_t)((uint64_t)t1227 + (uint64_t)t1228);
+                        int64_t t1230 = wh_result1199 * 4;
+                        int64_t t1231 = t1230 + 65536;
+                        int64_t t1232 = (int64_t)((uint64_t)t1212 * (uint64_t)2048);
+                        bool cmp1233 = t1232 == 0;
+                        bool cmp1234 = t1232 != 0;
+                        int64_t t1235 = (int64_t)(uint8_t)cmp1234;
+                        int64_t sel1236 = cmp1233 ? 4 : t1232;
+                        asc_lock(PIPE_MTE2, 8);
+                        {
+                            cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ int32_t*)((__ubuf__ uint8_t*)buf523 + t1231), (__gm__ int32_t*)((__gm__ uint8_t*)gm11 + t1229), t1235, sel1236, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                        }
+                        asc_unlock(PIPE_MTE2, 8);
+                        int64_t t1237 = (int64_t)((uint64_t)wh_result1199 + (uint64_t)t1213);
+                        bool cmp1238 = t1237 > 512;
+                        int32_t ifr1239;
+                        int32_t ifr1240;
+                        if (cmp1238) {
+                            int64_t t1241 = (int64_t)((uint64_t)t1237 + (uint64_t)255);
+                            int64_t t1242 = t1241 % 256;
+                            bool cmp1243 = t1242 != 0;
+                            bool cmp1244 = t1242 < 0;
+                            bool t1245 = cmp1243 & cmp1244;
+                            int64_t t1246 = t1241 / 256;
+                            int64_t t1247 = (int64_t)(uint8_t)t1245;
+                            int64_t t1248 = (int64_t)((uint64_t)t1246 - (uint64_t)t1247);
+                            asc_lock(PIPE_V, 7);
+                            __ubuf__ uint16_t* view_root1249 = reinterpret_cast<__ubuf__ uint16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                            kernel_score_topk_mix_vf13(t1237, (__ubuf__ uint16_t*)view_root1249, t1248, (__ubuf__ uint16_t*)view_root1249);
+                            asc_unlock(PIPE_V, 7);
+                            asc_sync();
+                            int64_t t1250 = (int64_t)((uint64_t)t1237 + (uint64_t)-511);
+                            int32_t t1251 = (int32_t)t1250;
+                            int32_t iter1252 = 255;
+                            int32_t iter1253 = 0;
+                            for (int64_t i1254 = 0; i1254 < 8; i1254 = (int64_t)((uint64_t)i1254 + (uint64_t)1)) {
+                                int32_t t1255 = (int32_t)((uint32_t)iter1253 + (uint32_t)iter1252);
+                                int32_t t1256 = t1255 % 2;
+                                bool cmp1257 = t1256 != 0;
+                                bool cmp1258 = t1256 < 0;
+                                bool t1259 = cmp1257 & cmp1258;
+                                int32_t t1260 = t1255 / 2;
+                                int32_t t1261 = (int32_t)(uint8_t)t1259;
+                                int32_t t1262 = (int32_t)((uint32_t)t1260 - (uint32_t)t1261);
+                                asc_lock(PIPE_S, 10);
+                                int64_t t1263 = t1262;
+                                int64_t t1264 = t1263 + 65536;
+                                uint16_t ld1265 = view_root1249[t1264];
+                                asc_unlock(PIPE_S, 10);
+                                int16_t scalar1266 = (int16_t)ld1265;
+                                int32_t t1267 = (int32_t)(uint16_t)scalar1266;
+                                bool cmp1268 = t1267 >= t1251;
+                                int32_t sel1269 = cmp1268 ? t1262 : iter1252;
+                                int32_t t1270 = (int32_t)((uint32_t)t1262 + (uint32_t)1);
+                                int32_t sel1271 = cmp1268 ? iter1253 : t1270;
+                                iter1252 = sel1269;
+                                iter1253 = sel1271;
+                            }
+                            bool cmp1272 = iter1253 > 0;
+                            int32_t ifr1273;
+                            if (cmp1272) {
+                                int32_t t1274 = (int32_t)((uint32_t)iter1253 - (uint32_t)1);
+                                asc_lock(PIPE_S, 10);
+                                int64_t t1275 = t1274;
+                                int64_t t1276 = t1275 + 65536;
+                                uint16_t ld1277 = view_root1249[t1276];
+                                asc_unlock(PIPE_S, 10);
+                                int16_t scalar1278 = (int16_t)ld1277;
+                                int32_t t1279 = (int32_t)(uint16_t)scalar1278;
+                                ifr1273 = t1279;
+                            } else {
+                                ifr1273 = 0;
+                            }
+                            int32_t t1280 = (int32_t)((uint32_t)t1251 - (uint32_t)ifr1273);
+                            asc_lock(PIPE_V, 10);
+                            kernel_score_topk_mix_vf14(t1237, (__ubuf__ uint16_t*)view_root1249, iter1253, t1248, (__ubuf__ uint16_t*)view_root1249);
+                            asc_unlock(PIPE_V, 10);
+                            asc_sync();
+                            int32_t iter1281 = 255;
+                            int32_t iter1282 = 0;
+                            for (int64_t i1283 = 0; i1283 < 8; i1283 = (int64_t)((uint64_t)i1283 + (uint64_t)1)) {
+                                int32_t t1284 = (int32_t)((uint32_t)iter1282 + (uint32_t)iter1281);
+                                int32_t t1285 = t1284 % 2;
+                                bool cmp1286 = t1285 != 0;
+                                bool cmp1287 = t1285 < 0;
+                                bool t1288 = cmp1286 & cmp1287;
+                                int32_t t1289 = t1284 / 2;
+                                int32_t t1290 = (int32_t)(uint8_t)t1288;
+                                int32_t t1291 = (int32_t)((uint32_t)t1289 - (uint32_t)t1290);
+                                int64_t t1292 = t1291;
+                                int64_t t1293 = t1292 + 65536;
+                                uint16_t ld1294 = view_root1249[t1293];
+                                int16_t scalar1295 = (int16_t)ld1294;
+                                int32_t t1296 = (int32_t)(uint16_t)scalar1295;
+                                bool cmp1297 = t1296 >= t1280;
+                                int32_t sel1298 = cmp1297 ? t1291 : iter1281;
+                                int32_t t1299 = (int32_t)((uint32_t)t1291 + (uint32_t)1);
+                                int32_t sel1300 = cmp1297 ? iter1282 : t1299;
+                                iter1281 = sel1298;
+                                iter1282 = sel1300;
+                            }
+                            bool cmp1301 = iter1282 > 0;
+                            int32_t ifr1302;
+                            if (cmp1301) {
+                                int32_t t1303 = (int32_t)((uint32_t)iter1282 - (uint32_t)1);
+                                int64_t t1304 = t1303;
+                                int64_t t1305 = t1304 + 65536;
+                                uint16_t ld1306 = view_root1249[t1305];
+                                int16_t scalar1307 = (int16_t)ld1306;
+                                int32_t t1308 = (int32_t)(uint16_t)scalar1307;
+                                ifr1302 = t1308;
+                            } else {
+                                ifr1302 = 0;
+                            }
+                            int64_t t1309 = iter1282;
+                            int64_t t1310 = t1309 + 65536;
+                            uint16_t ld1311 = view_root1249[t1310];
+                            int16_t scalar1312 = (int16_t)ld1311;
+                            int32_t t1313 = (int32_t)(uint16_t)scalar1312;
+                            int32_t t1314 = (int32_t)((uint32_t)t1313 - (uint32_t)ifr1302);
+                            int32_t t1315 = (int32_t)((uint32_t)t1280 - (uint32_t)ifr1302);
+                            int32_t t1316 = (int32_t)((uint32_t)iter1253 * (uint32_t)256);
+                            int32_t t1317 = (int32_t)((uint32_t)t1316 + (uint32_t)iter1282);
+                            int64_t t1318 = (int64_t)((uint64_t)t1237 + (uint64_t)127);
+                            int64_t t1319 = t1318 % 128;
+                            bool cmp1320 = t1319 != 0;
+                            bool cmp1321 = t1319 < 0;
+                            bool t1322 = cmp1320 & cmp1321;
+                            int64_t t1323 = t1318 / 128;
+                            int64_t t1324 = (int64_t)(uint8_t)t1322;
+                            int64_t t1325 = (int64_t)((uint64_t)t1323 - (uint64_t)t1324);
+                            kernel_score_topk_mix_vf15((__ubuf__ uint16_t*)view_root1249, t1237, (__ubuf__ uint16_t*)view_root1249, t1317, t1325);
+                            asc_sync();
+                            int32_t t1326 = (int32_t)((uint32_t)t1314 - (uint32_t)t1315);
+                            int64_t t1327 = t1326;
+                            int64_t t1328 = t1327 + 16384;
+                            uint16_t ld1329 = view_root1249[t1328];
+                            int16_t scalar1330 = (int16_t)ld1329;
+                            int32_t t1331 = (int32_t)(uint16_t)scalar1330;
+                            ifr1239 = t1317;
+                            ifr1240 = t1331;
+                        } else {
+                            ifr1239 = 127;
+                            ifr1240 = -1;
+                        }
+                        int64_t t1332 = (int64_t)((uint64_t)t1237 + (uint64_t)63);
+                        int64_t t1333 = t1332 % 64;
+                        bool cmp1334 = t1333 != 0;
+                        bool cmp1335 = t1333 < 0;
+                        bool t1336 = cmp1334 & cmp1335;
+                        int64_t t1337 = t1332 / 64;
+                        int64_t t1338 = (int64_t)(uint8_t)t1336;
+                        int64_t t1339 = (int64_t)((uint64_t)t1337 - (uint64_t)t1338);
+                        asc_lock(PIPE_V, 7);
+                        __ubuf__ int32_t* view_root1340 = reinterpret_cast<__ubuf__ int32_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                        __ubuf__ uint16_t* view_root1341 = reinterpret_cast<__ubuf__ uint16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf523) + 0);
+                        kernel_score_topk_mix_vf16((__ubuf__ int32_t*)view_root1340, t1237, (__ubuf__ uint16_t*)view_root1341, ifr1239, ifr1240, t1339);
+                        asc_lock(PIPE_V, 8);
+                        asc_lock(PIPE_V, 11);
+                        kernel_score_topk_mix_vf17((__ubuf__ int32_t*)view_root1340, (__ubuf__ uint16_t*)view_root1341, (__ubuf__ uint16_t*)view_root1341, (__ubuf__ int32_t*)view_root1340, (__ubuf__ int32_t*)view_root1340);
+                        asc_unlock(PIPE_V, 11);
+                        asc_unlock(PIPE_V, 8);
+                        asc_unlock(PIPE_V, 7);
+                        int64_t t1342 = (int64_t)((uint64_t)wh_result1200 + (uint64_t)t1212);
+                        bool cmp1343 = t1342 > t1196;
+                        int64_t sel1344 = cmp1343 ? wh_result1199 : 512;
+                        if (cmp1343) {
+                            bool cmp1345 = arg15 > 0;
+                            if (cmp1345) {
+                                int64_t t1346 = (int64_t)((uint64_t)i1109 * (uint64_t)arg15);
+                                int64_t t1347 = (int64_t)((uint64_t)2304 - (uint64_t)t1346);
+                                int64_t t1348 = (t1347 < 768 ? t1347 : 768);
+                                int64_t t1349 = (int64_t)((uint64_t)t1346 * (uint64_t)4);
+                                int64_t t1350 = (int64_t)((uint64_t)t1348 * (uint64_t)4);
+                                bool cmp1351 = t1350 == 0;
+                                bool cmp1352 = t1350 != 0;
+                                int64_t t1353 = (int64_t)(uint8_t)cmp1352;
+                                int64_t sel1354 = cmp1351 ? 4 : t1350;
+                                asc_lock(PIPE_MTE2, 12);
+                                {
+                                    cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ int32_t*)((__ubuf__ uint8_t*)buf523 + 134656), (__gm__ int32_t*)((__gm__ uint8_t*)gm13 + t1349), t1353, sel1354, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                                }
+                                asc_unlock(PIPE_MTE2, 12);
+                            } else {
+                                int64_t t1355 = i1109;
+                                int32_t ld1356 = gm5[t1355];
+                                int64_t t1357 = (int64_t)ld1356;
+                                int64_t dim1358 = gm4_arg.stride[0];
+                                int64_t t1359 = (int64_t)((uint64_t)t1357 * (uint64_t)dim1358);
+                                int64_t t1360 = (int64_t)((uint64_t)t1359 * (uint64_t)4);
+                                asc_lock(PIPE_MTE2, 12);
+                                {
+                                    cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ int32_t*)((__ubuf__ uint8_t*)buf523 + 134656), (__gm__ int32_t*)((__gm__ uint8_t*)gm4 + t1360), 1, 24, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                                }
+                                asc_unlock(PIPE_MTE2, 12);
+                            }
+                            asc_lock(PIPE_V, 11);
+                            asc_lock(PIPE_V, 12);
+                            kernel_score_topk_mix_vf18((__ubuf__ int32_t*)view_root1340, (__ubuf__ int32_t*)view_root1340, cmp1345);
+                            asc_unlock(PIPE_V, 12);
+                            asc_unlock(PIPE_V, 11);
+                            int64_t dim1361 = gm9_arg.stride[0];
+                            int64_t t1362 = (int64_t)((uint64_t)i1109 * (uint64_t)dim1361);
+                            int64_t t1363 = (int64_t)((uint64_t)t1362 * (uint64_t)32);
+                            int64_t t1364 = (int64_t)((uint64_t)t1363 / (uint64_t)8);
+                            int64_t t1365 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(gm9) + (uint64_t)t1364);
+                            __gm__ int32_t* root1366 = (__gm__ int32_t*)(uintptr_t)(uint64_t)(t1365);
+                            int64_t t1367 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(buf523) + (uint64_t)132608);
+                            __ubuf__ int32_t* selected_root1368 = (__ubuf__ int32_t*)(uintptr_t)(uint64_t)(t1367);
+                            int64_t dim1369 = gm9_arg.stride[0];
+                            int64_t t1370 = dim1369;
+                            int64_t t1371 = t1370 * 4;
+                            int64_t t1372 = t1371;
+                            asc_lock(PIPE_MTE3, 11);
+                            cannbotdsl_92::cannbotdsl_copy_ub2gm_align((__gm__ int32_t*)root1366 + 0, (__ubuf__ int32_t*)selected_root1368 + 0, 1, 2048, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                            asc_unlock(PIPE_MTE3, 11);
+                        } else {
+                            asc_lock(PIPE_V, 7);
+                            asc_copy_ub2ub((__ubuf__ void*)(view_root1341 + 0), (__ubuf__ void*)(view_root1341 + 65792), 1024);
+                            kernel_score_topk_mix_vf19((__ubuf__ uint16_t*)view_root1341, (__ubuf__ uint16_t*)view_root1341);
+                            asc_unlock(PIPE_V, 7);
+                            asc_lock(PIPE_V, 8);
+                            asc_copy_ub2ub((__ubuf__ void*)(view_root1340 + 16384), (__ubuf__ void*)(view_root1340 + 33152), 2048);
+                            kernel_score_topk_mix_vf20((__ubuf__ int32_t*)view_root1340, (__ubuf__ int32_t*)view_root1340);
+                            asc_unlock(PIPE_V, 8);
+                        }
+                        wh1197 = sel1344;
+                        wh1198 = t1342;
+                    }
+                }
+            }
+        }
+    }
+}

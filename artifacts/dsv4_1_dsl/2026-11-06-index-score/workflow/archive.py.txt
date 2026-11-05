@@ -1,0 +1,119 @@
+"""归档单个 MIX+syncall Indexer 任务的代码、设备生成物和验证记录。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-index-score-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-06-index-score"
+inventory = []
+
+
+def capture(source, target, binary=False):
+    source = Path(source)
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        value = source.read_text().replace(str(workspace), "<workspace>")
+        value = value.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n")
+    source_name = str(source.relative_to(workspace)) if source.is_relative_to(workspace) else source.name
+    inventory.append({"path": str(destination.relative_to(archive)), "source": source_name,
+                      "bytes": destination.stat().st_size, "encoding": "gzip" if binary else "utf-8"})
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        source = directory / name
+        if source.is_file():
+            capture(source, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*.cpp")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        saved = set()
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name.startswith("score_topk_mix") and entry not in saved:
+                saved.add(entry)
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+def require_pass(path, count):
+    value = path.read_text()
+    if len(re.findall(r"^\[RUN\] PASS", value, re.MULTILINE)) != count:
+        raise RuntimeError(str(path) + " 的通过数量不符")
+    return value
+
+
+validation = require_pass(Path("/tmp/index-score-cases.log"), 8)
+layer_log = require_pass(Path("/tmp/index-score-layer.log"), 1)
+c1a_log = require_pass(Path("/tmp/index-score-c1a-compile.log"), 1)
+if len(re.findall(r"^\[RUN\]   '[^']+' PASS", layer_log, re.MULTILINE)) != 16:
+    raise RuntimeError("整层必须通过全部 16 项输出")
+bridge_log = Path("/tmp/index-score-bridge-pass.log").read_text()
+if "104 passed" not in bridge_log:
+    raise RuntimeError("桥接定向回归未全部通过")
+
+for name in ("cases", "layer", "layer-compile", "c1a-compile", "bridge-pass", "pypto-precommit"):
+    capture(Path(f"/tmp/index-score-{name}.log"), f"validation/{name}.log.txt")
+capture(Path("/tmp/index-score-bridge-regression.log"), "diagnostics/扩展回归中的既有构造器失败.log.txt")
+for name in ("index_score_dsl", "index_topk_dsl", "decode_indexer"):
+    capture(model / "models/deepseek_v4_1_flash" / (name + ".py"), f"model-snapshot/{name}.py.txt")
+for name in ("index_score_topk.cpp", "decode_indexer_before.py", "archive.py"):
+    capture(work / name, f"workflow/{name}.txt")
+for name in ("run-case.sh", "run_layer_frozen.py"):
+    capture(workspace / "artifacts/dsv41-index-query-dsl" / name, f"workflow/{name}.txt")
+for index, directory in enumerate(dict.fromkeys(re.findall(r"^\[产物\] (.+)$", validation, re.MULTILINE))):
+    generated(f"case-{index}", Path(directory), fixtures=True)
+for label, log, pattern in (("layer2-ep2", layer_log, "l3_decode_layer"),
+                            ("c1a-compile", c1a_log, "l3_decode_c1a_full")):
+    directory = Path(re.search(r"see (.+?/_jit_" + pattern + r"_[^/]+)/report/", log)[1])
+    generated(label, directory)
+    for child in sorted((directory / "next_levels").glob("*")):
+        generated(f"{label}/{child.name}", child)
+
+
+def revision(path):
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=path, text=True).strip()
+
+
+summary = {
+    "状态": "PASS", "分支": "dsv4.1-dsl", "模型基线": revision(model),
+    "PyPTO版本": revision(workspace / "issue75-env/pypto-pr"),
+    "DSL版本": "0.8.1", "DSL源码": revision(workspace / "cannbot-dsl-dev"),
+    "替换任务": "idx_score_topk", "新任务": "dsl_idx_score_topk",
+    "融合契约": "一个全核 SPMD MIX 任务；每个逻辑 block 为 1AIC+2AIV，局部打分及选择后在核内 global_sync_all，再归并其他 block 的候选。",
+    "调度": "PyPTO 的有类型内联入口持有四条依赖；simpler 使用实际驻留 cluster 数和 sync_start=True。",
+    "数值契约": "MXFP4/E8M0 点积、BF16 QK、BF16 权重乘 1/64、逐 head BF16 融合乘加；同分按逻辑索引稳定选择，升序输出对应物理缓存行，空位为 -1。",
+    "验证": {
+        "设备用例": "8 组全部零容差通过，打分及最终物理索引同时比对 CPU 参考。",
+        "覆盖": "随机/负权重、页洞、同分、短历史 0/129/511/512/17/400、候选池有效位、局部基数选择、超过 32 分片的多批归并、7 行 Query 尾块、1000 列尾块、部分及零有效 token。",
+        "整层": "C2A layer2 EP2，固定输入和原比较器，全部 16 项输出通过。",
+        "整层误差": re.search(r"\[PRECISION\] composed x_next (.+)", layer_log)[1],
+        "整层设备": [int(device) for device in re.findall(r"已获取设备 (\d+) 的锁", layer_log)],
+        "C1A": "完整共享入口编译通过；独立候选池打分已上卡，完整 C1A 模型本轮未执行。",
+        "PyPTO回归": "104 项通过，包含 AIC/AIV/MIX 内部动态工作区回写回归。预提交全部通过。",
+        "扩展回归": "另一次包含 IR 返回类型测试的运行中 193 项通过，8 项在 TileType/TensorType 混合 Expr/int 构造时即失败，未进入本次修改的调用解析器；保留诊断，未修改测试预期。",
+        "未执行": "整网、真实 checkpoint 和正式性能 A/B。",
+    },
+    "通信修改": False, "DSL框架修改": False, "整层阈值修改": False, "量化契约修改": False,
+    "PyPTO修正": "复用 IR 返回参数追踪，使外部核及 MIX 包装的显式参数回写保留调用方工作区的动态形状表达式；提交到原 PR #3231。",
+    "固定整层输入": "build_output/_jit_l3_decode_layer_20261105_160121_u27otki0/data",
+    "归档说明": "仅保存代表性小输入；相同编译目录被后续用例复用时保留最后一份输入，可按固定种子重建全部 8 组。不重复保存整层权重。",
+    "files": inventory,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"已归档 {len(inventory)} 个文件：{archive}")
