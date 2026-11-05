@@ -1,0 +1,28 @@
+"""保留迁移前的 Indexer Key 原生核和分页归属调度，用于逐字节对照。"""
+
+from pathlib import Path
+
+import pypto.language as pl
+from pypto.runtime import pto_isa_include_dir
+
+
+@pl.jit.extern(core_type="aiv", source=Path(__file__).parent / "idx_k_norm_rope_publish_before.cpp",
+               include_dirs=(pto_isa_include_dir(),))
+def native_publication(
+    source: pl.Tensor, weight: pl.Tensor, cosine: pl.Tensor, sine: pl.Tensor, slots: pl.Tensor,
+    cache: pl.InOut[pl.Tensor], scales: pl.InOut[pl.Tensor], num_tokens: pl.Scalar[pl.INT32],
+) -> pl.Tensor:
+    """按原实现执行 RMSNorm、RoPE、最近偶数 FP4 量化和页内顺序发布。"""
+    ...
+
+
+@pl.jit.inline(auto_scope=False)
+def publish_index_rows(
+    source: pl.Tensor, weight: pl.Tensor, cosine: pl.Tensor, sine: pl.Tensor, slots: pl.Tensor,
+    cache: pl.Tensor, scales: pl.Tensor, num_tokens: pl.Scalar[pl.INT32],
+    cache_ready: pl.Scalar[pl.TASK_ID], kv_ready: pl.Scalar[pl.TASK_ID],
+):
+    workers = pl.max(1, pl.min(num_tokens, 4))
+    with pl.spmd(workers, name_hint="idx_k_norm_rope_publish", deps=[cache_ready, kv_ready]) as published:
+        native_publication(source, weight, cosine, sine, slots, cache, scales, num_tokens)
+    return published

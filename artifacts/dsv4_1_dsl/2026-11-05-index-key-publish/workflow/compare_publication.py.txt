@@ -1,0 +1,65 @@
+"""在相同输入和缓存上逐字节对照原生与 DSL Indexer Key 发布任务。"""
+
+import argparse
+from dataclasses import replace
+
+import pypto.language as pl
+from golden import run
+
+from baseline_publication import publish_index_rows as baseline
+from index_key_dsl import build_publication_specs, compare_bytes, golden_publication, publish_index_rows
+
+
+@pl.jit
+def compare_program(
+    source: pl.Tensor, weight: pl.Tensor, cosine: pl.Tensor, sine: pl.Tensor, slots: pl.Tensor,
+    cache: pl.InOut[pl.Tensor], scales: pl.InOut[pl.Tensor], num_tokens: pl.Scalar[pl.INT32],
+    reference_cache: pl.InOut[pl.Tensor], reference_scales: pl.InOut[pl.Tensor],
+):
+    ready = pl.system.task_dummy(deps=[])
+    baseline(source, weight, cosine, sine, slots, reference_cache, reference_scales, num_tokens, ready, ready)
+    publish_index_rows(source, weight, cosine, sine, slots, cache, scales, num_tokens, ready, ready)
+    return cache, scales, reference_cache, reference_scales
+
+
+def golden(tensors):
+    golden_publication(tensors)
+    tensors["reference_cache"].copy_(tensors["cache"])
+    tensors["reference_scales"].copy_(tensors["scales"])
+
+
+def same_as_native(reference):
+    def compare(actual, expected, *, actual_outputs, **kwargs):
+        return compare_bytes(actual, actual_outputs[reference], actual_outputs=actual_outputs, **kwargs)
+    return compare
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--device", type=int, default=0)
+parser.add_argument("--compile-only", action="store_true")
+args = parser.parse_args()
+for rows, active, pages, kind in ((1, 1, 1, "ties"), (17, 15, 3, "zero"), (17, 0, 3, "random"),
+                                  (80, 72, 3, "random"), (17, 17, 13, "random")):
+    print(f"[原核对照] 行数={rows} 有效行={active} 页数={pages} 类型={kind}", flush=True)
+    specs = build_publication_specs(rows, active, pages, kind)
+    by_name = {spec.name: spec for spec in specs}
+    # 原核要求所有非负槽位落在缓存范围内；越界保护由 DSL 独立用例覆盖。
+    slots = by_name["slots"].init_value.clone()
+    slots[slots >= pages * 128] = -1
+    by_name["slots"].init_value = slots
+    for name in ("cache", "scales"):
+        spec = by_name[name]
+        specs.append(replace(spec, name="reference_" + name, init_value=spec.init_value.clone()))
+    result = run(
+        fn=compare_program,
+        specs=specs,
+        golden_fn=golden,
+        compare_fn={"cache": same_as_native("reference_cache"), "scales": same_as_native("reference_scales"),
+                    "reference_cache": compare_bytes, "reference_scales": compare_bytes},
+        config=dict(backend_type="a5", execution_mode=False, device_id=args.device),
+        compile_only=args.compile_only,
+        save_data=True,
+    )
+    if not result.passed:
+        raise SystemExit(result.error or 1)
+    print(f"[产物] {result.work_dir}", flush=True)

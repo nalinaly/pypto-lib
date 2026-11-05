@@ -1,0 +1,67 @@
+[INDEX_KEY_PUBLISH_DSL] 行数=1 有效行=1 页数=1 类型=ties
+[RUN] compile ...
+[RUN] compile done (0.06s)
+Traceback (most recent call last):
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/index_key_dsl.py", line 272, in <module>
+    result = run(
+             ^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1565, in _run_pipeline
+    compiled = compile_step(cfg, compile_state)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1741, in _compile
+    return fn.compile(*dummy_args, config=cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1432, in compile
+    compiled, _ordered_args, _run_config = self._resolve_compiled(args, kwargs, allow_signature_mode=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1168, in _resolve_compiled
+    prepared_contexts = self._build_contexts(
+                        ^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1870, in _build_contexts
+    apply_external_spec(contexts[-1], dep._external_builder(contexts[-1]))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 266, in build
+    return _build(target, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 213, in _build
+    exported = exporter.export_source_bundle(kernel, arguments)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/_cannbotdsl_source.py", line 181, in export_source_bundle
+    device, debug, _ = kernel_materialize._materialize_device_function(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/kernel_materialize.py", line 349, in _materialize_device_function
+    frontend_artifact = compile_function(
+                        ^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/compiler.py", line 139, in compile_function
+    return compile_frontend(fn, options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/compiler.py", line 92, in compile_frontend
+    return FrontendCompiler().compile(fn, options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/compiler.py", line 50, in compile
+    plan = analyze(source)
+           ^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 989, in analyze
+    dataflow = analyze_dataflow(source, region_inputs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/dataflow.py", line 1048, in analyze_dataflow
+    return _analyze_dataflow(source, regions)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/dataflow.py", line 1013, in _analyze_dataflow
+    raise source.error(code, message, node=node, hint=hint)
+cannbotdsl.core.frontend.diagnostics.FrontendError: <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/index_key_dsl.py:113:25: FE202_REGION_VALUE_ESCAPE: Region-local value 'selected' cannot escape a dynamic if region.
+113 |                         if level % 2:
+    |                         ^^^^^^^^^^^^^
+114 |                             selected = rr.vgts(magnitude, threshold, mask=group_mask)
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+115 |                         else:
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+116 |                             selected = rr.vges(magnitude, threshold, mask=group_mask)
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+hint: Initialize 'selected' before the region or consume it entirely inside the region.

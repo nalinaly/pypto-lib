@@ -1,0 +1,41 @@
+"""使用已有固定数据和当前整层比较器验证 C2A EP2。"""
+
+import ast
+from pathlib import Path
+import sys
+
+import torch
+from golden import ScalarSpec, TensorSpec
+import decode_layer
+
+
+if "--golden-data" not in sys.argv:
+    raise ValueError("请通过 --golden-data 指定已有固定输入和参考输出")
+fixture = Path(sys.argv[sys.argv.index("--golden-data") + 1]).resolve()
+
+
+def frozen_specs(layer_id=2, seed=0):
+    if layer_id != 2 or seed != 0:
+        raise ValueError("本次固定数据对应 layer=2、seed=0")
+    specs = []
+    for name in decode_layer.l3_decode_layer.param_names:
+        path = fixture / "in" / (name + ".pt")
+        if not path.is_file():
+            path = fixture / "out" / (name + ".pt")
+        value = torch.load(path, weights_only=True, mmap=True)
+        if value.ndim == 0:
+            specs.append(ScalarSpec(name, value.dtype, value.item()))
+        else:
+            specs.append(TensorSpec(name, list(value.shape), value.dtype))
+    return specs
+
+
+# 仅替换输入规格准备，参数解析、程序调用及比较器直接使用当前源码。
+namespace = vars(decode_layer).copy()
+namespace["build_tensor_specs"] = frozen_specs
+source = Path(decode_layer.__file__)
+tree = ast.parse(source.read_text())
+main = tree.body[-1]
+if not isinstance(main, ast.If):
+    raise RuntimeError("无法定位当前整层验证入口")
+exec(compile(ast.Module(body=main.body, type_ignores=[]), str(source), "exec"), namespace)

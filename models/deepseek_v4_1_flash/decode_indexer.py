@@ -13,6 +13,7 @@ from pathlib import Path
 from pypto.runtime import pto_isa_include_dir
 
 from index_projection_dsl import project_index_key
+from index_key_dsl import publish_index_rows
 import pypto.language as pl
 from config import (
     B_DYN, FLASH, INDEX_BLOCKS_DYN, INDEX_CACHE_GROUP, INDEX_POOL_BLOCKS_DYN,
@@ -345,42 +346,6 @@ def select_candidate_block_pool(
             _publish_candidate_counts(compressed_lens, pool_block_counts, active_tokens, positions, capacity)
         pool_tid = pl.yield_(counts_tid)
     return pool_tid
-
-
-@pl.jit.extern(core_type="aiv", source=Path(__file__).parent / "kernels" / "idx_k_norm_rope_publish.cpp",
-               include_dirs=(pto_isa_include_dir(),))
-def _idx_k_norm_rope_publish(
-    source: pl.Tensor,
-    weight: pl.Tensor,
-    cosine: pl.Tensor,
-    sine: pl.Tensor,
-    slots: pl.Tensor,
-    cache: pl.InOut[pl.Tensor],
-    scales: pl.InOut[pl.Tensor],
-    num_tokens: pl.Scalar[pl.INT32],
-) -> pl.Tensor:
-    """Normalize, rotate, and publish group-32 MXFP4 index keys with E8M0 scales."""
-    ...
-
-
-@pl.jit.inline(auto_scope=False)
-def publish_index_rows(
-    source: pl.Tensor[[T_DYN, INDEX_DIM], pl.BF16],
-    weight: pl.Tensor[[INDEX_DIM], pl.BF16],
-    cosine: pl.Tensor[[T_DYN, ROPE_DIM // 2], pl.FP32],
-    sine: pl.Tensor[[T_DYN, ROPE_DIM // 2], pl.FP32],
-    slots: pl.Tensor[[T_DYN], pl.INT64],
-    cache: pl.Tensor[[INDEX_BLOCKS_DYN, 128, 1, INDEX_DIM // 2], pl.UINT8],
-    scales: pl.Tensor[[INDEX_BLOCKS_DYN, 128, 1, INDEX_DIM // INDEX_CACHE_GROUP], pl.FP8E8M0],
-    num_tokens: pl.Scalar[pl.INT32],
-    cache_ready: pl.Scalar[pl.TASK_ID],
-    kv_ready: pl.Scalar[pl.TASK_ID],
-):
-    """Fuse index RMSNorm, BF16 RoPE, and cache publication with one writer per page."""
-    workers = pl.max(1, pl.min(num_tokens, 4))
-    with pl.spmd(workers, name_hint="idx_k_norm_rope_publish", deps=[cache_ready, kv_ready]) as published:
-        cache = _idx_k_norm_rope_publish(source, weight, cosine, sine, slots, cache, scales, num_tokens)
-    return published
 
 
 @pl.jit.inline(auto_scope=False)

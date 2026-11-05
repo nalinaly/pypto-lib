@@ -1,0 +1,116 @@
+"""归档 Indexer Key 发布的源码、生成物、固定数据和校验结果。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-index-key-publish-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-05-index-key-publish"
+inventory = []
+
+
+def capture(source, target, binary=False):
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        value = source.read_text().replace(str(workspace), "<workspace>")
+        value = value.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n")
+    inventory.append({"path": str(destination.relative_to(archive)),
+                      "source": str(source.relative_to(workspace)), "bytes": destination.stat().st_size,
+                      "encoding": "gzip" if binary else "utf-8"})
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        source = directory / name
+        if source.is_file():
+            capture(source, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*.cpp")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name.startswith("publish_index_page"):
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+def require_pass(filename, count):
+    value = (work / filename).read_text()
+    if len(re.findall(r"^\[RUN\] PASS", value, re.MULTILINE)) != count:
+        raise RuntimeError(filename + " 的通过数量不符")
+    return value
+
+
+validation = require_pass("publication-validation.log", 10)
+layer_log = require_pass("layer2-ep2.log", 1)
+c1a_log = require_pass("c1a-compile.log", 1)
+layer_outputs = len(re.findall(r"^\[RUN\]   '[^']+' PASS", layer_log, re.MULTILINE))
+if layer_outputs != 16:
+    raise RuntimeError("整层必须通过全部 16 项输出")
+
+archive.mkdir(parents=True, exist_ok=True)
+for filename in ("publication-validation.log", "layer2-ep2.log", "c1a-compile.log", "scope-review.txt", "pre-commit.log"):
+    capture(work / filename, f"validation/{filename}.txt")
+for filename in ("unaligned-pack-failure.log", "index_key_unaligned.py", "compile.log"):
+    capture(work / filename, f"diagnostics/{filename}.txt")
+for name in ("index_key_dsl", "decode_indexer", "decode_c1a_full"):
+    capture(model / "models/deepseek_v4_1_flash" / (name + ".py"), f"model-snapshot/{name}.py.txt")
+for filename in ("baseline_publication.py", "compare_publication.py", "run_layer_frozen.py", "archive.py",
+                 "run-case.sh", "run-regressions.sh"):
+    capture(work / filename, f"workflow/{filename}.txt")
+capture(work / "idx_k_norm_rope_publish_before.cpp", "workflow/idx_k_norm_rope_publish_before.cpp.txt")
+
+directories = list(dict.fromkeys(re.findall(r"^\[产物\] (.+)$", validation, re.MULTILINE)))
+for index, directory in enumerate(directories):
+    generated(f"case-{index}", Path(directory), fixtures=True)
+layer = Path(re.search(r"see (.+?/_jit_l3_decode_layer_[^/]+)/report/", layer_log)[1])
+generated("layer2-ep2", layer)
+generated("layer2-ep2/chip", layer / "next_levels/l2_decode_layer")
+c1a = Path(re.search(r"see (.+?/_jit_l3_decode_c1a_full_[^/]+)/report/", c1a_log)[1])
+generated("c1a-compile", c1a)
+for child in sorted((c1a / "next_levels").glob("*")):
+    generated("c1a-compile/" + child.name, child)
+
+
+def revision(path):
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=path, text=True).strip()
+
+
+summary = {
+    "状态": "PASS", "分支": "dsv4.1-dsl", "模型基线": revision(model),
+    "PyPTO版本": revision(workspace / "issue75-env/pypto-pr"),
+    "DSL版本": "0.8.1", "DSL源码": revision(workspace / "cannbot-dsl-dev"),
+    "替换任务": "idx_k_norm_rope_publish", "新任务": "dsl_idx_k_norm_rope_publish",
+    "计算契约": "BF16 Key 输入，经两个 64 元素段分别归约的 RMSNorm 和相邻对 RoPE，两次 BF16 舍入后按 group-32 / E8M0 / 最近偶数 FP4 量化。",
+    "调度": "PyPTO/simpler 每物理页派发一个 AIV 任务，页内按 token 顺序更新；保留 cache_ready、kv_ready 及后续消费者依赖。",
+    "写入": "payload 按 64 字节行发布；E8M0 页内读改写后一次对齐写回 512 字节；所有未选中字节保留原值。",
+    "验证": {
+        "独立用例": "5 组通过：正负量化中点和相邻 BF16 值、零与负零、无有效 token、80/72 随机输入、13 页完成句柄复用。FP4 与 E8M0 全部逐字节比较。",
+        "原核对照": "相同 5 组输入上，DSL 与原生核的 payload、scale 逐字节一致；原生核同时通过 CPU 参考比较。",
+        "整层": "C2A layer2 EP2 全部 16 项输出通过，保持当前源码中的原比较器和阈值；复用此前固定输入与 CPU 参考。",
+        "整层误差": "x_next rel_l2=0.021193206，max_abs=0.65664196，与替换前一致。",
+        "C1A": "共享 decode 入口编译通过；本次未运行完整 C1A 设备用例。",
+        "未执行": "整网、真实 checkpoint 和正式性能 A/B。",
+    },
+    "通信修改": False, "整层阈值修改": False, "量化契约修改": False, "框架修改": False,
+    "实现问题修正": "首版每组 16 字节打包违反 UB 的 32 字节存储对齐要求，已改为每 64 元素打包；错误版本及设备失败日志仅作诊断归档。",
+    "固定整层数据来源": "build_output/_jit_l3_decode_layer_20261105_160121_u27otki0/data，layer-id=2、seed=0。",
+    "归档说明": "保存全部结果日志、生成代码、原核对照脚本和代表性固定数据；相同编译目录的连续用例保留最后一次数据，不重复复制整层权重。",
+    "files": inventory,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"归档 {len(inventory)} 项，大小 {sum(item['bytes'] for item in inventory)} 字节")
