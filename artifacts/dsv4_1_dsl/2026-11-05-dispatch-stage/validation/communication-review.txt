@@ -1,0 +1,21 @@
+decode_moe._parse_experts_per_rank: unchanged
+decode_moe.clear_moe_signals: unchanged
+dispatch: input/output allocations and all statements after staging unchanged
+decode_moe.combine_scattered: unchanged
+decode_moe.moe: unchanged
+decode_moe.l2_moe: unchanged
+decode_moe.l3_moe: unchanged
+decode_moe._normalise_num_tokens: unchanged
+decode_moe._route_bias: unchanged
+decode_moe.build_moe_specs: unchanged
+decode_moe.golden_moe: unchanged
+decode_moe._local_mhc_compare: unchanged
+moe_dispatch_dsl.gather_rows: unchanged
+moe_dispatch_dsl._gather_task: unchanged
+moe_dispatch_dsl.gather_local: unchanged
+moe_dispatch_dsl.validate_gather: unchanged
+moe_dispatch_dsl.golden_gather: unchanged
+moe_dispatch_dsl.build_gather_specs: unchanged
+expert_routed.py: unchanged, including ffn_reduce_scatter
+decode_layer.py: unchanged
+prefill_moe.py: unchanged, separate staging implementation retained

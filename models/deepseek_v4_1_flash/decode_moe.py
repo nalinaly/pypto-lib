@@ -42,7 +42,7 @@ from expert_routed import (
 )
 from hc import hc_pre, hc_post
 from moe_combine_dsl import combine_local
-from moe_dispatch_dsl import gather_local
+from moe_dispatch_dsl import gather_local, stage_local
 
 
 # 模型配置
@@ -71,10 +71,6 @@ AUX_W = 0
 AUX_PAD = AUX_WIDTH
 IDX_PAD = ROUTE_WIDTH
 SIGNAL_PAD = 128  # 512-byte padded monotonic counter lane
-
-# 分块参数
-DISPATCH_STAGE_TILE = 8
-
 
 @pl.jit.inline(auto_scope=False)
 def clear_moe_signals(
@@ -122,28 +118,7 @@ def dispatch(
     # Raw payload and logical MX scale rows in ND order.
     x_norm_mx_raw = pl.create_tensor([T, D], dtype=pl.INT8)
     scale_src = pl.create_tensor([T, K_SCALE], dtype=pl.UINT8, manual_dep=True)
-    with pl.spmd(T // DISPATCH_STAGE_TILE, name_hint="dispatch_stage") as _stage_tid:
-        t_begin = pl.tile.get_block_idx() * DISPATCH_STAGE_TILE
-        raw_row = pl.load(x_norm_mx, [t_begin, 0], [DISPATCH_STAGE_TILE, D])
-        raw_row_i8 = pl.reinterpret_view(raw_row, pl.INT8)
-        x_norm_mx_raw = pl.store(raw_row_i8, [t_begin, 0], x_norm_mx_raw)
-        scale_offset = t_begin // 16 * 16 * K_SCALE
-        raw_scale = pl.load(x_norm_scale, [0, scale_offset], [1, 16 * K_SCALE])
-        raw_scale_u8 = pl.reinterpret_view(raw_scale, pl.UINT8)
-        raw_scale_i8 = pl.reinterpret_view(raw_scale_u8, pl.INT8)
-        active_tokens = pl.cast(num_tokens, pl.INDEX)
-        if active_tokens < 0:
-            active_tokens = pl.cast(0, pl.INDEX)
-        if active_tokens > T:
-            active_tokens = pl.cast(T, pl.INDEX)
-        # Each block owns whole 64-byte lines in the UINT8 scale buffer.
-        t_end = pl.min(t_begin + DISPATCH_STAGE_TILE, active_tokens)
-        for t in pl.range(t_begin, t_end):
-            for group in pl.range(K_SCALE):
-                scale_index = group // 2 * 32 + t % 16 * 2 + group % 2
-                scale_i8 = pl.tile.read(raw_scale_i8, [0, scale_index])
-                scale = pl.cast(scale_i8, pl.UINT8)
-                pl.write(scale_src, [t, group], scale)
+    _stage_tid = stage_local(x_norm_mx, x_norm_scale, x_norm_mx_raw, scale_src, num_tokens)
 
     # Publish per-source route counts.
     with pl.at(level=pl.Level.CORE_GROUP, name_hint="dispatch_meta_publish", allow_early_resolve=True) as _meta_push_tid:

@@ -1,0 +1,111 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "source",
+      "direction": "In",
+      "shape": [
+        32,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "packed_scale",
+      "direction": "In",
+      "shape": [
+        1,
+        5120
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "payload",
+      "direction": "InOut",
+      "shape": [
+        40,
+        5120
+      ],
+      "dtype": "int8",
+      "layout": "ND"
+    },
+    {
+      "name": "scales",
+      "direction": "InOut",
+      "shape": [
+        40,
+        160
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "source",
+      "direction": "In",
+      "shape": [
+        32,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "packed_scale",
+      "direction": "In",
+      "shape": [
+        1,
+        5120
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "payload",
+      "direction": "InOut",
+      "shape": [
+        40,
+        5120
+      ],
+      "dtype": "int8",
+      "layout": "ND"
+    },
+    {
+      "name": "scales",
+      "direction": "InOut",
+      "shape": [
+        40,
+        160
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "num_return_types": 2,
+  "return_aliases": [
+    2,
+    3
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

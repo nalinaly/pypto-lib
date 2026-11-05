@@ -6,7 +6,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-"""使用 CANNBotDSL 实现本地 MoE 接收数据压紧和 MX 缩放打包。"""
+"""使用 CANNBotDSL 实现本地 MoE 发送暂存、接收压紧和 MX 缩放布局转换。"""
 
 import cannbotdsl as cb
 from cannbotdsl import reg as rr
@@ -22,8 +22,76 @@ MX_GROUP = 32
 
 # 分块参数
 ROW_TILE = 16
+STAGE_ROW_TILE = 8
 TASK_TILE = 64
 BYTE_TILE = 256
+
+
+@cb.kernel
+def stage_rows(
+    source: cb.Tensor, packed_scale: cb.Tensor, payload: cb.Tensor, scales: cb.Tensor,
+    scale_row_begin: cb.ScalarValue, active_rows: cb.ScalarValue,
+):
+    """复制八行物理数据，仅解包有效行的缩放值。"""
+    width = source.shape[1]
+    groups = width // MX_GROUP
+    raw = Buffer(cb.MemLoc.UB, cb.dtypes.int8, cb.make_layout((STAGE_ROW_TILE, width)))
+    packed = Buffer(cb.MemLoc.UB, cb.dtypes.uint8, cb.make_layout((1, ROW_TILE * groups)))
+    unpacked = Buffer(cb.MemLoc.UB, cb.dtypes.uint8, cb.make_layout((1, groups)))
+    cb.mem_copy(raw, source.view(dtype=cb.dtypes.int8))
+    cb.mem_copy(payload, raw)
+    if active_rows > 0:
+        cb.mem_copy(packed, packed_scale.view(dtype=cb.dtypes.uint8))
+        for row in cb.range(active_rows):
+            for group in cb.range(groups):
+                offset = group // 2 * ROW_TILE * 2 + (scale_row_begin + row) * 2 + group % 2
+                unpacked[0, group] = packed[0, offset]
+            cb.mem_copy(cb.tile_slice(scales, (1, groups), (row, 0)), unpacked)
+
+
+@pl.jit.inline(auto_scope=False)
+def _stage_task(
+    source: pl.Tensor, packed_scale: pl.Tensor, payload: pl.Tensor, scales: pl.Tensor,
+    scale_row_begin: pl.Scalar[pl.INDEX], active_rows: pl.Scalar[pl.INDEX], ready: pl.Scalar[pl.TASK_ID],
+):
+    """派发八行 AIV 任务，确保传输输出区域互不重叠。"""
+    with pl.spmd(1, name_hint="dsl_dispatch_stage", deps=[ready]) as done:
+        stage_rows(source, packed_scale, payload, scales, scale_row_begin, active_rows)
+    return done
+
+
+@pl.jit.inline(auto_scope=False)
+def stage_local(
+    source: pl.Tensor, packed_scale: pl.Tensor, payload: pl.Tensor, scales: pl.Tensor,
+    num_tokens: pl.Scalar[pl.INT32],
+):
+    """在调用者发送前，汇合原始数据复制和缩放解包任务。
+
+    物理行按 M16 对齐。每个八行缩放块独占完整的 64 字节缓存行；
+    经边界截断后的有效计数之外的缩放行保持不变。
+    """
+    rows = pl.tensor.dim(source, 0)
+    width = pl.tensor.dim(source, 1)
+    groups = width // MX_GROUP
+    active = pl.min(rows, pl.max(pl.cast(num_tokens, pl.INDEX), 0))
+    ready = pl.system.task_dummy(deps=[])
+    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
+    for slot in pl.range(TASK_TILE):
+        completed[slot] = ready
+    for row in pl.parallel(0, rows, STAGE_ROW_TILE):
+        live = pl.min(STAGE_ROW_TILE, pl.max(active - row, 0))
+        scale_begin = row // ROW_TILE * ROW_TILE * groups
+        local_x = pl.slice(source, [STAGE_ROW_TILE, width], [row, 0])
+        local_s = pl.slice(packed_scale, [1, ROW_TILE * groups], [0, scale_begin])
+        out_x = pl.slice(payload, [STAGE_ROW_TILE, width], [row, 0])
+        out_s = pl.slice(scales, [STAGE_ROW_TILE, groups], [row, 0])
+        slot = row // STAGE_ROW_TILE % TASK_TILE
+        previous = completed[slot]
+        scale_row = row % ROW_TILE
+        done = _stage_task(local_x, local_s, out_x, out_s, scale_row, live, previous)
+        completed[slot] = done
+    joined = pl.system.task_dummy(deps=[completed])
+    return joined
 
 
 @cb.kernel
@@ -126,6 +194,20 @@ def gather_local(
 
 
 @pl.jit
+def validate_stage(
+    source: pl.Tensor, packed_scale: pl.Tensor,
+    payload: pl.InOut[pl.Tensor], scales: pl.InOut[pl.Tensor], num_tokens: pl.Scalar[pl.INT32],
+):
+    """使用生产路径的暂存逻辑，保留非有效缩放哨兵值和输出保护区。"""
+    rows = pl.tensor.dim(source, 0)
+    width = pl.tensor.dim(source, 1)
+    out_x = pl.slice(payload, [rows, width], [0, 0])
+    out_s = pl.slice(scales, [rows, width // MX_GROUP], [0, 0])
+    stage_local(source, packed_scale, out_x, out_s, num_tokens)
+    return payload, scales
+
+
+@pl.jit
 def validate_gather(
     source: pl.Tensor, source_scale: pl.Tensor, source_weight: pl.Tensor, source_route: pl.Tensor,
     metadata: pl.Tensor, counts: pl.Tensor,
@@ -143,6 +225,38 @@ def validate_gather(
     gather_local(source, source_scale, source_weight, source_route, metadata, counts,
                  out_x, out_s, out_w, out_r, ready, ready, ready, 8, 8)
     return payload, scales, weights, routes
+
+
+def golden_stage(tensors):
+    """复制所有物理数据行，并恢复有效的 ND 缩放行。"""
+    import torch
+    from quant import unpack_mx_a_scale
+
+    rows, width = tensors["source"].shape
+    active = max(0, min(rows, int(tensors["num_tokens"])))
+    tensors["payload"][:rows].copy_(tensors["source"].view(torch.int8))
+    packed = tensors["packed_scale"].view(torch.uint8).reshape(rows, width // MX_GROUP)
+    tensors["scales"][:active].copy_(unpack_mx_a_scale(packed)[:active])
+
+
+def build_stage_specs(rows=32, active=17):
+    """覆盖所有字节编码、有效计数截断，以及保持不变的缩放尾部。"""
+    import torch
+    from golden import ScalarSpec, TensorSpec
+    from quant import pack_mx_a_scale
+
+    groups = D // MX_GROUP
+    row_id = torch.arange(rows).reshape(-1, 1)
+    raw_x = ((row_id * 43 + torch.arange(D) * 37) % 256).to(torch.uint8)
+    raw_s = ((row_id * 29 + torch.arange(groups) * 13) % 256).to(torch.uint8)
+    packed = pack_mx_a_scale(raw_s).view(torch.float8_e8m0fnu).reshape(1, -1)
+    return [
+        TensorSpec("source", [rows, D], torch.float8_e4m3fn, init_value=raw_x.view(torch.float8_e4m3fn)),
+        TensorSpec("packed_scale", [1, rows * groups], torch.float8_e8m0fnu, init_value=packed),
+        TensorSpec("payload", [rows + STAGE_ROW_TILE, D], torch.int8, init_value=0x5A),
+        TensorSpec("scales", [rows + STAGE_ROW_TILE, groups], torch.uint8, init_value=0xA5),
+        ScalarSpec("num_tokens", torch.int32, active),
+    ]
 
 
 def golden_gather(tensors):
@@ -219,19 +333,30 @@ if __name__ == "__main__":
     from golden import run
     from window_kv_dsl import compare_payload_bytes
 
-    parser = argparse.ArgumentParser(description="Validate local DSL MoE receive gather on A5.")
+    parser = argparse.ArgumentParser(description="Validate local DSL MoE staging and gather on A5.")
     parser.add_argument("-d", "--device", type=int, default=0)
+    parser.add_argument("--op", choices=("all", "stage", "gather"), default="all")
     parser.add_argument("--case", choices=("all", "bounds", "zero", "full", "multi"), default="all")
     parser.add_argument("--compile-only", action="store_true")
     args = parser.parse_args()
-    cases = ("bounds", "zero", "full", "multi") if args.case == "all" else (args.case,)
-    for case in cases:
-        print(f"[DISPATCH_GATHER_DSL] case={case}", flush=True)
+    checks = []
+    if args.op in ("all", "stage"):
+        for rows, active in [(32, n) for n in (-1, 0, 7, 8, 9, 15, 16, 17, 35)] + [(80, 72)]:
+            label = f"[DISPATCH_STAGE_DSL] rows={rows} active={active}"
+            checks.append((label, validate_stage, build_stage_specs(rows, active), golden_stage, ("payload", "scales")))
+    if args.op in ("all", "gather"):
+        cases = ("bounds", "zero", "full", "multi") if args.case == "all" else (args.case,)
+        for case in cases:
+            label = f"[DISPATCH_GATHER_DSL] case={case}"
+            outputs = ("payload", "scales", "weights", "routes")
+            checks.append((label, validate_gather, build_gather_specs(case), golden_gather, outputs))
+    for label, function, specs, golden, outputs in checks:
+        print(label, flush=True)
         result = run(
-            fn=validate_gather,
-            specs=build_gather_specs(case),
-            golden_fn=golden_gather,
-            compare_fn={name: compare_payload_bytes for name in ("payload", "scales", "weights", "routes")},
+            fn=function,
+            specs=specs,
+            golden_fn=golden,
+            compare_fn={name: compare_payload_bytes for name in outputs},
             config=dict(backend_type="a5", execution_mode=False, device_id=args.device),
             compile_only=args.compile_only,
             save_data=True,

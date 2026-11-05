@@ -452,6 +452,35 @@ lanes, NaN inactive inputs and an untouched output guard row. The layer-0
 EP2 entry validates the local communication-window view and the preserved
 notification/wait boundary using the existing model comparators.
 
+## Local MoE send staging in DSL
+
+The decode `dispatch_stage` task uses `stage_local` in
+[`moe_dispatch_dsl.py`](../../../models/deepseek_v4_1_flash/moe_dispatch_dsl.py).
+Each `dsl_dispatch_stage` AIV task copies eight physical FP8 rows as unchanged
+INT8 transport bytes and unpacks their E8M0 scale codes from `MX_A_ZZ` into ND
+token rows. This performs no requantization or floating-point arithmetic.
+
+The original write contract is preserved: payload staging includes inactive
+physical rows, while scale staging writes only the active prefix after clamping
+`num_tokens` to the physical capacity. Inactive scale rows retain their input
+contents. Physical capacity is M16-aligned, and each eight-row scale slab owns
+complete 64-byte cache lines. PyPTO slices the buffers, joins every staging task,
+and passes that completion handle to the unchanged `dispatch_push` scope.
+Metadata, sends, notifications, waits and receive gather retain their code.
+Prefill retains its separate staging implementation.
+
+With an allocated A5 device in `TASK_DEVICE`:
+
+```bash
+python models/deepseek_v4_1_flash/moe_dispatch_dsl.py --op stage -d "$TASK_DEVICE"
+```
+
+The ten staging cases cover negative and zero active counts, 7/8/9 and 15/16/17
+rows, an active count above capacity, and the 72-active/80-physical decode shape.
+All 256 byte codes occur in the fixtures. Payload and scale comparisons are
+byte-exact, including inactive scale sentinels and an extra output guard slab.
+The default `--op all` additionally runs the four receive-gather cases below.
+
 ## Local MoE receive gather in DSL
 
 The decode `dispatch_gather` task in
@@ -464,7 +493,7 @@ from transport ND rows into the existing M16-paired `MX_A_ZZ` storage; no
 quantization or floating-point arithmetic is performed.
 
 The DSL receives local views of the current rank's receive windows. The
-existing staging, metadata publication/finalization, remote payload stores,
+existing metadata publication/finalization, remote payload stores,
 notification and deferred-wait scopes remain unchanged. PyPTO/simpler retains
 the original push, wait and metadata dependencies and joins every local gather
 before routed-expert compute. A bounded completion pool also retains those
@@ -478,7 +507,7 @@ buffer is removed; each DSL task packs its scale tile in UB.
 With an allocated A5 device in `TASK_DEVICE`:
 
 ```bash
-python models/deepseek_v4_1_flash/moe_dispatch_dsl.py -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/moe_dispatch_dsl.py --op gather -d "$TASK_DEVICE"
 ```
 
 The four bounded cases cover empty experts and sources, 15/16/17-row boundaries,
@@ -523,4 +552,7 @@ contains the local reduction checks, communication-scope review, generated
 leaf/wrapper/orchestration, CPU fixtures and the layer-0 EP2 regression.
 The [receive-gather archive](../../../artifacts/dsv4_1_dsl/2026-11-04-dispatch-gather/README.txt)
 contains byte-exact layout/compaction checks, unchanged communication-scope
+review, generated code, CPU fixtures and the layer-0 EP2 regression.
+The [send-staging archive](../../../artifacts/dsv4_1_dsl/2026-11-05-dispatch-stage/README.txt)
+contains byte-exact staging and gather regressions, unchanged communication
 review, generated code, CPU fixtures and the layer-0 EP2 regression.

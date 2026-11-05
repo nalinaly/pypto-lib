@@ -1,0 +1,82 @@
+{
+  "status": "PASS",
+  "branch": "dsv4.1-dsl",
+  "model_base": "08f4b64f67a2276da3a98baccf52326f35e5d33d",
+  "pypto_revision": "4a65a9c79b305aac9cac5a8cd84eef4cc8e4986c",
+  "dsl_revision": "91feb222c59ec3ad1175ba5fd88445c72f8abdff",
+  "replaced_task": "dispatch_stage",
+  "replacement_task": "dsl_dispatch_stage",
+  "communication_code_unchanged": true,
+  "gather_functions_unchanged": true,
+  "stage_cases": [
+    {
+      "rows": 32,
+      "active": -1,
+      "result": "PASS"
+    },
+    {
+      "rows": 32,
+      "active": 0,
+      "result": "PASS"
+    },
+    {
+      "rows": 32,
+      "active": 7,
+      "result": "PASS"
+    },
+    {
+      "rows": 32,
+      "active": 8,
+      "result": "PASS"
+    },
+    {
+      "rows": 32,
+      "active": 9,
+      "result": "PASS"
+    },
+    {
+      "rows": 32,
+      "active": 15,
+      "result": "PASS"
+    },
+    {
+      "rows": 32,
+      "active": 16,
+      "result": "PASS"
+    },
+    {
+      "rows": 32,
+      "active": 17,
+      "result": "PASS"
+    },
+    {
+      "rows": 32,
+      "active": 35,
+      "result": "PASS"
+    },
+    {
+      "rows": 80,
+      "active": 72,
+      "result": "PASS"
+    }
+  ],
+  "gather_regressions": [
+    "bounds",
+    "zero",
+    "full",
+    "multi"
+  ],
+  "local_acceptance": "Byte-exact outputs, including inactive scale rows and output guards",
+  "local_task": "task_20261105_100512_27701962641",
+  "ep2_task": "task_20261105_100612_27852117337",
+  "ep2_devices": [
+    1,
+    2
+  ],
+  "layer_outputs": 16,
+  "limits": [
+    "A5 generated CPU fixtures",
+    "No checkpoint/prefill or performance claim",
+    "Original layer comparators retained"
+  ]
+}
