@@ -1,0 +1,6 @@
+[FIXTURE] c2a tokens=72 requests=12 case=mixed lengths=[6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6] prefixes=[8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192, 8192] max_compressed_len=4099 window_pages=781 compressed_pages=397 index_block_table=(12, 33)
+[RUN] compile ...
+2026-11-06 16:50:54.254 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable '_attended' in function 'attend_packed' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/sparse_attention.py:1695:9
+2026-11-06 16:50:54.254 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'scores_tid' in function 'decode_c2a_indexer' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_indexer.py:334:5
+[RUN] compile done (13.20s)
+[RUN] PASS (13.20s)

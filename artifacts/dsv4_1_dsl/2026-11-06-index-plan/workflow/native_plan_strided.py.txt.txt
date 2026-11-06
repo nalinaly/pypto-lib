@@ -1,0 +1,29 @@
+"""通过原 PyPTO 主体校验相同的运行时参数和保护区。"""
+
+import pypto.language as pl
+from decode_indexer_baseline import _plan_index_runs
+from index_plan_dsl import INPUT_ROWS_DYN, RUN_COLUMNS_DYN
+
+
+@pl.jit
+def validate_native(
+    request_ids: pl.Tensor[[INPUT_ROWS_DYN], pl.INT32],
+    lengths: pl.Tensor[[INPUT_ROWS_DYN], pl.INT32],
+    runs: pl.InOut[pl.Tensor[[5, RUN_COLUMNS_DYN], pl.INT32]],
+    num_tokens: pl.Scalar[pl.INT32],
+    width: pl.Scalar[pl.INDEX],
+    skip_short: pl.Scalar[pl.INT32],
+):
+    """在相同偏移视图中调用原有两种请求分组模式。"""
+    request_ids.bind_dynamic(0, INPUT_ROWS_DYN)
+    lengths.bind_dynamic(0, INPUT_ROWS_DYN)
+    runs.bind_dynamic(1, RUN_COLUMNS_DYN)
+    capacity = pl.tensor.dim(request_ids, 0) - 2
+    requests = request_ids[1:capacity + 1]
+    visible = lengths[1:capacity + 1]
+    target = runs[0:4, 1:capacity + 2]
+    if skip_short != 0:
+        _plan_index_runs(requests, visible, target, num_tokens, width, True)
+    else:
+        _plan_index_runs(requests, visible, target, num_tokens, width, False)
+    return runs

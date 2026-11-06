@@ -1,0 +1,59 @@
+"""复现二维 GM 子视图的标量写入行距错误，并提供直接写父张量的对照。"""
+
+import argparse
+import json
+from pathlib import Path
+
+import pypto.language as pl
+from golden import TensorSpec, ratio_allclose, run
+import torch
+
+
+@pl.jit(auto_scope=False)
+def sliced(output: pl.InOut[pl.Tensor[[5, 10], pl.INT32]]):
+    view = output[0:4, 1:9]
+    with pl.at(level=pl.Level.CORE_GROUP, name_hint="scalar_slice_write"):
+        pl.write(view, [3, 0], pl.cast(7, pl.INT32))
+    return output
+
+
+@pl.jit(auto_scope=False)
+def direct(output: pl.InOut[pl.Tensor[[5, 10], pl.INT32]]):
+    with pl.at(level=pl.Level.CORE_GROUP, name_hint="scalar_direct_write"):
+        pl.write(output, [3, 1], pl.cast(7, pl.INT32))
+    return output
+
+
+def golden(tensors):
+    tensors["output"][3, 1] = 7
+
+
+def compare(actual, expected, **kwargs):
+    changed = torch.nonzero(actual != -99).tolist()
+    print("实际被改写位置：" + str(changed), flush=True)
+    return ratio_allclose(atol=0, rtol=0, max_error_ratio=0)(actual, expected, **kwargs)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--device", type=int, default=0)
+    parser.add_argument("--compile-only", action="store_true")
+    args = parser.parse_args()
+    records = {}
+    for label, fn in (("sliced", sliced), ("direct", direct)):
+        print("[最小复现] " + label, flush=True)
+        result = run(
+            fn=fn,
+            specs=[TensorSpec("output", [5, 10], torch.int32, init_value=-99)],
+            golden_fn=golden,
+            config={"backend_type": "a5", "execution_mode": False,
+                    "device_id": args.device, "dump_passes": True},
+            compare_fn={"output": compare},
+            compile_only=args.compile_only,
+        )
+        records[label] = {"passed": bool(result.passed), "error": str(result.error or ""),
+                          "work_dir": str(result.work_dir), "compile_only": args.compile_only}
+    suffix = "compile" if args.compile_only else "result"
+    Path(__file__).with_name(f"stride-repro-{suffix}.json").write_text(json.dumps(records, indent=2) + "\n")
+    if not all(record["passed"] for record in records.values()):
+        raise SystemExit(1)

@@ -1,0 +1,41 @@
+"""仅在 CPU 模拟器验证原核连续布局，单独记录且不替代 A5 实机结果。"""
+
+import json
+from pathlib import Path
+
+import torch
+from golden import TensorSpec, ratio_allclose, run
+from index_plan_dsl import PLAN_CASES, build_plan_specs, golden_plan
+from native_plan import validate_native
+
+
+work = Path(__file__).resolve().parent
+records = []
+
+
+def reference(tensors):
+    native = tensors["runs"]
+    backing = torch.full((5, native.shape[1] + 2), -71, dtype=torch.int32)
+    backing[:4, 1:-1] = native
+    golden_plan({**tensors, "runs": backing})
+    native.copy_(backing[:4, 1:-1])
+
+
+for case in PLAN_CASES:
+    for skip_short in (0, 1):
+        specs = build_plan_specs(case, skip_short)
+        initial = specs[2].init_value[:4, 1:-1].contiguous()
+        specs[2] = TensorSpec("runs", list(initial.shape), torch.int32, init_value=initial)
+        print(f"[仅 CPU 原核连续布局] {case}/{skip_short}", flush=True)
+        result = run(
+            fn=validate_native,
+            specs=specs,
+            golden_fn=reference,
+            config={"backend_type": "a5", "execution_mode": True},
+            compare_fn={"runs": ratio_allclose(atol=0, rtol=0, max_error_ratio=0)},
+        )
+        records.append({"case": case, "skip_short": skip_short, "passed": bool(result.passed),
+                        "platform": "a5sim", "work_dir": str(result.work_dir), "error": str(result.error or "")})
+        (work / "native-cpu-results.json").write_text(json.dumps(records, ensure_ascii=False, indent=2) + "\n")
+if not all(record["passed"] for record in records):
+    raise SystemExit("原核连续布局 CPU 检查失败")

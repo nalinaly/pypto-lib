@@ -1,0 +1,155 @@
+"""归档请求分组规划的实现、生成物、设备结果及上游问题核对。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+work = Path(__file__).resolve().parent
+workspace = work.parents[1]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-06-index-plan"
+files = []
+
+
+def capture(source, target, binary=False):
+    source = Path(source)
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        value = source.read_text().replace(str(workspace), "<workspace>")
+        value = value.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n")
+    files.append({"文件": str(target), "字节数": destination.stat().st_size})
+
+
+def read(name):
+    source = work / name
+    return json.loads(source.read_text()) if source.is_file() else None
+
+
+def generated(label, directory):
+    for name in ("kernel_config.py", "compiled_meta.json", "distributed_meta.json"):
+        if (directory / name).is_file():
+            capture(directory / name, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*")):
+        if source.suffix in (".py", ".cpp"):
+            capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name == "plan_runs":
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if label in ("native", "stride-repro"):
+        for source in sorted((directory / "kernels").rglob("*.cpp")):
+            capture(source, f"generated/{label}/kernels/{source.name}.txt")
+
+
+compiled = read("compiled.json")
+if len(compiled) != 28 or not all(row["passed"] and row["compile_only"] for row in compiled):
+    raise RuntimeError("需要完整的 28 项原核/DSL 入口编译记录")
+for kind in ("native", "dsl"):
+    record = next(row for row in compiled if row["label"].endswith("-" + kind))
+    generated(kind, Path(record["work_dir"]))
+for name in ("index_plan_dsl.py", "decode_indexer.py"):
+    capture(model / "models/deepseek_v4_1_flash" / name, f"model-snapshot/{name}.txt")
+for name in ("decode_indexer_baseline.py", "native_plan.py", "native_plan_strided.py.txt",
+             "compare-native.py", "run-integration.py", "run-case.sh", "build-binaries.py",
+             "scalar-write-stride-repro.py", "archive.py"):
+    capture(work / name, f"workflow/{name}.txt")
+if (work / "check-native-cpu.py").is_file():
+    capture(work / "check-native-cpu.py", "workflow/check-native-cpu.py.txt")
+capture(workspace / "artifacts/dsv41-semantic-review/run_case.py", "workflow/run_case.py.txt")
+for name in ("compiled.json", "core-binaries.json", "integration-binaries.json", "upstream-review.json",
+             "stride-repro-result.json", "initial-strided-results.json"):
+    capture(work / name, "validation/" + name)
+for name in ("core-compile", "core-binaries", "integration-binaries", "precommit", "stride-repro-device"):
+    capture(Path(f"/tmp/index-plan-{name}.log"), f"validation/{name}.log.txt")
+capture(work / "initial-strided-native.log", "validation/initial-strided-native.log.txt")
+cpu_records = read("native-cpu-results.json") or []
+if cpu_records:
+    capture(work / "native-cpu-results.json", "validation/native-cpu-results.json")
+    capture(Path("/tmp/index-plan-native-cpu.log"), "validation/native-cpu.log.txt")
+if (work / "reindex-input-preflight.json").is_file():
+    capture(work / "reindex-input-preflight.json", "validation/reindex-input-preflight.json")
+repro = read("stride-repro-result.json")
+generated("stride-repro", Path(repro["sliced"]["work_dir"]))
+
+records = read("device-results.json") or []
+comparison = read("native-comparison.json") or []
+native_passed = len(records) == 28 and all(row["passed"] and not row["compile_only"] for row in records)
+native_passed = native_passed and len(comparison) == 14 and all(row["不同元素数"] == 0 for row in comparison)
+if native_passed:
+    capture(work / "device-results.json", "validation/device-results.json")
+    capture(work / "native-comparison.json", "validation/native-comparison.json")
+    capture(Path("/tmp/index-plan-core-device.log"), "validation/core-device.log.txt")
+    core_records = records
+else:
+    # 原生核的非连续视图诊断不计入生产布局对照通过数。
+    core_records = [row for row in read("initial-strided-results.json") if row["label"].endswith("-dsl")]
+dsl_count = sum(row["passed"] for row in core_records if row["label"].endswith("-dsl"))
+for row in core_records:
+    if row["passed"]:
+        source = work / "device-output" / row["label"] / "runs.pt"
+        capture(source, f"device-output/{row['label']}/runs.pt.gz", binary=True)
+
+integrations = {}
+for name in ("c1a", "c2a", "reindex"):
+    record = read(f"{name}-compile.json")
+    capture(work / f"{name}-compile.json", f"validation/{name}-compile.json")
+    capture(Path(f"/tmp/index-plan-{name}-compile.log"), f"validation/{name}-compile.log.txt")
+    root = Path(record["work_dir"])
+    generated(name, root)
+    for child in sorted((root / "next_levels").glob("*")):
+        generated(name + "/" + child.name, child)
+    result = read(f"{name}-result.json")
+    passed = bool(result and result["passed"] and not result["compile_only"])
+    integrations[name] = "PASS" if passed else "待设备验证"
+    if passed:
+        capture(work / f"{name}-result.json", f"validation/{name}-result.json")
+        capture(Path(f"/tmp/index-plan-{name}-device.log"), f"validation/{name}-device.log.txt")
+        for source in sorted((work / "device-output" / name).glob("*.pt")):
+            capture(source, f"device-output/{name}/{source.name}.gz", binary=True)
+        for tensor in ("request_ids", "token_to_req_indices", "compressed_lens", "num_tokens",
+                       "pool_block_ids", "pool_block_counts", "index_block_table"):
+            source = Path(result["work_dir"]) / "data/in" / f"{tensor}.pt"
+            if source.is_file():
+                capture(source, f"routing-inputs/{name}/{source.name}.gz", binary=True)
+if (work / "reindex-routing.json").is_file():
+    capture(work / "reindex-routing.json", "validation/reindex-routing.json")
+
+passed = native_passed and dsl_count == 14 and all(state == "PASS" for state in integrations.values())
+summary = {
+    "状态": "PASS" if passed else "待设备队列恢复后补齐验证",
+    "分支": "dsv4.1-dsl",
+    "模型基线": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=model, text=True).strip(),
+    "替换任务": "idx_plan_req",
+    "新任务": "dsl_idx_plan_req",
+    "DSL核函数": "plan_runs",
+    "调度": "一个 AIV worker，返回原有计划完成依赖，下游 MIX+syncall 打分及 TopK 不变。",
+    "元数据契约": "同一请求的连续 Query 最多六行一组；记录起止、最大可见长度、Query 映射和组数。C2A 中长度不超过 INDEX_TOPK 的行按零参与最大值。",
+    "编译": "28 项核心调用与三个完整 Attention 入口通过；两个核心程序和三个集成子程序的 A5 二进制编译通过。",
+    "DSL设备用例通过数": dsl_count,
+    "原核生产布局对照": "14 组完整元数据逐项一致" if native_passed else "已改为连续生产布局并重新编译，等待设备执行。",
+    "原核连续布局CPU检查": {"平台": "a5sim", "通过数": sum(row["passed"] for row in cpu_records),
+                           "说明": "仅校验对照脚本与连续布局，不计入 A5 实机结果。"},
+    "集成": integrations,
+    "保护区": "DSL 对带偏移、非连续视图、非有效行和输出保护区全部进行零容差 CPU 校验。",
+    "上游问题": "额外非连续原核用例和最小复现确认 pl.write 错写行距；已核对 main 与相关未合并 PR，并补充中文复现到既有 #3254。",
+    "问题链接": "https://github.com/hw-native-sys/pypto/issues/3254#issuecomment-6681261698",
+    "通信修改": False,
+    "框架修改": False,
+    "阈值降低": False,
+    "未执行": ["整网", "真实 checkpoint", "正式性能 A/B"],
+    "说明": "device-output 来自比较器 actual 参数；失败的非连续原核结果只作为诊断，不计入生产布局对照通过数。",
+    "文件": files,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"已归档 {len(files)} 个过程文件，状态：{summary['状态']}")

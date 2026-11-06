@@ -1,0 +1,14 @@
+{
+  "sliced": {
+    "passed": false,
+    "error": "Output(s) does not match golden: ['output']\n  'output' FAIL (compare)  shape=(5, 10) dtype=torch.int32\n    ratio_allclose fail: error_count=2/50 (ratio=4.0000%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=106 at (2, 5) (tol=0)\n    first 2 mismatches:\n    [25] actual=7, expected=-99, diff=106, tol=0\n    [31] actual=-99, expected=7, diff=106, tol=0",
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_sliced_20261106_170151_t54b8miu",
+    "compile_only": false
+  },
+  "direct": {
+    "passed": true,
+    "error": "",
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_direct_20261106_170155_xd8t_254",
+    "compile_only": false
+  }
+}

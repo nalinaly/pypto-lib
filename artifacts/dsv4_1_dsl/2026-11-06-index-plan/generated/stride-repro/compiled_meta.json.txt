@@ -1,0 +1,36 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "output",
+      "direction": "InOut",
+      "shape": [
+        5,
+        10
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "output",
+      "direction": "InOut",
+      "shape": [
+        5,
+        10
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    }
+  ],
+  "num_return_types": 1,
+  "return_aliases": [
+    0
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

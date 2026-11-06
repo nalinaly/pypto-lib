@@ -1,0 +1,85 @@
+import torch
+from simpler.task_interface import CallConfig, CommBufferSpec, DataType, TaskArgs, TensorArgType
+from pypto.runtime.tensor_arg import make_tensor_arg
+from pypto.runtime.distributed_runner import add_chip_tensor_arg, _submit_chip
+
+def _alloc_intermediates(tensors, world_size=1):
+    pass
+
+def l3_decode_c2a_full(orch, _args, config, *, tensors, callables, sub_ids, _keep, world_size, _domain_provider=None):
+    num_tokens__ssa_v0 = tensors["num_tokens__ssa_v0"]
+    LOCAL_T_DYN = tensors["x_hc__ssa_v0"].shape[0]
+    V41_LOCAL_T_DYN = tensors["pre_mix__ssa_v0"].shape[0]
+    V41_T_DYN = tensors["rope_cos__ssa_v0"].shape[0]
+    ORI_BLOCKS_DYN = tensors["window_cache__ssa_v0"].shape[0]
+    V41_ORI_BLOCKS_DYN = tensors["window_cache_scale__ssa_v0"].shape[0]
+    CMP_BLOCKS_DYN = tensors["compressed_cache__ssa_v0"].shape[0]
+    V41_CMP_BLOCKS_DYN = tensors["compressed_cache_scale__ssa_v0"].shape[0]
+    INDEX_BLOCKS_DYN = tensors["index_cache__ssa_v0"].shape[0]
+    V41_INDEX_BLOCKS_DYN = tensors["index_cache_scale__ssa_v0"].shape[0]
+    B_DYN = tensors["index_block_table__ssa_v0"].shape[0]
+    TABLE_DYN = tensors["index_block_table__ssa_v0"].shape[1]
+    Q_START_DYN = tensors["query_start_loc__ssa_v0"].shape[0]
+    V41_B_DYN = tensors["state_block_table__ssa_v0"].shape[0]
+    STATE_BLOCKS_DYN = tensors["state_cache__ssa_v0"].shape[0]
+    tensors["wq_a_scale_mx__ssa_v0"] = tensors["wq_a_scale__ssa_v0"]
+    tensors["wq_b_scale_mx__ssa_v0"] = tensors["wq_b_scale__ssa_v0"]
+    tensors["wkv_scale_mx__ssa_v0"] = tensors["wkv_scale__ssa_v0"]
+    tensors["wo_b_scale_mx__ssa_v0"] = tensors["wo_b_scale__ssa_v0"]
+    tensors["index_wq_b_scale_mx__ssa_v0"] = tensors["index_wq_b_scale__ssa_v0"]
+    _ta_0 = TaskArgs()
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["x_hc__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 0)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["pre_mix__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 1)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["hc_attn_fn__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 2)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["hc_attn_scale__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 3)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["hc_attn_base__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 4)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["attn_norm_weight__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 5)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wq_a__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 6)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wq_a_scale_mx__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 7)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["q_norm_weight__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 8)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wq_b__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 9)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wq_b_scale_mx__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 10)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wkv__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 11)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wkv_scale_mx__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 12)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["kv_norm_weight__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 13)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["attn_sink__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 14)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wo_a__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 15)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wo_a_scale__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 16)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wo_b__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 17)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["wo_b_scale_mx__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 18)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["rope_cos__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 19)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["rope_sin__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 20)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["window_slots__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 21)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["window_indices__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 22)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["window_cache__ssa_v0"], TensorArgType.INOUT, callables, "l2_decode_c2a_full", 23)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["window_cache_scale__ssa_v0"], TensorArgType.INOUT, callables, "l2_decode_c2a_full", 24)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["compressed_cache__ssa_v0"], TensorArgType.INOUT, callables, "l2_decode_c2a_full", 25)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["compressed_cache_scale__ssa_v0"], TensorArgType.INOUT, callables, "l2_decode_c2a_full", 26)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["token_to_req_indices__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 27)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["compressed_lens__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 28)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["index_cache__ssa_v0"], TensorArgType.INOUT, callables, "l2_decode_c2a_full", 29)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["index_cache_scale__ssa_v0"], TensorArgType.INOUT, callables, "l2_decode_c2a_full", 30)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["index_block_table__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 31)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["position_ids__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 32)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["compressed_rope_cos__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 33)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["compressed_rope_sin__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 34)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["compressor_wkv__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 35)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["compressor_wgate__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 36)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["query_start_loc__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 37)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["state_block_table__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 38)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["state_cache__ssa_v0"], TensorArgType.INOUT, callables, "l2_decode_c2a_full", 39)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["compressor_norm_weight__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 40)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["compressed_slots__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 41)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["index_wk__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 42)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["index_norm_weight__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 43)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["index_wq_b__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 44)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["index_wq_b_scale_mx__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 45)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["index_weights_proj__ssa_v0"], TensorArgType.INPUT, callables, "l2_decode_c2a_full", 46)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["topk_indices__ssa_v0"], TensorArgType.INOUT, callables, "l2_decode_c2a_full", 47)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["output__ssa_v0"], TensorArgType.OUTPUT_EXISTING, callables, "l2_decode_c2a_full", 48)
+    add_chip_tensor_arg(_ta_0, orch._worker, tensors["next_pre_mix__ssa_v0"], TensorArgType.OUTPUT_EXISTING, callables, "l2_decode_c2a_full", 49)
+    _ta_0.add_scalar(num_tokens__ssa_v0)
+    _keep.append(_ta_0)
+    _submit_chip(orch, callables["l2_decode_c2a_full"], _ta_0, config, 0)
+
+l3_decode_c2a_full._pypto_distributed_entry = True

@@ -1,0 +1,198 @@
+[
+  {
+    "label": "zero-0-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 10) dtype=torch.int32\n    ratio_allclose fail: error_count=2/50 (ratio=4.0000%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=999978 at (2, 5) (tol=0)\n    first 2 mismatches:\n    [25] actual=0, expected=-999978, diff=1e+06, tol=0\n    [31] actual=-999972, expected=0, diff=1e+06, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "zero-0-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "zero-1-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 10) dtype=torch.int32\n    ratio_allclose fail: error_count=2/50 (ratio=4.0000%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=999978 at (2, 5) (tol=0)\n    first 2 mismatches:\n    [25] actual=0, expected=-999978, diff=1e+06, tol=0\n    [31] actual=-999972, expected=0, diff=1e+06, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "zero-1-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "single-0-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 4) dtype=torch.int32\n    ratio_allclose fail: error_count=7/20 (ratio=35.0000%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=1.00051e+06 at (2, 1) (tol=0)\n    first 7 mismatches:\n    [3] actual=1, expected=-1000000, diff=1e+06, tol=0\n    [5] actual=513, expected=1, diff=512, tol=0\n    [7] actual=1, expected=-999996, diff=1e+06, tol=0\n    [8] actual=0, expected=-999995, diff=1e+06, tol=0\n    [9] actual=-999994, expected=513, diff=1.001e+06, tol=0\n    [13] actual=-999990, expected=1, diff=1e+06, tol=0\n    [14] actual=-999989, expected=0, diff=1e+06, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "single-0-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "single-1-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 4) dtype=torch.int32\n    ratio_allclose fail: error_count=7/20 (ratio=35.0000%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=1.00051e+06 at (2, 1) (tol=0)\n    first 7 mismatches:\n    [3] actual=1, expected=-1000000, diff=1e+06, tol=0\n    [5] actual=513, expected=1, diff=512, tol=0\n    [7] actual=1, expected=-999996, diff=1e+06, tol=0\n    [8] actual=0, expected=-999995, diff=1e+06, tol=0\n    [9] actual=-999994, expected=513, diff=1.001e+06, tol=0\n    [13] actual=-999990, expected=1, diff=1e+06, tol=0\n    [14] actual=-999989, expected=0, diff=1e+06, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "single-1-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "six-0-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 9) dtype=torch.int32\n    ratio_allclose fail: error_count=17/45 (ratio=37.7778%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=1.00076e+06 at (1, 6) (tol=0)\n    first 10 mismatches:\n    [8] actual=6, expected=-999995, diff=1e+06, tol=0\n    [10] actual=-999993, expected=6, diff=1e+06, tol=0\n    [15] actual=769, expected=-999988, diff=1.001e+06, tol=0\n    [19] actual=-999984, expected=769, diff=1.001e+06, tol=0\n    [22] actual=1, expected=-999981, diff=1e+06, tol=0\n    [23] actual=0, expected=-999980, diff=1e+06, tol=0\n    [24] actual=0, expected=-999979, diff=1e+06, tol=0\n    [25] actual=0, expected=-999978, diff=1e+06, tol=0\n    [26] actual=0, expected=-999977, diff=1e+06, tol=0\n    [27] actual=0, expected=-999976, diff=1e+06, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "six-0-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "six-1-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 9) dtype=torch.int32\n    ratio_allclose fail: error_count=17/45 (ratio=37.7778%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=1.00076e+06 at (1, 6) (tol=0)\n    first 10 mismatches:\n    [8] actual=6, expected=-999995, diff=1e+06, tol=0\n    [10] actual=-999993, expected=6, diff=1e+06, tol=0\n    [15] actual=769, expected=-999988, diff=1.001e+06, tol=0\n    [19] actual=-999984, expected=769, diff=1.001e+06, tol=0\n    [22] actual=1, expected=-999981, diff=1e+06, tol=0\n    [23] actual=0, expected=-999980, diff=1e+06, tol=0\n    [24] actual=0, expected=-999979, diff=1e+06, tol=0\n    [25] actual=0, expected=-999978, diff=1e+06, tol=0\n    [26] actual=0, expected=-999977, diff=1e+06, tol=0\n    [27] actual=0, expected=-999976, diff=1e+06, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "six-1-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "seven-0-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 10) dtype=torch.int32\n    ratio_allclose fail: error_count=22/50 (ratio=44.0000%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=1.00101e+06 at (1, 8) (tol=0)\n    first 10 mismatches:\n    [9] actual=6, expected=-999994, diff=1e+06, tol=0\n    [10] actual=7, expected=-999993, diff=1e+06, tol=0\n    [11] actual=-999992, expected=6, diff=1e+06, tol=0\n    [12] actual=-999991, expected=7, diff=1e+06, tol=0\n    [17] actual=769, expected=-999986, diff=1.001e+06, tol=0\n    [18] actual=1024, expected=-999985, diff=1.001e+06, tol=0\n    [21] actual=-999982, expected=769, diff=1.001e+06, tol=0\n    [22] actual=-999981, expected=1024, diff=1.001e+06, tol=0\n    [25] actual=2, expected=-999978, diff=1e+06, tol=0\n    [26] actual=0, expected=-999977, diff=1e+06, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "seven-0-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "seven-1-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 10) dtype=torch.int32\n    ratio_allclose fail: error_count=22/50 (ratio=44.0000%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=1.00101e+06 at (1, 8) (tol=0)\n    first 10 mismatches:\n    [9] actual=6, expected=-999994, diff=1e+06, tol=0\n    [10] actual=7, expected=-999993, diff=1e+06, tol=0\n    [11] actual=-999992, expected=6, diff=1e+06, tol=0\n    [12] actual=-999991, expected=7, diff=1e+06, tol=0\n    [17] actual=769, expected=-999986, diff=1.001e+06, tol=0\n    [18] actual=1024, expected=-999985, diff=1.001e+06, tol=0\n    [21] actual=-999982, expected=769, diff=1.001e+06, tol=0\n    [22] actual=-999981, expected=1024, diff=1.001e+06, tol=0\n    [25] actual=2, expected=-999978, diff=1e+06, tol=0\n    [26] actual=0, expected=-999977, diff=1e+06, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "seven-1-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "short-0-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 9) dtype=torch.int32\n    ratio_allclose fail: error_count=17/45 (ratio=37.7778%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=1.0005e+06 at (1, 6) (tol=0)\n    first 10 mismatches:\n    [8] actual=6, expected=-999995, diff=1e+06, tol=0\n    [10] actual=-999993, expected=6, diff=1e+06, tol=0\n    [15] actual=512, expected=-999988, diff=1e+06, tol=0\n    [19] actual=-999984, expected=512, diff=1e+06, tol=0\n    [22] actual=1, expected=-999981, diff=1e+06, tol=0\n    [23] actual=0, expected=-999980, diff=1e+06, tol=0\n    [24] actual=0, expected=-999979, diff=1e+06, tol=0\n    [25] actual=0, expected=-999978, diff=1e+06, tol=0\n    [26] actual=0, expected=-999977, diff=1e+06, tol=0\n    [27] actual=0, expected=-999976, diff=1e+06, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "short-0-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "short-1-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 9) dtype=torch.int32\n    ratio_allclose fail: error_count=17/45 (ratio=37.7778%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=1e+06 at (0, 8) (tol=0)\n    first 10 mismatches:\n    [8] actual=6, expected=-999995, diff=1e+06, tol=0\n    [10] actual=-999993, expected=6, diff=1e+06, tol=0\n    [15] actual=0, expected=-999988, diff=1e+06, tol=0\n    [19] actual=-999984, expected=0, diff=1e+06, tol=0\n    [22] actual=1, expected=-999981, diff=1e+06, tol=0\n    [23] actual=0, expected=-999980, diff=1e+06, tol=0\n    [24] actual=0, expected=-999979, diff=1e+06, tol=0\n    [25] actual=0, expected=-999978, diff=1e+06, tol=0\n    [26] actual=0, expected=-999977, diff=1e+06, tol=0\n    [27] actual=0, expected=-999976, diff=1e+06, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "short-1-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "mixed-0-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 20) dtype=torch.int32\n    ratio_allclose fail: error_count=36/100 (ratio=36.0000%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=1.00074e+06 at (1, 17) (tol=0)\n    first 10 mismatches:\n    [19] actual=6, expected=-999984, diff=1e+06, tol=0\n    [20] actual=7, expected=-999983, diff=1e+06, tol=0\n    [21] actual=9, expected=6, diff=3, tol=0\n    [22] actual=15, expected=7, diff=8, tol=0\n    [23] actual=-999980, expected=9, diff=1e+06, tol=0\n    [24] actual=-999979, expected=15, diff=1e+06, tol=0\n    [37] actual=769, expected=-999966, diff=1.001e+06, tol=0\n    [38] actual=769, expected=-999965, diff=1.001e+06, tol=0\n    [39] actual=513, expected=-999964, diff=1e+06, tol=0\n    [40] actual=769, expected=-999963, diff=1.001e+06, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "mixed-0-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "mixed-1-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 20) dtype=torch.int32\n    ratio_allclose fail: error_count=36/100 (ratio=36.0000%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=1.00074e+06 at (1, 17) (tol=0)\n    first 10 mismatches:\n    [19] actual=6, expected=-999984, diff=1e+06, tol=0\n    [20] actual=7, expected=-999983, diff=1e+06, tol=0\n    [21] actual=9, expected=6, diff=3, tol=0\n    [22] actual=15, expected=7, diff=8, tol=0\n    [23] actual=-999980, expected=9, diff=1e+06, tol=0\n    [24] actual=-999979, expected=15, diff=1e+06, tol=0\n    [37] actual=769, expected=-999966, diff=1.001e+06, tol=0\n    [38] actual=769, expected=-999965, diff=1.001e+06, tol=0\n    [39] actual=513, expected=-999964, diff=1e+06, tol=0\n    [40] actual=769, expected=-999963, diff=1.001e+06, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "mixed-1-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "decode72-0-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 75) dtype=torch.int32\n    ratio_allclose fail: error_count=134/375 (ratio=35.7333%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=1.00088e+06 at (1, 73) (tol=0)\n    first 10 mismatches:\n    [74] actual=6, expected=-999929, diff=9.999e+05, tol=0\n    [75] actual=7, expected=-999928, diff=9.999e+05, tol=0\n    [76] actual=9, expected=6, diff=3, tol=0\n    [77] actual=15, expected=7, diff=8, tol=0\n    [78] actual=16, expected=9, diff=7, tol=0\n    [79] actual=17, expected=15, diff=2, tol=0\n    [80] actual=23, expected=16, diff=7, tol=0\n    [81] actual=24, expected=17, diff=7, tol=0\n    [82] actual=26, expected=23, diff=3, tol=0\n    [83] actual=32, expected=24, diff=8, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "decode72-0-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  },
+  {
+    "label": "decode72-1-native",
+    "passed": false,
+    "error": "Output(s) does not match golden: ['runs']\n  'runs' FAIL (compare)  shape=(5, 75) dtype=torch.int32\n    ratio_allclose fail: error_count=132/375 (ratio=35.2000%, allowed<=0.0000%, threshold=0 pts)\n    atol=0 rtol=0\n    max abs diff=1.00088e+06 at (1, 73) (tol=0)\n    first 10 mismatches:\n    [74] actual=6, expected=-999929, diff=9.999e+05, tol=0\n    [75] actual=7, expected=-999928, diff=9.999e+05, tol=0\n    [76] actual=9, expected=6, diff=3, tol=0\n    [77] actual=15, expected=7, diff=8, tol=0\n    [78] actual=16, expected=9, diff=7, tol=0\n    [79] actual=17, expected=15, diff=2, tol=0\n    [80] actual=23, expected=16, diff=7, tol=0\n    [81] actual=24, expected=17, diff=7, tol=0\n    [82] actual=26, expected=23, diff=3, tol=0\n    [83] actual=32, expected=24, diff=8, tol=0",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_native_20261106_164752_hqwr9v39"
+  },
+  {
+    "label": "decode72-1-dsl",
+    "passed": true,
+    "error": "",
+    "compile_only": false,
+    "work_dir": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_plan_20261106_164753_h5knraew"
+  }
+]

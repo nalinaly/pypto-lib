@@ -1,0 +1,114 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "request_ids",
+      "direction": "In",
+      "shape": [
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "lengths",
+      "direction": "In",
+      "shape": [
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "runs",
+      "direction": "InOut",
+      "shape": [
+        4,
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    },
+    {
+      "name": "width",
+      "direction": "In",
+      "shape": null,
+      "dtype": "index",
+      "layout": null
+    },
+    {
+      "name": "skip_short",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "request_ids",
+      "direction": "In",
+      "shape": [
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "lengths",
+      "direction": "In",
+      "shape": [
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "runs",
+      "direction": "InOut",
+      "shape": [
+        4,
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    },
+    {
+      "name": "width",
+      "direction": "In",
+      "shape": null,
+      "dtype": "index",
+      "layout": null
+    },
+    {
+      "name": "skip_short",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "num_return_types": 1,
+  "return_aliases": [
+    2
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

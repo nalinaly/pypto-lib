@@ -20,6 +20,7 @@ from index_key_dsl import publish_index_rows
 from index_weight_dsl import project_index_weights
 from index_query_dsl import project_index_query
 from index_score_dsl import dispatch_score_topk
+from index_plan_dsl import plan_index_runs
 import pypto.language as pl
 from config import (
     B_DYN, FLASH, INDEX_BLOCKS_DYN, INDEX_CACHE_GROUP, INDEX_POOL_BLOCKS_DYN,
@@ -39,47 +40,6 @@ CANDIDATE_BLOCK_SIZE = FLASH.candidate_block_size
 CANDIDATE_TOPK_BLOCKS = FLASH.candidate_topk_blocks
 
 _SCALE_COUNT = INDEX_DIM // INDEX_CACHE_GROUP
-
-
-@pl.jit.inline(auto_scope=False)
-def _plan_index_runs(
-    request_ids: pl.Tensor,
-    lengths: pl.Tensor,
-    runs: pl.Tensor,
-    num_tokens: pl.Scalar[pl.INT32],
-    width: pl.Scalar[pl.INDEX],
-    skip_short: pl.constexpr,
-):
-    """Plan contiguous request groups of at most six query rows."""
-    with pl.at(level=pl.Level.CORE_GROUP, name_hint="idx_plan_req") as plan_tid:
-        run_count = pl.cast(0, pl.INT32)
-        run_start = pl.cast(0, pl.INT32)
-        previous_request = pl.cast(-1, pl.INT32)
-        maximum_visible = pl.cast(0, pl.INT32)
-        for token in pl.range(num_tokens):
-            request = pl.read(request_ids, [token])
-            if token > 0:
-                if request != previous_request or token - run_start == 6:
-                    pl.write(runs, [0, run_count], run_start)
-                    pl.write(runs, [1, run_count], pl.cast(token, pl.INT32))
-                    pl.write(runs, [2, run_count], maximum_visible)
-                    run_count = run_count + pl.cast(1, pl.INT32)
-                    run_start = pl.cast(token, pl.INT32)
-                    maximum_visible = pl.cast(0, pl.INT32)
-            visible = pl.cast(pl.max(0, pl.min(pl.read(lengths, [token]), width)), pl.INT32)
-            if skip_short:
-                if visible <= INDEX_TOPK:
-                    visible = pl.cast(0, pl.INT32)
-            maximum_visible = pl.max(maximum_visible, visible)
-            pl.write(runs, [3, token + 1], run_count)
-            previous_request = request
-        if num_tokens > 0:
-            pl.write(runs, [0, run_count], run_start)
-            pl.write(runs, [1, run_count], num_tokens)
-            pl.write(runs, [2, run_count], maximum_visible)
-            run_count = run_count + pl.cast(1, pl.INT32)
-        pl.write(runs, [3, 0], run_count)
-    return plan_tid
 
 
 @pl.jit.inline(auto_scope=False)
@@ -260,7 +220,10 @@ def score_select_paged(
     width = pl.tensor.dim(scores, 1)
     capacity = pl.tensor.dim(output, 0)
     runs = pl.create_tensor([4, capacity + 1], dtype=pl.INT32)
-    plan_tid = _plan_index_runs(request_ids, lengths, runs, num_tokens, width, c2a)
+    direct_short = pl.cast(0, pl.INT32)
+    if c2a:
+        direct_short = pl.cast(1, pl.INT32)
+    plan_tid = plan_index_runs(request_ids, lengths, runs, num_tokens, width, direct_short)
     run_count = pl.read(runs, [3, 0])
     workers = pl.cast(pl.system.available_cluster_count(), pl.INDEX)
     panels = (width + 255) // 256
@@ -274,9 +237,6 @@ def score_select_paged(
             emit_scores = pl.cast(1, pl.INT32)
     active_tokens = pl.cast(num_tokens, pl.INT32)
     gathered_rows = pl.cast(0, pl.INDEX)
-    direct_short = pl.cast(0, pl.INT32)
-    if c2a:
-        direct_short = pl.cast(1, pl.INT32)
     query_rows = pl.slice(query, [capacity, INDEX_H * INDEX_DIM // 2], [0, 0])
     scale_rows = pl.slice(query_scale, [capacity, INDEX_H * (INDEX_DIM // INDEX_CACHE_GROUP)], [0, 0])
     weight_rows = pl.slice(weights, [capacity, INDEX_H], [0, 0])

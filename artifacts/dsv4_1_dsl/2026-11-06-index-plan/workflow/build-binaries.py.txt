@@ -1,0 +1,29 @@
+"""在 CPU 编译 A5 核函数及编排，不占用设备。"""
+
+import argparse
+import json
+from pathlib import Path
+
+from pypto.runtime import device_runner
+
+
+work = Path(__file__).resolve().parent
+parser = argparse.ArgumentParser()
+parser.add_argument("--integration", action="store_true")
+args = parser.parse_args()
+records = json.loads((work / "compiled.json").read_text())
+directories = list(dict.fromkeys(Path(record["work_dir"]) for record in records))
+if args.integration:
+    directories = []
+    for name in ("c1a", "c2a", "reindex"):
+        record = json.loads((work / f"{name}-compile.json").read_text())
+        root = Path(record["work_dir"]) / "next_levels"
+        directories.extend(sorted(source.parent for source in root.rglob("kernel_config.py")))
+results = []
+for directory in directories:
+    print("[A5 二进制编译] " + str(directory), flush=True)
+    device_runner._compile_and_assemble(directory, "a5")
+    results.append({"work_dir": str(directory), "platform": "a5", "passed": True})
+name = "integration-binaries.json" if args.integration else "core-binaries.json"
+(work / name).write_text(json.dumps(results, ensure_ascii=False, indent=2) + "\n")
+print(f"[A5 二进制编译] 通过 {len(results)} 组", flush=True)

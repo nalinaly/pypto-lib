@@ -1,0 +1,577 @@
+{
+  "状态": "PASS",
+  "分支": "dsv4.1-dsl",
+  "模型基线": "c4fbcf516526c756119195215f1873b67d5b6436",
+  "替换任务": "idx_plan_req",
+  "新任务": "dsl_idx_plan_req",
+  "DSL核函数": "plan_runs",
+  "调度": "一个 AIV worker，返回原有计划完成依赖，下游 MIX+syncall 打分及 TopK 不变。",
+  "元数据契约": "同一请求的连续 Query 最多六行一组；记录起止、最大可见长度、Query 映射和组数。C2A 中长度不超过 INDEX_TOPK 的行按零参与最大值。",
+  "编译": "28 项核心调用与三个完整 Attention 入口通过；两个核心程序和三个集成子程序的 A5 二进制编译通过。",
+  "DSL设备用例通过数": 14,
+  "原核生产布局对照": "14 组完整元数据逐项一致",
+  "原核连续布局CPU检查": {
+    "平台": "a5sim",
+    "通过数": 14,
+    "说明": "仅校验对照脚本与连续布局，不计入 A5 实机结果。"
+  },
+  "集成": {
+    "c1a": "PASS",
+    "c2a": "PASS",
+    "reindex": "PASS"
+  },
+  "保护区": "DSL 对带偏移、非连续视图、非有效行和输出保护区全部进行零容差 CPU 校验。",
+  "上游问题": "额外非连续原核用例和最小复现确认 pl.write 错写行距；已核对 main 与相关未合并 PR，并补充中文复现到既有 #3254。",
+  "问题链接": "https://github.com/hw-native-sys/pypto/issues/3254#issuecomment-6681261698",
+  "通信修改": false,
+  "框架修改": false,
+  "阈值降低": false,
+  "未执行": [
+    "整网",
+    "真实 checkpoint",
+    "正式性能 A/B"
+  ],
+  "说明": "device-output 来自比较器 actual 参数；失败的非连续原核结果只作为诊断，不计入生产布局对照通过数。",
+  "文件": [
+    {
+      "文件": "generated/native/kernel_config.py.txt",
+      "字节数": 971
+    },
+    {
+      "文件": "generated/native/compiled_meta.json.txt",
+      "字节数": 1905
+    },
+    {
+      "文件": "generated/native/orchestration/validate_native.cpp.txt",
+      "字节数": 2787
+    },
+    {
+      "文件": "generated/native/kernels/idx_plan_req.cpp.txt",
+      "字节数": 7899
+    },
+    {
+      "文件": "generated/native/kernels/idx_plan_req_0.cpp.txt",
+      "字节数": 7815
+    },
+    {
+      "文件": "generated/dsl/kernel_config.py.txt",
+      "字节数": 1108
+    },
+    {
+      "文件": "generated/dsl/compiled_meta.json.txt",
+      "字节数": 1905
+    },
+    {
+      "文件": "generated/dsl/orchestration/validate_plan.cpp.txt",
+      "字节数": 2711
+    },
+    {
+      "文件": "generated/dsl/foreign/plan_runs/entry.cpp.txt",
+      "字节数": 3079
+    },
+    {
+      "文件": "generated/dsl/foreign/plan_runs/device_source.hpp.txt",
+      "字节数": 29432
+    },
+    {
+      "文件": "generated/dsl/foreign/plan_runs/manifest.json.txt",
+      "字节数": 2229
+    },
+    {
+      "文件": "model-snapshot/index_plan_dsl.py.txt",
+      "字节数": 8147
+    },
+    {
+      "文件": "model-snapshot/decode_indexer.py.txt",
+      "字节数": 28005
+    },
+    {
+      "文件": "workflow/decode_indexer_baseline.py.txt",
+      "字节数": 29780
+    },
+    {
+      "文件": "workflow/native_plan.py.txt",
+      "字节数": 1083
+    },
+    {
+      "文件": "workflow/native_plan_strided.py.txt.txt",
+      "字节数": 1108
+    },
+    {
+      "文件": "workflow/compare-native.py.txt",
+      "字节数": 3824
+    },
+    {
+      "文件": "workflow/run-integration.py.txt",
+      "字节数": 3950
+    },
+    {
+      "文件": "workflow/run-case.sh.txt",
+      "字节数": 387
+    },
+    {
+      "文件": "workflow/build-binaries.py.txt",
+      "字节数": 1250
+    },
+    {
+      "文件": "workflow/scalar-write-stride-repro.py.txt",
+      "字节数": 2239
+    },
+    {
+      "文件": "workflow/archive.py.txt",
+      "字节数": 8959
+    },
+    {
+      "文件": "workflow/check-native-cpu.py.txt",
+      "字节数": 1651
+    },
+    {
+      "文件": "workflow/run_case.py.txt",
+      "字节数": 613
+    },
+    {
+      "文件": "validation/compiled.json",
+      "字节数": 6237
+    },
+    {
+      "文件": "validation/core-binaries.json",
+      "字节数": 347
+    },
+    {
+      "文件": "validation/integration-binaries.json",
+      "字节数": 630
+    },
+    {
+      "文件": "validation/upstream-review.json",
+      "字节数": 575
+    },
+    {
+      "文件": "validation/stride-repro-result.json",
+      "字节数": 777
+    },
+    {
+      "文件": "validation/initial-strided-results.json",
+      "字节数": 16846
+    },
+    {
+      "文件": "validation/core-compile.log.txt",
+      "字节数": 2594
+    },
+    {
+      "文件": "validation/core-binaries.log.txt",
+      "字节数": 282
+    },
+    {
+      "文件": "validation/integration-binaries.log.txt",
+      "字节数": 517
+    },
+    {
+      "文件": "validation/precommit.log.txt",
+      "字节数": 320
+    },
+    {
+      "文件": "validation/stride-repro-device.log.txt",
+      "字节数": 12063
+    },
+    {
+      "文件": "validation/initial-strided-native.log.txt",
+      "字节数": 176821
+    },
+    {
+      "文件": "validation/native-cpu-results.json",
+      "字节数": 3295
+    },
+    {
+      "文件": "validation/native-cpu.log.txt",
+      "字节数": 50645
+    },
+    {
+      "文件": "validation/reindex-input-preflight.json",
+      "字节数": 366
+    },
+    {
+      "文件": "generated/stride-repro/kernel_config.py.txt",
+      "字节数": 748
+    },
+    {
+      "文件": "generated/stride-repro/compiled_meta.json.txt",
+      "字节数": 539
+    },
+    {
+      "文件": "generated/stride-repro/orchestration/sliced.cpp.txt",
+      "字节数": 1148
+    },
+    {
+      "文件": "generated/stride-repro/kernels/scalar_slice_write.cpp.txt",
+      "字节数": 2233
+    },
+    {
+      "文件": "validation/device-results.json",
+      "字节数": 6265
+    },
+    {
+      "文件": "validation/native-comparison.json",
+      "字节数": 2091
+    },
+    {
+      "文件": "validation/core-device.log.txt",
+      "字节数": 179860
+    },
+    {
+      "文件": "device-output/zero-0-native/runs.pt.gz",
+      "字节数": 680
+    },
+    {
+      "文件": "device-output/zero-0-dsl/runs.pt.gz",
+      "字节数": 714
+    },
+    {
+      "文件": "device-output/zero-1-native/runs.pt.gz",
+      "字节数": 680
+    },
+    {
+      "文件": "device-output/zero-1-dsl/runs.pt.gz",
+      "字节数": 714
+    },
+    {
+      "文件": "device-output/single-0-native/runs.pt.gz",
+      "字节数": 614
+    },
+    {
+      "文件": "device-output/single-0-dsl/runs.pt.gz",
+      "字节数": 650
+    },
+    {
+      "文件": "device-output/single-1-native/runs.pt.gz",
+      "字节数": 614
+    },
+    {
+      "文件": "device-output/single-1-dsl/runs.pt.gz",
+      "字节数": 650
+    },
+    {
+      "文件": "device-output/six-0-native/runs.pt.gz",
+      "字节数": 658
+    },
+    {
+      "文件": "device-output/six-0-dsl/runs.pt.gz",
+      "字节数": 696
+    },
+    {
+      "文件": "device-output/six-1-native/runs.pt.gz",
+      "字节数": 658
+    },
+    {
+      "文件": "device-output/six-1-dsl/runs.pt.gz",
+      "字节数": 696
+    },
+    {
+      "文件": "device-output/seven-0-native/runs.pt.gz",
+      "字节数": 668
+    },
+    {
+      "文件": "device-output/seven-0-dsl/runs.pt.gz",
+      "字节数": 706
+    },
+    {
+      "文件": "device-output/seven-1-native/runs.pt.gz",
+      "字节数": 668
+    },
+    {
+      "文件": "device-output/seven-1-dsl/runs.pt.gz",
+      "字节数": 706
+    },
+    {
+      "文件": "device-output/short-0-native/runs.pt.gz",
+      "字节数": 660
+    },
+    {
+      "文件": "device-output/short-0-dsl/runs.pt.gz",
+      "字节数": 694
+    },
+    {
+      "文件": "device-output/short-1-native/runs.pt.gz",
+      "字节数": 660
+    },
+    {
+      "文件": "device-output/short-1-dsl/runs.pt.gz",
+      "字节数": 697
+    },
+    {
+      "文件": "device-output/mixed-0-native/runs.pt.gz",
+      "字节数": 731
+    },
+    {
+      "文件": "device-output/mixed-0-dsl/runs.pt.gz",
+      "字节数": 780
+    },
+    {
+      "文件": "device-output/mixed-1-native/runs.pt.gz",
+      "字节数": 731
+    },
+    {
+      "文件": "device-output/mixed-1-dsl/runs.pt.gz",
+      "字节数": 780
+    },
+    {
+      "文件": "device-output/decode72-0-native/runs.pt.gz",
+      "字节数": 1010
+    },
+    {
+      "文件": "device-output/decode72-0-dsl/runs.pt.gz",
+      "字节数": 1137
+    },
+    {
+      "文件": "device-output/decode72-1-native/runs.pt.gz",
+      "字节数": 1001
+    },
+    {
+      "文件": "device-output/decode72-1-dsl/runs.pt.gz",
+      "字节数": 1129
+    },
+    {
+      "文件": "validation/c1a-compile.json",
+      "字节数": 184
+    },
+    {
+      "文件": "validation/c1a-compile.log.txt",
+      "字节数": 301
+    },
+    {
+      "文件": "generated/c1a/distributed_meta.json.txt",
+      "字节数": 8634
+    },
+    {
+      "文件": "generated/c1a/orchestration/host_orch.py.txt",
+      "字节数": 8299
+    },
+    {
+      "文件": "generated/c1a/l2_decode_c1a_full/kernel_config.py.txt",
+      "字节数": 17342
+    },
+    {
+      "文件": "generated/c1a/l2_decode_c1a_full/orchestration/l2_decode_c1a_full.cpp.txt",
+      "字节数": 166850
+    },
+    {
+      "文件": "generated/c1a/l2_decode_c1a_full/foreign/plan_runs/entry.cpp.txt",
+      "字节数": 3079
+    },
+    {
+      "文件": "generated/c1a/l2_decode_c1a_full/foreign/plan_runs/device_source.hpp.txt",
+      "字节数": 29432
+    },
+    {
+      "文件": "generated/c1a/l2_decode_c1a_full/foreign/plan_runs/manifest.json.txt",
+      "字节数": 2229
+    },
+    {
+      "文件": "validation/c1a-result.json",
+      "字节数": 185
+    },
+    {
+      "文件": "validation/c1a-device.log.txt",
+      "字节数": 17276
+    },
+    {
+      "文件": "device-output/c1a/next_pre_mix.pt.gz",
+      "字节数": 1720
+    },
+    {
+      "文件": "device-output/c1a/output.pt.gz",
+      "字节数": 5467861
+    },
+    {
+      "文件": "device-output/c1a/pool_block_counts.pt.gz",
+      "字节数": 620
+    },
+    {
+      "文件": "device-output/c1a/pool_block_ids.pt.gz",
+      "字节数": 4615
+    },
+    {
+      "文件": "device-output/c1a/topk_indices.pt.gz",
+      "字节数": 58145
+    },
+    {
+      "文件": "routing-inputs/c1a/request_ids.pt.gz",
+      "字节数": 638
+    },
+    {
+      "文件": "routing-inputs/c1a/compressed_lens.pt.gz",
+      "字节数": 633
+    },
+    {
+      "文件": "routing-inputs/c1a/num_tokens.pt.gz",
+      "字节数": 598
+    },
+    {
+      "文件": "routing-inputs/c1a/index_block_table.pt.gz",
+      "字节数": 1871
+    },
+    {
+      "文件": "validation/c2a-compile.json",
+      "字节数": 184
+    },
+    {
+      "文件": "validation/c2a-compile.log.txt",
+      "字节数": 802
+    },
+    {
+      "文件": "generated/c2a/distributed_meta.json.txt",
+      "字节数": 9165
+    },
+    {
+      "文件": "generated/c2a/orchestration/host_orch.py.txt",
+      "字节数": 8767
+    },
+    {
+      "文件": "generated/c2a/l2_decode_c2a_full/kernel_config.py.txt",
+      "字节数": 17963
+    },
+    {
+      "文件": "generated/c2a/l2_decode_c2a_full/orchestration/l2_decode_c2a_full.cpp.txt",
+      "字节数": 194318
+    },
+    {
+      "文件": "generated/c2a/l2_decode_c2a_full/foreign/plan_runs/entry.cpp.txt",
+      "字节数": 3079
+    },
+    {
+      "文件": "generated/c2a/l2_decode_c2a_full/foreign/plan_runs/device_source.hpp.txt",
+      "字节数": 29432
+    },
+    {
+      "文件": "generated/c2a/l2_decode_c2a_full/foreign/plan_runs/manifest.json.txt",
+      "字节数": 2229
+    },
+    {
+      "文件": "validation/c2a-result.json",
+      "字节数": 185
+    },
+    {
+      "文件": "validation/c2a-device.log.txt",
+      "字节数": 17761
+    },
+    {
+      "文件": "device-output/c2a/next_pre_mix.pt.gz",
+      "字节数": 1714
+    },
+    {
+      "文件": "device-output/c2a/output.pt.gz",
+      "字节数": 5465478
+    },
+    {
+      "文件": "device-output/c2a/topk_indices.pt.gz",
+      "字节数": 61064
+    },
+    {
+      "文件": "routing-inputs/c2a/token_to_req_indices.pt.gz",
+      "字节数": 650
+    },
+    {
+      "文件": "routing-inputs/c2a/compressed_lens.pt.gz",
+      "字节数": 628
+    },
+    {
+      "文件": "routing-inputs/c2a/num_tokens.pt.gz",
+      "字节数": 598
+    },
+    {
+      "文件": "routing-inputs/c2a/index_block_table.pt.gz",
+      "字节数": 1438
+    },
+    {
+      "文件": "validation/reindex-compile.json",
+      "字节数": 187
+    },
+    {
+      "文件": "validation/reindex-compile.log.txt",
+      "字节数": 541
+    },
+    {
+      "文件": "generated/reindex/distributed_meta.json.txt",
+      "字节数": 7436
+    },
+    {
+      "文件": "generated/reindex/orchestration/host_orch.py.txt",
+      "字节数": 7425
+    },
+    {
+      "文件": "generated/reindex/l2_decode_c1a_reindex/kernel_config.py.txt",
+      "字节数": 16799
+    },
+    {
+      "文件": "generated/reindex/l2_decode_c1a_reindex/orchestration/l2_decode_c1a_reindex.cpp.txt",
+      "字节数": 166222
+    },
+    {
+      "文件": "generated/reindex/l2_decode_c1a_reindex/foreign/plan_runs/entry.cpp.txt",
+      "字节数": 3079
+    },
+    {
+      "文件": "generated/reindex/l2_decode_c1a_reindex/foreign/plan_runs/device_source.hpp.txt",
+      "字节数": 29432
+    },
+    {
+      "文件": "generated/reindex/l2_decode_c1a_reindex/foreign/plan_runs/manifest.json.txt",
+      "字节数": 2229
+    },
+    {
+      "文件": "validation/reindex-result.json",
+      "字节数": 188
+    },
+    {
+      "文件": "validation/reindex-device.log.txt",
+      "字节数": 17301
+    },
+    {
+      "文件": "device-output/reindex/next_pre_mix.pt.gz",
+      "字节数": 737
+    },
+    {
+      "文件": "device-output/reindex/output.pt.gz",
+      "字节数": 532653
+    },
+    {
+      "文件": "device-output/reindex/pool_block_counts.pt.gz",
+      "字节数": 613
+    },
+    {
+      "文件": "device-output/reindex/pool_block_ids.pt.gz",
+      "字节数": 1601
+    },
+    {
+      "文件": "device-output/reindex/topk_indices.pt.gz",
+      "字节数": 6296
+    },
+    {
+      "文件": "routing-inputs/reindex/request_ids.pt.gz",
+      "字节数": 604
+    },
+    {
+      "文件": "routing-inputs/reindex/compressed_lens.pt.gz",
+      "字节数": 621
+    },
+    {
+      "文件": "routing-inputs/reindex/num_tokens.pt.gz",
+      "字节数": 599
+    },
+    {
+      "文件": "routing-inputs/reindex/pool_block_ids.pt.gz",
+      "字节数": 1601
+    },
+    {
+      "文件": "routing-inputs/reindex/pool_block_counts.pt.gz",
+      "字节数": 613
+    },
+    {
+      "文件": "routing-inputs/reindex/index_block_table.pt.gz",
+      "字节数": 685
+    },
+    {
+      "文件": "validation/reindex-routing.json",
+      "字节数": 269
+    }
+  ]
+}
