@@ -1,0 +1,1363 @@
+// CANNBOTDSL_HOST_ABI_VERSION=9
+#include "c_api/asc_simd.h"
+#include "basic_api/reg_compute/kernel_reg_compute_vec_binary_intf.h"
+#include "acl/acl_rt.h"
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+
+#if defined(__NPU_ARCH__) && (__NPU_ARCH__ == 3510)
+namespace cannbotdsl_92 {
+
+__aicore__ inline int8_t cannbotdsl_load_dev(__gm__ int8_t* addr)
+{
+    return ld_dev(reinterpret_cast<__gm__ uint8_t*>(addr), 0);
+}
+
+__aicore__ inline uint8_t cannbotdsl_load_dev(__gm__ uint8_t* addr)
+{
+    return ld_dev(addr, 0);
+}
+
+__aicore__ inline int16_t cannbotdsl_load_dev(__gm__ int16_t* addr)
+{
+    return ld_dev(reinterpret_cast<__gm__ uint16_t*>(addr), 0);
+}
+
+__aicore__ inline uint16_t cannbotdsl_load_dev(__gm__ uint16_t* addr)
+{
+    return ld_dev(addr, 0);
+}
+
+__aicore__ inline int32_t cannbotdsl_load_dev(__gm__ int32_t* addr)
+{
+    return ld_dev(reinterpret_cast<__gm__ uint32_t*>(addr), 0);
+}
+
+__aicore__ inline uint32_t cannbotdsl_load_dev(__gm__ uint32_t* addr)
+{
+    return ld_dev(addr, 0);
+}
+
+__aicore__ inline int64_t cannbotdsl_load_dev(__gm__ int64_t* addr)
+{
+    return static_cast<int64_t>(ld_dev(reinterpret_cast<__gm__ uint64_t*>(addr), 0));
+}
+
+__aicore__ inline uint64_t cannbotdsl_load_dev(__gm__ uint64_t* addr)
+{
+    return ld_dev(addr, 0);
+}
+
+__aicore__ inline int64_t cannbotdsl_get_squeeze_status()
+{
+    return get_ar();
+}
+
+__aicore__ inline bool cannbotdsl_is_aic()
+{
+    if ASC_IS_AIC { return true; }
+    return false;
+}
+
+__aicore__ inline bool cannbotdsl_is_aiv()
+{
+    if ASC_IS_AIV { return true; }
+    return false;
+}
+
+__aicore__ inline void cannbotdsl_set_atomic_add_int32()
+{
+    set_atomic_add();
+    set_atomic_s32();
+}
+
+__aicore__ inline void cannbotdsl_set_l0c_copy_nz_para(
+    uint16_t matrix_num, uint16_t src_nz_matrix_stride, uint32_t dst_matrix_stride)
+{
+    if ASC_IS_AIC {
+        uint64_t config = (static_cast<uint64_t>(dst_matrix_stride) << 32) |
+                          (static_cast<uint64_t>(src_nz_matrix_stride) << 16) | matrix_num;
+        set_loop3_para(config);
+    }
+}
+
+__aicore__ inline void cannbotdsl_set_l0c_copy_channel_para(uint16_t src_nz_fractal_stride)
+{
+    if ASC_IS_AIC {
+        set_channel_para(static_cast<uint64_t>(src_nz_fractal_stride) << 48);
+    }
+}
+
+__aicore__ inline void cannbotdsl_set_l12l0a_3d_padding(uint64_t config)
+{
+    if ASC_IS_AIC {
+        set_padding(config);
+    }
+}
+
+#define CANNBOTDSL_DEFINE_UPDATE_ADDR_REG(BXX)                                                        \
+    __simd_callee__ inline auto cannbotdsl_update_addr_reg_##BXX(uint32_t offset)                    \
+    {                                                                                                 \
+        if ASC_IS_AIV { return vag_##BXX(offset); }                                                   \
+        return decltype(vag_##BXX(offset)){};                                                         \
+    }                                                                                                 \
+    __simd_callee__ inline auto cannbotdsl_update_addr_reg_##BXX(                                    \
+        uint32_t offset0, uint32_t offset1)                                                           \
+    {                                                                                                 \
+        if ASC_IS_AIV { return vag_##BXX(offset0, offset1); }                                         \
+        return decltype(vag_##BXX(offset0, offset1)){};                                               \
+    }                                                                                                 \
+    __simd_callee__ inline auto cannbotdsl_update_addr_reg_##BXX(                                    \
+        uint32_t offset0, uint32_t offset1, uint32_t offset2)                                         \
+    {                                                                                                 \
+        if ASC_IS_AIV { return vag_##BXX(offset0, offset1, offset2); }                                \
+        return decltype(vag_##BXX(offset0, offset1, offset2)){};                                      \
+    }                                                                                                 \
+    __simd_callee__ inline auto cannbotdsl_update_addr_reg_##BXX(                                    \
+        uint32_t offset0, uint32_t offset1, uint32_t offset2, uint32_t offset3)                       \
+    {                                                                                                 \
+        if ASC_IS_AIV { return vag_##BXX(offset0, offset1, offset2, offset3); }                       \
+        return decltype(vag_##BXX(offset0, offset1, offset2, offset3)){};                             \
+    }
+
+CANNBOTDSL_DEFINE_UPDATE_ADDR_REG(b8)
+CANNBOTDSL_DEFINE_UPDATE_ADDR_REG(b16)
+CANNBOTDSL_DEFINE_UPDATE_ADDR_REG(b32)
+#undef CANNBOTDSL_DEFINE_UPDATE_ADDR_REG
+
+#define CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(VECTOR_TYPE)                                               \
+    __simd_callee__ inline void cannbotdsl_duplicate_highest(                                         \
+        VECTOR_TYPE& dst, VECTOR_TYPE src, vector_bool mask)                                         \
+    {                                                                                                 \
+        if ASC_IS_AIV { vdup(dst, src, mask, POS_HIGHEST, MODE_ZEROING); }                            \
+    }                                                                                                 \
+    __simd_callee__ inline void cannbotdsl_duplicate_merge(                                           \
+        VECTOR_TYPE& dst, VECTOR_TYPE src, vector_bool mask)                                         \
+    {                                                                                                 \
+        if ASC_IS_AIV { vdup(dst, src, mask, POS_LOWEST, MODE_MERGING); }                             \
+    }                                                                                                 \
+    __simd_callee__ inline void cannbotdsl_duplicate_highest_merge(                                   \
+        VECTOR_TYPE& dst, VECTOR_TYPE src, vector_bool mask)                                         \
+    {                                                                                                 \
+        if ASC_IS_AIV { vdup(dst, src, mask, POS_HIGHEST, MODE_MERGING); }                            \
+    }
+
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_uint8_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_int8_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_fp8_e4m3fn_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_fp8_e5m2_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_fp8_e8m0_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_uint16_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_int16_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_half)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_bfloat16_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_uint32_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_int32_t)
+CANNBOTDSL_DEFINE_DUPLICATE_VECTOR(vector_float)
+#undef CANNBOTDSL_DEFINE_DUPLICATE_VECTOR
+
+#define CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(VECTOR_TYPE, SCALAR_TYPE)                                  \
+    __simd_callee__ inline void cannbotdsl_duplicate_scalar_merge(                                    \
+        VECTOR_TYPE& dst, SCALAR_TYPE value, vector_bool mask)                                       \
+    {                                                                                                 \
+        if ASC_IS_AIV { vdup(dst, value, mask, MODE_MERGING); }                                       \
+    }
+
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_uint8_t, uint8_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_int8_t, int8_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_fp8_e4m3fn_t, fp8_e4m3fn_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_fp8_e5m2_t, fp8_e5m2_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_fp8_e8m0_t, fp8_e8m0_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_uint16_t, uint16_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_int16_t, int16_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_half, half)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_bfloat16_t, bfloat16_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_uint32_t, uint32_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_int32_t, int32_t)
+CANNBOTDSL_DEFINE_DUPLICATE_SCALAR(vector_float, float)
+#undef CANNBOTDSL_DEFINE_DUPLICATE_SCALAR
+
+__simd_callee__ inline void cannbotdsl_pack_to_low(vector_uint8_t& dst, vector_uint16_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, LOWER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_low(vector_uint8_t& dst, vector_int16_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, LOWER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_low(vector_uint16_t& dst, vector_uint32_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, LOWER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_low(vector_uint16_t& dst, vector_int32_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, LOWER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_low(vector_bool& dst, vector_bool src)
+{
+    if ASC_IS_AIV { ppack(dst, src, LOWER); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_high(vector_uint8_t& dst, vector_uint16_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, HIGHER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_high(vector_uint8_t& dst, vector_int16_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, HIGHER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_high(vector_uint16_t& dst, vector_uint32_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, HIGHER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_high(vector_uint16_t& dst, vector_int32_t src)
+{
+    if ASC_IS_AIV { vpack(dst, src, HIGHER, MODE_UNKNOWN); }
+}
+
+__simd_callee__ inline void cannbotdsl_pack_to_high(vector_bool& dst, vector_bool src)
+{
+    if ASC_IS_AIV { ppack(dst, src, HIGHER); }
+}
+
+// Stable bfloat16 multiply-add. CANN 9.1 and 9.2 declare asc_madd only for
+// half/float while newer SDKs add the bfloat16 overload. All versions lower
+// to the same dav-3510 vmadd primitive, so generated kernels call this
+// compatibility layer instead of the version-specific public ABI.
+__simd_callee__ inline void cannbotdsl_madd_bfloat16(
+    vector_bfloat16_t& dst, vector_bfloat16_t src0, vector_bfloat16_t src1, vector_bool mask)
+{
+    if ASC_IS_AIV { vmadd(dst, src0, src1, mask, MODE_ZEROING); }
+}
+
+__simd_callee__ inline void cannbotdsl_loadalign_unpack4(
+    vector_uint8_t& dst, __ubuf__ uint8_t* src)
+{
+    if ASC_IS_AIV { vlds(dst, src, 0, UNPK4_B8); }
+}
+
+__simd_callee__ inline void cannbotdsl_storealign_pack_quarter(
+    __ubuf__ float* dst, vector_float src, vector_bool mask)
+{
+    if ASC_IS_AIV { vsts(src, dst, 0, PK4_B32, mask); }
+}
+
+__simd_callee__ inline void cannbotdsl_storealign_squeeze_status_postupdate(
+    __ubuf__ uint32_t*& dst, int32_t offset)
+{
+    if ASC_IS_AIV { sprsts(SPR_AR, dst, offset, POST_UPDATE); }
+}
+
+__simd_callee__ inline void cannbotdsl_squeeze_store_init()
+{
+    if ASC_IS_AIV { sprclr(SPR_AR); }
+}
+
+#define CANNBOTDSL_DEFINE_SQUEEZE_STORE(SCALAR_TYPE, VECTOR_TYPE)                                     \
+    __simd_callee__ inline void cannbotdsl_squeeze_store(                                            \
+        __ubuf__ SCALAR_TYPE* dst_addr, VECTOR_TYPE& dst, vector_store_unalign& cursor,               \
+        VECTOR_TYPE src, vector_bool mask)                                                            \
+    {                                                                                                 \
+        if ASC_IS_AIV {                                                                               \
+            vsqz(dst, src, mask, MODE_STORED);                                                        \
+            vstur(cursor, dst, dst_addr, POST_UPDATE);                                                \
+        }                                                                                             \
+    }                                                                                                 \
+    __simd_callee__ inline void cannbotdsl_squeeze_store_finalize(                                   \
+        __ubuf__ SCALAR_TYPE* dst, vector_store_unalign cursor)                                       \
+    {                                                                                                 \
+        if ASC_IS_AIV { vstar(cursor, dst); }                                                         \
+    }
+
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(int8_t, vector_int8_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(uint8_t, vector_uint8_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(int16_t, vector_int16_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(uint16_t, vector_uint16_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(int32_t, vector_int32_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(uint32_t, vector_uint32_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(half, vector_half)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(float, vector_float)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(bfloat16_t, vector_bfloat16_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(fp8_e4m3fn_t, vector_fp8_e4m3fn_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(fp8_e5m2_t, vector_fp8_e5m2_t)
+CANNBOTDSL_DEFINE_SQUEEZE_STORE(fp8_e8m0_t, vector_fp8_e8m0_t)
+#undef CANNBOTDSL_DEFINE_SQUEEZE_STORE
+
+__simd_callee__ inline void cannbotdsl_squeeze_store(
+    __ubuf__ fp4x2_e2m1_t* dst_addr, vector_fp4x2_e2m1_t& dst,
+    vector_store_unalign& cursor, vector_fp4x2_e2m1_t src, vector_bool mask)
+{
+    if ASC_IS_AIV {
+        vsqz(reinterpret_cast<vector_int8_t&>(dst), reinterpret_cast<vector_int8_t&>(src),
+             mask, MODE_STORED);
+        vstur(cursor, dst, dst_addr, POST_UPDATE);
+    }
+}
+
+__simd_callee__ inline void cannbotdsl_squeeze_store_finalize(
+    __ubuf__ fp4x2_e2m1_t* dst, vector_store_unalign cursor)
+{
+    if ASC_IS_AIV { vstar(cursor, dst); }
+}
+
+template <typename T>
+__aicore__ inline void cannbotdsl_copy_gm2ub_align(
+    __ubuf__ T* dst, __gm__ T* src, uint32_t burst_count, uint32_t burst_len,
+    uint8_t left_padding_num, uint8_t right_padding_num, bool enable_constant_pad,
+    uint8_t l2_cache_mode, uint64_t src_stride, uint32_t dst_stride)
+{
+    if ASC_IS_AIV {
+        if constexpr (sizeof(T) == 8) {
+            copy_gm_to_ubuf_align_v2(
+                (__ubuf__ uint8_t*)dst, (__gm__ uint8_t*)src, 0, burst_count, burst_len,
+                left_padding_num * 8, right_padding_num * 8,
+                enable_constant_pad, l2_cache_mode, src_stride, dst_stride);
+        } else {
+            copy_gm_to_ubuf_align_v2(
+                dst, src, 0, burst_count, burst_len, left_padding_num, right_padding_num,
+                enable_constant_pad, l2_cache_mode, src_stride, dst_stride);
+        }
+    }
+}
+
+template <typename T>
+__aicore__ inline void cannbotdsl_copy_ub2gm_align(
+    __gm__ T* dst, __ubuf__ T* src, uint32_t burst_count, uint32_t burst_len,
+    uint8_t l2_cache_mode, uint64_t dst_stride, uint32_t src_stride)
+{
+    if ASC_IS_AIV {
+        copy_ubuf_to_gm_align_v2(
+            (__gm__ void*)dst, (__ubuf__ void*)src, 0, burst_count, burst_len,
+            l2_cache_mode, dst_stride, src_stride);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ int8_t* dst, __gm__ int8_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ uint8_t* dst, __gm__ uint8_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ fp4x2_e2m1_t* dst, __gm__ fp4x2_e2m1_t* src, uint32_t loop0_size, uint32_t loop1_size,
+    uint32_t loop2_size, uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count,
+    bool padding_mode, uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ fp4x2_e1m2_t* dst, __gm__ fp4x2_e1m2_t* src, uint32_t loop0_size, uint32_t loop1_size,
+    uint32_t loop2_size, uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count,
+    bool padding_mode, uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ fp8_e8m0_t* dst, __gm__ fp8_e8m0_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ fp8_e5m2_t* dst, __gm__ fp8_e5m2_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ fp8_e4m3fn_t* dst, __gm__ fp8_e4m3fn_t* src, uint32_t loop0_size, uint32_t loop1_size,
+    uint32_t loop2_size, uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count,
+    bool padding_mode, uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b8(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ int16_t* dst, __gm__ int16_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b16(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ uint16_t* dst, __gm__ uint16_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b16(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ half* dst, __gm__ half* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b16(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ bfloat16_t* dst, __gm__ bfloat16_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b16(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ int32_t* dst, __gm__ int32_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b32(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ uint32_t* dst, __gm__ uint32_t* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b32(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+__aicore__ inline void cannbotdsl_ndim_copy_gm2ub(
+    __ubuf__ float* dst, __gm__ float* src, uint32_t loop0_size, uint32_t loop1_size, uint32_t loop2_size,
+    uint32_t loop3_size, uint32_t loop4_size, uint8_t loop0_lp_count, uint8_t loop0_rp_count, bool padding_mode,
+    uint8_t cache_mode)
+{
+    if ASC_IS_AIV {
+        nddma_out_to_ub_b32(
+            (__ubuf__ void*)dst, (__gm__ void*)src, 0, loop0_size, loop1_size, loop2_size, loop3_size, loop4_size,
+            loop0_lp_count, loop0_rp_count, padding_mode, cache_mode);
+    }
+}
+
+template <typename DstT, typename SrcT>
+__aicore__ inline void cannbotdsl_copy_l0c2l1(
+    __cbuf__ DstT* dst, __cc__ SrcT* src, uint16_t n_size, uint16_t m_size,
+    uint32_t dst_stride, uint16_t src_stride, uint8_t enable_clip_relu_pre,
+    uint8_t unit_flag_mode, uint64_t quant_pre_mode, uint8_t relu_pre_mode,
+    bool enable_channel_split, bool enable_nz2nd, uint64_t quant_post,
+    uint8_t relu_post, bool clip_relu_post, uint8_t eltwise_op,
+    uint8_t eltwise_antq_en, bool c0_pad_en)
+{
+    if ASC_IS_AIC {
+        copy_matrix_cc_to_cbuf(
+            dst, src, 0, n_size, m_size, dst_stride, src_stride, 0,
+            enable_clip_relu_pre, unit_flag_mode,
+            static_cast<QuantMode_t>(quant_pre_mode), relu_pre_mode,
+            enable_channel_split, enable_nz2nd,
+            static_cast<QuantMode_post>(quant_post), relu_post, clip_relu_post,
+            false, eltwise_op, eltwise_antq_en, false, c0_pad_en, false, false,
+            false);
+    }
+}
+
+} // namespace cannbotdsl_92
+#endif
+
+struct KernelArgTensor_bfloat16_t_2d {
+    __gm__ bfloat16_t* ptr;
+    int64_t shape[2];
+    int64_t stride[2];
+};
+
+struct KernelArgTensor_fp8_e4m3fn_t_2d {
+    __gm__ fp8_e4m3fn_t* ptr;
+    int64_t shape[2];
+    int64_t stride[2];
+};
+
+struct KernelArgTensor_uint8_t_2d {
+    __gm__ uint8_t* ptr;
+    int64_t shape[2];
+    int64_t stride[2];
+};
+
+struct KernelArgTensor_int32_t_2d {
+    __gm__ int32_t* ptr;
+    int64_t shape[2];
+    int64_t stride[2];
+};
+
+struct KernelArgTensor_float_2d {
+    __gm__ float* ptr;
+    int64_t shape[2];
+    int64_t stride[2];
+};
+
+struct KernelArgTensor_bfloat16_t_2d_Device_ss_ds {
+    __gm__ bfloat16_t* ptr;
+    int64_t stride[1];
+};
+static inline KernelArgTensor_bfloat16_t_2d_Device_ss_ds cannbotdsl_pack_KernelArgTensor_bfloat16_t_2d_Device_ss_ds(const KernelArgTensor_bfloat16_t_2d& src) {
+    return {src.ptr, {src.stride[0]}};
+}
+
+struct KernelArgTensor_fp8_e4m3fn_t_2d_Device_ss_ds {
+    __gm__ fp8_e4m3fn_t* ptr;
+    int64_t stride[1];
+};
+static inline KernelArgTensor_fp8_e4m3fn_t_2d_Device_ss_ds cannbotdsl_pack_KernelArgTensor_fp8_e4m3fn_t_2d_Device_ss_ds(const KernelArgTensor_fp8_e4m3fn_t_2d& src) {
+    return {src.ptr, {src.stride[0]}};
+}
+
+struct KernelArgTensor_uint8_t_2d_Device_ss_ds {
+    __gm__ uint8_t* ptr;
+    int64_t stride[1];
+};
+static inline KernelArgTensor_uint8_t_2d_Device_ss_ds cannbotdsl_pack_KernelArgTensor_uint8_t_2d_Device_ss_ds(const KernelArgTensor_uint8_t_2d& src) {
+    return {src.ptr, {src.stride[0]}};
+}
+
+struct KernelArgTensor_int32_t_2d_Device_ss_ds {
+    __gm__ int32_t* ptr;
+    int64_t stride[1];
+};
+static inline KernelArgTensor_int32_t_2d_Device_ss_ds cannbotdsl_pack_KernelArgTensor_int32_t_2d_Device_ss_ds(const KernelArgTensor_int32_t_2d& src) {
+    return {src.ptr, {src.stride[0]}};
+}
+
+struct KernelArgTensor_float_2d_Device_ss_ds {
+    __gm__ float* ptr;
+    int64_t stride[1];
+};
+static inline KernelArgTensor_float_2d_Device_ss_ds cannbotdsl_pack_KernelArgTensor_float_2d_Device_ss_ds(const KernelArgTensor_float_2d& src) {
+    return {src.ptr, {src.stride[0]}};
+}
+
+static_assert(sizeof(KernelArgTensor_bfloat16_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_bfloat16_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_fp8_e4m3fn_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_fp8_e4m3fn_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_bfloat16_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_bfloat16_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_uint8_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_uint8_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_bfloat16_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_bfloat16_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_int32_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_float_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_float_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(KernelArgTensor_bfloat16_t_2d_Device_ss_ds) == 16 && alignof(KernelArgTensor_bfloat16_t_2d_Device_ss_ds) == 8, "device argument ABI mismatch");
+static_assert(sizeof(int64_t) == 8 && alignof(int64_t) == 8, "device argument ABI mismatch");
+static_assert(sizeof(int64_t) == 8 && alignof(int64_t) == 8, "device argument ABI mismatch");
+static_assert(sizeof(int64_t) == 8 && alignof(int64_t) == 8, "device argument ABI mismatch");
+static_assert(sizeof(int32_t) == 4 && alignof(int32_t) == 4, "device argument ABI mismatch");
+__simd_vf__ inline void kernel_sparse_attention_mix_vf0(__ubuf__ float* buf13, __ubuf__ float* buf14)
+{
+    vector_bool vmask;
+    float c15 = -1.00000002E+30f;
+    float c16 = 0.0f;
+    uint32_t rem18 = 32;
+    vector_bool mask17 = asc_update_mask_b32(rem18);
+    vector_bool mask19 = asc_create_mask_b32(PAT_ALL);
+    vector_float v20;
+    asc_duplicate_scalar(v20, c16, mask19);
+    vector_float v21;
+    asc_duplicate_scalar(v21, c15, mask17);
+    asc_storealign(buf13 + 0, v21, mask17);
+    asc_storealign(buf13 + 32, v20, mask17);
+    for (int32_t i22 = 0; i22 < 256; i22 = (int32_t)((uint32_t)i22 + (uint32_t)1)) {
+        int32_t t23 = i22 * 64;
+        int32_t t24 = t23;
+        asc_storealign(buf14 + t24, v20, mask19);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_sparse_attention_mix_vf1(int64_t arg25, __ubuf__ int32_t* buf26, __ubuf__ fp8_e4m3fn_t* buf27, __ubuf__ bfloat16_t* buf28, __ubuf__ bfloat16_t* buf29)
+{
+    vector_bool vmask;
+    float c30 = 0.0f;
+    uint32_t rem32 = 32;
+    vector_bool mask31 = asc_update_mask_b32(rem32);
+    uint32_t rem34 = 128;
+    vector_bool mask33 = asc_update_mask_b8(rem34);
+    vector_float v35;
+    asc_duplicate_scalar(v35, c30, mask31);
+    for (int32_t i36 = 0; i36 < 16; i36 = (int32_t)((uint32_t)i36 + (uint32_t)1)) {
+        int32_t t37 = (int32_t)arg25;
+        int32_t t38 = (int32_t)((uint32_t)t37 + (uint32_t)i36);
+        int32_t t39 = t38;
+        vector_int32_t v40;
+asc_loadalign_brc(v40, buf26 + t39);
+        vector_bool m41;
+        asc_ge_scalar(m41, v40, 0, mask31);
+        vector_bool m42;
+        asc_lt_scalar(m42, v40, 640, mask31);
+        vector_bool m43;
+        asc_and(m43, m41, m42, mask31);
+        for (int32_t i44 = 0; i44 < 16; i44 = (int32_t)((uint32_t)i44 + (uint32_t)1)) {
+            int32_t t45 = i36 * 512;
+            int32_t t46 = i44 * 32;
+            int32_t t47 = t45 + t46;
+            int32_t t48 = t47;
+            vector_uint32_t v49;
+            cannbotdsl_92::cannbotdsl_loadalign_unpack4(*(vector_uint8_t*)&v49, (__ubuf__ uint8_t*)(buf27 + t48));
+            vector_fp8_e4m3fn_t &r50 = (vector_fp8_e4m3fn_t &)v49;
+            vector_float v51;
+            asc_e4m32float(v51, *(vector_fp8_e4m3fn_t*)&r50, mask33);
+            int32_t t52 = i36 * 16;
+            int32_t t53 = t52 + i44;
+            int32_t t54 = t53;
+            vector_bfloat16_t v55;
+asc_loadalign_brc(v55, buf28 + t54);
+            vector_float v56;
+            asc_bfloat162float(v56, *(vector_bfloat16_t*)&v55, mask31);
+            vector_float v57;
+            asc_mul(v57, v51, v56, mask31);
+            vector_float v58;
+            asc_select(v58, v57, v35, m43);
+            vector_bfloat16_t v59;
+            asc_float2bfloat16_rn(v59, v58, mask31, ASC_POSITION_EVEN);
+            asc_storealign_pack((__ubuf__ uint32_t*)(buf29 + t48), *(vector_uint32_t*)&v59, mask31);
+        }
+    }
+}
+
+__simd_vf__ inline void kernel_sparse_attention_mix_vf2(__ubuf__ bfloat16_t* buf60, __ubuf__ bfloat16_t* buf61)
+{
+    vector_bool vmask;
+    vector_bool mask62 = asc_create_mask_b16(PAT_ALL);
+    for (int32_t i63 = 0; i63 < 16; i63 = (int32_t)((uint32_t)i63 + (uint32_t)1)) {
+        for (int32_t i64 = 0; i64 < 512; i64 = (int32_t)((uint32_t)i64 + (uint32_t)128)) {
+            int32_t t65 = i63 * 512;
+            int32_t t66 = t65 + i64;
+            int32_t t67 = t66;
+            vector_bfloat16_t v68;
+            asc_loadalign(v68, buf60 + t67);
+            int32_t t69 = i63 * 16;
+            int32_t t70 = i64 / 16;
+            int32_t t71 = t70 * 272;
+            int32_t t72 = t69 + t71;
+            int32_t t73 = t72;
+            asc_storealign(buf61 + t73, v68, (uint16_t)17, (uint16_t)0, mask62);
+        }
+    }
+}
+
+__simd_vf__ inline void kernel_sparse_attention_mix_vf3(int64_t arg74, __ubuf__ int32_t* buf75, __ubuf__ uint8_t* buf76, __ubuf__ bfloat16_t* buf77, __ubuf__ bfloat16_t* buf78)
+{
+    vector_bool vmask;
+    bfloat16_t c79 = __builtin_bit_cast(bfloat16_t, (uint16_t)0);
+    vector_bool mask80 = asc_create_mask_b8(PAT_ALL);
+    vector_bool mask81 = asc_create_mask_b16(PAT_ALL);
+    vector_bool mask82 = asc_create_mask_b32(PAT_ALL);
+    vector_bfloat16_t v83;
+    asc_duplicate_scalar(v83, c79, mask81);
+    for (int32_t i84 = 0; i84 < 16; i84 = (int32_t)((uint32_t)i84 + (uint32_t)1)) {
+        int32_t t85 = (int32_t)arg74;
+        int32_t t86 = (int32_t)((uint32_t)t85 + (uint32_t)i84);
+        int32_t t87 = t86;
+        vector_int32_t v88;
+asc_loadalign_brc(v88, buf75 + t87);
+        vector_bool m89;
+        asc_ge_scalar(m89, v88, 0, mask82);
+        vector_bool m90;
+        asc_lt_scalar(m90, v88, 896, mask82);
+        vector_bool m91;
+        asc_and(m91, m89, m90, mask82);
+        vector_uint32_t v92;
+        asc_duplicate_scalar(v92, 1);
+        vector_uint32_t v93;
+        asc_duplicate_scalar(v93, 0);
+        vector_uint32_t v94;
+        asc_select(v94, v92, v93, m91);
+        vector_uint16_t &r95 = (vector_uint16_t &)v94;
+        vector_uint16_t v96;
+        asc_duplicate(v96, r95, mask81);
+        vector_bool m97;
+        asc_eq_scalar(m97, v96, 1, mask81);
+        for (int32_t i98 = 0; i98 < 512; i98 = (int32_t)((uint32_t)i98 + (uint32_t)128)) {
+            int32_t t99 = i84 * 256;
+            int32_t t100 = i98 / 2;
+            int32_t t101 = t99 + t100;
+            int32_t t102 = t101;
+            vector_uint32_t v103;
+            cannbotdsl_92::cannbotdsl_loadalign_unpack4(*(vector_uint8_t*)&v103, (__ubuf__ uint8_t*)(buf76 + t102));
+            vector_fp4x2_e2m1_t &r104 = (vector_fp4x2_e2m1_t &)v103;
+            vector_bfloat16_t v105;
+            asc_e2m1x22bfloat16(v105, *(vector_fp4x2_e2m1_t*)&r104, mask80, ASC_DISPERSE_FIRST_QUARTER);
+            int32_t t106 = i84 * 32;
+            int32_t t107 = i98 / 16;
+            int32_t t108 = t106 + t107;
+            int32_t t109 = t108;
+            vector_uint16_t v110;
+            vlds(v110, (__ubuf__ uint16_t*)(buf77 + t109), 0, E2B_B16);
+            vector_bfloat16_t &r111 = (vector_bfloat16_t &)v110;
+            vector_bfloat16_t v112;
+            asc_mul(v112, v105, r111, mask81);
+            vector_bfloat16_t v113;
+            asc_select(v113, v112, v83, m97);
+            int32_t t114 = i84 * 16;
+            int32_t t115 = t107 * 272;
+            int32_t t116 = t114 + t115;
+            int32_t t117 = t116;
+            asc_storealign(buf78 + t117, v113, (uint16_t)17, (uint16_t)0, mask81);
+        }
+    }
+}
+
+__simd_vf__ inline void kernel_sparse_attention_mix_vf4(__ubuf__ int32_t* buf118, int32_t arg119, __ubuf__ float* buf120, __ubuf__ float* buf121, __ubuf__ bfloat16_t* buf122)
+{
+    vector_bool vmask;
+    float c123 = 0.0441941731f;
+    float c124 = -1.00000002E+30f;
+    float c125 = 0.0f;
+    vector_bool mask126 = asc_create_mask_b32(PAT_ALL);
+    vector_bool mask127 = asc_create_mask_b16(PAT_ALL);
+    vector_float v128;
+    asc_duplicate_scalar(v128, c125, mask126);
+    vector_float v129;
+    asc_duplicate_scalar(v129, c124, mask126);
+    vector_int32_t v130;
+    asc_loadalign(v130, buf118 + 0);
+    vector_int32_t v131;
+    asc_loadalign(v131, buf118 + 64);
+    vector_bool m132;
+    asc_ge_scalar(m132, v130, 0, mask126);
+    vector_bool m133;
+    asc_lt_scalar(m133, v130, arg119, mask126);
+    vector_bool m134;
+    asc_and(m134, m132, m133, mask126);
+    vector_bool m135;
+    asc_ge_scalar(m135, v131, 0, mask126);
+    vector_bool m136;
+    asc_lt_scalar(m136, v131, arg119, mask126);
+    vector_bool m137;
+    asc_and(m137, m135, m136, mask126);
+    for (int32_t i138 = 0; i138 < 32; i138 = (int32_t)((uint32_t)i138 + (uint32_t)1)) {
+        int32_t t139 = i138 * 128;
+        int32_t t140 = t139;
+        vector_float v141;
+        asc_loadalign(v141, buf120 + t140);
+        vector_float v142;
+        asc_mul_scalar(v142, v141, c123, mask126);
+        int32_t t143 = t139 + 64;
+        int32_t t144 = t143;
+        vector_float v145;
+        asc_loadalign(v145, buf120 + t144);
+        vector_float v146;
+        asc_mul_scalar(v146, v145, c123, mask126);
+        vector_float v147;
+        asc_select(v147, v142, v129, m134);
+        vector_float v148;
+        asc_select(v148, v146, v129, m137);
+        vector_float v149;
+        asc_max(v149, v147, v148, mask126);
+        vector_float v150;
+        asc_reduce_max(v150, v149, mask126);
+        vector_float v151;
+        asc_duplicate(v151, v150, mask126);
+        int32_t t152 = i138;
+        vector_float v153;
+asc_loadalign_brc(v153, buf121 + t152);
+        vector_float v154;
+        asc_max(v154, v151, v153, mask126);
+        vector_float v155;
+        asc_sub(v155, v153, v154, mask126);
+        vector_float v156;
+        asc_exp(v156, v155, mask126);
+        vector_float v157;
+        asc_sub(v157, v147, v154, mask126);
+        vector_float v158;
+        asc_exp(v158, v157, mask126);
+        vector_float v159;
+        asc_sub(v159, v148, v154, mask126);
+        vector_float v160;
+        asc_exp(v160, v159, mask126);
+        vector_float v161;
+        asc_select(v161, v158, v128, m134);
+        vector_float v162;
+        asc_select(v162, v160, v128, m137);
+        vector_float v163;
+        asc_reduce_sum(v163, v161, mask126);
+        vector_float v164;
+        asc_reduce_sum(v164, v162, mask126);
+        vector_float v165;
+        asc_add(v165, v163, v164, mask126);
+        vector_float v166;
+        asc_duplicate(v166, v165, mask126);
+        int32_t t167 = i138 + 32;
+        int32_t t168 = t167;
+        vector_float v169;
+asc_loadalign_brc(v169, buf121 + t168);
+        vector_float v170;
+        asc_mul(v170, v169, v156, mask126);
+        vector_float v171;
+        asc_add(v171, v170, v166, mask126);
+        asc_storealign_1st(buf121 + t152, v154);
+        asc_storealign_1st(buf121 + t168, v171);
+        int32_t t172 = i138 + 64;
+        int32_t t173 = t172;
+        asc_storealign_1st(buf121 + t173, v156);
+        vector_bfloat16_t v174;
+        asc_float2bfloat16_rn(v174, v161, mask126, ASC_POSITION_EVEN);
+        vector_bfloat16_t v175;
+        asc_float2bfloat16_rn(v175, v162, mask126, ASC_POSITION_EVEN);
+        vector_bfloat16_t v176;
+        vector_bfloat16_t v177;
+        asc_deintlv(v176, v177, v174, v175);
+        int32_t t178 = i138 * 16;
+        int32_t t179 = t178;
+        asc_storealign(buf122 + t179, v176, (uint16_t)33, (uint16_t)0, mask127);
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_sparse_attention_mix_vf5(__ubuf__ float* buf180, int64_t arg181, __ubuf__ float* buf182, __ubuf__ float* buf183)
+{
+    vector_bool vmask;
+    vector_bool mask184 = asc_create_mask_b32(PAT_ALL);
+    for (int32_t i185 = 0; i185 < 32; i185 = (int32_t)((uint32_t)i185 + (uint32_t)1)) {
+        int32_t t186 = i185 + 64;
+        int32_t t187 = t186;
+        vector_float v188;
+asc_loadalign_brc(v188, buf180 + t187);
+        for (int32_t i189 = 0; i189 < 128; i189 = (int32_t)((uint32_t)i189 + (uint32_t)64)) {
+            int32_t t190 = i185 * 512;
+            int32_t t191 = (int32_t)arg181;
+            int32_t t192 = (int32_t)((uint32_t)t191 * (uint32_t)128);
+            int32_t t193 = (int32_t)((uint32_t)t190 + (uint32_t)t192);
+            int32_t t194 = (int32_t)((uint32_t)t193 + (uint32_t)i189);
+            int32_t t195 = t194;
+            vector_float v196;
+            asc_loadalign(v196, buf182 + t195);
+            int32_t t197 = i185 * 128;
+            int32_t t198 = t197 + i189;
+            int32_t t199 = t198;
+            vector_float v200;
+            asc_loadalign(v200, buf183 + t199);
+            vector_float v201;
+            asc_mul(v201, v196, v188, mask184);
+            vector_float v202;
+            asc_add(v202, v201, v200, mask184);
+            asc_storealign(buf182 + t195, v202, mask184);
+        }
+    }
+    asc_mem_bar(VST_VLD);
+}
+
+__simd_vf__ inline void kernel_sparse_attention_mix_vf6(__ubuf__ float* buf203, __ubuf__ float* buf204, int64_t arg205, __ubuf__ float* buf206, __ubuf__ bfloat16_t* buf207)
+{
+    vector_bool vmask;
+    vector_bool mask208 = asc_create_mask_b32(PAT_ALL);
+    for (int32_t i209 = 0; i209 < 32; i209 = (int32_t)((uint32_t)i209 + (uint32_t)1)) {
+        int32_t t210 = i209;
+        vector_float v211;
+asc_loadalign_brc(v211, buf203 + t210);
+        int32_t t212 = i209 + 32;
+        int32_t t213 = t212;
+        vector_float v214;
+asc_loadalign_brc(v214, buf203 + t213);
+        vector_float v215;
+asc_loadalign_brc(v215, buf204 + t210);
+        vector_float v216;
+        asc_max(v216, v211, v215, mask208);
+        vector_float v217;
+        asc_sub(v217, v211, v216, mask208);
+        vector_float v218;
+        asc_exp(v218, v217, mask208);
+        vector_float v219;
+        asc_sub(v219, v215, v216, mask208);
+        vector_float v220;
+        asc_exp(v220, v219, mask208);
+        vector_float v221;
+        asc_mul(v221, v214, v218, mask208);
+        vector_float v222;
+        asc_add(v222, v221, v220, mask208);
+        vector_float v223;
+        {
+            static constexpr AscendC::Reg::DivSpecificMode div_mode_224 = {
+                AscendC::Reg::MaskMergeMode::ZEROING, true, AscendC::DivAlgo::PRECISION_0ULP_FTZ_TRUE};
+            AscendC::Reg::Div<float, &div_mode_224, AscendC::Reg::RegTensor<float>>(*(AscendC::Reg::RegTensor<float>*)&v223, *(AscendC::Reg::RegTensor<float>*)&v218, *(AscendC::Reg::RegTensor<float>*)&v222, mask208);
+        }
+        for (int32_t i225 = 0; i225 < 128; i225 = (int32_t)((uint32_t)i225 + (uint32_t)64)) {
+            int32_t t226 = i209 * 512;
+            int32_t t227 = (int32_t)arg205;
+            int32_t t228 = (int32_t)((uint32_t)t227 * (uint32_t)128);
+            int32_t t229 = (int32_t)((uint32_t)t226 + (uint32_t)t228);
+            int32_t t230 = (int32_t)((uint32_t)t229 + (uint32_t)i225);
+            int32_t t231 = t230;
+            vector_float v232;
+            asc_loadalign(v232, buf206 + t231);
+            vector_float v233;
+            asc_mul(v233, v232, v223, mask208);
+            vector_bfloat16_t v234;
+            asc_float2bfloat16_rn(v234, v233, mask208, ASC_POSITION_EVEN);
+            int32_t t235 = i209 * 128;
+            int32_t t236 = t235 + i225;
+            int32_t t237 = t236;
+            asc_storealign_pack((__ubuf__ uint32_t*)(buf207 + t237), *(vector_uint32_t*)&v234, mask208);
+        }
+    }
+}
+
+__global__ __aicore__ void kernel_sparse_attention_mix(KernelArgTensor_bfloat16_t_2d_Device_ss_ds gm0_arg, KernelArgTensor_fp8_e4m3fn_t_2d_Device_ss_ds gm1_arg, KernelArgTensor_bfloat16_t_2d_Device_ss_ds gm2_arg, KernelArgTensor_uint8_t_2d_Device_ss_ds gm3_arg, KernelArgTensor_bfloat16_t_2d_Device_ss_ds gm4_arg, KernelArgTensor_int32_t_2d_Device_ss_ds gm5_arg, KernelArgTensor_int32_t_2d_Device_ss_ds gm6_arg, KernelArgTensor_float_2d_Device_ss_ds gm7_arg, KernelArgTensor_bfloat16_t_2d_Device_ss_ds gm8_arg, int64_t arg9, int64_t arg10, int64_t arg11, int32_t arg12)
+{
+    KERNEL_TASK_TYPE_DEFAULT(KERNEL_TYPE_MIX_AIC_1_2);
+    __gm__ bfloat16_t* gm0 = gm0_arg.ptr;
+    __gm__ fp8_e4m3fn_t* gm1 = gm1_arg.ptr;
+    __gm__ bfloat16_t* gm2 = gm2_arg.ptr;
+    __gm__ uint8_t* gm3 = gm3_arg.ptr;
+    __gm__ bfloat16_t* gm4 = gm4_arg.ptr;
+    __gm__ int32_t* gm5 = gm5_arg.ptr;
+    __gm__ int32_t* gm6 = gm6_arg.ptr;
+    __gm__ float* gm7 = gm7_arg.ptr;
+    __gm__ bfloat16_t* gm8 = gm8_arg.ptr;
+    asc_init();
+    asc_set_ctrl(0x1000000000000008ULL | (asc_get_ctrl() & (1ULL << 48)));  // reset CTRL like AscendC InitSocState
+    asc_set_gm2l1_loop_size(1, 1);
+    asc_set_gm2ub_loop_size(1, 1);
+    asc_set_ub2gm_loop_size(1, 1);
+    asc_set_l0c2gm_config(0, 0, false);
+    asc_set_l0c2gm_nz2nd(0, 0, 0);
+    asc_set_l0c_copy_prequant(0);
+    asc_set_l0c2gm_quant_post(0);
+    asc_set_l0c2gm_relu_alpha(0);
+    float cannbotdsl_lrelu_alpha = 0.0f;
+    asc_set_l0c2gm_lrelu_alpha(cannbotdsl_lrelu_alpha);
+    asc_set_l0c2gm_channel_para(0);
+    asc_set_copy_pad_val(static_cast<uint32_t>(0));
+    asc_set_ndim_pad_value(static_cast<uint32_t>(0));
+    asc_set_gm2l1_pad(static_cast<uint32_t>(0));
+    asc_set_l13d_padding(static_cast<uint64_t>(0));
+    asc_set_l12l0_padding_val(static_cast<uint64_t>(0));
+
+    __ubuf__ float* buf238 = (__ubuf__ float*)(uintptr_t)(uint64_t)(0);
+    __ubuf__ float* buf239 = (__ubuf__ float*)(uintptr_t)(uint64_t)(16384);
+    __cc__ float* buf240 = (__cc__ float*)(uintptr_t)(uint64_t)(0);
+    __ca__ bfloat16_t* buf241 = (__ca__ bfloat16_t*)(uintptr_t)(uint64_t)(0);
+    __cb__ bfloat16_t* buf242 = (__cb__ bfloat16_t*)(uintptr_t)(uint64_t)(0);
+    __cbuf__ bfloat16_t* buf243 = (__cbuf__ bfloat16_t*)(uintptr_t)(uint64_t)(65536);
+    __cbuf__ bfloat16_t* buf244 = (__cbuf__ bfloat16_t*)(uintptr_t)(uint64_t)(196608);
+    __cbuf__ bfloat16_t* buf245 = (__cbuf__ bfloat16_t*)(uintptr_t)(uint64_t)(0);
+    __ubuf__ float* buf246 = (__ubuf__ float*)(uintptr_t)(uint64_t)(0);
+    __ubuf__ float* buf247 = (__ubuf__ float*)(uintptr_t)(uint64_t)(16384);
+    __ubuf__ int32_t* buf248 = (__ubuf__ int32_t*)(uintptr_t)(uint64_t)(32768);
+    __ubuf__ fp8_e4m3fn_t* buf249 = (__ubuf__ fp8_e4m3fn_t*)(uintptr_t)(uint64_t)(33280);
+    __ubuf__ uint8_t* buf250 = (__ubuf__ uint8_t*)(uintptr_t)(uint64_t)(41984);
+    __ubuf__ bfloat16_t* buf251 = (__ubuf__ bfloat16_t*)(uintptr_t)(uint64_t)(46336);
+    __ubuf__ bfloat16_t* buf252 = (__ubuf__ bfloat16_t*)(uintptr_t)(uint64_t)(46848);
+    __ubuf__ bfloat16_t* buf253 = (__ubuf__ bfloat16_t*)(uintptr_t)(uint64_t)(47872);
+    __ubuf__ bfloat16_t* buf254 = (__ubuf__ bfloat16_t*)(uintptr_t)(uint64_t)(64256);
+    __ubuf__ bfloat16_t* buf255 = (__ubuf__ bfloat16_t*)(uintptr_t)(uint64_t)(81664);
+    __ubuf__ float* buf256 = (__ubuf__ float*)(uintptr_t)(uint64_t)(90112);
+    __ubuf__ float* buf257 = (__ubuf__ float*)(uintptr_t)(uint64_t)(90496);
+    __ubuf__ float* buf258 = (__ubuf__ float*)(uintptr_t)(uint64_t)(156032);
+    __ubuf__ bfloat16_t* buf259 = (__ubuf__ bfloat16_t*)(uintptr_t)(uint64_t)(156160);
+    __cbuf__ bfloat16_t* buf260 = (__cbuf__ bfloat16_t*)(uintptr_t)(uint64_t)(65536);
+    __cbuf__ bfloat16_t* buf261 = (__cbuf__ bfloat16_t*)(uintptr_t)(uint64_t)(196608);
+
+    if ASCEND_IS_AIC {
+        asc_sync_intra_arrive(PIPE_MTE1, 1);
+        asc_sync_intra_arrive(PIPE_MTE1, 17);
+        asc_sync_intra_arrive(PIPE_MTE1, 0);
+        asc_sync_intra_arrive(PIPE_MTE1, 16);
+        int64_t t262 = (int64_t)arg12;
+        for (int64_t i263 = arg9; i263 < t262; i263 = (int64_t)((uint64_t)i263 + (uint64_t)arg10)) {
+            __cbuf__ bfloat16_t* view_root264 = reinterpret_cast<__cbuf__ bfloat16_t*>(reinterpret_cast<__cbuf__ uint8_t*>(buf245) + 0);
+            int64_t t265 = (int64_t)((uint64_t)i263 * (uint64_t)4);
+            int64_t dim266 = gm0_arg.stride[0];
+            int64_t t267 = (int64_t)((uint64_t)t265 * (uint64_t)dim266);
+            int64_t t268 = (int64_t)((uint64_t)t267 * (uint64_t)16);
+            int64_t t269 = (i263 < 2 ? i263 : 2);
+            int64_t t270 = (int64_t)((uint64_t)t269 * (uint64_t)64);
+            int64_t t271 = (int64_t)((uint64_t)128 - (uint64_t)t270);
+            int64_t t272 = (t271 < 64 ? t271 : 64);
+            bool cmp273 = i263 <= 2;
+            int64_t sel274 = cmp273 ? t272 : 0;
+            int64_t dim275 = gm0_arg.stride[0];
+            int64_t t276 = dim275;
+            int64_t t277 = t276 * 2;
+            int64_t t278 = t277;
+            asc_lock(PIPE_MTE2, 0);
+            bool cmp279 = (uint64_t)sel274 > (uint64_t)0;
+            if (cmp279) {
+                int64_t t280 = t268;
+                int32_t t281 = (int32_t)sel274;
+                set_mte2_nz_para(((uint64_t)(0) << 48) | ((uint64_t)(64) << 32) | ((uint64_t)(1) << 16) | (uint64_t)(1));
+                asc_copy_gm2l1_nd2nz(view_root264 + 0, gm0 + t280, t278, 0, t281, 512, 0, false);
+            }
+            asc_unlock(PIPE_MTE2, 0);
+            for (int64_t i282 = 0; i282 < 5; i282 = (int64_t)((uint64_t)i282 + (uint64_t)1)) {
+                asc_sync_intra_wait(PIPE_MTE1, 0);
+                asc_sync_intra_wait(PIPE_MTE1, 16);
+                for (int64_t i283 = 0; i283 < 4; i283 = (int64_t)((uint64_t)i283 + (uint64_t)1)) {
+                    __ca__ bfloat16_t* view_root284 = reinterpret_cast<__ca__ bfloat16_t*>(reinterpret_cast<__ca__ uint8_t*>(buf241) + 0);
+                    int64_t t285 = i283 * 8;
+                    asc_lock(PIPE_MTE1, 1);
+                    asc_lock(PIPE_MTE1, 0);
+                    int32_t t286 = (int32_t)t285;
+                    asc_copy_l12l0a(view_root284 + 0, view_root264 + 0, 0, t286, 4, 8, 4, 4);
+                    asc_unlock(PIPE_MTE1, 0);
+                    asc_unlock(PIPE_MTE1, 1);
+                    __cb__ bfloat16_t* view_root287 = reinterpret_cast<__cb__ bfloat16_t*>(reinterpret_cast<__cb__ uint8_t*>(buf242) + 0);
+                    __cbuf__ bfloat16_t* view_root288 = reinterpret_cast<__cbuf__ bfloat16_t*>(reinterpret_cast<__cbuf__ uint8_t*>(buf243) + 0);
+                    asc_lock(PIPE_MTE1, 2);
+                    asc_copy_l12l0b(view_root287 + 0, view_root288 + 0, 0, t286, 8, 8, 8, 8);
+                    asc_unlock(PIPE_MTE1, 2);
+                    bool cmp289 = i283 == 0;
+                    __cc__ float* view_root290 = reinterpret_cast<__cc__ float*>(reinterpret_cast<__cc__ uint8_t*>(buf240) + 0);
+                    asc_lock(PIPE_M, 3);
+                    asc_lock(PIPE_M, 1);
+                    asc_lock(PIPE_M, 2);
+                    if (cmp289) {
+                        asc_mmad(view_root290 + 0, view_root284, view_root287, 64, 128, 128, 0, true, false, true);
+                    } else {
+                        asc_mmad(view_root290 + 0, view_root284, view_root287, 64, 128, 128, 0, true, false, false);
+                    }
+                    asc_unlock(PIPE_M, 2);
+                    asc_unlock(PIPE_M, 1);
+                    asc_unlock(PIPE_M, 3);
+                }
+                __ubuf__ float* view_root291 = reinterpret_cast<__ubuf__ float*>(reinterpret_cast<__ubuf__ uint8_t*>(buf238) + 0);
+                __cc__ float* view_root292 = reinterpret_cast<__cc__ float*>(reinterpret_cast<__cc__ uint8_t*>(buf240) + 0);
+                asc_sync_intra_wait(PIPE_FIX, 2);
+                asc_sync_intra_wait(PIPE_FIX, 18);
+                asc_lock(PIPE_FIX, 3);
+                asc_set_l0c2gm_nz2nd(1, 0, 0);
+                asc_copy_l0c2ub((__ubuf__ float*)view_root291 + 0, view_root292, 128, 64, 128, 64, 1, static_cast<bool>(0), 0, 0, QuantMode_t::NoQuant, 0, false, true, 0, 0, false, 0, false, false, false, false);
+                asc_unlock(PIPE_FIX, 3);
+                asc_sync_intra_arrive(PIPE_FIX, 2);
+                asc_sync_intra_arrive(PIPE_FIX, 18);
+                __cbuf__ bfloat16_t* view_root293 = reinterpret_cast<__cbuf__ bfloat16_t*>(reinterpret_cast<__cbuf__ uint8_t*>(buf244) + 0);
+                asc_sync_intra_wait(PIPE_MTE1, 1);
+                asc_sync_intra_wait(PIPE_MTE1, 17);
+                for (int64_t i294 = 0; i294 < 4; i294 = (int64_t)((uint64_t)i294 + (uint64_t)1)) {
+                    __ca__ bfloat16_t* view_root295 = reinterpret_cast<__ca__ bfloat16_t*>(reinterpret_cast<__ca__ uint8_t*>(buf241) + 0);
+                    asc_lock(PIPE_MTE1, 1);
+                    asc_copy_l12l0a(view_root295 + 0, view_root293 + 0, 0, 0, 4, 8, 4, 4);
+                    asc_unlock(PIPE_MTE1, 1);
+                    __cb__ bfloat16_t* view_root296 = reinterpret_cast<__cb__ bfloat16_t*>(reinterpret_cast<__cb__ uint8_t*>(buf242) + 0);
+                    __cbuf__ bfloat16_t* view_root297 = reinterpret_cast<__cbuf__ bfloat16_t*>(reinterpret_cast<__cbuf__ uint8_t*>(buf243) + 0);
+                    int64_t t298 = i294 * 8;
+                    asc_lock(PIPE_MTE1, 2);
+                    int32_t t299 = (int32_t)t298;
+                    asc_copy_l12l0b_transpose(view_root296 + 0, view_root297 + 0, 0, t299, 8, 8, 8, 8);
+                    asc_unlock(PIPE_MTE1, 2);
+                    asc_lock(PIPE_M, 3);
+                    asc_lock(PIPE_M, 1);
+                    asc_lock(PIPE_M, 2);
+                    asc_mmad(view_root292 + 0, view_root295, view_root296, 64, 128, 128, 0, true, false, true);
+                    asc_unlock(PIPE_M, 2);
+                    asc_unlock(PIPE_M, 1);
+                    asc_unlock(PIPE_M, 3);
+                    __ubuf__ float* view_root300 = reinterpret_cast<__ubuf__ float*>(reinterpret_cast<__ubuf__ uint8_t*>(buf239) + 0);
+                    asc_sync_intra_wait(PIPE_FIX, 3);
+                    asc_sync_intra_wait(PIPE_FIX, 19);
+                    asc_lock(PIPE_FIX, 3);
+                    asc_set_l0c2gm_nz2nd(1, 0, 0);
+                    asc_copy_l0c2ub((__ubuf__ float*)view_root300 + 0, view_root292, 128, 64, 128, 64, 1, static_cast<bool>(0), 0, 0, QuantMode_t::NoQuant, 0, false, true, 0, 0, false, 0, false, false, false, false);
+                    asc_unlock(PIPE_FIX, 3);
+                    asc_sync_intra_arrive(PIPE_FIX, 3);
+                    asc_sync_intra_arrive(PIPE_FIX, 19);
+                }
+                asc_sync_intra_arrive(PIPE_MTE1, 0);
+                asc_sync_intra_arrive(PIPE_MTE1, 16);
+                asc_sync_intra_arrive(PIPE_MTE1, 1);
+                asc_sync_intra_arrive(PIPE_MTE1, 17);
+            }
+        }
+        asc_sync_intra_wait(PIPE_FIX, 2);
+        asc_sync_intra_wait(PIPE_FIX, 18);
+        asc_sync_intra_wait(PIPE_FIX, 3);
+        asc_sync_intra_wait(PIPE_FIX, 19);
+    }
+
+    if ASCEND_IS_AIV {
+        asc_sync_intra_arrive(PIPE_V, 3);
+        asc_sync_intra_arrive(PIPE_V, 2);
+        int64_t t301 = (int64_t)arg12;
+        for (int64_t i302 = arg9; i302 < t301; i302 = (int64_t)((uint64_t)i302 + (uint64_t)arg10)) {
+            int64_t t303 = (i302 < 2 ? i302 : 2);
+            int64_t t304 = (int64_t)((uint64_t)t303 * (uint64_t)64);
+            int64_t t305 = (int64_t)((uint64_t)128 - (uint64_t)t304);
+            int64_t t306 = (t305 < 64 ? t305 : 64);
+            bool cmp307 = i302 <= 2;
+            int64_t sel308 = cmp307 ? t306 : 0;
+            int64_t t309 = (int64_t)((uint64_t)arg11 * (uint64_t)128);
+            asc_lock(PIPE_MTE2, 7);
+            {
+                cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ float*)((__ubuf__ uint8_t*)buf258 + 0), (__gm__ float*)((__gm__ uint8_t*)gm7 + t309), 1, 128, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)0, 0);
+            }
+            asc_unlock(PIPE_MTE2, 7);
+            kernel_sparse_attention_mix_vf0((__ubuf__ float*)buf256, (__ubuf__ float*)buf257);
+            for (int64_t i310 = 0; i310 < 5; i310 = (int64_t)((uint64_t)i310 + (uint64_t)1)) {
+                bool cmp311 = i310 == 0;
+                int64_t sel312 = cmp311 ? 640 : 896;
+                if (cmp311) {
+                    int64_t dim313 = gm5_arg.stride[0];
+                    int64_t t314 = (int64_t)((uint64_t)i302 * (uint64_t)dim313);
+                    int64_t t315 = (int64_t)((uint64_t)t314 * (uint64_t)4);
+                    asc_lock(PIPE_MTE2, 0);
+                    {
+                        cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ int32_t*)((__ubuf__ uint8_t*)buf248 + 0), (__gm__ int32_t*)((__gm__ uint8_t*)gm5 + t315), 1, 512, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                    }
+                    asc_unlock(PIPE_MTE2, 0);
+                    asc_sync_intra_wait(PIPE_MTE3, 0);
+                    for (int64_t i316 = 0; i316 < 4; i316 = (int64_t)((uint64_t)i316 + (uint64_t)1)) {
+                        int64_t t317 = (int64_t)((uint64_t)arg11 * (uint64_t)64);
+                        int64_t t318 = i316 * 16;
+                        int64_t t319 = (int64_t)((uint64_t)t317 + (uint64_t)t318);
+                        for (int64_t i320 = 0; i320 < 16; i320 = (int64_t)((uint64_t)i320 + (uint64_t)1)) {
+                            int64_t t321 = (int64_t)((uint64_t)t319 + (uint64_t)i320);
+                            int64_t t322 = t314;
+                            int64_t t323 = t321;
+                            int64_t t324 = t322 + t323;
+                            int32_t ld325 = gm5[t324];
+                            int64_t t326 = (int64_t)ld325;
+                            int64_t t327 = (t326 < 639 ? t326 : 639);
+                            int64_t t328 = (t327 > 0 ? t327 : 0);
+                            int64_t t329 = (t328 < 640 ? t328 : 640);
+                            int64_t t330 = (int64_t)((uint64_t)640 - (uint64_t)t329);
+                            int64_t t331 = (t330 < 1 ? t330 : 1);
+                            bool cmp332 = t328 <= 640;
+                            int64_t sel333 = cmp332 ? t331 : 0;
+                            int64_t dim334 = gm1_arg.stride[0];
+                            int64_t t335 = (int64_t)((uint64_t)t328 * (uint64_t)dim334);
+                            int64_t t336 = i320 * 512;
+                            asc_lock(PIPE_MTE2, 1);
+                            {
+                                cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ fp8_e4m3fn_t*)((__ubuf__ uint8_t*)buf249 + t336), (__gm__ fp8_e4m3fn_t*)((__gm__ uint8_t*)gm1 + t335), sel333, 512, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)dim334, 512);
+                            }
+                            asc_unlock(PIPE_MTE2, 1);
+                            int64_t dim337 = gm2_arg.stride[0];
+                            int64_t t338 = (int64_t)((uint64_t)dim337 * (uint64_t)2);
+                            int64_t t339 = (int64_t)((uint64_t)t328 * (uint64_t)dim337);
+                            int64_t t340 = (int64_t)((uint64_t)t339 * (uint64_t)2);
+                            int64_t t341 = i320 * 32;
+                            asc_lock(PIPE_MTE2, 3);
+                            {
+                                cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ bfloat16_t*)((__ubuf__ uint8_t*)buf251 + t341), (__gm__ bfloat16_t*)((__gm__ uint8_t*)gm2 + t340), sel333, 32, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)t338, 32);
+                            }
+                            asc_unlock(PIPE_MTE2, 3);
+                        }
+                        asc_lock(PIPE_V, 0);
+                        asc_lock(PIPE_V, 1);
+                        asc_lock(PIPE_V, 3);
+                        kernel_sparse_attention_mix_vf1(t319, (__ubuf__ int32_t*)buf248, (__ubuf__ fp8_e4m3fn_t*)buf249, (__ubuf__ bfloat16_t*)buf251, (__ubuf__ bfloat16_t*)buf253);
+                        asc_unlock(PIPE_V, 3);
+                        asc_unlock(PIPE_V, 1);
+                        asc_unlock(PIPE_V, 0);
+                        asc_lock(PIPE_V, 5);
+                        kernel_sparse_attention_mix_vf2((__ubuf__ bfloat16_t*)buf253, (__ubuf__ bfloat16_t*)buf254);
+                        asc_unlock(PIPE_V, 5);
+                        int64_t t342 = (int64_t)((uint64_t)arg11 * (uint64_t)4);
+                        int64_t t343 = (int64_t)((uint64_t)t342 + (uint64_t)i316);
+                        __ubuf__ bfloat16_t* view_root344 = reinterpret_cast<__ubuf__ bfloat16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf254) + 0);
+                        __cbuf__ bfloat16_t* view_root345 = reinterpret_cast<__cbuf__ bfloat16_t*>(reinterpret_cast<__cbuf__ uint8_t*>(buf260) + 0);
+                        int64_t t346 = (int64_t)((uint64_t)t343 * (uint64_t)256);
+                        asc_lock(PIPE_MTE3, 5);
+                        int64_t t347 = t346;
+                        asc_copy_ub2l1(view_root345 + t347, (__ubuf__ bfloat16_t*)view_root344 + 0, 32, 16, 1, 112);
+                        asc_unlock(PIPE_MTE3, 5);
+                    }
+                    asc_sync_intra_arrive(PIPE_MTE3, 0);
+                } else {
+                    int64_t t348 = i310 - 1;
+                    int64_t t349 = t348 * 128;
+                    int64_t dim350 = gm6_arg.stride[0];
+                    int64_t t351 = (int64_t)((uint64_t)i302 * (uint64_t)dim350);
+                    int64_t t352 = (int64_t)((uint64_t)t351 * (uint64_t)4);
+                    int64_t t353 = t348 * 512;
+                    int64_t t354 = (int64_t)((uint64_t)t352 + (uint64_t)t353);
+                    asc_lock(PIPE_MTE2, 0);
+                    {
+                        cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ int32_t*)((__ubuf__ uint8_t*)buf248 + 0), (__gm__ int32_t*)((__gm__ uint8_t*)gm6 + t354), 1, 512, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)0, 0);
+                    }
+                    asc_unlock(PIPE_MTE2, 0);
+                    asc_sync_intra_wait(PIPE_MTE3, 0);
+                    for (int64_t i355 = 0; i355 < 4; i355 = (int64_t)((uint64_t)i355 + (uint64_t)1)) {
+                        int64_t t356 = (int64_t)((uint64_t)arg11 * (uint64_t)64);
+                        int64_t t357 = i355 * 16;
+                        int64_t t358 = (int64_t)((uint64_t)t356 + (uint64_t)t357);
+                        for (int64_t i359 = 0; i359 < 16; i359 = (int64_t)((uint64_t)i359 + (uint64_t)1)) {
+                            int64_t t360 = (int64_t)((uint64_t)t358 + (uint64_t)i359);
+                            int64_t t361 = t351;
+                            int64_t t362 = t349;
+                            int64_t t363 = t361 + t362;
+                            int64_t t364 = t360;
+                            int64_t t365 = t363 + t364;
+                            int32_t ld366 = gm6[t365];
+                            int64_t t367 = (int64_t)ld366;
+                            int64_t t368 = (t367 < 895 ? t367 : 895);
+                            int64_t t369 = (t368 > 0 ? t368 : 0);
+                            int64_t t370 = (t369 < 896 ? t369 : 896);
+                            int64_t t371 = (int64_t)((uint64_t)896 - (uint64_t)t370);
+                            int64_t t372 = (t371 < 1 ? t371 : 1);
+                            bool cmp373 = t369 <= 896;
+                            int64_t sel374 = cmp373 ? t372 : 0;
+                            int64_t dim375 = gm3_arg.stride[0];
+                            int64_t t376 = (int64_t)((uint64_t)t369 * (uint64_t)dim375);
+                            int64_t t377 = i359 * 256;
+                            asc_lock(PIPE_MTE2, 2);
+                            {
+                                cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ uint8_t*)((__ubuf__ uint8_t*)buf250 + t377), (__gm__ uint8_t*)((__gm__ uint8_t*)gm3 + t376), sel374, 256, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)dim375, 256);
+                            }
+                            asc_unlock(PIPE_MTE2, 2);
+                            int64_t dim378 = gm4_arg.stride[0];
+                            int64_t t379 = (int64_t)((uint64_t)dim378 * (uint64_t)2);
+                            int64_t t380 = (int64_t)((uint64_t)t369 * (uint64_t)dim378);
+                            int64_t t381 = (int64_t)((uint64_t)t380 * (uint64_t)2);
+                            int64_t t382 = i359 * 64;
+                            asc_lock(PIPE_MTE2, 4);
+                            {
+                                cannbotdsl_92::cannbotdsl_copy_gm2ub_align((__ubuf__ bfloat16_t*)((__ubuf__ uint8_t*)buf252 + t382), (__gm__ bfloat16_t*)((__gm__ uint8_t*)gm4 + t381), sel374, 64, 0, 0, false, static_cast<uint8_t>(0), (uint64_t)t379, 64);
+                            }
+                            asc_unlock(PIPE_MTE2, 4);
+                        }
+                        asc_lock(PIPE_V, 0);
+                        asc_lock(PIPE_V, 2);
+                        asc_lock(PIPE_V, 4);
+                        asc_lock(PIPE_V, 5);
+                        kernel_sparse_attention_mix_vf3(t358, (__ubuf__ int32_t*)buf248, (__ubuf__ uint8_t*)buf250, (__ubuf__ bfloat16_t*)buf252, (__ubuf__ bfloat16_t*)buf254);
+                        asc_unlock(PIPE_V, 5);
+                        asc_unlock(PIPE_V, 4);
+                        asc_unlock(PIPE_V, 2);
+                        asc_unlock(PIPE_V, 0);
+                        int64_t t383 = (int64_t)((uint64_t)arg11 * (uint64_t)4);
+                        int64_t t384 = (int64_t)((uint64_t)t383 + (uint64_t)i355);
+                        __ubuf__ bfloat16_t* view_root385 = reinterpret_cast<__ubuf__ bfloat16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf254) + 0);
+                        __cbuf__ bfloat16_t* view_root386 = reinterpret_cast<__cbuf__ bfloat16_t*>(reinterpret_cast<__cbuf__ uint8_t*>(buf260) + 0);
+                        int64_t t387 = (int64_t)((uint64_t)t384 * (uint64_t)256);
+                        asc_lock(PIPE_MTE3, 5);
+                        int64_t t388 = t387;
+                        asc_copy_ub2l1(view_root386 + t388, (__ubuf__ bfloat16_t*)view_root385 + 0, 32, 16, 1, 112);
+                        asc_unlock(PIPE_MTE3, 5);
+                    }
+                    asc_sync_intra_arrive(PIPE_MTE3, 0);
+                }
+                int32_t t389 = (int32_t)sel312;
+                asc_sync_intra_wait(PIPE_V, 2);
+                asc_lock(PIPE_V, 0);
+                asc_lock(PIPE_V, 6);
+                kernel_sparse_attention_mix_vf4((__ubuf__ int32_t*)buf248, t389, (__ubuf__ float*)buf246, (__ubuf__ float*)buf256, (__ubuf__ bfloat16_t*)buf255);
+                asc_unlock(PIPE_V, 6);
+                asc_unlock(PIPE_V, 0);
+                asc_sync_intra_arrive(PIPE_V, 2);
+                __ubuf__ bfloat16_t* view_root390 = reinterpret_cast<__ubuf__ bfloat16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf255) + 0);
+                __cbuf__ bfloat16_t* view_root391 = reinterpret_cast<__cbuf__ bfloat16_t*>(reinterpret_cast<__cbuf__ uint8_t*>(buf261) + 0);
+                int64_t t392 = (int64_t)((uint64_t)arg11 * (uint64_t)32);
+                int64_t t393 = t392;
+                int64_t t394 = t393 * 16;
+                asc_sync_intra_wait(PIPE_MTE3, 1);
+                asc_lock(PIPE_MTE3, 6);
+                asc_copy_ub2l1(view_root391 + t394, (__ubuf__ bfloat16_t*)view_root390 + 0, 8, 32, 1, 32);
+                asc_unlock(PIPE_MTE3, 6);
+                asc_sync_intra_arrive(PIPE_MTE3, 1);
+                for (int64_t i395 = 0; i395 < 4; i395 = (int64_t)((uint64_t)i395 + (uint64_t)1)) {
+                    asc_sync_intra_wait(PIPE_V, 3);
+                    kernel_sparse_attention_mix_vf5((__ubuf__ float*)buf256, i395, (__ubuf__ float*)buf257, (__ubuf__ float*)buf247);
+                    asc_sync_intra_arrive(PIPE_V, 3);
+                }
+            }
+            for (int64_t i396 = 0; i396 < 4; i396 = (int64_t)((uint64_t)i396 + (uint64_t)1)) {
+                asc_lock(PIPE_V, 7);
+                asc_lock(PIPE_V, 8);
+                kernel_sparse_attention_mix_vf6((__ubuf__ float*)buf256, (__ubuf__ float*)buf258, i396, (__ubuf__ float*)buf257, (__ubuf__ bfloat16_t*)buf259);
+                asc_unlock(PIPE_V, 8);
+                asc_unlock(PIPE_V, 7);
+                int64_t t397 = (int64_t)((uint64_t)i302 * (uint64_t)64);
+                int64_t dim398 = gm8_arg.stride[0];
+                int64_t t399 = (int64_t)((uint64_t)t397 * (uint64_t)dim398);
+                int64_t t400 = i396 * 128;
+                int64_t t401 = (int64_t)((uint64_t)t399 + (uint64_t)t400);
+                int64_t t402 = (int64_t)((uint64_t)t401 * (uint64_t)16);
+                int64_t t403 = (int64_t)((uint64_t)t402 / (uint64_t)8);
+                int64_t t404 = (int64_t)((uint64_t)reinterpret_cast<uint64_t>(gm8) + (uint64_t)t403);
+                __gm__ bfloat16_t* root405 = (__gm__ bfloat16_t*)(uintptr_t)(uint64_t)(t404);
+                __ubuf__ bfloat16_t* view_root406 = reinterpret_cast<__ubuf__ bfloat16_t*>(reinterpret_cast<__ubuf__ uint8_t*>(buf259) + 0);
+                int64_t dim407 = gm8_arg.stride[0];
+                int64_t t408 = dim407;
+                int64_t t409 = sel308 / 2;
+                int64_t t410 = sel308 % 2;
+                int64_t t411 = t410 + 1;
+                int64_t t412 = t411 / 2;
+                int64_t t413 = (int64_t)((uint64_t)t409 + (uint64_t)t412);
+                int64_t t414 = (int64_t)((uint64_t)arg11 * (uint64_t)t413);
+                int64_t t415 = t414;
+                int64_t t416 = t415 * t408;
+                int64_t t417 = t408 * 2;
+                int64_t t418 = t417;
+                asc_lock(PIPE_MTE3, 8);
+                cannbotdsl_92::cannbotdsl_copy_ub2gm_align((__gm__ bfloat16_t*)root405 + t416, (__ubuf__ bfloat16_t*)view_root406 + 0, 32, 256, static_cast<uint8_t>(0), (uint64_t)t418, 256);
+                asc_unlock(PIPE_MTE3, 8);
+            }
+        }
+        asc_sync_intra_wait(PIPE_MTE3, 0);
+        asc_sync_intra_wait(PIPE_MTE3, 1);
+    }
+}

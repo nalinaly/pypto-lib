@@ -14,6 +14,8 @@ from cannbotdsl.buffer import Buffer
 from cannbotdsl.ring_buffer import RingBuffer
 import pypto.language as pl
 
+from attention_cache_dsl import dequantize_fp8, store_nz
+
 
 # 模型配置。
 HEADS = 64
@@ -80,32 +82,9 @@ def swa_query(
             cb.mem_copy(cb.tile_slice(payload, (1, HEAD_DIM), (row, 0)), cb.tile_slice(cache, (1, HEAD_DIM), (safe, 0)))
             src_scale = cb.tile_slice(scales, (1, HEAD_DIM // CACHE_GROUP), (safe, 0))
             cb.mem_copy(cb.tile_slice(factors, (1, HEAD_DIM // CACHE_GROUP), (row, 0)), src_scale)
-        with cb.vf():
-            half = rr.update_mask(CACHE_GROUP, elem_bits=32)[0]
-            fp8_mask = rr.update_mask(CACHE_GROUP * 4, elem_bits=8)[0]
-            zero = rr.vdups(0.0, cb.dtypes.float32, mask=half)
-            for row in range(GATHER_TILE):
-                position = lane * (WINDOW // 2) + chunk * GATHER_TILE + row
-                index = rr.vload_broadcast(ids, position)
-                valid = rr.mask_and(rr.vges(index, 0, mask=half), rr.vlts(index, cache_rows, mask=half), exec_mask=half)
-                for group in range(HEAD_DIM // CACHE_GROUP):
-                    offset = row * HEAD_DIM + group * CACHE_GROUP
-                    code = rr.vload_unpack(payload, offset, unpack_mode=rr.UnpackMode.B8_TO_B32)
-                    code = rr.vreinterpret_lanes(code, cb.dtypes.float8_e4m3fn)
-                    value = rr.vcast(code, cb.dtypes.float32, mask=fp8_mask, reg_layout=rr.RegLayout.ZERO)
-                    factor = rr.vload_broadcast(factors, row * (HEAD_DIM // CACHE_GROUP) + group)
-                    factor = rr.vcast(factor, cb.dtypes.float32, mask=half)
-                    value = rr.vmul(value, factor, mask=half)
-                    value = rr.vselect(value, zero, cond_mask=valid)
-                    value = rr.vcast(value, cb.dtypes.bfloat16, mask=half, rounding="rn")
-                    rr.vstore_pack(decoded, offset, value, half, pack_mode=rr.PackMode.B32_TO_B16)
-        with cb.vf():
-            full16 = rr.full_mask(elem_bits=16)
-            for row in range(GATHER_TILE):
-                for col in range(0, HEAD_DIM, CUBE_TILE):
-                    value = rr.vload(decoded, row * HEAD_DIM + col)
-                    offset = row * 16 + (col // 16) * 272
-                    rr.vstore_strided(kv_nz, offset, value, full16, block_stride=17, repeat_stride=0)
+        first = lane * (WINDOW // 2) + chunk * GATHER_TILE
+        dequantize_fp8(payload, factors, ids, decoded, first, cache_rows)
+        store_nz(decoded, kv_nz)
         target = cb.tile_slice(kv_write, (GATHER_TILE, HEAD_DIM), (lane * 4 + chunk, 0))
         cb.mem_copy(target, kv_nz)
 

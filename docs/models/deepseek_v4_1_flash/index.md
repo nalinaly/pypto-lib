@@ -95,9 +95,9 @@ PV, and applies the sink contribution during final FP32 normalization before
 storing BF16 output. It consumes the stored scale values without selecting a
 new quantizer. Inactive output rows retain their caller-provided contents.
 
-The packed544 entry, other TP configurations, and compressed-KV Attention
-retain their existing implementations during this staged migration. Extending
-the DSL reader to compressed KV requires a separate FP4 contract review.
+The packed544 entry and other TP configurations retain their existing
+implementations during this staged migration. Split-cache compressed-KV
+Attention uses the mixed-quantization leaf described below.
 
 Run the existing standalone numerical checks with the selected environment
 active and an allocated A5 device in `TASK_DEVICE`:
@@ -111,6 +111,49 @@ The core cases cover zero active Queries, masked windows, cross-page and wrap
 indices, irregular/repeated indices, and inactive output sentinels. The
 existing core and composed Attention error thresholds are unchanged. Use the
 layer-0 command above to validate composition with EP MoE.
+
+## Mixed FP8/FP4 sparse Attention in DSL
+
+The TP1 `attend_packed` path uses
+[`sparse_attention_dsl.py`](../../../models/deepseek_v4_1_flash/sparse_attention_dsl.py)
+in place of the native `sparse_gather_vf` MIX kernel. One AIC and two AIVs
+process each Query's complete 128-entry window and 512 compressed positions.
+Gathering, dequantization, QK, online Softmax, PV and final sink normalization
+stay in one DSL MIX task. KV is staged in L1; partial attention state stays
+in UB. PyPTO/simpler owns task dependencies and the SPMD launch.
+
+Window KV remains FP8 E4M3FN with group-32 BF16 scales; compressed KV remains
+packed E2M1 with group-16 BF16 scales and the even element in the low nibble.
+Payload and scale buffers remain separate, and the kernel consumes physical
+row indices. It preserves the existing 128-key online accumulation, BF16
+probability rounding and final sink contribution to the denominator.
+Invalid rows contribute neither probability nor value. Inactive output rows
+retain their initial contents.
+
+The implementation references the current
+[Mixed Quant Sparse Flash MLA sample](https://gitcode.com/cann/cannbot-dsl/tree/31bbd70/samples/attention/mixed_quant_sparse_flash_mla).
+Its packed-row ABI, logical indices and metadata scheduler are adapted to
+the model's existing storage and simpler scheduling. The sample's initial
+sink state is not used, preserving this model's BF16 rounding order.
+[`attention_cache_dsl.py`](../../../models/deepseek_v4_1_flash/attention_cache_dsl.py)
+shares the FP8 dequantizer with SWA and supplies the FP4-to-BF16 NZ path.
+
+There is no reduction between Query owners: synchronization remains inside
+each AIC/AIV block, without a launch-wide barrier or cross-device communication.
+Other TP paths keep their existing implementations. The retired native MIX
+source and its two private headers are retained only in the evidence archive.
+
+After acquiring an A5 device through the task queue, run:
+
+```bash
+python models/deepseek_v4_1_flash/sparse_attention_dsl.py --case all -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/sparse_attention.py --mode swa --swa-case all -d "$TASK_DEVICE"
+```
+
+The eight sparse cases cover mixed inputs, each source independently, masked
+rows, dominant sinks, zero active rows, inactive sentinels and multiple Queries
+per block. Their outputs also match the archived native kernel elementwise.
+See the [validation and generated-code archive](../../../artifacts/dsv4_1_dsl/2026-11-06-sparse-attention/README.txt).
 
 ## Shared input and QA/KV projection in DSL
 

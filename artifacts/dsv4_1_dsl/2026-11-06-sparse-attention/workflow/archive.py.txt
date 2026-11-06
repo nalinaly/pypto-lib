@@ -1,0 +1,134 @@
+"""归档稀疏 Attention 的原核对照、最新 sample 参考和设备生成物。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-sparse-attention-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-06-sparse-attention"
+inventory = []
+
+
+def capture(source, target, binary=False):
+    source = Path(source)
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        value = source.read_text().replace(str(workspace), "<workspace>")
+        value = value.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n")
+    source_name = str(source.relative_to(workspace)) if source.is_relative_to(workspace) else source.name
+    inventory.append({"path": str(destination.relative_to(archive)), "source": source_name,
+                      "bytes": destination.stat().st_size, "encoding": "gzip" if binary else "utf-8"})
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        source = directory / name
+        if source.is_file():
+            capture(source, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*.cpp")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        saved = set()
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name.startswith(("sparse_attention_mix", "swa_query")) and entry not in saved:
+                saved.add(entry)
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+def require_pass(name, count):
+    source = Path(f"/tmp/sparse-attention-{name}.log")
+    value = source.read_text()
+    if len(re.findall(r"^\[RUN\] PASS", value, re.MULTILINE)) != count:
+        raise RuntimeError(name + " 的通过数量不符")
+    capture(source, f"validation/{name}.log.txt")
+    return value
+
+
+cases_log = require_pass("cases", 16)
+swa_log = require_pass("swa", 4)
+layer_log = require_pass("layer", 1)
+c1a_log = require_pass("c1a-compile", 1)
+require_pass("layer-compile", 1)
+if len(re.findall(r"^\[RUN\]   '[^']+' PASS", layer_log, re.MULTILINE)) != 16:
+    raise RuntimeError("整层必须通过全部 16 项输出")
+comparisons = json.loads((work / "native-comparison.json").read_text())
+if len(comparisons) != 8 or any(row["原核不同元素数"] for row in comparisons):
+    raise RuntimeError("8 组原核对照必须逐元素相同")
+capture(work / "native-comparison.json", "validation/native-comparison.json")
+for name in ("sparse_attention_dsl", "attention_cache_dsl", "sparse_attention", "swa_dsl"):
+    capture(model / "models/deepseek_v4_1_flash" / (name + ".py"), f"model-snapshot/{name}.py.txt")
+for name in ("sparse_gather_vf.cpp", "sparse_dequant_vf.hpp", "sparse_softmax_vf.hpp",
+             "sparse_attention.py", "swa_dsl.py", "compare_native.py", "archive.py", "samples-update.txt"):
+    capture(work / name, f"workflow/{name}.txt")
+for name in ("run-case.sh", "run_layer_frozen.py"):
+    capture(workspace / "artifacts/dsv41-index-query-dsl" / name, f"workflow/{name}.txt")
+sample = workspace / "cannbot-dsl/samples/attention/mixed_quant_sparse_flash_mla"
+for name in ("README.md", "mixed_quant_sparse_flash_mla.py"):
+    capture(sample / name, f"reference/{name}.txt")
+for index, directory in enumerate(dict.fromkeys(row["DSL"] for row in comparisons)):
+    generated(f"case-{index}", Path(directory), fixtures=True)
+for index, directory in enumerate(dict.fromkeys(row["原生"] for row in comparisons)):
+    generated(f"native-{index}", Path(directory))
+swa_directories = dict.fromkeys(re.findall(r"^DEVICE_VALIDATED swa \S+ (.+)$", swa_log, re.MULTILINE))
+for index, directory in enumerate(swa_directories):
+    generated(f"swa-{index}", Path(directory))
+for label, log, pattern in (("layer2-ep2", layer_log, "l3_decode_layer"),
+                            ("c1a-compile", c1a_log, "l3_decode_c1a_full")):
+    directory = Path(re.search(r"see (.+?/_jit_" + pattern + r"_[^/]+)/report/", log)[1])
+    generated(label, directory)
+    for child in sorted((directory / "next_levels").glob("*")):
+        generated(f"{label}/{child.name}", child)
+
+
+def revision(path):
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=path, text=True).strip()
+
+
+summary = {
+    "状态": "PASS", "分支": "dsv4.1-dsl", "模型基线": revision(model),
+    "PyPTO版本": revision(workspace / "issue75-env/pypto-pr"),
+    "DSL版本": "0.8.1", "DSL源码": revision(workspace / "cannbot-dsl-dev"),
+    "samples仓库": "https://gitcode.com/cann/cannbot-dsl", "samples分支": "master",
+    "samples更新前": "48fa202", "samples更新后": revision(workspace / "cannbot-dsl"),
+    "samples更新方式": "保持浅克隆，depth=1 获取 master；工作区原本干净，切换到新 tip。",
+    "参考范围": "mixed_quant_sparse_flash_mla 的 BF16 Cube 流水、FP4 UNPACK4/quarter-0 展开、group-16 scale 广播及 NZ17 写入；该 sample 在本轮拉取的两个提交间无变化。",
+    "替换任务": "sparse_gather_vf", "新任务": "dsl_sparse_attn",
+    "融合契约": "每个 block 的 1AIC+2AIV 完整处理一个 Query 的 128 个窗口位置和 512 个压缩位置。反量化、QK、在线 Softmax、PV 和最终归一化均在同一个 MIX 任务内。",
+    "数值契约": "FP8 E4M3FN/group32/BF16 scale；FP4 E2M1/group16/BF16 scale，低半字节在前；保留 128-key 在线累加、BF16 P 舍入与最终 sink 分母。",
+    "适配差异": "保留 payload/scale 分离存储和物理行索引，使用 simpler 调度；没有接入 sample 的逻辑索引/页表/AICPU metadata 启动链，也没有采用其初始 sink 状态。",
+    "共享实现": "SWA 与稀疏 Attention 共用 FP8 反量化及 NZ 写入；CPU 参考移到独立子模块，默认 key_tile=64 和原调用接口不变。",
+    "验证": {
+        "原核对照": "8 组输入分别执行 DSL、原生 MIX 和 CPU 参考；设备对照全部逐元素相同，最大绝对差均为 0。",
+        "独立比较器": "沿用 atol=0.003、rtol=0.03、max_error_ratio=0；额外精确校验非有效输出哨兵和全屏蔽零输出。",
+        "覆盖": "混合 KV、仅窗口、仅压缩、全屏蔽、强 sink、零有效 token、单 Query、非有效行和 33 Query 的同 block 复用。",
+        "SWA回归": "4 组设备用例全部通过原比较器。",
+        "整层": "C2A layer2 EP2，固定输入和原比较器，全部 16 项输出通过。",
+        "整层误差": re.search(r"\[PRECISION\] composed x_next (.+)", layer_log)[1],
+        "整层设备": [int(device) for device in re.findall(r"已获取设备 (\d+) 的锁", layer_log)],
+        "C1A": "共用模型入口编译通过；完整 C1A 设备模型本轮未执行。",
+        "未执行": "整网、真实 checkpoint、完整 prefill 设备模型及正式性能 A/B。",
+    },
+    "通信修改": False, "PyPTO框架修改": False, "DSL框架修改": False,
+    "整层阈值修改": False, "量化契约修改": False,
+    "固定整层输入": "build_output/_jit_l3_decode_layer_20261105_160121_u27otki0/data",
+    "归档说明": "保留代表性小输入、原核、最新参考 sample、生成代码和完整日志；相同编译目录复用时保留最后一组输入，全部用例可用固定种子重建；不重复保存整层权重。",
+    "files": inventory,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"已归档 {len(inventory)} 个文件：{archive}")

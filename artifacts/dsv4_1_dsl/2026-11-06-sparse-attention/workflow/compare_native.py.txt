@@ -1,0 +1,101 @@
+"""在同一组输入上比较原生 MIX 与 DSL MIX，并各自校验共享 CPU 参考。"""
+
+import argparse
+import json
+from pathlib import Path
+
+import pypto.language as pl
+import torch
+from golden import ratio_allclose, run
+from pypto.runtime import pto_isa_include_dir
+
+from sparse_attention_dsl import build_sparse_specs, golden_sparse, validate_sparse_attention
+
+
+work = Path(__file__).resolve().parent
+
+
+@pl.jit.extern(core_type="mixed", aic_source=work / "sparse_gather_vf.cpp",
+               aiv_source=work / "sparse_gather_vf.cpp", dual_aiv_dispatch=True,
+               include_dirs=(pto_isa_include_dir(),))
+def native_attention(
+    output: pl.Out[pl.Tensor],
+    query: pl.Tensor,
+    sink: pl.Tensor,
+    window: pl.Tensor,
+    window_scale: pl.Tensor,
+    compressed: pl.Tensor,
+    compressed_scale: pl.Tensor,
+    window_indices: pl.Tensor,
+    compressed_indices: pl.Tensor,
+    num_tokens: pl.Scalar[pl.INT32],
+    heads: pl.Scalar[pl.INT32],
+    window_keys: pl.Scalar[pl.INT32],
+    compressed_keys: pl.Scalar[pl.INT32],
+) -> pl.Tensor:
+    ...
+
+
+@pl.jit
+def validate_native(
+    query: pl.Tensor,
+    window: pl.Tensor,
+    window_scale: pl.Tensor,
+    compressed: pl.Tensor,
+    compressed_scale: pl.Tensor,
+    window_indices: pl.Tensor,
+    compressed_indices: pl.Tensor,
+    sink: pl.Tensor,
+    output: pl.InOut[pl.Tensor],
+    num_tokens: pl.Scalar[pl.INT32],
+):
+    heads = pl.cast(64, pl.INT32)
+    window_keys = pl.cast(128, pl.INT32)
+    compressed_keys = pl.cast(512, pl.INT32)
+    workers = pl.max(1, pl.min(num_tokens, 32))
+    with pl.spmd(workers, name_hint="native_sparse_attn", sync_start=True):
+        output = native_attention(output, query, sink, window, window_scale, compressed,
+                                  compressed_scale, window_indices, compressed_indices,
+                                  num_tokens, heads, window_keys, compressed_keys)
+    return output
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--device", type=int, default=0)
+    parser.add_argument("--case", choices=("basic", "all"), default="all")
+    args = parser.parse_args()
+    cases = [(4, 3, "mixed")]
+    if args.case == "all":
+        cases += [(2, 0, "mixed"), (1, 1, "mixed"), (7, 5, "masked"), (3, 2, "window"),
+                  (3, 2, "compressed"), (3, 2, "sink"), (35, 33, "mixed")]
+    records = []
+    for rows, active, kind in cases:
+        outputs = []
+        record = {"rows": rows, "active": active, "kind": kind}
+        for label, entry in (("DSL", validate_sparse_attention), ("原生", validate_native)):
+            print(f"[SPARSE_COMPARE] {label} {rows=} {active=} {kind=}", flush=True)
+            result = run(
+                fn=entry,
+                specs=build_sparse_specs(rows, active, kind),
+                golden_fn=golden_sparse,
+                compare_fn={"output": ratio_allclose(atol=0.003, rtol=0.03, max_error_ratio=0.0)},
+                config=dict(backend_type="a5", execution_mode=False, device_id=args.device),
+                save_data=True,
+            )
+            if not result.passed:
+                raise SystemExit(result.error or 1)
+            actual = torch.load(result.work_dir / "data/out/output.pt", weights_only=True)
+            initial = torch.load(result.work_dir / "data/in/output.pt", weights_only=True)
+            torch.testing.assert_close(actual[active:], initial[active:], rtol=0, atol=0)
+            if kind == "masked":
+                torch.testing.assert_close(actual[:active], torch.zeros_like(actual[:active]), rtol=0, atol=0)
+            outputs.append(actual)
+            record[label] = str(result.work_dir)
+            print(f"[产物] {result.work_dir}", flush=True)
+        torch.testing.assert_close(outputs[0], outputs[1], rtol=0.03, atol=0.003)
+        record["原核最大绝对差"] = (outputs[0].float() - outputs[1].float()).abs().max().item()
+        record["原核不同元素数"] = int((outputs[0] != outputs[1]).sum())
+        records.append(record)
+        print(f"[对照通过] {record}", flush=True)
+    (work / "native-comparison.json").write_text(json.dumps(records, ensure_ascii=False, indent=2) + "\n")

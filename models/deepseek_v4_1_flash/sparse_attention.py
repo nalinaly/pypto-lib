@@ -29,6 +29,8 @@ from gemm import golden_gemm_bf16_via_mxfp8_to_bf16_sequential
 from utils import packed_query_lengths, window_metadata
 from window_kv_dsl import quantize_window_kv
 from swa_dsl import swa_attention_dsl
+from sparse_attention_dsl import sparse_attention_dsl
+from sparse_attention_dsl import golden_selected_attention as golden_selected_attention
 
 from pathlib import Path
 
@@ -1066,46 +1068,7 @@ def make_packed_swa_inputs(tokens=257, requests=4, seed=17, case="mixed", start_
     return values
 
 
-GOLDEN_SELECTED_KEY_TILE = 64
 GOLDEN_PREFILL_KEY_TILE = 128
-
-
-def golden_selected_attention(
-    q, window_value, window_indices, compressed_value, compressed_indices, sink,
-    *, key_tile=GOLDEN_SELECTED_KEY_TILE,
-):
-    """Attend selected paged KV rows with BF16 probability tiles and one sink."""
-    tokens, heads, head_dim = q.shape
-    gathered = torch.cat(
-        (
-            window_value.flatten(0, 1).squeeze(-2)[window_indices.clamp_min(0).long()],
-            compressed_value.flatten(0, 1).squeeze(-2)[compressed_indices.clamp_min(0).long()],
-        ),
-        dim=-2,
-    ).to(torch.bfloat16).float()
-    visible = torch.cat((window_indices >= 0, compressed_indices >= 0), dim=-1)
-    gathered = gathered.masked_fill(~visible.unsqueeze(-1), 0.0)
-    maximum = torch.full((tokens, heads), -1e30)
-    denominator = torch.zeros_like(maximum)
-    numerator = torch.zeros(tokens, heads, head_dim, dtype=torch.float32)
-    for start in range(0, gathered.shape[-2], key_tile):
-        tile = gathered[:, start : start + key_tile]
-        tile_visible = visible[:, None, start : start + key_tile]
-        logits = torch.einsum("thd,tkd->thk", q.float(), tile) * head_dim**-0.5
-        logits = logits.masked_fill(~tile_visible, -1e30)
-        next_maximum = torch.maximum(maximum, logits.amax(-1))
-        correction = torch.exp(maximum - next_maximum)
-        probabilities = torch.exp(logits - next_maximum.unsqueeze(-1))
-        probabilities = probabilities * tile_visible
-        denominator = denominator * correction + probabilities.sum(-1)
-        weights = probabilities.to(torch.bfloat16).float()
-        numerator = numerator * correction.unsqueeze(-1) + torch.einsum("thk,tkd->thd", weights, tile)
-        maximum = next_maximum
-    sink_value = sink.float().view(1, -1)
-    final_maximum = torch.maximum(maximum, sink_value)
-    correction = torch.exp(maximum - final_maximum)
-    denominator = denominator * correction + torch.exp(sink_value - final_maximum)
-    return (numerator * (correction / denominator).unsqueeze(-1)).to(q.dtype)
 
 
 def golden_prefill_c1a_attention(
@@ -1201,64 +1164,6 @@ def golden_merge_attention_stats(
         denominator = denominator + local_sum * scale
         numerator = numerator + local_numerator * scale.unsqueeze(-1)
     return numerator / denominator.unsqueeze(-1)
-
-
-@pl.jit.extern(core_type="mixed", aic_source=Path(__file__).parent / "kernels" / "sparse_gather_vf.cpp",
-               aiv_source=Path(__file__).parent / "kernels" / "sparse_gather_vf.cpp",
-               include_dirs=(pto_isa_include_dir(),), dual_aiv_dispatch=True)
-def _gather_sparse_vf_rows(
-    output: pl.Out[pl.Tensor],
-    query: pl.Tensor,
-    sink: pl.Tensor,
-    window: pl.Tensor,
-    window_scale: pl.Tensor,
-    compressed: pl.Tensor,
-    compressed_scale: pl.Tensor,
-    window_indices: pl.Tensor,
-    compressed_indices: pl.Tensor,
-    num_tokens: pl.Scalar[pl.INT32],
-    heads: pl.Scalar[pl.INT32],
-    window_keys: pl.Scalar[pl.INT32],
-    compressed_keys: pl.Scalar[pl.INT32],
-    cache_mode: pl.constexpr,
-) -> pl.Tensor:
-    """Stream packed cache rows through L1 into sink-aware sparse attention."""
-    ...
-
-
-@pl.jit.inline(auto_scope=False)
-def gather_sparse_attention(
-    query: pl.Tensor,
-    window_indices: pl.Tensor,
-    window: pl.Tensor,
-    window_scale: pl.Tensor,
-    compressed_indices: pl.Tensor,
-    compressed: pl.Tensor,
-    compressed_scale: pl.Tensor,
-    sink: pl.Tensor,
-    output: pl.Tensor,
-    num_tokens: pl.Scalar[pl.INT32],
-    source_ready: pl.Scalar[pl.TASK_ID],
-    compressed_keys: pl.constexpr,
-):
-    """Attend H=64, D=512 packed caches with K=128 or 640 and both Vector lanes."""
-    query = query[:num_tokens, :]
-    output = output[:num_tokens, :]
-    window_indices = window_indices[:num_tokens, :]
-    compressed_indices = compressed_indices[:num_tokens, :]
-    if compressed_keys == 0:
-        # Use fewer workers without increasing the maximum queries per worker.
-        query_waves = pl.max(1, (num_tokens + WORKERS - 1) // WORKERS)
-        workers = pl.max(1, pl.min(WORKERS, (num_tokens + query_waves - 1) // query_waves))
-    else:
-        workers = pl.max(1, pl.min(num_tokens, WORKERS))
-    with pl.spmd(workers, name_hint="sparse_gather_vf", deps=[source_ready]) as attended:
-        output = _gather_sparse_vf_rows(
-            output, query, sink, window, window_scale, compressed, compressed_scale,
-            window_indices, compressed_indices, num_tokens, LOCAL_H, WINDOW_KEYS, compressed_keys,
-            cache_mode=compressed_keys,
-        )
-    return attended
 
 
 @pl.jit.extern(core_type="aiv", source=Path(__file__).parent / "kernels" / "gather_packed.cpp",
@@ -1787,9 +1692,9 @@ def attend_packed(
     source_ready: pl.Scalar[pl.TASK_ID],
 ):
     if LOCAL_H == 64:
-        attended = gather_sparse_attention(
-            query, window_indices, window, window_scale, compressed_indices,
-            compressed, compressed_scale, sink, output, num_tokens, source_ready, compressed_keys=INDEX_TOPK,
+        _attended = sparse_attention_dsl(
+            query, window, window_scale, compressed, compressed_scale,
+            window_indices, compressed_indices, sink, output, num_tokens, source_ready,
         )
     else:
         marker = pl.create_tensor([1, 16], dtype=pl.FP32)

@@ -1,0 +1,224 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "query",
+      "direction": "In",
+      "shape": [
+        1,
+        32768
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "window",
+      "direction": "In",
+      "shape": [
+        5,
+        128,
+        1,
+        512
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "window_scale",
+      "direction": "In",
+      "shape": [
+        5,
+        128,
+        1,
+        16
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "compressed",
+      "direction": "In",
+      "shape": [
+        7,
+        128,
+        1,
+        256
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "compressed_scale",
+      "direction": "In",
+      "shape": [
+        7,
+        128,
+        1,
+        32
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "window_indices",
+      "direction": "In",
+      "shape": [
+        1,
+        128
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "compressed_indices",
+      "direction": "In",
+      "shape": [
+        1,
+        512
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "sink",
+      "direction": "In",
+      "shape": [
+        64
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "output",
+      "direction": "InOut",
+      "shape": [
+        1,
+        32768
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "query",
+      "direction": "In",
+      "shape": [
+        1,
+        32768
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "window",
+      "direction": "In",
+      "shape": [
+        5,
+        128,
+        1,
+        512
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "window_scale",
+      "direction": "In",
+      "shape": [
+        5,
+        128,
+        1,
+        16
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "compressed",
+      "direction": "In",
+      "shape": [
+        7,
+        128,
+        1,
+        256
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "compressed_scale",
+      "direction": "In",
+      "shape": [
+        7,
+        128,
+        1,
+        32
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "window_indices",
+      "direction": "In",
+      "shape": [
+        1,
+        128
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "compressed_indices",
+      "direction": "In",
+      "shape": [
+        1,
+        512
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "sink",
+      "direction": "In",
+      "shape": [
+        64
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "output",
+      "direction": "InOut",
+      "shape": [
+        1,
+        32768
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "num_return_types": 1,
+  "return_aliases": [
+    8
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}
