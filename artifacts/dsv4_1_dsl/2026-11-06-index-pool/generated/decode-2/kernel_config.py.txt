@@ -1,0 +1,27 @@
+# Kernel and Orchestration Configuration
+
+from pathlib import Path
+
+from simpler.task_interface import ArgDirection as _D
+
+_ROOT_DIR = Path(__file__).parent
+
+# Runtime configuration for tensormap_and_ringbuffer.
+# AICPU thread count 0 selects the runtime's architecture default (a2a3: 4; a5: 5).
+RUNTIME_CONFIG = {
+	"runtime": "tensormap_and_ringbuffer",
+	"aicpu_thread_num": 0,
+}
+
+ORCHESTRATION = {
+	"source": str(_ROOT_DIR / "orchestration" / "validate_decode.cpp"),
+	"function_name": "aicpu_orchestration_entry",
+	"signature": [_D.IN, _D.IN, _D.INOUT, _D.INOUT],
+}
+
+KERNELS = [
+	{"func_id": 0, "name": "pool_all", "source": str(_ROOT_DIR / "kernels" / "aiv" / "pool_all.cpp"), "core_type": "aiv", "code_name": "pool_all", "signature": [_D.IN, _D.OUT, _D.OUT]},
+	{"func_id": 1, "name": "pool_score", "source": str(_ROOT_DIR / "kernels" / "aiv" / "pool_score.cpp"), "core_type": "aiv", "code_name": "pool_score", "signature": [_D.IN, _D.IN, _D.OUT]},
+	{"func_id": 2, "name": "pool_select", "source": str(_ROOT_DIR / "kernels" / "aiv" / "pool_select.cpp"), "core_type": "aiv", "code_name": "pool_select", "signature": [_D.IN, _D.IN, _D.INOUT, _D.OUT]},
+	{"func_id": 3, "name": "pool_count", "source": str(_ROOT_DIR / "kernels" / "aiv" / "pool_count.cpp"), "core_type": "aiv", "code_name": "pool_count", "signature": [_D.IN, _D.OUT]},
+]

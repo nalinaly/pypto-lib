@@ -1,0 +1,91 @@
+"""对相同输入比较 DSL、原 Decode 和原 Prefill 候选池的真实设备输出。"""
+
+import json
+from pathlib import Path
+import argparse
+
+import pypto.language as pl
+import torch
+from golden import ratio_allclose, run
+
+from decode_indexer_baseline import select_candidate_block_pool as decode_pool
+from prefill_indexer_baseline import select_candidate_block_pool as prefill_pool
+from index_pool_dsl import build_pool_specs, golden_pool, validate_pool
+
+
+work = Path(__file__).resolve().parent
+
+
+@pl.jit
+def validate_decode(scores: pl.Tensor, lengths: pl.Tensor, ids: pl.InOut[pl.Tensor],
+                    counts: pl.InOut[pl.Tensor], num_tokens: pl.Scalar[pl.INT32]):
+    rows = pl.tensor.dim(scores, 0)
+    capacity = pl.tensor.dim(ids, 1)
+    output_ids = pl.slice(ids, [rows, capacity], [0, 0])
+    output_counts = pl.slice(counts, [rows], [0])
+    ready = pl.system.task_dummy(deps=[])
+    decode_pool(scores, lengths, output_ids, output_counts, num_tokens, ready)
+    return ids, counts
+
+
+@pl.jit
+def validate_prefill(scores: pl.Tensor, lengths: pl.Tensor, ids: pl.InOut[pl.Tensor],
+                     counts: pl.InOut[pl.Tensor], num_tokens: pl.Scalar[pl.INT32]):
+    rows = pl.tensor.dim(scores, 0)
+    capacity = pl.tensor.dim(ids, 1)
+    output_ids = pl.slice(ids, [rows, capacity], [0, 0])
+    output_counts = pl.slice(counts, [rows], [0])
+    ready = pl.system.task_dummy(deps=[])
+    prefill_pool(scores, lengths, output_ids, output_counts, num_tokens, ready)
+    return ids, counts
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--device", type=int, default=0)
+    parser.add_argument("--case", choices=("all", "late"), default="all")
+    args = parser.parse_args()
+    cases = [(5, 257, 4, "random"), (3, 16385, 2, "random"), (5, 257, 0, "random"),
+             (3, 16384, 2, "random"), (2, 32779, 2, "fp32"), (2, 65549, 2, "ties"),
+             (3, 32776, 0, "floor"), (2, 32776, 2, "floor"), (1, 524317, 1, "overflow")]
+    cases = cases + [(1, 32779, 1, "late")] if args.case == "all" else [(1, 32779, 1, "late")]
+    records = []
+    for case in cases:
+        outputs = []
+        record = {"case": case, "输出来源": "compare_fn 的 actual 参数"}
+        for label, entry in (("DSL", validate_pool), ("Decode", validate_decode), ("Prefill", validate_prefill)):
+            captured = {}
+            exact = ratio_allclose(atol=0, rtol=0, max_error_ratio=0)
+
+            def capture(name):
+                def compare(actual, expected, **kwargs):
+                    captured[name] = actual.detach().cpu().clone()
+                    return exact(actual, expected, **kwargs)
+                return compare
+
+            print(f"[INDEX_POOL_COMPARE] {label} {case}", flush=True)
+            result = run(
+                fn=entry,
+                specs=build_pool_specs(*case),
+                golden_fn=golden_pool,
+                compare_fn={name: capture(name) for name in ("ids", "counts")},
+                config=dict(backend_type="a5", execution_mode=False, device_id=args.device),
+                save_data=True,
+            )
+            if not result.passed:
+                raise SystemExit(result.error or 1)
+            destination = work / "device-output" / "-".join(map(str, case)) / label
+            destination.mkdir(parents=True, exist_ok=True)
+            for name, value in captured.items():
+                torch.save(value, destination / f"{name}.pt")
+            outputs.append(captured)
+            record[label] = str(result.work_dir)
+            print(f"[产物] {result.work_dir}", flush=True)
+        for baseline in outputs[1:]:
+            for name, actual in outputs[0].items():
+                torch.testing.assert_close(actual, baseline[name], rtol=0, atol=0)
+        record["不同元素数"] = 0
+        records.append(record)
+        print(f"[原核对照通过] {record}", flush=True)
+        filename = "native-comparison.json" if args.case == "all" else "native-comparison-late.json"
+        (work / filename).write_text(json.dumps(records, ensure_ascii=False, indent=2) + "\n")

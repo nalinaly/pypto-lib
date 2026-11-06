@@ -1,0 +1,9 @@
+[RUN] compile ...
+2026-11-06 12:41:15.705 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable '_attended' in function 'attend_packed' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/sparse_attention.py:1695:9
+2026-11-06 12:41:15.705 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'projected_result' in function 'project_index_weights' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/prefill_indexer.py:392:5
+2026-11-06 12:41:15.705 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'projected_tid' in function 'project_index_weights' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/prefill_indexer.py:392:5
+2026-11-06 12:41:15.705 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'projected_result' in function 'publish_c1a_index_key' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/prefill_indexer.py:936:5
+2026-11-06 12:41:15.705 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'projected_tid' in function 'publish_c1a_index_key' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/prefill_indexer.py:936:5
+2026-11-06 12:41:18.181 I | [perf_hint] 10 hints across 10 sites; see <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_prefill_c1a_full_20261106_124115_dsfyr9ye/report/perf_hints.log
+[RUN] compile done (13.12s)
+[RUN] PASS (13.13s)

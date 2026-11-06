@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 顺序占用一张 A5，完成两个原实现对照和短/长历史 C1A 集成验证。
+pool_workspace=<workspace>
+pool_runner="$pool_workspace/artifacts/dsv41-index-query-dsl/run-case.sh"
+pool_work="$pool_workspace/artifacts/dsv41-index-pool-dsl"
+pool_fixture="$pool_workspace/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_c1a_full_20261106_105330_ow_omtjh/data"
+bash "$pool_runner" "$pool_work/compare_native.py" 2>&1 | tee /tmp/index-pool-cases.log
+bash "$pool_runner" models/deepseek_v4_1_flash/decode_c1a_full.py --golden-data "$pool_fixture" --save-data 2>&1 | tee /tmp/index-pool-full.log
+bash "$pool_runner" models/deepseek_v4_1_flash/decode_c1a_full.py --start-pos 16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384,16384 --save-data 2>&1 | tee /tmp/index-pool-long-full.log

@@ -731,6 +731,49 @@ CANNBotDSL 0.8.1 and the
 See the [validation and generated-code archive](../../../artifacts/dsv4_1_dsl/2026-11-06-index-score/summary.json)
 for the device checks and layer-2 EP2 regression.
 
+## Candidate block pools in one DSL AIV task
+
+[`index_pool_dsl.py`](../../../models/deepseek_v4_1_flash/index_pool_dsl.py)
+implements the candidate-pool selector shared by decode and prefill. The
+former block-score, sorting and count-publication scopes become one
+`dsl_index_pool` AIV SPMD task. PyPTO/simpler retains the score readiness
+dependency and exposes one completion handle for both output buffers.
+
+The input remains FP32. Each group of eight positions contributes its
+maximum, floored at `-1e30`; the newest visible block receives score `1e30`.
+The selector retains up to 2048 blocks, breaking equal-score ties by earlier
+logical block ID, then emits the IDs in ascending order. Unused slots are
+`-1`; inactive queries and empty histories publish zero counts. Short
+histories that fit the pool produce their block IDs directly.
+
+One worker owns each query's complete reduction and selection. Long histories
+use four byte-histogram passes over monotonic UINT32 keys that preserve FP32
+ordering, followed by a stable scan. Per-chunk 16-bit histogram results are
+accumulated into 32-bit counts, including histories with more than 65535
+equal-scoring blocks. Scratch buffers stay bounded in UB; the intermediate
+GM block-score and merge arenas are removed. This selector is separate from
+the BF16/512-position token TopK implementation.
+
+Worker 0 alone publishes the count vector, avoiding concurrent writes to a
+shared cache line. Query owners write separate aligned ID rows. No launch-wide
+barrier or cross-device communication is needed. Both old selectors and their
+private sort helpers are removed; their CPU reference and capacity helper
+also share the new module. The original import interfaces remain available.
+
+With an A5 device allocated through the task queue:
+
+```bash
+python models/deepseek_v4_1_flash/index_pool_dsl.py --case all -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/decode_c1a_full.py -d "$TASK_DEVICE"
+```
+
+The bounded cases cover the 2048-block boundary, causal tails, inactive rows,
+FP32 values within one BF16 rounding interval, signed-zero ties, the score
+floor and 32-bit histogram accumulation. IDs, counts and output guards require
+exact equality. The archive compares actual device tensors from the DSL,
+original decode selector and original prefill selector on the same inputs.
+See the [candidate-pool evidence archive](../../../artifacts/dsv4_1_dsl/2026-11-06-index-pool/README.txt).
+
 ## DSL development branch and evidence
 
 Continue DSL implementation and evidence collection on

@@ -1,0 +1,157 @@
+"""归档单任务候选池的三方设备对照、短/长历史集成验证及生成物。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-index-pool-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-06-index-pool"
+inventory = []
+
+
+def capture(source, target, binary=False):
+    source = Path(source)
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        text = source.read_text().replace(str(workspace), "<workspace>")
+        text = text.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in text.splitlines()).rstrip() + "\n")
+    source_name = str(source.relative_to(workspace)) if source.is_relative_to(workspace) else source.name
+    inventory.append({"path": str(destination.relative_to(archive)), "source": source_name,
+                      "bytes": destination.stat().st_size, "encoding": "gzip" if binary else "utf-8"})
+
+
+def require_pass(name, count, outputs=None):
+    source = Path(f"/tmp/index-pool-{name}.log")
+    text = source.read_text()
+    if len(re.findall(r"^\[RUN\] PASS", text, re.MULTILINE)) != count:
+        raise RuntimeError(name + " 的通过数量不符")
+    if outputs is not None and len(re.findall(r"^\[RUN\]   '[^']+' PASS", text, re.MULTILINE)) != outputs:
+        raise RuntimeError(name + " 的输出通过数量不符")
+    capture(source, f"validation/{name}.log.txt")
+    return text
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json", "distributed_meta.json"):
+        source = directory / name
+        if source.is_file():
+            capture(source, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*")):
+        if source.suffix in (".cpp", ".py"):
+            capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    if re.fullmatch(r"(?:decode|prefill)-\d+", label):
+        for source in sorted((directory / "kernels").rglob("*.cpp")):
+            relative = source.relative_to(directory / "kernels")
+            capture(source, f"generated/{label}/kernels/{relative}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name == "generate_pool":
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+records = json.loads((work / "native-comparison.json").read_text())
+require_pass("cases", len(records) * 3, len(records) * 6)
+if not any(row["case"][-1] == "late" for row in records):
+    require_pass("late", 3, 6)
+    records += json.loads((work / "native-comparison-late.json").read_text())
+if len(records) != 10 or any(row["不同元素数"] for row in records):
+    raise RuntimeError("十组用例必须通过 DSL、原 Decode 和原 Prefill 的真实输出比较")
+full_log = require_pass("full", 1, 11)
+long_log = require_pass("long-full", 1, 11)
+prefill_log = require_pass("prefill-compile", 1)
+precommit = Path("/tmp/index-pool-precommit.log")
+if precommit.is_file():
+    if precommit.read_text().count("Passed") != 4:
+        raise RuntimeError("四项预提交检查必须全部通过")
+    capture(precommit, "validation/precommit.log.txt")
+capture(Path("/tmp/index-pool-prefill-dynamic-capacity.log"), "validation/initial-dynamic-tile.log.txt")
+
+for row in records:
+    case = "-".join(map(str, row["case"]))
+    for source_label, label in (("DSL", "dsl"), ("Decode", "decode"), ("Prefill", "prefill")):
+        for name in ("ids", "counts"):
+            capture(work / "device-output" / case / source_label / f"{name}.pt",
+                    f"device-output/{case}/{label}/{name}.pt.gz", True)
+comparison_file = work / "all-comparisons.json"
+comparison_file.write_text(json.dumps(records, ensure_ascii=False, indent=2) + "\n")
+capture(comparison_file, "validation/native-comparison.json")
+for name in ("index_pool_dsl", "decode_indexer", "prefill_indexer"):
+    capture(model / "models/deepseek_v4_1_flash" / f"{name}.py", f"model-snapshot/{name}.py.txt")
+for name in ("decode_indexer_baseline.py", "prefill_indexer_baseline.py", "compare_native.py", "run-suite.sh", "archive.py"):
+    capture(work / name, f"workflow/{name}.txt")
+capture(workspace / "artifacts/dsv41-index-query-dsl/run-case.sh", "workflow/run-case.sh.txt")
+capture(workspace / "artifacts/dsv41-semantic-review/run_case.py", "workflow/run_case.py.txt")
+for name in ("README.md", "stem_indexer.py"):
+    capture(workspace / "cannbot-dsl/samples/attention/stem_indexer" / name, f"reference/{name}.txt")
+for label, field in (("dsl", "DSL"), ("decode", "Decode"), ("prefill", "Prefill")):
+    for index, directory in enumerate(dict.fromkeys(row[field] for row in records)):
+        generated(f"{label}-{index}", Path(directory), fixtures=label == "dsl")
+
+integration_dirs = {}
+for label, log, pattern in (("c1a-full", full_log, "l3_decode_c1a_full"),
+                            ("c1a-long", long_log, "l3_decode_c1a_full"),
+                            ("prefill-compile", prefill_log, "l3_prefill_c1a_full")):
+    match = re.search(r"see (.+?/_jit_" + pattern + r"_[^/]+)/report/", log)
+    if match:
+        directory = Path(match[1])
+    else:
+        start = re.search(r"^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})\.", log, re.MULTILINE)
+        stamp = start[1].replace("-", "") + "_" + start[2].replace(":", "")
+        candidates = list((model / "build_output").glob(f"_jit_{pattern}_{stamp}_*"))
+        if len(candidates) != 1:
+            raise RuntimeError("无法唯一定位本次生成目录：" + label)
+        directory = candidates[0]
+    integration_dirs[label] = str(directory.relative_to(model))
+    generated(label, directory)
+    for child in sorted((directory / "next_levels").glob("*")):
+        generated(f"{label}/{child.name}", child)
+
+
+def revision(path):
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=path, text=True).strip()
+
+
+summary = {
+    "状态": "PASS", "分支": "dsv4.1-dsl", "模型基线": "03337be5",
+    "PyPTO版本": revision(workspace / "issue75-env/pypto-pr"),
+    "DSL版本": "0.8.1", "DSL源码": revision(workspace / "cannbot-dsl-dev"),
+    "参考samples版本": revision(workspace / "cannbot-dsl"),
+    "替换范围": "Decode 与 Prefill 候选块池生成，包括块最大值、稳定筛选、升序块号和数量发布。",
+    "新任务": "单个 dsl_index_pool AIV SPMD 任务；Query 固定归属 worker；worker 0 独占写计数向量。",
+    "数值契约": "FP32，每 8 个位置取最大值，下限 -1e30，最新可见块 1e30；至多 2048 块，同分优先较小块号，结果按逻辑块号升序。",
+    "实现": "四轮保序 UINT32 字节直方图及稳定扫描，分块 16 位计数扩展到 32 位累加；工作区在 UB，无中间 GM 分数/归并数组。",
+    "参考": "参考 stem_indexer 的 FP32 保序键和字节直方图思路；保留本模型的块大小、2048 容量、同分规则和最新块规则，不使用 sample 的 Sink/Window 策略。",
+    "验证": {
+        "原核对照": "10 组输入分别运行 DSL、原 Decode 和原 Prefill，全部对 CPU 参考零容差通过，真实设备输出三方完全一致。",
+        "输出": "块 ID、数量和保护区均要求完全一致；从 compare_fn 捕获真实设备输出。",
+        "覆盖": "短历史、2048 块边界、因果尾块、空输入、FP32 近邻值、正负零、分数下限、65540 个同分块、选中项全部位于后段。",
+        "完整C1A短历史": "72 token、12 请求、start-pos=8192，冻结原有输入和 CPU 参考，11 项输出通过原比较器。",
+        "完整C1A长历史": "72 token、12 请求、start-pos=16384，新建输入和 CPU 参考；实际筛选超过 2048 个可见块，11 项输出通过原比较器。",
+        "prefill": "共用 C1A full 入口以 17 token 编译通过；原 Prefill 核已参加三方设备对照。",
+        "未执行": "完整 prefill 设备模型、整网、真实 checkpoint 和正式性能 A/B。",
+    },
+    "动态宽度修复": "首次集成编译中误将动态容量用作 tile 尺寸；已在模型侧改为固定 TOPK 分块和动态有效长度，保留初次日志供追溯。",
+    "通信修改": False, "PyPTO框架修改": False, "DSL框架修改": False, "精度阈值修改": False,
+    "集成生成目录": integration_dirs,
+    "固定短历史参考": "build_output/_jit_l3_decode_c1a_full_20261106_105330_ow_omtjh/data",
+    "归档说明": "device-output 是实际设备输出；fixtures/*/out 是 CPU 参考。复用编译目录时保存最后一组输入，其他输入可按固定种子重建。整图权重不重复归档。",
+    "files": inventory,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"已归档 {len(inventory)} 个文件：{archive}")
