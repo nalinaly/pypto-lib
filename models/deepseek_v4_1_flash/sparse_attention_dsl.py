@@ -396,21 +396,24 @@ if __name__ == "__main__":
                   (3, 2, "compressed"), (3, 2, "sink"), (35, 33, "mixed")]
     for rows, active, kind in cases:
         print(f"[SPARSE_ATTENTION_MIX_DSL] {rows=} {active=} {kind=}", flush=True)
+        compare_live = ratio_allclose(atol=0.003, rtol=0.03, max_error_ratio=0.0)
+
+        def compare_output(actual, expected, **kwargs):
+            """在真实设备输出上检查哨兵和全屏蔽行，再调用原精度比较器。"""
+            torch.testing.assert_close(actual[active:], expected[active:], rtol=0, atol=0)
+            if kind == "masked":
+                torch.testing.assert_close(actual[:active], torch.zeros_like(actual[:active]), rtol=0, atol=0)
+            return compare_live(actual, expected, **kwargs)
+
         result = run(
             fn=validate_sparse_attention,
             specs=build_sparse_specs(rows, active, kind),
             golden_fn=golden_sparse,
-            compare_fn={"output": ratio_allclose(atol=0.003, rtol=0.03, max_error_ratio=0.0)},
+            compare_fn={"output": compare_output},
             config=dict(backend_type="a5", execution_mode=False, device_id=args.device),
             compile_only=args.compile_only,
             save_data=True,
         )
         if not result.passed:
             raise SystemExit(result.error or 1)
-        if not args.compile_only:
-            actual = torch.load(result.work_dir / "data/out/output.pt", weights_only=True)
-            initial = torch.load(result.work_dir / "data/in/output.pt", weights_only=True)
-            torch.testing.assert_close(actual[active:], initial[active:], rtol=0, atol=0)
-            if kind == "masked":
-                torch.testing.assert_close(actual[:active], torch.zeros_like(actual[:active]), rtol=0, atol=0)
         print(f"[产物] {result.work_dir}", flush=True)

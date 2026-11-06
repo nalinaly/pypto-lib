@@ -1,0 +1,100 @@
+"""更正曾把 CPU 参考当作设备输出的原核对照记录，保留原始记录供追溯。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-sparse-attention-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-06-sparse-attention"
+summary = json.loads((archive / "summary.json").read_text())
+inventory = {entry["path"]: entry for entry in summary["files"]}
+log = Path("/tmp/sparse-attention-actual-comparison.log")
+content = log.read_text()
+records = json.loads((work / "native-comparison.json").read_text())
+if len(records) != 8 or len(re.findall(r"^\[RUN\] PASS", content, re.MULTILINE)) != 16:
+    raise RuntimeError("必须重新执行全部八组 DSL/原生核设备对照")
+if len(re.findall(r"^\[对照通过\]", content, re.MULTILINE)) != 8:
+    raise RuntimeError("全部真实输出对照都必须通过原阈值")
+
+
+def capture(source, target, binary=False):
+    source = Path(source)
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        text = source.read_text().replace(str(workspace), "<workspace>")
+        text = text.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in text.splitlines()).rstrip() + "\n")
+    source_name = str(source.relative_to(workspace)) if source.is_relative_to(workspace) else source.name
+    inventory[str(target)] = {"path": str(target), "source": source_name,
+                              "bytes": destination.stat().st_size, "encoding": "gzip" if binary else "utf-8"}
+
+
+for name, destination in (
+    ("validation/native-comparison.json", "validation/native-comparison.invalid-cpu-reference.json"),
+    ("workflow/compare_native.py.txt", "workflow/compare_native.invalid-cpu-reference.py.txt"),
+    ("workflow/archive.py.txt", "workflow/archive.invalid-cpu-reference.py.txt"),
+):
+    if not (archive / destination).exists():
+        capture(archive / name, destination)
+(archive / "workflow/archive.py.txt").unlink(missing_ok=True)
+inventory.pop("workflow/archive.py.txt", None)
+capture(work / "compare_native.py", "workflow/compare_native.py.txt")
+capture(Path(__file__), "workflow/correct_comparison.py.txt")
+capture(work / "native-comparison.json", "validation/native-comparison.json")
+capture(log, "validation/actual-device-comparison.log.txt")
+capture(model / "models/deepseek_v4_1_flash/sparse_attention_dsl.py", "model-snapshot/sparse_attention_dsl.py.txt")
+for record in records:
+    case = f"{record['rows']}-{record['active']}-{record['kind']}"
+    for source_label, label in (("DSL", "dsl"), ("原生", "native")):
+        capture(work / "device-output" / case / source_label / "output.pt",
+                f"device-output/{case}/{label}/output.pt.gz", True)
+
+max_abs = max(record["原核最大绝对差"] for record in records)
+different = sum(record["原核不同元素数"] for record in records)
+verdict = f"8 组真实设备输出通过 atol=0.003、rtol=0.03 的原核对照；最大绝对差 {max_abs}，不同元素总数 {different}。"
+summary["验证"]["原核对照"] = verdict
+summary["验证更正"] = {
+    "原因": "原对照脚本读取 golden.run 的 data/out，它保存的是 CPU 参考，不能支持原来的设备逐元素一致结论。",
+    "保留有效证据": "原设备对 CPU 的比较器执行及 C2A 整层 16 项输出通过记录仍然有效。",
+    "修复": "从 compare_fn 的 actual 参数捕获真实设备输出；哨兵和全屏蔽零输出也在真实设备张量上检查。",
+    "重跑": verdict,
+    "旧记录": "带 invalid-cpu-reference 的文件和原 cases.log.txt 仅供追溯；其中逐元素相同声明无效。",
+    "输出区分": "fixtures/*/out 是 CPU 参考；device-output 是回调捕获的真实设备输出。",
+}
+summary["files"] = list(inventory.values())
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+
+readme = archive / "README.txt"
+text = readme.read_text()
+text = text.replace("- 8 组用例各执行 DSL、原生 MIX 和 CPU 参考；DSL 与原核输出逐元素相同。", "- " + verdict)
+marker = "验证更正（2026-11-06）\n"
+if marker not in text:
+    text += ("\n" + marker + "---------------------\n"
+             "原对照脚本误读 data/out，将 CPU 参考当作设备输出。此前的设备逐元素一致声明作废。\n"
+             "原设备对 CPU 的精度检查和整层通过记录仍然有效，精度阈值没有改变。\n"
+             "已从 compare_fn 回调捕获真实输出，重跑全部 8 组 DSL/原生核对照，并精确检查尾部哨兵和全屏蔽零输出。\n"
+             + verdict + "\n"
+             "validation/actual-device-comparison.log.txt 和 device-output/ 是修正后的设备证据。\n"
+             "带 invalid-cpu-reference 的旧记录及原 cases.log.txt 仅供追溯，不再作为设备对照证据。\n"
+             "fixtures/*/out 始终表示 CPU 参考。workflow/correct_comparison.py.txt 保存更正过程。\n")
+readme.write_text(text)
+
+doc = model / "docs/models/deepseek_v4_1_flash/index.md"
+text = doc.read_text().replace(
+    "per block. Their outputs also match the archived native kernel elementwise.",
+    "per block. Actual device outputs captured through the comparison callbacks\n"
+    "also pass the native-kernel comparison at `atol=0.003, rtol=0.03`. The earlier\n"
+    "elementwise-equality claim was based on CPU reference snapshots and is\n"
+    "withdrawn; the archive records the correction and actual device differences.",
+)
+doc.write_text(text)
+print(verdict)

@@ -1,0 +1,143 @@
+"""归档 C1A 单任务替换的源码、真实设备输出和共享调用回归证据。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-c1a-publish-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-06-c1a-publish"
+inventory = []
+
+
+def capture(source, target, binary=False):
+    source = Path(source)
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        value = source.read_text().replace(str(workspace), "<workspace>")
+        value = value.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in value.splitlines()).rstrip() + "\n")
+    source_name = str(source.relative_to(workspace)) if source.is_relative_to(workspace) else source.name
+    inventory.append({"path": str(destination.relative_to(archive)), "source": source_name,
+                      "bytes": destination.stat().st_size, "encoding": "gzip" if binary else "utf-8"})
+
+
+def require_pass(name, count, outputs=None):
+    source = Path(f"/tmp/c1a-publish-{name}.log")
+    value = source.read_text()
+    if len(re.findall(r"^\[RUN\] PASS", value, re.MULTILINE)) != count:
+        raise RuntimeError(name + " 的通过数量不符")
+    if outputs is not None and len(re.findall(r"^\[RUN\]   '[^']+' PASS", value, re.MULTILINE)) != outputs:
+        raise RuntimeError(name + " 的输出通过数量不符")
+    capture(source, f"validation/{name}.log.txt")
+    return value
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json"):
+        source = directory / name
+        if source.is_file():
+            capture(source, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*.cpp")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        saved = set()
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name.startswith(("publish_c1a", "pool_state_block", "publish_compressed_page")) and entry not in saved:
+                saved.add(entry)
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        # data/out 是 CPU 参考，不是设备输出；真实输出单独保存在 device-output。
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+require_pass("compile", 1)
+require_pass("all", 10, 30)
+require_pass("baseline-full", 1, 11)
+full_log = require_pass("full", 1, 11)
+pool_log = require_pass("c2a-regression", 6)
+prefill_log = require_pass("prefill-compile", 1)
+capture(Path("/tmp/c1a-publish-layer-queue-timeout.log"), "validation/layer-queue-timeout.log.txt")
+capture(Path("/tmp/c1a-publish-layer.log"), "validation/layer-queue-cancelled.log.txt")
+precommit = Path("/tmp/c1a-publish-precommit.log")
+if precommit.read_text().count("Passed") != 4:
+    raise RuntimeError("四项预提交检查必须全部通过")
+capture(precommit, "validation/precommit.log.txt")
+comparisons = json.loads((work / "native-comparison.json").read_text())
+if len(comparisons) != 5 or any(row["原核不同字节数"] for row in comparisons):
+    raise RuntimeError("五组 C1A 用例必须通过真实设备输出的逐字节对照")
+capture(work / "native-comparison.json", "validation/native-comparison.json")
+
+for row in comparisons:
+    rows, active, kind = row["case"]
+    case = f"{rows}-{active}-{kind}"
+    for source_label, label in (("DSL", "dsl"), ("原生", "native")):
+        for name in ("cache", "scales", "latent"):
+            capture(work / "device-output" / case / source_label / f"{name}.pt",
+                    f"device-output/{case}/{label}/{name}.pt.gz", True)
+
+for name in ("compressor", "compressor_publish_dsl", "compressor_pool_dsl", "compressor_vector_dsl"):
+    capture(model / "models/deepseek_v4_1_flash" / f"{name}.py", f"model-snapshot/{name}.py.txt")
+for name in ("compressor.py", "compressor_pool_dsl.py", "compressor_publish.cpp", "compressor_publish.h",
+             "compare_native.py", "archive.py"):
+    capture(work / name, f"workflow/{name}.txt")
+for name in ("run-case.sh", "run_layer_frozen.py"):
+    capture(workspace / "artifacts/dsv41-index-query-dsl" / name, f"workflow/{name}.txt")
+
+for index, directory in enumerate(dict.fromkeys(row["DSL"] for row in comparisons)):
+    generated(f"case-{index}", Path(directory), fixtures=True)
+for index, directory in enumerate(dict.fromkeys(row["原生"] for row in comparisons)):
+    generated(f"native-{index}", Path(directory))
+pool_directories = list(dict.fromkeys(re.findall(r"^\[产物\] (.+)$", pool_log, re.MULTILINE)))
+generated("c2a-pool", Path(pool_directories[0]))
+generated("c2a-replay", Path(pool_directories[-1]))
+for label, log, pattern in (("c1a-full", full_log, "l3_decode_c1a_full"),
+                            ("prefill-compile", prefill_log, "l3_prefill_c1a_full")):
+    directory = Path(re.search(r"see (.+?/_jit_" + pattern + r"_[^/]+)/report/", log)[1])
+    generated(label, directory)
+    for child in sorted((directory / "next_levels").glob("*")):
+        generated(f"{label}/{child.name}", child)
+
+
+def revision(path):
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=path, text=True).strip()
+
+
+summary = {
+    "状态": "PASS", "分支": "dsv4.1-dsl", "模型基线": "802fcd09",
+    "PyPTO版本": revision(workspace / "issue75-env/pypto-pr"),
+    "DSL版本": "0.8.1", "DSL源码": revision(workspace / "cannbot-dsl-dev"),
+    "替换任务": "c1a_compress", "新任务": "dsl_c1a_compress",
+    "任务类型": "单个 AIV SPMD 任务，最多 8 个 worker，没有跨卡通信或全核屏障。",
+    "计算": "RMSNorm -> 未旋转 BF16 latent -> 尾部 64 维相邻对 RoPE -> group16 BF16-scale FP4 -> 物理缓存行。",
+    "顺序": "同一物理页由同一 worker 按 token 顺序写入，重复槽位最后一个 token 生效；负槽位只生成 latent。",
+    "共享实现": "C1A 与 C2A 共用 RMSNorm、RoPE、FP4 编码；C1A 保持中点取偶数，C2A 保持中点取较小幅值。",
+    "验证": {
+        "C1A核心": "5 组输入各运行 DSL 和原生核，三个输出均与 CPU 参考零容差通过；真实设备输出逐字节一致。",
+        "输出来源": "compare_fn 回调的 actual 参数；data/out 只用作 CPU 参考存档。",
+        "C2A共享回归": "6 组设备用例通过，包括连续两步环形状态回放。",
+        "C1A完整路径": "固定原生基线的输入和 CPU 参考，全部 11 项输出通过原比较器。",
+        "C2A整层": "未重跑。第一次双卡排队超过 600 秒自动取消；第二次仍未分配设备，主动取消额外检查。共享算子 6 组设备回归已通过。",
+        "prefill": "共用 C1A full 入口以 17 token 编译通过，没有执行完整 prefill 设备用例。",
+        "预提交": "版权、语言、公开文档和 Ruff 四项检查全部通过。",
+        "未执行": "C2A 双卡整层重跑、完整 prefill 设备流程、整网、真实 checkpoint 和正式性能 A/B。",
+    },
+    "通信修改": False, "PyPTO框架修改": False, "DSL框架修改": False, "精度阈值修改": False,
+    "固定C1A参考": "build_output/_jit_l3_decode_c1a_full_20261106_105330_ow_omtjh/data",
+    "归档说明": "设备输出与 CPU 参考分目录保存；相同编译目录复用时 fixtures 保留最后一组输入，可用固定种子重建其他输入；不重复保存整层权重。",
+    "files": inventory,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"已归档 {len(inventory)} 个文件：{archive}")

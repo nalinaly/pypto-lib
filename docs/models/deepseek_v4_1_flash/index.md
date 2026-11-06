@@ -152,7 +152,12 @@ python models/deepseek_v4_1_flash/sparse_attention.py --mode swa --swa-case all 
 
 The eight sparse cases cover mixed inputs, each source independently, masked
 rows, dominant sinks, zero active rows, inactive sentinels and multiple Queries
-per block. Their outputs also match the archived native kernel elementwise.
+per block. Actual device outputs captured through the comparison callbacks
+also pass the native-kernel comparison at `atol=0.003, rtol=0.03`. Four elements
+differ in the 33-Query case, with a maximum absolute difference of
+`0.000244140625`; the other cases match elementwise. The earlier equality
+claim was based on CPU reference snapshots and is withdrawn. The archive
+records the correction and actual device differences.
 See the [validation and generated-code archive](../../../artifacts/dsv4_1_dsl/2026-11-06-sparse-attention/README.txt).
 
 ## Shared input and QA/KV projection in DSL
@@ -605,6 +610,47 @@ python models/deepseek_v4_1_flash/decode_layer.py --ep 2 --layer-id 2 -d "$TASK_
 
 The shared prefill caller is compiled with the new interface. Its complete
 device execution is outside this decode validation scope.
+
+## C1A cache publication in one DSL AIV task
+
+[`compressor_publish_dsl.py`](../../../models/deepseek_v4_1_flash/compressor_publish_dsl.py)
+replaces the native `c1a_compress` task for both decode and the shared prefill
+caller. One `dsl_c1a_compress` AIV task performs RMSNorm, writes the unrotated
+BF16 latent for Indexer, applies adjacent-pair RoPE to the last 64 elements,
+and publishes packed E2M1 cache rows with group-16 BF16 scales. The upstream
+C1A projection retains its current implementation.
+
+PyPTO/simpler keeps the cache-ready and projection-ready dependencies and
+launches at most eight workers. A physical cache page belongs to one worker;
+that worker processes tokens in order, so the last token wins on repeated
+slots. Negative slots still produce latent but do not write cache. Inactive
+latent rows and untouched cache rows retain their initial contents. This
+local AIV task has no cross-device communication or launch-wide barrier.
+
+[`compressor_vector_dsl.py`](../../../models/deepseek_v4_1_flash/compressor_vector_dsl.py)
+shares the RMSNorm, RoPE and FP4 encoding with the C2A pool/publication path.
+The two quantization contracts stay distinct: C1A rounds FP4 midpoints to the
+nearest even code, while C2A rounds them toward the smaller magnitude. Both
+keep the BF16 scale rounding, the scale floor of `2**-9`, and the even element
+in the low nibble. The old C1A C++ kernel and private header are removed from
+the model and retained in the evidence archive for direct device comparison.
+
+With an A5 device allocated through the task queue:
+
+```bash
+python models/deepseek_v4_1_flash/compressor_publish_dsl.py --case all -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/compressor_pool_dsl.py --case all -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/decode_c1a_full.py -d "$TASK_DEVICE"
+```
+
+The five publication cases cover zero active tokens, inactive sentinels,
+negative and repeated slots, page boundaries, FP4 midpoints, signed zeros and
+worker reuse. Device outputs are compared with the CPU reference at zero
+tolerance. The archive additionally captures actual device tensors through
+the comparison callbacks for bytewise comparison with the original kernel;
+`golden.run(save_data=True)` files under `data/out` contain CPU references.
+
+See the [C1A validation and generated-code archive](../../../artifacts/dsv4_1_dsl/2026-11-06-c1a-publish/README.txt).
 
 ## Indexer scoring and stable TopK in one DSL MIX task
 

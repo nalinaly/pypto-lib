@@ -1,0 +1,196 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "source",
+      "direction": "In",
+      "shape": [
+        1,
+        512
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "slots",
+      "direction": "In",
+      "shape": [
+        1
+      ],
+      "dtype": "int64",
+      "layout": "ND"
+    },
+    {
+      "name": "cache",
+      "direction": "InOut",
+      "shape": [
+        4,
+        128,
+        1,
+        256
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "scales",
+      "direction": "InOut",
+      "shape": [
+        4,
+        128,
+        1,
+        32
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "cosine",
+      "direction": "In",
+      "shape": [
+        1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "sine",
+      "direction": "In",
+      "shape": [
+        1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "norm_weight",
+      "direction": "In",
+      "shape": [
+        512
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "latent",
+      "direction": "InOut",
+      "shape": [
+        1,
+        512
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "source",
+      "direction": "In",
+      "shape": [
+        1,
+        512
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "slots",
+      "direction": "In",
+      "shape": [
+        1
+      ],
+      "dtype": "int64",
+      "layout": "ND"
+    },
+    {
+      "name": "cache",
+      "direction": "InOut",
+      "shape": [
+        4,
+        128,
+        1,
+        256
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "scales",
+      "direction": "InOut",
+      "shape": [
+        4,
+        128,
+        1,
+        32
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "cosine",
+      "direction": "In",
+      "shape": [
+        1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "sine",
+      "direction": "In",
+      "shape": [
+        1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "norm_weight",
+      "direction": "In",
+      "shape": [
+        512
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "latent",
+      "direction": "InOut",
+      "shape": [
+        1,
+        512
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "num_return_types": 3,
+  "return_aliases": [
+    2,
+    3,
+    7
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

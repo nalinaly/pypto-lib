@@ -1,0 +1,104 @@
+"""用相同输入逐字节比较原生 C1A 发布核和 DSL 发布核。"""
+
+import argparse
+import json
+from pathlib import Path
+
+import pypto.language as pl
+import torch
+from golden import ratio_allclose, run
+from pypto.runtime import pto_isa_include_dir
+
+from compressor_publish_dsl import build_publication_specs, golden_publication, validate_publication
+
+
+work = Path(__file__).resolve().parent
+
+
+@pl.jit.extern(core_type="aiv", source=work / "compressor_publish.cpp",
+               include_dirs=(pto_isa_include_dir(), str(work)))
+def native_publish(
+    source: pl.Tensor,
+    slots: pl.Tensor,
+    cache: pl.InOut[pl.Tensor],
+    scales: pl.InOut[pl.Tensor],
+    cosine: pl.Tensor,
+    sine: pl.Tensor,
+    norm_weight: pl.Tensor,
+    latent: pl.InOut[pl.Tensor],
+    num_tokens: pl.Scalar[pl.INT32],
+) -> pl.Tensor:
+    ...
+
+
+@pl.jit
+def validate_native(
+    source: pl.Tensor,
+    slots: pl.Tensor,
+    cache: pl.InOut[pl.Tensor],
+    scales: pl.InOut[pl.Tensor],
+    cosine: pl.Tensor,
+    sine: pl.Tensor,
+    norm_weight: pl.Tensor,
+    latent: pl.InOut[pl.Tensor],
+    num_tokens: pl.Scalar[pl.INT32],
+):
+    workers = pl.max(pl.min(num_tokens, 8), 1)
+    with pl.spmd(workers, name_hint="native_c1a_compress"):
+        cache = native_publish(source, slots, cache, scales, cosine, sine, norm_weight, latent, num_tokens)
+    return cache, scales, latent
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--device", type=int, default=0)
+    parser.add_argument("--case", choices=("basic", "all"), default="all")
+    args = parser.parse_args()
+    cases = [(17, 15, "random")]
+    if args.case == "all":
+        cases += [(17, 0, "random"), (1, 1, "ties"), (9, 9, "zero"), (81, 73, "random")]
+    records = []
+    for case in cases:
+        outputs = []
+        record = {"case": case}
+        for label, entry in (("DSL", validate_publication), ("原生", validate_native)):
+            captured = {}
+            exact = ratio_allclose(atol=0, rtol=0, max_error_ratio=0)
+
+            def capture(name):
+                def compare(actual, expected, **kwargs):
+                    captured[name] = actual.detach().cpu().clone()
+                    return exact(actual, expected, **kwargs)
+                return compare
+
+            print(f"[C1A_PUBLISH_COMPARE] {label} {case}", flush=True)
+            result = run(
+                fn=entry,
+                specs=build_publication_specs(*case),
+                golden_fn=golden_publication,
+                rtol=0,
+                atol=0,
+                compare_fn={name: capture(name) for name in ("cache", "scales", "latent")},
+                config=dict(backend_type="a5", execution_mode=False, device_id=args.device),
+                save_data=True,
+            )
+            if not result.passed:
+                raise SystemExit(result.error or 1)
+            if set(captured) != {"cache", "scales", "latent"}:
+                raise RuntimeError("没有捕获全部真实设备输出")
+            destination = work / "device-output" / f"{case[0]}-{case[1]}-{case[2]}" / label
+            destination.mkdir(parents=True, exist_ok=True)
+            for name, tensor in captured.items():
+                torch.save(tensor, destination / f"{name}.pt")
+            outputs.append(captured)
+            record[label] = str(result.work_dir)
+            print(f"[产物] {result.work_dir}", flush=True)
+        for name in outputs[0]:
+            actual = outputs[0][name].contiguous().view(torch.uint8)
+            native = outputs[1][name].contiguous().view(torch.uint8)
+            torch.testing.assert_close(actual, native, rtol=0, atol=0)
+        record["原核不同字节数"] = 0
+        record["输出来源"] = "compare_fn 的 actual 参数，真实设备输出"
+        records.append(record)
+        print(f"[逐字节对照通过] {record}", flush=True)
+    (work / "native-comparison.json").write_text(json.dumps(records, ensure_ascii=False, indent=2) + "\n")

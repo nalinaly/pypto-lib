@@ -13,13 +13,13 @@ from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
 import pypto.language as pl
 
+from compressor_vector_dsl import CompressedRow, golden_normalize_latent, normalize_latent
 from config import FLASH as M
 
 
 # 模型配置
 HEAD_DIM = M.head_dim
 ROPE_DIM = M.qk_rope_head_dim
-EPS = M.rms_norm_eps
 CACHE_GROUP = 16
 PAGE_SIZE = 128
 
@@ -53,7 +53,7 @@ def pool_state_block(
     previous_kv = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, HEAD_DIM)))
     previous_score = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, HEAD_DIM)))
     gamma = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((HEAD_DIM,)))
-    pooled = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((HEAD_DIM,)))
+    pooled = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, HEAD_DIM)))
     output = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, HEAD_DIM)))
     cb.mem_copy(gamma, weight)
     for request in cb.range(blocks.shape[0]):
@@ -74,7 +74,6 @@ def pool_state_block(
                         cb.mem_copy(previous_score, cb.tile_slice(state, (1, HEAD_DIM), (previous, 1)))
                     with cb.vf():
                         pool_mask = rr.full_mask()
-                        accum = rr.vdups(0.0, cb.dtypes.float32, mask=pool_mask)
                         for col in range(0, HEAD_DIM, VECTOR_TILE):
                             a = rr.vload(previous_score, col)
                             b = rr.vload(current_score, col)
@@ -88,22 +87,8 @@ def pool_state_block(
                             vb = rr.vmul(rr.vload(current_kv, col), pb, mask=pool_mask)
                             combined = rr.vadd(va, vb, mask=pool_mask)
                             rounded = rr.vcast(combined, cb.dtypes.bfloat16, mask=pool_mask, rounding="rn")
-                            value = rr.vcast(rounded, cb.dtypes.float32, mask=pool_mask)
-                            rr.vstore(pooled, col, value, pool_mask)
-                            accum = rr.vadd(accum, rr.vmul(value, value, mask=pool_mask), mask=pool_mask)
-                        total = rr.vreduce_sum(accum, mask=pool_mask)
-                        mean = rr.vmuls(total, 1.0 / HEAD_DIM, mask=pool_mask)
-                        root = rr.vsqrt(rr.vadds(mean, EPS, mask=pool_mask), mask=pool_mask)
-                        one = rr.vdups(1.0, cb.dtypes.float32, mask=pool_mask)
-                        inverse = rr.vdup(rr.vdiv(one, root, mask=pool_mask), mask=pool_mask)
-                        rr.vmem_bar("vst_vld")
-                        for col in range(0, HEAD_DIM, VECTOR_TILE):
-                            g16 = rr.vload_unpack(gamma, col, unpack_mode=rr.UnpackMode.B16_TO_B32)
-                            g = rr.vcast(g16, cb.dtypes.float32, mask=pool_mask)
-                            value = rr.vmul(rr.vload(pooled, col), inverse, mask=pool_mask)
-                            value = rr.vmul(value, g, mask=pool_mask)
-                            value16 = rr.vcast(value, cb.dtypes.bfloat16, mask=pool_mask, rounding="rn")
-                            rr.vstore_pack(output, col, value16, pool_mask, pack_mode=rr.PackMode.B32_TO_B16)
+                            rr.vstore_pack(pooled, col, rounded, pool_mask, pack_mode=rr.PackMode.B32_TO_B16)
+                    normalize_latent(pooled, gamma, output)
                     cb.mem_copy(cb.tile_slice(latent, (1, HEAD_DIM), (token, 0)), output)
     # 同一物理块的所有请求均读完旧状态后，按请求和 token 顺序更新最后一个环形周期。
     for request in cb.range(blocks.shape[0]):
@@ -128,12 +113,7 @@ def publish_compressed_page(
 ):
     """按 token 顺序发布一个物理页，保留 C2A 的 E2M1 中点向零舍入规则。"""
     raw = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, HEAD_DIM)))
-    values = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((HEAD_DIM + VECTOR_TILE,)))
-    normalized = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((HEAD_DIM,)))
-    cos_ub = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
-    sin_ub = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
-    packed = Buffer(cb.MemLoc.UB, cb.dtypes.uint8, cb.make_layout((1, HEAD_DIM // 2)))
-    factors = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, HEAD_DIM // CACHE_GROUP)))
+    publication = CompressedRow()
     for token in cb.range(num_tokens):
         slot = slots[token]
         request = requests[token]
@@ -145,63 +125,13 @@ def publish_compressed_page(
             if block >= 0 and block < num_blocks and token >= start and token < end:
                 if position >= 0 and position % 2 == 1:
                     cb.mem_copy(raw, cb.tile_slice(latent, (1, HEAD_DIM), (token, 0)))
-                    cos_dst = cb.tile_slice(cos_ub, (1, ROPE_DIM // 2), (0, 0))
-                    sin_dst = cb.tile_slice(sin_ub, (1, ROPE_DIM // 2), (0, 0))
-                    cb.mem_copy(cos_dst, cb.tile_slice(cosine, (1, ROPE_DIM // 2), (token, 0)))
-                    cb.mem_copy(sin_dst, cb.tile_slice(sine, (1, ROPE_DIM // 2), (token, 0)))
-                    with cb.vf():
-                        publish_mask = rr.full_mask()
-                        pair_mask = rr.update_mask(ROPE_DIM // 2, elem_bits=32)[0]
-                        group_mask = rr.update_mask(CACHE_GROUP, elem_bits=32)[0]
-                        for col in range(0, HEAD_DIM, VECTOR_TILE):
-                            bf = rr.vload_unpack(raw, col, unpack_mode=rr.UnpackMode.B16_TO_B32)
-                            value = rr.vcast(bf, cb.dtypes.float32, mask=publish_mask)
-                            rr.vstore(values, col, value, publish_mask)
-                        rr.vmem_bar("vst_vld")
-                        real, imag = rr.vload_deinterleave(values, HEAD_DIM - ROPE_DIM, width="b32")
-                        cos = rr.vload(cos_ub)
-                        sin = rr.vload(sin_ub)
-                        real_cos = rr.vmul(real, cos, mask=pair_mask)
-                        imag_sin = rr.vmul(imag, sin, mask=pair_mask)
-                        real_sin = rr.vmul(real, sin, mask=pair_mask)
-                        imag_cos = rr.vmul(imag, cos, mask=pair_mask)
-                        real_rotated = rr.vsub(real_cos, imag_sin, mask=pair_mask)
-                        imag_rotated = rr.vadd(real_sin, imag_cos, mask=pair_mask)
-                        real_bf16 = rr.vcast(real_rotated, cb.dtypes.bfloat16, mask=pair_mask, rounding="rn")
-                        imag_bf16 = rr.vcast(imag_rotated, cb.dtypes.bfloat16, mask=pair_mask, rounding="rn")
-                        real32 = rr.vcast(real_bf16, cb.dtypes.float32, mask=pair_mask)
-                        imag32 = rr.vcast(imag_bf16, cb.dtypes.float32, mask=pair_mask)
-                        rr.vstore_interleave(values, HEAD_DIM - ROPE_DIM, real32, imag32, width="b32")
-                        rr.vmem_bar("vst_vld")
-                        for group in range(HEAD_DIM // CACHE_GROUP):
-                            value = rr.vload(values, group * CACHE_GROUP)
-                            maximum = rr.vreduce_max(rr.vabs(value, mask=group_mask), mask=group_mask)
-                            scale = rr.vmuls(maximum, 1.0 / 6.0, mask=group_mask)
-                            scale = rr.vmaxs(scale, 2.0**-9, mask=group_mask)
-                            scale16 = rr.vcast(scale, cb.dtypes.bfloat16, mask=group_mask, rounding="rn")
-                            rr.vstore_first(factors, group, scale16)
-                            scale32 = rr.vdup(rr.vcast(scale16, cb.dtypes.float32, mask=group_mask), mask=group_mask)
-                            scaled = rr.vdiv(value, scale32, mask=group_mask)
-                            rr.vstore(normalized, group * CACHE_GROUP, scaled, group_mask)
-                        rr.vmem_bar("vst_vld")
-                        for col in range(0, HEAD_DIM, VECTOR_TILE):
-                            value = rr.vload(normalized, col)
-                            magnitude = rr.vabs(value, mask=publish_mask)
-                            codes = rr.vdups(0, cb.dtypes.uint32, mask=publish_mask)
-                            for code, threshold in ((1, 0.25), (2, 0.75), (3, 1.25), (4, 1.75), (5, 2.5), (6, 3.5), (7, 5.0)):
-                                selected = rr.vgts(magnitude, threshold, mask=publish_mask)
-                                level = rr.vdups(code, cb.dtypes.uint32, mask=publish_mask)
-                                codes = rr.vselect(level, codes, cond_mask=selected)
-                            bits = rr.vreinterpret(value, cb.dtypes.uint32)
-                            sign = rr.vshr(bits, 28, mask=publish_mask)
-                            sign = rr.vbitwise_and(sign, rr.vdups(8, cb.dtypes.uint32), mask=publish_mask)
-                            codes = rr.vbitwise_or(codes, sign, mask=publish_mask)
-                            even, odd = rr.vdeinterleave(codes, codes)
-                            high = rr.vshl(odd, 4, mask=pair_mask)
-                            byte = rr.vbitwise_or(even, high, mask=pair_mask)
-                            rr.vstore_pack(packed, col // 2, byte, pair_mask, pack_mode=rr.PackMode.B32_TO_B8)
-                    cb.mem_copy(cb.tile_slice(cache, (1, HEAD_DIM // 2), (slot % PAGE_SIZE, 0)), packed)
-                    cb.mem_copy(cb.tile_slice(scales, (1, HEAD_DIM // CACHE_GROUP), (slot % PAGE_SIZE, 0)), factors)
+                    cos_row = cb.tile_slice(cosine, (1, ROPE_DIM // 2), (token, 0))
+                    sin_row = cb.tile_slice(sine, (1, ROPE_DIM // 2), (token, 0))
+                    publication.encode(raw, cos_row, sin_row, False)
+                    target = cb.tile_slice(cache, (1, HEAD_DIM // 2), (slot % PAGE_SIZE, 0))
+                    factors = cb.tile_slice(scales, (1, HEAD_DIM // CACHE_GROUP), (slot % PAGE_SIZE, 0))
+                    cb.mem_copy(target, publication.payload)
+                    cb.mem_copy(factors, publication.scale)
 
 
 @pl.jit.inline(auto_scope=False)
@@ -330,14 +260,7 @@ def golden_compression(tensors):
             a, b = (old_score - maximum).exp(), (score[token] - maximum).exp()
             denominator = a + b
             pooled = (old_kv * (a / denominator) + kv[token] * (b / denominator)).bfloat16().float()
-            squared = pooled.square().reshape(HEAD_DIM // VECTOR_TILE, VECTOR_TILE)
-            total = squared[0].clone()
-            for chunk in range(1, HEAD_DIM // VECTOR_TILE):
-                total = total + squared[chunk]
-            while total.numel() > 1:
-                total = total[0::2] + total[1::2]
-            inverse = torch.sqrt(total / HEAD_DIM + EPS).reciprocal()
-            latent[token] = (pooled * inverse * tensors["norm_weight"].float()).bfloat16()
+            latent[token] = golden_normalize_latent(pooled, tensors["norm_weight"])
             eligible[token] = True
         for token in range(max(start, end - state.shape[1]), end):
             position = int(positions[token])

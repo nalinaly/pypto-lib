@@ -20,7 +20,7 @@ cann/cannbot-dsl 的 master samples 已由 48fa202 更新到 31bbd70，保持浅
 
 验证结果
 --------
-- 8 组用例各执行 DSL、原生 MIX 和 CPU 参考；DSL 与原核输出逐元素相同。
+- 8 组真实设备输出通过 atol=0.003、rtol=0.03 的原核对照；最大绝对差 0.000244140625，不同元素总数 4。
 - SWA 共用反量化回归：4 组设备用例通过。
 - C2A 第 2 层 EP2：固定输入和原比较器，16 项输出全部通过。
   x_next rel_l2=0.021193206，max_abs=0.65664196，与原基线一致。
@@ -38,3 +38,13 @@ summary.json 记录版本、范围和文件清单；validation/ 保存最终日�
 generated/ 保存 DSL 设备代码、包装与编排；fixtures/ 保存代表性小输入。
 相同编译目录被复用时保留最后一组输入，全部用例可按源码中的固定种子重建。
 reference/ 保留本轮参考 sample 的原文，workflow/ 保留替换前源码。
+
+验证更正（2026-11-06）
+---------------------
+原对照脚本误读 data/out，将 CPU 参考当作设备输出。此前的设备逐元素一致声明作废。
+原设备对 CPU 的精度检查和整层通过记录仍然有效，精度阈值没有改变。
+已从 compare_fn 回调捕获真实输出，重跑全部 8 组 DSL/原生核对照，并精确检查尾部哨兵和全屏蔽零输出。
+8 组真实设备输出通过 atol=0.003、rtol=0.03 的原核对照；最大绝对差 0.000244140625，不同元素总数 4。
+validation/actual-device-comparison.log.txt 和 device-output/ 是修正后的设备证据。
+带 invalid-cpu-reference 的旧记录及原 cases.log.txt 仅供追溯，不再作为设备对照证据。
+fixtures/*/out 始终表示 CPU 参考。workflow/correct_comparison.py.txt 保存更正过程。

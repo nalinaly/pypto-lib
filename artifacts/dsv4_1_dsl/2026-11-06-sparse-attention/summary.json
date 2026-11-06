@@ -18,7 +18,7 @@
   "适配差异": "保留 payload/scale 分离存储和物理行索引，使用 simpler 调度；没有接入 sample 的逻辑索引/页表/AICPU metadata 启动链，也没有采用其初始 sink 状态。",
   "共享实现": "SWA 与稀疏 Attention 共用 FP8 反量化及 NZ 写入；CPU 参考移到独立子模块，默认 key_tile=64 和原调用接口不变。",
   "验证": {
-    "原核对照": "8 组输入分别执行 DSL、原生 MIX 和 CPU 参考；设备对照全部逐元素相同，最大绝对差均为 0。",
+    "原核对照": "8 组真实设备输出通过 atol=0.003、rtol=0.03 的原核对照；最大绝对差 0.000244140625，不同元素总数 4。",
     "独立比较器": "沿用 atol=0.003、rtol=0.03、max_error_ratio=0；额外精确校验非有效输出哨兵和全屏蔽零输出。",
     "覆盖": "混合 KV、仅窗口、仅压缩、全屏蔽、强 sink、零有效 token、单 Query、非有效行和 33 Query 的同 block 复用。",
     "SWA回归": "4 组设备用例全部通过原比较器。",
@@ -73,13 +73,13 @@
     {
       "path": "validation/native-comparison.json",
       "source": "artifacts/dsv41-sparse-attention-dsl/native-comparison.json",
-      "bytes": 3019,
+      "bytes": 3614,
       "encoding": "utf-8"
     },
     {
       "path": "model-snapshot/sparse_attention_dsl.py.txt",
       "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/sparse_attention_dsl.py",
-      "bytes": 22002,
+      "bytes": 22046,
       "encoding": "utf-8"
     },
     {
@@ -133,13 +133,7 @@
     {
       "path": "workflow/compare_native.py.txt",
       "source": "artifacts/dsv41-sparse-attention-dsl/compare_native.py",
-      "bytes": 4191,
-      "encoding": "utf-8"
-    },
-    {
-      "path": "workflow/archive.py.txt",
-      "source": "artifacts/dsv41-sparse-attention-dsl/archive.py",
-      "bytes": 8341,
+      "bytes": 4742,
       "encoding": "utf-8"
     },
     {
@@ -1011,6 +1005,140 @@
       "source": "sparse-attention-precommit.log",
       "bytes": 320,
       "encoding": "utf-8"
+    },
+    {
+      "path": "validation/native-comparison.invalid-cpu-reference.json",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/artifacts/dsv4_1_dsl/2026-11-06-sparse-attention/validation/native-comparison.json",
+      "bytes": 3019,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "workflow/compare_native.invalid-cpu-reference.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/artifacts/dsv4_1_dsl/2026-11-06-sparse-attention/workflow/compare_native.py.txt",
+      "bytes": 4191,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "workflow/archive.invalid-cpu-reference.py.txt",
+      "source": "pypto-a5-dev/pypto-lib-dsv41-dsl/artifacts/dsv4_1_dsl/2026-11-06-sparse-attention/workflow/archive.py.txt",
+      "bytes": 8341,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "workflow/correct_comparison.py.txt",
+      "source": "artifacts/dsv41-sparse-attention-dsl/correct_comparison.py",
+      "bytes": 5870,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "validation/actual-device-comparison.log.txt",
+      "source": "sparse-attention-actual-comparison.log",
+      "bytes": 112159,
+      "encoding": "utf-8"
+    },
+    {
+      "path": "device-output/4-3-mixed/dsl/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/4-3-mixed/DSL/output.pt",
+      "bytes": 156604,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/4-3-mixed/native/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/4-3-mixed/原生/output.pt",
+      "bytes": 156606,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/2-0-mixed/dsl/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/2-0-mixed/DSL/output.pt",
+      "bytes": 888,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/2-0-mixed/native/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/2-0-mixed/原生/output.pt",
+      "bytes": 892,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/1-1-mixed/dsl/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/1-1-mixed/DSL/output.pt",
+      "bytes": 52792,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/1-1-mixed/native/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/1-1-mixed/原生/output.pt",
+      "bytes": 52796,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/7-5-masked/dsl/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/7-5-masked/DSL/output.pt",
+      "bytes": 1279,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/7-5-masked/native/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/7-5-masked/原生/output.pt",
+      "bytes": 1284,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/3-2-window/dsl/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/3-2-window/DSL/output.pt",
+      "bytes": 105418,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/3-2-window/native/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/3-2-window/原生/output.pt",
+      "bytes": 105423,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/3-2-compressed/dsl/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/3-2-compressed/DSL/output.pt",
+      "bytes": 105200,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/3-2-compressed/native/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/3-2-compressed/原生/output.pt",
+      "bytes": 105202,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/3-2-sink/dsl/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/3-2-sink/DSL/output.pt",
+      "bytes": 104688,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/3-2-sink/native/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/3-2-sink/原生/output.pt",
+      "bytes": 104692,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/35-33-mixed/dsl/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/35-33-mixed/DSL/output.pt",
+      "bytes": 1712462,
+      "encoding": "gzip"
+    },
+    {
+      "path": "device-output/35-33-mixed/native/output.pt.gz",
+      "source": "artifacts/dsv41-sparse-attention-dsl/device-output/35-33-mixed/原生/output.pt",
+      "bytes": 1712455,
+      "encoding": "gzip"
     }
-  ]
+  ],
+  "验证更正": {
+    "原因": "原对照脚本读取 golden.run 的 data/out，它保存的是 CPU 参考，不能支持原来的设备逐元素一致结论。",
+    "保留有效证据": "原设备对 CPU 的比较器执行及 C2A 整层 16 项输出通过记录仍然有效。",
+    "修复": "从 compare_fn 的 actual 参数捕获真实设备输出；哨兵和全屏蔽零输出也在真实设备张量上检查。",
+    "重跑": "8 组真实设备输出通过 atol=0.003、rtol=0.03 的原核对照；最大绝对差 0.000244140625，不同元素总数 4。",
+    "旧记录": "带 invalid-cpu-reference 的文件和原 cases.log.txt 仅供追溯；其中逐元素相同声明无效。",
+    "输出区分": "fixtures/*/out 是 CPU 参考；device-output 是回调捕获的真实设备输出。"
+  }
 }
