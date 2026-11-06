@@ -1,0 +1,139 @@
+"""保留替换前的三个本地初始化主体，用于设备逐字节对照。"""
+
+import pypto.language as pl
+from initialization_dsl import D, TOPK, MIN_FP32, ROWS_DYN, COLUMNS_DYN
+
+
+@pl.jit
+def native_padding(
+    x: pl.InOut[pl.Tensor[[ROWS_DYN, COLUMNS_DYN], pl.BF16]],
+    valid_rows: pl.Scalar[pl.INT32],
+):
+    x.bind_dynamic(0, ROWS_DYN)
+    x.bind_dynamic(1, COLUMNS_DYN)
+    tokens = pl.tensor.dim(x, 0)
+    if tokens > 0 and valid_rows < tokens:
+        for row in pl.spmd(tokens, name_hint="decode_sp_zero_padding"):
+            if row >= valid_rows:
+                x[row:row + 1, 0:D] = pl.full([1, D], dtype=pl.BF16, value=0.0)
+    return x
+
+
+@pl.jit
+def native_output(x: pl.InOut[pl.Tensor[[ROWS_DYN, COLUMNS_DYN], pl.BF16]]):
+    x.bind_dynamic(0, ROWS_DYN)
+    x.bind_dynamic(1, COLUMNS_DYN)
+    output_rows = pl.tensor.dim(x, 0)
+    for row in pl.parallel(0, output_rows, 8):
+        with pl.at(level=pl.Level.CORE_GROUP, name_hint="unused_attention_output"):
+            live_rows = pl.min(8, output_rows - row)
+            zeros = pl.tile.full([8, D], dtype=pl.BF16, value=0.0)
+            valid = pl.tile.set_validshape(zeros, live_rows, D)
+            x = pl.store(valid, [row, 0], x)
+    return x
+
+
+@pl.jit
+def native_gate_partial(
+    indices: pl.InOut[pl.Tensor[[80, TOPK], pl.INT32]],
+    weights: pl.InOut[pl.Tensor[[80, TOPK], pl.FP32]],
+    biased: pl.InOut[pl.Tensor[[80, 384], pl.FP32]],
+    num_tokens: pl.Scalar[pl.INT32],
+    experts: pl.Scalar[pl.INDEX],
+):
+    active_tokens = pl.max(0, pl.min(num_tokens, 80))
+    with pl.at(level=pl.Level.CORE_GROUP, name_hint="gate_pre_route"):
+        for zt in pl.range(80):
+            if zt >= active_tokens:
+                for zk in pl.range(TOPK):
+                    zero_index = pl.cast(0, pl.INT32)
+                    pl.write(indices, [zt, zk], zero_index)
+                    zero_weight = pl.cast(0.0, pl.FP32)
+                    pl.write(weights, [zt, zk], zero_weight)
+        biased_pad = pl.full([80, 368], dtype=pl.FP32, value=MIN_FP32)
+        biased[:, 16:384] = biased_pad
+    return indices, weights, biased
+
+
+@pl.jit
+def native_gate_full(
+    indices: pl.InOut[pl.Tensor[[80, TOPK], pl.INT32]],
+    weights: pl.InOut[pl.Tensor[[80, TOPK], pl.FP32]],
+    biased: pl.InOut[pl.Tensor[[80, 384], pl.FP32]],
+    num_tokens: pl.Scalar[pl.INT32],
+    experts: pl.Scalar[pl.INDEX],
+):
+    active_tokens = pl.max(0, pl.min(num_tokens, 80))
+    with pl.at(level=pl.Level.CORE_GROUP, name_hint="gate_pre_route"):
+        for zt in pl.range(80):
+            if zt >= active_tokens:
+                for zk in pl.range(TOPK):
+                    zero_index = pl.cast(0, pl.INT32)
+                    pl.write(indices, [zt, zk], zero_index)
+                    zero_weight = pl.cast(0.0, pl.FP32)
+                    pl.write(weights, [zt, zk], zero_weight)
+    return indices, weights, biased
+
+
+@pl.jit
+def native_gate_zero(
+    indices: pl.InOut[pl.Tensor[[16, TOPK], pl.INT32]],
+    weights: pl.InOut[pl.Tensor[[16, TOPK], pl.FP32]],
+    biased: pl.InOut[pl.Tensor[[16, 32], pl.FP32]],
+    num_tokens: pl.Scalar[pl.INT32],
+    experts: pl.Scalar[pl.INDEX],
+):
+    active_tokens = pl.max(0, pl.min(num_tokens, 16))
+    with pl.at(level=pl.Level.CORE_GROUP, name_hint="gate_pre_route"):
+        for zt in pl.range(16):
+            if zt >= active_tokens:
+                for zk in pl.range(TOPK):
+                    zero_index = pl.cast(0, pl.INT32)
+                    pl.write(indices, [zt, zk], zero_index)
+                    zero_weight = pl.cast(0.0, pl.FP32)
+                    pl.write(weights, [zt, zk], zero_weight)
+        biased_pad = pl.full([16, 16], dtype=pl.FP32, value=MIN_FP32)
+        biased[:, 16:32] = biased_pad
+    return indices, weights, biased
+
+
+@pl.jit
+def native_gate_negative(
+    indices: pl.InOut[pl.Tensor[[17, TOPK], pl.INT32]],
+    weights: pl.InOut[pl.Tensor[[17, TOPK], pl.FP32]],
+    biased: pl.InOut[pl.Tensor[[32, 64], pl.FP32]],
+    num_tokens: pl.Scalar[pl.INT32],
+    experts: pl.Scalar[pl.INDEX],
+):
+    active_tokens = pl.max(0, pl.min(num_tokens, 17))
+    with pl.at(level=pl.Level.CORE_GROUP, name_hint="gate_pre_route"):
+        for zt in pl.range(17):
+            if zt >= active_tokens:
+                for zk in pl.range(TOPK):
+                    zero_index = pl.cast(0, pl.INT32)
+                    pl.write(indices, [zt, zk], zero_index)
+                    zero_weight = pl.cast(0.0, pl.FP32)
+                    pl.write(weights, [zt, zk], zero_weight)
+        biased_pad = pl.full([32, 40], dtype=pl.FP32, value=MIN_FP32)
+        biased[:, 24:64] = biased_pad
+    return indices, weights, biased
+
+
+@pl.jit
+def native_gate_beyond(
+    indices: pl.InOut[pl.Tensor[[17, TOPK], pl.INT32]],
+    weights: pl.InOut[pl.Tensor[[17, TOPK], pl.FP32]],
+    biased: pl.InOut[pl.Tensor[[32, 64], pl.FP32]],
+    num_tokens: pl.Scalar[pl.INT32],
+    experts: pl.Scalar[pl.INDEX],
+):
+    active_tokens = pl.max(0, pl.min(num_tokens, 17))
+    with pl.at(level=pl.Level.CORE_GROUP, name_hint="gate_pre_route"):
+        for zt in pl.range(17):
+            if zt >= active_tokens:
+                for zk in pl.range(TOPK):
+                    zero_index = pl.cast(0, pl.INT32)
+                    pl.write(indices, [zt, zk], zero_index)
+                    zero_weight = pl.cast(0.0, pl.FP32)
+                    pl.write(weights, [zt, zk], zero_weight)
+    return indices, weights, biased

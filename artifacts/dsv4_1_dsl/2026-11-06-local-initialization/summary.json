@@ -1,0 +1,1023 @@
+{
+  "状态": "PASS",
+  "分支": "dsv4.1-dsl",
+  "模型基线": "580bcf7463d2496fb4d3d68b0a991993231e778c",
+  "替换任务": [
+    "decode_sp_zero_padding",
+    "gate_pre_route",
+    "unused_attention_output"
+  ],
+  "DSL核函数": [
+    "zero_bf16_rows",
+    "initialize_routes"
+  ],
+  "契约": "仅清零无效 BF16 行或未使用输出；保留有效路由，将非有效路由清零；全部分数行的补齐专家列填入原有最小有限 FP32，保留实际专家列。",
+  "调度": "PyPTO/simpler 继续管理调度及依赖；SWA 仅提交无效行的清零任务，未使用输出继续按最多八行分块，路由初始化保留一个 AIV 任务。",
+  "设备验证": "十三组原核与 DSL 对照，二十六次 A5 运行；二十三个完整输出逐字节一致，含有效区、额外保护列及正负零位模式。",
+  "边界": "零/部分/全部有效行、负数和超过容量的有效行数、八行分块尾部、无专家补齐和多种补齐宽度。",
+  "集成验证": {
+    "moe": {
+      "状态": "PASS",
+      "输出通过数": 3
+    },
+    "layer0": {
+      "状态": "PASS",
+      "输出通过数": 16
+    },
+    "layer2": {
+      "状态": "PASS",
+      "输出通过数": 16
+    }
+  },
+  "缩减专家MoE": "EP2，每卡八个专家，两卡有效 token 数分别为 72 和 17，实际覆盖专家分数补齐及后续路由。",
+  "整层": "TP1/EP2，layer 0 为 SWA、layer 2 为 C2A full；固定输入和原有比较器，未降低阈值。",
+  "入口盘点": "整层静态生成物涵盖六类 Attention 分支，75 个核注册中 67 个为 DSL，8 个为保留的通信协议核；本轮三类普通本地任务均已替换。",
+  "范围限制": "结论限定当前 A5 Decode TP1 主路径，不包括 Prefill、TP>1 或未使用的备用入口；通信协议相关的本地处理仍保留。",
+  "框架修改": false,
+  "通信修改": false,
+  "阈值降低": false,
+  "未执行": [
+    "整网",
+    "真实 checkpoint",
+    "正式性能 A/B"
+  ],
+  "输出说明": "device-output 保存比较器 actual 参数；整层仅归档六个激活边界输出，其余缓存输出在日志中记录验证结果。fixtures/*/out 是 CPU 参考，同一动态目录保存最后一次用例，其他输入由固定构造器重建。",
+  "文件": [
+    {
+      "文件": "validation/initial-compile.log.txt",
+      "字节数": 1234
+    },
+    {
+      "文件": "validation/core-compile.log.txt",
+      "字节数": 2960
+    },
+    {
+      "文件": "validation/core-device.log.txt",
+      "字节数": 165457
+    },
+    {
+      "文件": "validation/binaries.log.txt",
+      "字节数": 1300
+    },
+    {
+      "文件": "validation/integration-binaries.log.txt",
+      "字节数": 505
+    },
+    {
+      "文件": "validation/precommit.log.txt",
+      "字节数": 320
+    },
+    {
+      "文件": "validation/compiled.json",
+      "字节数": 5965
+    },
+    {
+      "文件": "validation/binary-results.json",
+      "字节数": 1748
+    },
+    {
+      "文件": "validation/integration-binaries.json",
+      "字节数": 588
+    },
+    {
+      "文件": "validation/device-results.json",
+      "字节数": 5991
+    },
+    {
+      "文件": "validation/native-comparison.json",
+      "字节数": 2510
+    },
+    {
+      "文件": "validation/kernel-inventory.json",
+      "字节数": 20318
+    },
+    {
+      "文件": "validation/queue-tasks.json",
+      "字节数": 172
+    },
+    {
+      "文件": "validation/environment.json",
+      "字节数": 732
+    },
+    {
+      "文件": "model-snapshot/initialization_dsl.py.txt",
+      "字节数": 9804
+    },
+    {
+      "文件": "model-snapshot/hc.py.txt",
+      "字节数": 38252
+    },
+    {
+      "文件": "model-snapshot/gate.py.txt",
+      "字节数": 21405
+    },
+    {
+      "文件": "model-snapshot/decode_layer.py.txt",
+      "字节数": 61133
+    },
+    {
+      "文件": "workflow/hc_baseline.py.txt",
+      "字节数": 38885
+    },
+    {
+      "文件": "workflow/gate_baseline.py.txt",
+      "字节数": 21893
+    },
+    {
+      "文件": "workflow/decode_layer_baseline.py.txt",
+      "字节数": 61583
+    },
+    {
+      "文件": "workflow/native_init.py.txt",
+      "字节数": 5417
+    },
+    {
+      "文件": "workflow/compare-native.py.txt",
+      "字节数": 3430
+    },
+    {
+      "文件": "workflow/run-moe.py.txt",
+      "字节数": 1485
+    },
+    {
+      "文件": "workflow/run-layer.py.txt",
+      "字节数": 2773
+    },
+    {
+      "文件": "workflow/run-case.sh.txt",
+      "字节数": 387
+    },
+    {
+      "文件": "workflow/run-integrations.sh.txt",
+      "字节数": 498
+    },
+    {
+      "文件": "workflow/run-layers.sh.txt",
+      "字节数": 339
+    },
+    {
+      "文件": "workflow/build-binaries.py.txt",
+      "字节数": 739
+    },
+    {
+      "文件": "workflow/build-integrations.py.txt",
+      "字节数": 975
+    },
+    {
+      "文件": "workflow/audit.py.txt",
+      "字节数": 2798
+    },
+    {
+      "文件": "workflow/archive.py.txt",
+      "字节数": 8324
+    },
+    {
+      "文件": "workflow/run_case.py.txt",
+      "字节数": 613
+    },
+    {
+      "文件": "README.txt",
+      "字节数": 3640
+    },
+    {
+      "文件": "generated/padding-zero-native/kernel_config.py.txt",
+      "字节数": 770
+    },
+    {
+      "文件": "generated/padding-zero-native/compiled_meta.json.txt",
+      "字节数": 801
+    },
+    {
+      "文件": "generated/padding-zero-native/orchestration/native_padding.cpp.txt",
+      "字节数": 1572
+    },
+    {
+      "文件": "generated/padding-zero-native/kernels/decode_sp_zero_padding.cpp.txt",
+      "字节数": 5948
+    },
+    {
+      "文件": "fixtures/padding-zero-native/in/valid_rows.pt.gz",
+      "字节数": 597
+    },
+    {
+      "文件": "fixtures/padding-zero-native/in/x.pt.gz",
+      "字节数": 1302
+    },
+    {
+      "文件": "fixtures/padding-zero-native/out/x.pt.gz",
+      "字节数": 1302
+    },
+    {
+      "文件": "generated/padding-zero-dsl/kernel_config.py.txt",
+      "字节数": 1088
+    },
+    {
+      "文件": "generated/padding-zero-dsl/compiled_meta.json.txt",
+      "字节数": 801
+    },
+    {
+      "文件": "generated/padding-zero-dsl/orchestration/validate_padding.cpp.txt",
+      "字节数": 1898
+    },
+    {
+      "文件": "generated/padding-zero-dsl/foreign/zero_bf16_rows/entry.cpp.txt",
+      "字节数": 1704
+    },
+    {
+      "文件": "generated/padding-zero-dsl/foreign/zero_bf16_rows/device_source.hpp.txt",
+      "字节数": 27180
+    },
+    {
+      "文件": "generated/padding-zero-dsl/foreign/zero_bf16_rows/manifest.json.txt",
+      "字节数": 778
+    },
+    {
+      "文件": "fixtures/padding-zero-dsl/in/valid_rows.pt.gz",
+      "字节数": 597
+    },
+    {
+      "文件": "fixtures/padding-zero-dsl/in/x.pt.gz",
+      "字节数": 1302
+    },
+    {
+      "文件": "fixtures/padding-zero-dsl/out/x.pt.gz",
+      "字节数": 1302
+    },
+    {
+      "文件": "generated/output-one-native/kernel_config.py.txt",
+      "字节数": 772
+    },
+    {
+      "文件": "generated/output-one-native/compiled_meta.json.txt",
+      "字节数": 537
+    },
+    {
+      "文件": "generated/output-one-native/orchestration/native_output.cpp.txt",
+      "字节数": 1209
+    },
+    {
+      "文件": "generated/output-one-native/kernels/unused_attention_output.cpp.txt",
+      "字节数": 5663
+    },
+    {
+      "文件": "fixtures/output-one-native/in/x.pt.gz",
+      "字节数": 4626
+    },
+    {
+      "文件": "fixtures/output-one-native/out/x.pt.gz",
+      "字节数": 3943
+    },
+    {
+      "文件": "generated/output-one-dsl/kernel_config.py.txt",
+      "字节数": 1087
+    },
+    {
+      "文件": "generated/output-one-dsl/compiled_meta.json.txt",
+      "字节数": 537
+    },
+    {
+      "文件": "generated/output-one-dsl/orchestration/validate_output.cpp.txt",
+      "字节数": 1842
+    },
+    {
+      "文件": "generated/output-one-dsl/foreign/zero_bf16_rows/entry.cpp.txt",
+      "字节数": 1704
+    },
+    {
+      "文件": "generated/output-one-dsl/foreign/zero_bf16_rows/device_source.hpp.txt",
+      "字节数": 27180
+    },
+    {
+      "文件": "generated/output-one-dsl/foreign/zero_bf16_rows/manifest.json.txt",
+      "字节数": 778
+    },
+    {
+      "文件": "fixtures/output-one-dsl/in/x.pt.gz",
+      "字节数": 4626
+    },
+    {
+      "文件": "fixtures/output-one-dsl/out/x.pt.gz",
+      "字节数": 3943
+    },
+    {
+      "文件": "generated/gate-partial-native/kernel_config.py.txt",
+      "字节数": 791
+    },
+    {
+      "文件": "generated/gate-partial-native/compiled_meta.json.txt",
+      "字节数": 1711
+    },
+    {
+      "文件": "generated/gate-partial-native/orchestration/native_gate_partial.cpp.txt",
+      "字节数": 1336
+    },
+    {
+      "文件": "generated/gate-partial-native/kernels/gate_pre_route.cpp.txt",
+      "字节数": 6141
+    },
+    {
+      "文件": "fixtures/gate-partial-native/in/biased.pt.gz",
+      "字节数": 38166
+    },
+    {
+      "文件": "fixtures/gate-partial-native/in/experts.pt.gz",
+      "字节数": 594
+    },
+    {
+      "文件": "fixtures/gate-partial-native/in/indices.pt.gz",
+      "字节数": 1385
+    },
+    {
+      "文件": "fixtures/gate-partial-native/in/num_tokens.pt.gz",
+      "字节数": 598
+    },
+    {
+      "文件": "fixtures/gate-partial-native/in/weights.pt.gz",
+      "字节数": 1384
+    },
+    {
+      "文件": "fixtures/gate-partial-native/out/biased.pt.gz",
+      "字节数": 3023
+    },
+    {
+      "文件": "fixtures/gate-partial-native/out/indices.pt.gz",
+      "字节数": 1316
+    },
+    {
+      "文件": "fixtures/gate-partial-native/out/weights.pt.gz",
+      "字节数": 1318
+    },
+    {
+      "文件": "generated/gate-partial-dsl/kernel_config.py.txt",
+      "字节数": 1135
+    },
+    {
+      "文件": "generated/gate-partial-dsl/compiled_meta.json.txt",
+      "字节数": 1709
+    },
+    {
+      "文件": "generated/gate-partial-dsl/orchestration/validate_gate_init.cpp.txt",
+      "字节数": 1328
+    },
+    {
+      "文件": "generated/gate-partial-dsl/foreign/initialize_routes/entry.cpp.txt",
+      "字节数": 3021
+    },
+    {
+      "文件": "generated/gate-partial-dsl/foreign/initialize_routes/device_source.hpp.txt",
+      "字节数": 29952
+    },
+    {
+      "文件": "generated/gate-partial-dsl/foreign/initialize_routes/manifest.json.txt",
+      "字节数": 2309
+    },
+    {
+      "文件": "fixtures/gate-partial-dsl/in/biased.pt.gz",
+      "字节数": 3193
+    },
+    {
+      "文件": "fixtures/gate-partial-dsl/in/experts.pt.gz",
+      "字节数": 593
+    },
+    {
+      "文件": "fixtures/gate-partial-dsl/in/indices.pt.gz",
+      "字节数": 787
+    },
+    {
+      "文件": "fixtures/gate-partial-dsl/in/num_tokens.pt.gz",
+      "字节数": 600
+    },
+    {
+      "文件": "fixtures/gate-partial-dsl/in/weights.pt.gz",
+      "字节数": 809
+    },
+    {
+      "文件": "fixtures/gate-partial-dsl/out/biased.pt.gz",
+      "字节数": 3193
+    },
+    {
+      "文件": "fixtures/gate-partial-dsl/out/indices.pt.gz",
+      "字节数": 787
+    },
+    {
+      "文件": "fixtures/gate-partial-dsl/out/weights.pt.gz",
+      "字节数": 809
+    },
+    {
+      "文件": "generated/gate-full-native/kernel_config.py.txt",
+      "字节数": 778
+    },
+    {
+      "文件": "generated/gate-full-native/compiled_meta.json.txt",
+      "字节数": 1711
+    },
+    {
+      "文件": "generated/gate-full-native/orchestration/native_gate_full.cpp.txt",
+      "字节数": 1292
+    },
+    {
+      "文件": "generated/gate-full-native/kernels/gate_pre_route.cpp.txt",
+      "字节数": 3553
+    },
+    {
+      "文件": "fixtures/gate-full-native/in/biased.pt.gz",
+      "字节数": 38166
+    },
+    {
+      "文件": "fixtures/gate-full-native/in/experts.pt.gz",
+      "字节数": 594
+    },
+    {
+      "文件": "fixtures/gate-full-native/in/indices.pt.gz",
+      "字节数": 1385
+    },
+    {
+      "文件": "fixtures/gate-full-native/in/num_tokens.pt.gz",
+      "字节数": 596
+    },
+    {
+      "文件": "fixtures/gate-full-native/in/weights.pt.gz",
+      "字节数": 1384
+    },
+    {
+      "文件": "fixtures/gate-full-native/out/biased.pt.gz",
+      "字节数": 38166
+    },
+    {
+      "文件": "fixtures/gate-full-native/out/indices.pt.gz",
+      "字节数": 1385
+    },
+    {
+      "文件": "fixtures/gate-full-native/out/weights.pt.gz",
+      "字节数": 1384
+    },
+    {
+      "文件": "generated/gate-zero-native/kernel_config.py.txt",
+      "字节数": 788
+    },
+    {
+      "文件": "generated/gate-zero-native/compiled_meta.json.txt",
+      "字节数": 1709
+    },
+    {
+      "文件": "generated/gate-zero-native/orchestration/native_gate_zero.cpp.txt",
+      "字节数": 1333
+    },
+    {
+      "文件": "generated/gate-zero-native/kernels/gate_pre_route.cpp.txt",
+      "字节数": 6055
+    },
+    {
+      "文件": "fixtures/gate-zero-native/in/biased.pt.gz",
+      "字节数": 1429
+    },
+    {
+      "文件": "fixtures/gate-zero-native/in/experts.pt.gz",
+      "字节数": 594
+    },
+    {
+      "文件": "fixtures/gate-zero-native/in/indices.pt.gz",
+      "字节数": 783
+    },
+    {
+      "文件": "fixtures/gate-zero-native/in/num_tokens.pt.gz",
+      "字节数": 595
+    },
+    {
+      "文件": "fixtures/gate-zero-native/in/weights.pt.gz",
+      "字节数": 800
+    },
+    {
+      "文件": "fixtures/gate-zero-native/out/biased.pt.gz",
+      "字节数": 1089
+    },
+    {
+      "文件": "fixtures/gate-zero-native/out/indices.pt.gz",
+      "字节数": 616
+    },
+    {
+      "文件": "fixtures/gate-zero-native/out/weights.pt.gz",
+      "字节数": 615
+    },
+    {
+      "文件": "generated/gate-negative-native/kernel_config.py.txt",
+      "字节数": 792
+    },
+    {
+      "文件": "generated/gate-negative-native/compiled_meta.json.txt",
+      "字节数": 1709
+    },
+    {
+      "文件": "generated/gate-negative-native/orchestration/native_gate_negative.cpp.txt",
+      "字节数": 1337
+    },
+    {
+      "文件": "generated/gate-negative-native/kernels/gate_pre_route.cpp.txt",
+      "字节数": 6166
+    },
+    {
+      "文件": "fixtures/gate-negative-native/in/biased.pt.gz",
+      "字节数": 3193
+    },
+    {
+      "文件": "fixtures/gate-negative-native/in/experts.pt.gz",
+      "字节数": 597
+    },
+    {
+      "文件": "fixtures/gate-negative-native/in/indices.pt.gz",
+      "字节数": 787
+    },
+    {
+      "文件": "fixtures/gate-negative-native/in/num_tokens.pt.gz",
+      "字节数": 599
+    },
+    {
+      "文件": "fixtures/gate-negative-native/in/weights.pt.gz",
+      "字节数": 809
+    },
+    {
+      "文件": "fixtures/gate-negative-native/out/biased.pt.gz",
+      "字节数": 1776
+    },
+    {
+      "文件": "fixtures/gate-negative-native/out/indices.pt.gz",
+      "字节数": 616
+    },
+    {
+      "文件": "fixtures/gate-negative-native/out/weights.pt.gz",
+      "字节数": 618
+    },
+    {
+      "文件": "generated/gate-beyond-native/kernel_config.py.txt",
+      "字节数": 780
+    },
+    {
+      "文件": "generated/gate-beyond-native/compiled_meta.json.txt",
+      "字节数": 1709
+    },
+    {
+      "文件": "generated/gate-beyond-native/orchestration/native_gate_beyond.cpp.txt",
+      "字节数": 1294
+    },
+    {
+      "文件": "generated/gate-beyond-native/kernels/gate_pre_route.cpp.txt",
+      "字节数": 3553
+    },
+    {
+      "文件": "fixtures/gate-beyond-native/in/biased.pt.gz",
+      "字节数": 3193
+    },
+    {
+      "文件": "fixtures/gate-beyond-native/in/experts.pt.gz",
+      "字节数": 593
+    },
+    {
+      "文件": "fixtures/gate-beyond-native/in/indices.pt.gz",
+      "字节数": 787
+    },
+    {
+      "文件": "fixtures/gate-beyond-native/in/num_tokens.pt.gz",
+      "字节数": 600
+    },
+    {
+      "文件": "fixtures/gate-beyond-native/in/weights.pt.gz",
+      "字节数": 809
+    },
+    {
+      "文件": "fixtures/gate-beyond-native/out/biased.pt.gz",
+      "字节数": 3193
+    },
+    {
+      "文件": "fixtures/gate-beyond-native/out/indices.pt.gz",
+      "字节数": 787
+    },
+    {
+      "文件": "fixtures/gate-beyond-native/out/weights.pt.gz",
+      "字节数": 809
+    },
+    {
+      "文件": "validation/moe-compile.log.txt",
+      "字节数": 249
+    },
+    {
+      "文件": "validation/moe-device.log.txt",
+      "字节数": 32706
+    },
+    {
+      "文件": "validation/moe-compile.json",
+      "字节数": 172
+    },
+    {
+      "文件": "validation/moe-result.json",
+      "字节数": 173
+    },
+    {
+      "文件": "generated/moe/distributed_meta.json.txt",
+      "字节数": 5026
+    },
+    {
+      "文件": "generated/moe/orchestration/host_orch.py.txt",
+      "字节数": 10125
+    },
+    {
+      "文件": "generated/moe/l2_moe/kernel_config.py.txt",
+      "字节数": 14819
+    },
+    {
+      "文件": "generated/moe/l2_moe/orchestration/l2_moe.cpp.txt",
+      "字节数": 145408
+    },
+    {
+      "文件": "generated/moe/l2_moe/foreign/initialize_routes/entry.cpp.txt",
+      "字节数": 2881
+    },
+    {
+      "文件": "generated/moe/l2_moe/foreign/initialize_routes/device_source.hpp.txt",
+      "字节数": 29407
+    },
+    {
+      "文件": "generated/moe/l2_moe/foreign/initialize_routes/manifest.json.txt",
+      "字节数": 1929
+    },
+    {
+      "文件": "validation/layer0-compile.log.txt",
+      "字节数": 972
+    },
+    {
+      "文件": "validation/layer0-device.log.txt",
+      "字节数": 60160
+    },
+    {
+      "文件": "validation/layer0-compile.json",
+      "字节数": 320
+    },
+    {
+      "文件": "validation/layer0-result.json",
+      "字节数": 321
+    },
+    {
+      "文件": "generated/layer0/distributed_meta.json.txt",
+      "字节数": 15174
+    },
+    {
+      "文件": "generated/layer0/orchestration/host_orch.py.txt",
+      "字节数": 24385
+    },
+    {
+      "文件": "generated/layer0/l2_decode_layer/kernel_config.py.txt",
+      "字节数": 41303
+    },
+    {
+      "文件": "generated/layer0/l2_decode_layer/orchestration/l2_decode_layer.cpp.txt",
+      "字节数": 1195507
+    },
+    {
+      "文件": "generated/layer0/l2_decode_layer/foreign/zero_bf16_rows/entry.cpp.txt",
+      "字节数": 1704
+    },
+    {
+      "文件": "generated/layer0/l2_decode_layer/foreign/zero_bf16_rows/device_source.hpp.txt",
+      "字节数": 27180
+    },
+    {
+      "文件": "generated/layer0/l2_decode_layer/foreign/zero_bf16_rows/manifest.json.txt",
+      "字节数": 778
+    },
+    {
+      "文件": "generated/layer0/l2_decode_layer/foreign/initialize_routes/entry.cpp.txt",
+      "字节数": 2881
+    },
+    {
+      "文件": "generated/layer0/l2_decode_layer/foreign/initialize_routes/device_source.hpp.txt",
+      "字节数": 29407
+    },
+    {
+      "文件": "generated/layer0/l2_decode_layer/foreign/initialize_routes/manifest.json.txt",
+      "字节数": 1929
+    },
+    {
+      "文件": "integration-inputs/layer0/layer_id.pt.gz",
+      "字节数": 592
+    },
+    {
+      "文件": "integration-inputs/layer0/attention_num_tokens.pt.gz",
+      "字节数": 616
+    },
+    {
+      "文件": "integration-inputs/layer0/moe_num_tokens.pt.gz",
+      "字节数": 616
+    },
+    {
+      "文件": "validation/layer2-compile.log.txt",
+      "字节数": 972
+    },
+    {
+      "文件": "validation/layer2-device.log.txt",
+      "字节数": 60567
+    },
+    {
+      "文件": "validation/layer2-compile.json",
+      "字节数": 320
+    },
+    {
+      "文件": "validation/layer2-result.json",
+      "字节数": 321
+    },
+    {
+      "文件": "generated/layer2/distributed_meta.json.txt",
+      "字节数": 15174
+    },
+    {
+      "文件": "generated/layer2/orchestration/host_orch.py.txt",
+      "字节数": 24385
+    },
+    {
+      "文件": "generated/layer2/l2_decode_layer/kernel_config.py.txt",
+      "字节数": 41303
+    },
+    {
+      "文件": "generated/layer2/l2_decode_layer/orchestration/l2_decode_layer.cpp.txt",
+      "字节数": 1195507
+    },
+    {
+      "文件": "generated/layer2/l2_decode_layer/foreign/zero_bf16_rows/entry.cpp.txt",
+      "字节数": 1704
+    },
+    {
+      "文件": "generated/layer2/l2_decode_layer/foreign/zero_bf16_rows/device_source.hpp.txt",
+      "字节数": 27180
+    },
+    {
+      "文件": "generated/layer2/l2_decode_layer/foreign/zero_bf16_rows/manifest.json.txt",
+      "字节数": 778
+    },
+    {
+      "文件": "generated/layer2/l2_decode_layer/foreign/initialize_routes/entry.cpp.txt",
+      "字节数": 2881
+    },
+    {
+      "文件": "generated/layer2/l2_decode_layer/foreign/initialize_routes/device_source.hpp.txt",
+      "字节数": 29407
+    },
+    {
+      "文件": "generated/layer2/l2_decode_layer/foreign/initialize_routes/manifest.json.txt",
+      "字节数": 1929
+    },
+    {
+      "文件": "integration-inputs/layer2/layer_id.pt.gz",
+      "字节数": 593
+    },
+    {
+      "文件": "integration-inputs/layer2/attention_num_tokens.pt.gz",
+      "字节数": 616
+    },
+    {
+      "文件": "integration-inputs/layer2/moe_num_tokens.pt.gz",
+      "字节数": 616
+    },
+    {
+      "文件": "device-output/gate-beyond-dsl/biased.pt.gz",
+      "字节数": 3193
+    },
+    {
+      "文件": "device-output/gate-beyond-dsl/indices.pt.gz",
+      "字节数": 787
+    },
+    {
+      "文件": "device-output/gate-beyond-dsl/weights.pt.gz",
+      "字节数": 809
+    },
+    {
+      "文件": "device-output/gate-beyond-native/biased.pt.gz",
+      "字节数": 3193
+    },
+    {
+      "文件": "device-output/gate-beyond-native/indices.pt.gz",
+      "字节数": 787
+    },
+    {
+      "文件": "device-output/gate-beyond-native/weights.pt.gz",
+      "字节数": 809
+    },
+    {
+      "文件": "device-output/gate-full-dsl/biased.pt.gz",
+      "字节数": 38166
+    },
+    {
+      "文件": "device-output/gate-full-dsl/indices.pt.gz",
+      "字节数": 1385
+    },
+    {
+      "文件": "device-output/gate-full-dsl/weights.pt.gz",
+      "字节数": 1384
+    },
+    {
+      "文件": "device-output/gate-full-native/biased.pt.gz",
+      "字节数": 38166
+    },
+    {
+      "文件": "device-output/gate-full-native/indices.pt.gz",
+      "字节数": 1385
+    },
+    {
+      "文件": "device-output/gate-full-native/weights.pt.gz",
+      "字节数": 1384
+    },
+    {
+      "文件": "device-output/gate-negative-dsl/biased.pt.gz",
+      "字节数": 1776
+    },
+    {
+      "文件": "device-output/gate-negative-dsl/indices.pt.gz",
+      "字节数": 616
+    },
+    {
+      "文件": "device-output/gate-negative-dsl/weights.pt.gz",
+      "字节数": 618
+    },
+    {
+      "文件": "device-output/gate-negative-native/biased.pt.gz",
+      "字节数": 1776
+    },
+    {
+      "文件": "device-output/gate-negative-native/indices.pt.gz",
+      "字节数": 616
+    },
+    {
+      "文件": "device-output/gate-negative-native/weights.pt.gz",
+      "字节数": 618
+    },
+    {
+      "文件": "device-output/gate-partial-dsl/biased.pt.gz",
+      "字节数": 3023
+    },
+    {
+      "文件": "device-output/gate-partial-dsl/indices.pt.gz",
+      "字节数": 1316
+    },
+    {
+      "文件": "device-output/gate-partial-dsl/weights.pt.gz",
+      "字节数": 1318
+    },
+    {
+      "文件": "device-output/gate-partial-native/biased.pt.gz",
+      "字节数": 3023
+    },
+    {
+      "文件": "device-output/gate-partial-native/indices.pt.gz",
+      "字节数": 1316
+    },
+    {
+      "文件": "device-output/gate-partial-native/weights.pt.gz",
+      "字节数": 1318
+    },
+    {
+      "文件": "device-output/gate-zero-dsl/biased.pt.gz",
+      "字节数": 1089
+    },
+    {
+      "文件": "device-output/gate-zero-dsl/indices.pt.gz",
+      "字节数": 616
+    },
+    {
+      "文件": "device-output/gate-zero-dsl/weights.pt.gz",
+      "字节数": 615
+    },
+    {
+      "文件": "device-output/gate-zero-native/biased.pt.gz",
+      "字节数": 1089
+    },
+    {
+      "文件": "device-output/gate-zero-native/indices.pt.gz",
+      "字节数": 616
+    },
+    {
+      "文件": "device-output/gate-zero-native/weights.pt.gz",
+      "字节数": 615
+    },
+    {
+      "文件": "device-output/layer0-ep2/attention_hidden.pt.gz",
+      "字节数": 12141618
+    },
+    {
+      "文件": "device-output/layer0-ep2/attention_output.pt.gz",
+      "字节数": 1172930
+    },
+    {
+      "文件": "device-output/layer0-ep2/attention_pre_mix.pt.gz",
+      "字节数": 1878
+    },
+    {
+      "文件": "device-output/layer0-ep2/next_pre_mix.pt.gz",
+      "字节数": 2932
+    },
+    {
+      "文件": "device-output/layer0-ep2/x_mixed.pt.gz",
+      "字节数": 1298025
+    },
+    {
+      "文件": "device-output/layer0-ep2/x_next.pt.gz",
+      "字节数": 12167236
+    },
+    {
+      "文件": "device-output/layer2-ep2/attention_hidden.pt.gz",
+      "字节数": 10934650
+    },
+    {
+      "文件": "device-output/layer2-ep2/attention_output.pt.gz",
+      "字节数": 2376
+    },
+    {
+      "文件": "device-output/layer2-ep2/attention_pre_mix.pt.gz",
+      "字节数": 1799
+    },
+    {
+      "文件": "device-output/layer2-ep2/next_pre_mix.pt.gz",
+      "字节数": 2831
+    },
+    {
+      "文件": "device-output/layer2-ep2/x_mixed.pt.gz",
+      "字节数": 1170026
+    },
+    {
+      "文件": "device-output/layer2-ep2/x_next.pt.gz",
+      "字节数": 10960230
+    },
+    {
+      "文件": "device-output/moe-ep2/next_pre_mix.pt.gz",
+      "字节数": 3028
+    },
+    {
+      "文件": "device-output/moe-ep2/x_mixed.pt.gz",
+      "字节数": 1310285
+    },
+    {
+      "文件": "device-output/moe-ep2/x_next.pt.gz",
+      "字节数": 12152017
+    },
+    {
+      "文件": "device-output/output-full-dsl/x.pt.gz",
+      "字节数": 3943
+    },
+    {
+      "文件": "device-output/output-full-native/x.pt.gz",
+      "字节数": 3943
+    },
+    {
+      "文件": "device-output/output-one-dsl/x.pt.gz",
+      "字节数": 675
+    },
+    {
+      "文件": "device-output/output-one-native/x.pt.gz",
+      "字节数": 675
+    },
+    {
+      "文件": "device-output/output-tail-dsl/x.pt.gz",
+      "字节数": 1323
+    },
+    {
+      "文件": "device-output/output-tail-native/x.pt.gz",
+      "字节数": 1323
+    },
+    {
+      "文件": "device-output/padding-beyond-dsl/x.pt.gz",
+      "字节数": 1302
+    },
+    {
+      "文件": "device-output/padding-beyond-native/x.pt.gz",
+      "字节数": 1302
+    },
+    {
+      "文件": "device-output/padding-full-dsl/x.pt.gz",
+      "字节数": 1800
+    },
+    {
+      "文件": "device-output/padding-full-native/x.pt.gz",
+      "字节数": 1800
+    },
+    {
+      "文件": "device-output/padding-negative-dsl/x.pt.gz",
+      "字节数": 1050
+    },
+    {
+      "文件": "device-output/padding-negative-native/x.pt.gz",
+      "字节数": 1050
+    },
+    {
+      "文件": "device-output/padding-partial-dsl/x.pt.gz",
+      "字节数": 4597
+    },
+    {
+      "文件": "device-output/padding-partial-native/x.pt.gz",
+      "字节数": 4597
+    },
+    {
+      "文件": "device-output/padding-zero-dsl/x.pt.gz",
+      "字节数": 675
+    },
+    {
+      "文件": "device-output/padding-zero-native/x.pt.gz",
+      "字节数": 675
+    }
+  ]
+}

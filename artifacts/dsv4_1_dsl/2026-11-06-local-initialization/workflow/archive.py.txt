@@ -1,0 +1,143 @@
+"""归档三类本地初始化任务的原核对照、整层验证及设备生成物。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+work = Path(__file__).resolve().parent
+workspace = work.parents[1]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-06-local-initialization"
+inventory = []
+
+
+def capture(source, target, binary=False):
+    source = Path(source)
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb", compresslevel=6) as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        content = source.read_text().replace(str(workspace), "<workspace>")
+        content = content.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in content.splitlines()).rstrip() + "\n")
+    inventory.append({"文件": str(target), "字节数": destination.stat().st_size})
+
+
+def generated(label, directory, native=False):
+    for name in ("kernel_config.py", "compiled_meta.json", "distributed_meta.json"):
+        if (directory / name).is_file():
+            capture(directory / name, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*")):
+        if source.suffix in (".cpp", ".py"):
+            capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name in ("zero_bf16_rows", "initialize_routes"):
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if native:
+        for source in sorted((directory / "kernels").rglob("*.cpp")):
+            capture(source, f"generated/{label}/kernels/{source.name}.txt")
+
+
+def require_log(label, passes, outputs=None):
+    source = Path(f"/tmp/local-init-{label}.log")
+    content = source.read_text()
+    if len(re.findall(r"^\[RUN\] PASS", content, re.MULTILINE)) != passes:
+        raise RuntimeError(label + " 的通过数量不符")
+    if outputs is not None and len(re.findall(r"^\[RUN\]   '[^']+' PASS", content, re.MULTILINE)) != outputs:
+        raise RuntimeError(label + " 的输出通过数量不符")
+    capture(source, f"validation/{label}.log.txt")
+
+
+records = json.loads((work / "device-results.json").read_text())
+comparison = json.loads((work / "native-comparison.json").read_text())
+if len(records) != 26 or not all(row["passed"] and not row["compile_only"] for row in records):
+    raise RuntimeError("二十六项核心设备运行必须全部通过")
+if len(comparison) != 23 or any(row["不同字节数"] for row in comparison):
+    raise RuntimeError("十三组原核对照的二十三个输出必须逐字节一致")
+require_log("initial-compile", 13)
+require_log("core-compile", 26)
+require_log("core-device", 26, 46)
+for name in ("binaries", "integration-binaries", "precommit"):
+    capture(Path(f"/tmp/local-init-{name}.log"), f"validation/{name}.log.txt")
+for name in ("compiled.json", "binary-results.json", "integration-binaries.json", "device-results.json",
+             "native-comparison.json", "kernel-inventory.json", "queue-tasks.json", "environment.json"):
+    capture(work / name, "validation/" + name)
+for name in ("initialization_dsl.py", "hc.py", "gate.py", "decode_layer.py"):
+    capture(model / "models/deepseek_v4_1_flash" / name, f"model-snapshot/{name}.txt")
+for name in ("hc_baseline.py", "gate_baseline.py", "decode_layer_baseline.py", "native_init.py", "compare-native.py",
+             "run-moe.py", "run-layer.py", "run-case.sh", "run-integrations.sh", "run-layers.sh", "build-binaries.py",
+             "build-integrations.py", "audit.py", "archive.py"):
+    capture(work / name, f"workflow/{name}.txt")
+capture(workspace / "artifacts/dsv41-semantic-review/run_case.py", "workflow/run_case.py.txt")
+capture(work / "README.txt", "README.txt")
+seen = set()
+for row in records:
+    directory = Path(row["work_dir"])
+    if directory in seen:
+        continue
+    seen.add(directory)
+    label = row["label"]
+    generated(label, directory, native=label.endswith("-native"))
+    for source in sorted((directory / "data").rglob("*.pt")):
+        relative = source.relative_to(directory / "data")
+        capture(source, f"fixtures/{label}/{relative}.gz", binary=True)
+
+integrations = {}
+for label, outputs in (("moe", 3), ("layer0", 16), ("layer2", 16)):
+    record = json.loads((work / f"{label}-result.json").read_text())
+    if not record["passed"] or record["compile_only"]:
+        raise RuntimeError(label + " 集成必须通过")
+    require_log(f"{label}-compile", 1)
+    require_log(f"{label}-device", 1, outputs)
+    for suffix in ("compile", "result"):
+        capture(work / f"{label}-{suffix}.json", f"validation/{label}-{suffix}.json")
+    root = Path(record["work_dir"])
+    generated(label, root)
+    for child in sorted((root / "next_levels").glob("*")):
+        generated(label + "/" + child.name, child)
+    if "fixture" in record:
+        fixture = Path(record["fixture"])
+        for name in ("layer_id", "attention_num_tokens", "moe_num_tokens"):
+            capture(fixture / "in" / f"{name}.pt", f"integration-inputs/{label}/{name}.pt.gz", binary=True)
+    integrations[label] = {"状态": "PASS", "输出通过数": outputs}
+for source in sorted((work / "device-output").rglob("*.pt")):
+    relative = source.relative_to(work / "device-output")
+    if relative.parts[0].startswith("layer") and source.stem not in (
+        "attention_output", "attention_hidden", "attention_pre_mix", "next_pre_mix", "x_mixed", "x_next"
+    ):
+        continue
+    capture(source, f"device-output/{relative}.gz", binary=True)
+
+summary = {
+    "状态": "PASS",
+    "分支": "dsv4.1-dsl",
+    "模型基线": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=model, text=True).strip(),
+    "替换任务": ["decode_sp_zero_padding", "gate_pre_route", "unused_attention_output"],
+    "DSL核函数": ["zero_bf16_rows", "initialize_routes"],
+    "契约": "仅清零无效 BF16 行或未使用输出；保留有效路由，将非有效路由清零；全部分数行的补齐专家列填入原有最小有限 FP32，保留实际专家列。",
+    "调度": "PyPTO/simpler 继续管理调度及依赖；SWA 仅提交无效行的清零任务，未使用输出继续按最多八行分块，路由初始化保留一个 AIV 任务。",
+    "设备验证": "十三组原核与 DSL 对照，二十六次 A5 运行；二十三个完整输出逐字节一致，含有效区、额外保护列及正负零位模式。",
+    "边界": "零/部分/全部有效行、负数和超过容量的有效行数、八行分块尾部、无专家补齐和多种补齐宽度。",
+    "集成验证": integrations,
+    "缩减专家MoE": "EP2，每卡八个专家，两卡有效 token 数分别为 72 和 17，实际覆盖专家分数补齐及后续路由。",
+    "整层": "TP1/EP2，layer 0 为 SWA、layer 2 为 C2A full；固定输入和原有比较器，未降低阈值。",
+    "入口盘点": "整层静态生成物涵盖六类 Attention 分支，75 个核注册中 67 个为 DSL，8 个为保留的通信协议核；本轮三类普通本地任务均已替换。",
+    "范围限制": "结论限定当前 A5 Decode TP1 主路径，不包括 Prefill、TP>1 或未使用的备用入口；通信协议相关的本地处理仍保留。",
+    "框架修改": False,
+    "通信修改": False,
+    "阈值降低": False,
+    "未执行": ["整网", "真实 checkpoint", "正式性能 A/B"],
+    "输出说明": "device-output 保存比较器 actual 参数；整层仅归档六个激活边界输出，其余缓存输出在日志中记录验证结果。fixtures/*/out 是 CPU 参考，同一动态目录保存最后一次用例，其他输入由固定构造器重建。",
+    "文件": inventory,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"已归档 {len(inventory)} 个文件，全部验证通过")

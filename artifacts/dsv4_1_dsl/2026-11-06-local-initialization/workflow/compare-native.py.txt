@@ -1,0 +1,70 @@
+"""逐字节对照原核和 DSL 的完整输出，包括有效区和保护列。"""
+
+import argparse
+import json
+from pathlib import Path
+
+import torch
+from golden import run
+from index_gather_dsl import compare_bytes
+import initialization_dsl as init
+import native_init
+
+
+work = Path(__file__).resolve().parent
+parser = argparse.ArgumentParser()
+parser.add_argument("--compile-only", action="store_true")
+parser.add_argument("-d", "--device", type=int, default=0)
+args = parser.parse_args()
+compiled = {} if args.compile_only else {r["label"]: r for r in json.loads((work / "compiled.json").read_text())}
+records = []
+failures = []
+
+
+def comparator(label, name):
+    def compare(actual, expected, **kwargs):
+        target = work / "device-output" / label
+        target.mkdir(parents=True, exist_ok=True)
+        torch.save(actual.detach().cpu().clone(), target / f"{name}.pt")
+        return compare_bytes(actual, expected, **kwargs)
+    return compare
+
+
+for case, config in init.INIT_CASES.items():
+    kind = config[0]
+    outputs = ("indices", "weights", "biased") if kind == "gate" else ("x",)
+    golden = getattr(init, "golden_gate_init" if kind == "gate" else f"golden_{kind}")
+    dsl = getattr(init, "validate_gate_init" if kind == "gate" else f"validate_{kind}")
+    native = getattr(native_init, f"native_{case.replace('-', '_')}" if kind == "gate" else f"native_{kind}")
+    for implementation, fn in (("native", native), ("dsl", dsl)):
+        label = f"{case}-{implementation}"
+        print("[本地初始化对照] " + label, flush=True)
+        result = run(
+            fn=fn, specs=init.build_init_specs(case), golden_fn=golden,
+            config={"backend_type": "a5", "execution_mode": False, "device_id": args.device},
+            compare_fn={name: comparator(label, name) for name in outputs},
+            compile_only=args.compile_only,
+            runtime_dir=None if args.compile_only else compiled[label]["work_dir"],
+            save_data=not args.compile_only,
+        )
+        records.append({"label": label, "passed": bool(result.passed), "error": str(result.error or ""),
+                        "work_dir": str(result.work_dir), "compile_only": args.compile_only})
+        (work / ("compiled.json" if args.compile_only else "device-results.json")).write_text(
+            json.dumps(records, ensure_ascii=False, indent=2) + "\n")
+        if not result.passed:
+            failures.append(label)
+
+if not args.compile_only and not failures:
+    comparisons = []
+    for case, config in init.INIT_CASES.items():
+        for name in (("indices", "weights", "biased") if config[0] == "gate" else ("x",)):
+            native = torch.load(work / "device-output" / f"{case}-native/{name}.pt", weights_only=True)
+            dsl = torch.load(work / "device-output" / f"{case}-dsl/{name}.pt", weights_only=True)
+            differences = int((native.contiguous().view(torch.uint8) != dsl.contiguous().view(torch.uint8)).sum())
+            comparisons.append({"用例": case, "输出": name, "不同字节数": differences, "元素数": dsl.numel()})
+            if differences:
+                failures.append(case + "/" + name)
+    (work / "native-comparison.json").write_text(json.dumps(comparisons, ensure_ascii=False, indent=2) + "\n")
+    print("[原核对照] " + json.dumps(comparisons, ensure_ascii=False), flush=True)
+if failures:
+    raise SystemExit("失败用例：" + ", ".join(failures))

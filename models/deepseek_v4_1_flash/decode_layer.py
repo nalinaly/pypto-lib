@@ -25,6 +25,7 @@ from decode_c1a_reuse import decode_c1a_reuse
 from decode_c2a_full import decode_c2a_full
 from decode_c2a_reuse import decode_c2a_reuse
 from decode_swa import decode_swa
+from initialization_dsl import zero_attention_output
 from expert_routed import MX_PACKED_LANE_COLS, MX_W1_PACKED_ROWS, MX_W2_PACKED_ROWS, MX_W3_PACKED_ROWS
 from decode_moe import (
     moe, AUX_WIDTH, EP_SIZE, N_LOCAL_EXPERTS, RECV_MAX, ROUTE_WIDTH, SIGNAL_PAD, clear_moe_signals,
@@ -51,10 +52,6 @@ N_EXPERTS = M.n_routed_experts
 TOPK = M.num_experts_per_tok
 MOE_INTER = M.moe_intermediate_size
 MX_GROUP = M.weight_block_size[0]
-
-
-# 分块参数
-OUTPUT_INIT_ROW_TILE = 8
 
 
 @pl.jit
@@ -165,13 +162,7 @@ def l2_decode_layer(
     x_next.bind_dynamic(0, LOCAL_T_DYN)
 
     if layer_id >= 2:
-        output_rows = pl.tensor.dim(attention_output, 0)
-        for row in pl.parallel(0, output_rows, OUTPUT_INIT_ROW_TILE):
-            with pl.at(level=pl.Level.CORE_GROUP, name_hint="unused_attention_output"):
-                live_rows = pl.min(OUTPUT_INIT_ROW_TILE, output_rows - row)
-                zeros = pl.tile.full([OUTPUT_INIT_ROW_TILE, D], dtype=pl.BF16, value=0.0)
-                valid = pl.tile.set_validshape(zeros, live_rows, D)
-                attention_output = pl.store(valid, [row, 0], attention_output)
+        attention_output = zero_attention_output(attention_output)
 
     if layer_id < 2:
         decode_swa(

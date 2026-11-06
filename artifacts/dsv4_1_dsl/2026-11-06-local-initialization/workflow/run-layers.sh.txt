@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+work_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+device=${TASK_DEVICE:?请通过 task-submit 分配两张 A5 设备}
+for layer in 0 2; do
+    bash "$work_dir/run-case.sh" "$work_dir/run-layer.py" --ep 2 --layer-id "$layer" -d "$device" > "/tmp/local-init-layer$layer-device.log" 2>&1
+done

@@ -1,0 +1,935 @@
+{
+  "layer0": {
+    "注册入口数": 75,
+    "DSL入口数": 67,
+    "保留原生核": [
+      "dispatch_meta_publish",
+      "dispatch_meta_wait",
+      "dispatch_meta_finalize",
+      "dispatch_push",
+      "combine_notify",
+      "combine_wait",
+      "ffn_reduce_scatter",
+      "moe_signal_clear"
+    ],
+    "入口": [
+      {
+        "func_id": 0,
+        "name": "zero_bf16_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 1,
+        "name": "collapse_norm_row",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 2,
+        "name": "quantize_bf16_tile",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 3,
+        "name": "project_q_a",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 4,
+        "name": "normalize_quant_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 5,
+        "name": "project_q_b",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 6,
+        "name": "query_rope_head",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 7,
+        "name": "project_kv",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 8,
+        "name": "window_kv_page",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 9,
+        "name": "swa_query_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 10,
+        "name": "swa_query_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 11,
+        "name": "inverse_rms_row",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 12,
+        "name": "project_hf32_tile",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 13,
+        "name": "coefficients_row",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 14,
+        "name": "rope_quant_head",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 15,
+        "name": "project_o_a",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 16,
+        "name": "project_o_b",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 17,
+        "name": "expand_row",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 18,
+        "name": "project_compressor_tile",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 19,
+        "name": "clear_latent",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 20,
+        "name": "pool_state_block",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 21,
+        "name": "publish_compressed_page",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 22,
+        "name": "project_index_key_tile",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 23,
+        "name": "publish_index_page",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 24,
+        "name": "project_query_mix_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 25,
+        "name": "project_query_mix_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 26,
+        "name": "project_index_weight_tile",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 27,
+        "name": "reduce_index_weight_tile",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 28,
+        "name": "plan_runs",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 29,
+        "name": "score_topk_mix_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 30,
+        "name": "score_topk_mix_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 31,
+        "name": "sparse_attention_mix_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 32,
+        "name": "sparse_attention_mix_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 33,
+        "name": "project_c1a_compressor",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 34,
+        "name": "publish_c1a",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 35,
+        "name": "project_query_mix__2_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 36,
+        "name": "project_query_mix__2_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 37,
+        "name": "score_topk_mix__2_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 38,
+        "name": "score_topk_mix__2_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 39,
+        "name": "generate_pool",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 40,
+        "name": "project_query_mix__3_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 41,
+        "name": "project_query_mix__3_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 42,
+        "name": "classify_pool_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 43,
+        "name": "score_topk_mix__3_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 44,
+        "name": "score_topk_mix__3_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 45,
+        "name": "gather_pool",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 46,
+        "name": "plan_pool_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 47,
+        "name": "score_topk_mix__4_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 48,
+        "name": "score_topk_mix__4_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 49,
+        "name": "collapse_tile",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 50,
+        "name": "normalize_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 51,
+        "name": "quantize_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 52,
+        "name": "initialize_routes",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 53,
+        "name": "project_scores_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 54,
+        "name": "project_scores_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 55,
+        "name": "select_routes",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 56,
+        "name": "project_tile",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 57,
+        "name": "shared_swiglu_quant_tile",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 58,
+        "name": "project_tile__2",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 59,
+        "name": "stage_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 60,
+        "name": "dispatch_meta_publish",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 61,
+        "name": "dispatch_meta_wait",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 62,
+        "name": "dispatch_meta_finalize",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 63,
+        "name": "dispatch_push",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 64,
+        "name": "combine_notify",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 65,
+        "name": "combine_wait",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 66,
+        "name": "gather_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 67,
+        "name": "project_up_worker_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 68,
+        "name": "project_up_worker_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 69,
+        "name": "activate_worker",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 70,
+        "name": "project_down_worker_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 71,
+        "name": "project_down_worker_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 72,
+        "name": "ffn_reduce_scatter",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 73,
+        "name": "combine_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 74,
+        "name": "moe_signal_clear",
+        "core_type": "aiv",
+        "external": null
+      }
+    ]
+  },
+  "layer2": {
+    "注册入口数": 75,
+    "DSL入口数": 67,
+    "保留原生核": [
+      "dispatch_meta_publish",
+      "dispatch_meta_wait",
+      "dispatch_meta_finalize",
+      "dispatch_push",
+      "combine_notify",
+      "combine_wait",
+      "ffn_reduce_scatter",
+      "moe_signal_clear"
+    ],
+    "入口": [
+      {
+        "func_id": 0,
+        "name": "zero_bf16_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 1,
+        "name": "collapse_norm_row",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 2,
+        "name": "quantize_bf16_tile",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 3,
+        "name": "project_q_a",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 4,
+        "name": "normalize_quant_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 5,
+        "name": "project_q_b",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 6,
+        "name": "query_rope_head",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 7,
+        "name": "project_kv",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 8,
+        "name": "window_kv_page",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 9,
+        "name": "swa_query_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 10,
+        "name": "swa_query_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 11,
+        "name": "inverse_rms_row",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 12,
+        "name": "project_hf32_tile",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 13,
+        "name": "coefficients_row",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 14,
+        "name": "rope_quant_head",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 15,
+        "name": "project_o_a",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 16,
+        "name": "project_o_b",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 17,
+        "name": "expand_row",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 18,
+        "name": "project_compressor_tile",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 19,
+        "name": "clear_latent",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 20,
+        "name": "pool_state_block",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 21,
+        "name": "publish_compressed_page",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 22,
+        "name": "project_index_key_tile",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 23,
+        "name": "publish_index_page",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 24,
+        "name": "project_query_mix_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 25,
+        "name": "project_query_mix_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 26,
+        "name": "project_index_weight_tile",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 27,
+        "name": "reduce_index_weight_tile",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 28,
+        "name": "plan_runs",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 29,
+        "name": "score_topk_mix_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 30,
+        "name": "score_topk_mix_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 31,
+        "name": "sparse_attention_mix_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 32,
+        "name": "sparse_attention_mix_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 33,
+        "name": "project_c1a_compressor",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 34,
+        "name": "publish_c1a",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 35,
+        "name": "project_query_mix__2_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 36,
+        "name": "project_query_mix__2_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 37,
+        "name": "score_topk_mix__2_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 38,
+        "name": "score_topk_mix__2_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 39,
+        "name": "generate_pool",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 40,
+        "name": "project_query_mix__3_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 41,
+        "name": "project_query_mix__3_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 42,
+        "name": "classify_pool_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 43,
+        "name": "score_topk_mix__3_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 44,
+        "name": "score_topk_mix__3_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 45,
+        "name": "gather_pool",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 46,
+        "name": "plan_pool_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 47,
+        "name": "score_topk_mix__4_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 48,
+        "name": "score_topk_mix__4_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 49,
+        "name": "collapse_tile",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 50,
+        "name": "normalize_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 51,
+        "name": "quantize_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 52,
+        "name": "initialize_routes",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 53,
+        "name": "project_scores_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 54,
+        "name": "project_scores_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 55,
+        "name": "select_routes",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 56,
+        "name": "project_tile",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 57,
+        "name": "shared_swiglu_quant_tile",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 58,
+        "name": "project_tile__2",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 59,
+        "name": "stage_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 60,
+        "name": "dispatch_meta_publish",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 61,
+        "name": "dispatch_meta_wait",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 62,
+        "name": "dispatch_meta_finalize",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 63,
+        "name": "dispatch_push",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 64,
+        "name": "combine_notify",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 65,
+        "name": "combine_wait",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 66,
+        "name": "gather_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 67,
+        "name": "project_up_worker_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 68,
+        "name": "project_up_worker_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 69,
+        "name": "activate_worker",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 70,
+        "name": "project_down_worker_aic",
+        "core_type": "aic",
+        "external": true
+      },
+      {
+        "func_id": 71,
+        "name": "project_down_worker_aiv",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 72,
+        "name": "ffn_reduce_scatter",
+        "core_type": "aiv",
+        "external": null
+      },
+      {
+        "func_id": 73,
+        "name": "combine_rows",
+        "core_type": "aiv",
+        "external": true
+      },
+      {
+        "func_id": 74,
+        "name": "moe_signal_clear",
+        "core_type": "aiv",
+        "external": null
+      }
+    ]
+  },
+  "通信代码检查": "decode_moe.py、expert_routed.py 与任务开始时 HEAD 内容完全一致，未改动通信或协议任务。"
+}

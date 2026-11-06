@@ -1,0 +1,43 @@
+"""运行原有 EP2 MoE 入口，记录实际设备输出和验证结果。"""
+
+import json
+from pathlib import Path
+import runpy
+import sys
+
+import golden
+import torch
+
+
+work = Path(__file__).resolve().parent
+workspace = work.parents[1]
+entry = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py"
+original_run = golden.run
+compile_only = "--compile-only" in sys.argv
+
+
+def capture(name, comparator):
+    def check(actual, expected, **kwargs):
+        directory = work / "device-output" / "moe-ep2"
+        directory.mkdir(parents=True, exist_ok=True)
+        torch.save(actual.detach().cpu().clone(), directory / f"{name}.pt")
+        return comparator(actual, expected, **kwargs)
+    return check
+
+
+def run(**kwargs):
+    kwargs["compare_fn"] = {name: capture(name, compare) for name, compare in kwargs["compare_fn"].items()}
+    if not compile_only:
+        compiled = json.loads((work / "moe-compile.json").read_text())
+        kwargs["runtime_dir"] = compiled["work_dir"]
+    result = original_run(**kwargs)
+    record = {"passed": bool(result.passed), "error": str(result.error or ""),
+              "work_dir": str(result.work_dir), "compile_only": compile_only}
+    record_name = "moe-compile.json" if compile_only else "moe-result.json"
+    (work / record_name).write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n")
+    return result
+
+
+golden.run = run
+sys.argv[0] = str(entry)
+runpy.run_path(str(entry), run_name="__main__")

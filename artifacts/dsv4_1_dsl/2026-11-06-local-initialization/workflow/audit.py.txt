@@ -1,0 +1,48 @@
+"""核对整层生成物中的 DSL 入口和保留的通信协议核。"""
+
+import ast
+import json
+from pathlib import Path
+import subprocess
+
+
+work = Path(__file__).resolve().parent
+model = work.parents[1] / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+protocol = {
+    "dispatch_meta_publish", "dispatch_meta_wait", "dispatch_meta_finalize", "dispatch_push",
+    "dispatch_publish_epoch", "dispatch_wait", "ffn_reduce_scatter", "combine_notify", "combine_wait",
+    "moe_signal_clear",
+}
+audit = {}
+for label in ("layer0", "layer2"):
+    root = Path(json.loads((work / f"{label}-compile.json").read_text())["work_dir"])
+    directory = root / "next_levels/l2_decode_layer"
+    tree = ast.parse((directory / "kernel_config.py").read_text())
+    kernels = next(n.value for n in tree.body if isinstance(n, ast.Assign)
+                   and any(isinstance(t, ast.Name) and t.id == "KERNELS" for t in n.targets))
+    entries = []
+    for node in kernels.elts:
+        values = {k.value: v.value if isinstance(v, ast.Constant) else None for k, v in zip(node.keys, node.values)}
+        entries.append({key: values.get(key) for key in ("func_id", "name", "core_type", "external")})
+    native = [entry["name"] for entry in entries if not entry["external"]]
+    if set(native) - protocol:
+        raise RuntimeError("存在非通信协议的原生核：" + str(set(native) - protocol))
+    for name in ("zero_bf16_rows", "initialize_routes"):
+        if not any(entry["name"] == name and entry["external"] and entry["core_type"] == "aiv" for entry in entries):
+            raise RuntimeError("缺少 AIV DSL 核：" + name)
+    orchestration = (directory / "orchestration/l2_decode_layer.cpp").read_text()
+    for name in ("dsl_decode_sp_zero_padding", "dsl_gate_pre_route", "dsl_unused_attention_output"):
+        if name not in orchestration:
+            raise RuntimeError("缺少整层调度入口：" + name)
+    audit[label] = {"注册入口数": len(entries), "DSL入口数": len(entries) - len(native),
+                    "保留原生核": native, "入口": entries}
+
+for name in ("decode_moe.py", "expert_routed.py"):
+    path = "models/deepseek_v4_1_flash/" + name
+    before = subprocess.check_output(["git", "show", "HEAD:" + path], cwd=model)
+    if (model / path).read_bytes() != before:
+        raise RuntimeError("通信所在文件出现非预期改动：" + name)
+audit["通信代码检查"] = "decode_moe.py、expert_routed.py 与任务开始时 HEAD 内容完全一致，未改动通信或协议任务。"
+(work / "kernel-inventory.json").write_text(json.dumps(audit, ensure_ascii=False, indent=2) + "\n")
+print(json.dumps({label: {key: value for key, value in row.items() if key != "入口"}
+                  for label, row in audit.items() if isinstance(row, dict)}, ensure_ascii=False))

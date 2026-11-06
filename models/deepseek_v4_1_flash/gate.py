@@ -14,9 +14,7 @@ import torch.nn.functional as F
 
 from config import FLASH as M, MOE_TOKENS, EP_SIZE, N_LOCAL_EXPERTS
 from gate_dsl import normalize_gate, project_gate, quantize_gate, route_gate
-
-
-FP32_NEG_INF = -3.4028234663852886e38
+from initialization_dsl import initialize_gate
 
 
 # 模型配置
@@ -104,17 +102,8 @@ def gate_from_fp32(
     quantize_gate(xg_buf, x_norm_mx, x_norm_scale)
 
     biased_scores_buf = pl.create_tensor([T_PAD, SCORE_PAD], dtype=pl.FP32)
-    with pl.at(level=pl.Level.CORE_GROUP, name_hint="gate_pre_route"):
-        for zt in pl.range(T):
-            if zt >= active_tokens:
-                for zk in pl.range(TOPK):
-                    zero_index = pl.cast(0, pl.INT32)
-                    pl.write(indices, [zt, zk], zero_index)
-                    zero_weight = pl.cast(0.0, pl.FP32)
-                    pl.write(weights, [zt, zk], zero_weight)
-        if N_EXPERTS < SCORE_PAD:
-            biased_pad = pl.full([T_PAD, SCORE_PAD - N_EXPERTS], dtype=pl.FP32, value=FP32_NEG_INF)
-            biased_scores_buf[:, N_EXPERTS:SCORE_PAD] = biased_pad
+    experts = pl.tensor.dim(gate_w, 0)
+    initialize_gate(indices, weights, biased_scores_buf, num_tokens, experts)
 
     route_scores_buf = pl.create_tensor([T_PAD, SCORE_PAD], dtype=pl.FP32)
     project_gate(xg_buf, gate_w, gate_bias, route_scores_buf, biased_scores_buf, active_tokens)

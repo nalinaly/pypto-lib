@@ -1,0 +1,42 @@
+{
+  "arch": "dav-3510",
+  "core_type": "aiv",
+  "device_abi": {
+    "parameters": [
+      {
+        "alignment": 8,
+        "kind": "pod",
+        "logical_index": 0,
+        "offset": 0,
+        "size": 24
+      }
+    ],
+    "schema": 1,
+    "size": 24,
+    "symbol": "kernel_zero_bf16_rows"
+  },
+  "export_backend": "source_bundle",
+  "hard_syncall": null,
+  "parameters": [
+    {
+      "access": "write",
+      "dtype": "bf16",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "shape",
+          "slot": 0
+        },
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "kind": "tensor",
+      "logical_index": 0,
+      "name": "output"
+    }
+  ],
+  "symbol": "kernel_zero_bf16_rows"
+}

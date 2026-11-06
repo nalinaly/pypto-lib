@@ -17,6 +17,7 @@ import torch.nn.functional as F
 from config import FLASH as M, SP_T_DYN, T_DYN
 from hc_dsl import collapse_tile, collapse_norm_row, expand_row, coefficients_row, inverse_rms_row, project_hf32_tile
 from hc_dsl import TASK_TILE, PROJECT_ROW_TILE, COLLAPSE_ROW_TILE
+from initialization_dsl import zero_bf16_padding as zero_bf16_padding
 
 
 # 模型配置
@@ -205,22 +206,6 @@ def hc_pre(
     mixes_ready = hc_sinkhorn(inv_rms, partials, scale, base, next_pre_mix, post_mix, residual_mix)
     hc_head(x_hc, incoming_pre_mix, output)
     return mixes_ready
-
-
-@pl.jit.inline
-def zero_bf16_padding(x: pl.Tensor, valid_rows: pl.Scalar[pl.INT32]):
-    """Clear physical rows that belong to an empty or partial TP slab.
-
-    A TP rank with no logical token still publishes one fixed-capacity slab so
-    every rank executes the same distributed window protocol.  Clearing the
-    unused rows makes that padding deterministic and prevents an empty owner
-    from publishing uninitialized data.
-    """
-    tokens = pl.tensor.dim(x, 0)
-    if tokens > 0 and valid_rows < tokens:
-        for row in pl.spmd(tokens, name_hint="decode_sp_zero_padding"):
-            if row >= valid_rows:
-                x[row : row + 1, 0:D] = pl.full([1, D], dtype=pl.BF16, value=0.0)
 
 
 @pl.jit.inline

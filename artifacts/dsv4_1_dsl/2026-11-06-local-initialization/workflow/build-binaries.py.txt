@@ -1,0 +1,17 @@
+"""在 CPU 编译本次初始化原核和 DSL 的 A5 二进制。"""
+
+import json
+from pathlib import Path
+from pypto.runtime import device_runner
+
+
+work = Path(__file__).resolve().parent
+records = json.loads((work / "compiled.json").read_text())
+directories = list(dict.fromkeys(Path(row["work_dir"]) for row in records))
+results = []
+for directory in directories:
+    print("[A5 二进制编译] " + str(directory), flush=True)
+    device_runner._compile_and_assemble(directory, "a5")
+    results.append({"work_dir": str(directory), "platform": "a5", "passed": True})
+(work / "binary-results.json").write_text(json.dumps(results, ensure_ascii=False, indent=2) + "\n")
+print(f"[A5 二进制编译] 通过 {len(results)} 组", flush=True)

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+work_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+device=${TASK_DEVICE:?请通过 task-submit 分配两张 A5 设备}
+bash "$work_dir/run-case.sh" "$work_dir/run-moe.py" --ep 2 --experts-per-rank 8 --num-tokens-per-rank 72,17 -d "$device" > /tmp/local-init-moe-device.log 2>&1
+for layer in 0 2; do
+    bash "$work_dir/run-case.sh" "$work_dir/run-layer.py" --ep 2 --layer-id "$layer" -d "$device" > "/tmp/local-init-layer$layer-device.log" 2>&1
+done
