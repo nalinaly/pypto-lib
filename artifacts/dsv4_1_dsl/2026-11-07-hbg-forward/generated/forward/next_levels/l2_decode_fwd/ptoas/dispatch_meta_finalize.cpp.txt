@@ -1,0 +1,79 @@
+#include "pto/pto-inst.hpp"
+using namespace pto;
+
+enum class PTOAutoSyncTailMode : int {
+  kBarrierAll = 0,
+  kSetWaitMte3ToSEvent0 = 1,
+};
+
+static AICORE inline void ptoas_auto_sync_tail(
+    PTOAutoSyncTailMode mode = PTOAutoSyncTailMode::kBarrierAll) {
+  switch (mode) {
+  case PTOAutoSyncTailMode::kSetWaitMte3ToSEvent0:
+    set_flag(PIPE_MTE3, PIPE_S, EVENT_ID0);
+    wait_flag(PIPE_MTE3, PIPE_S, EVENT_ID0);
+    break;
+  case PTOAutoSyncTailMode::kBarrierAll:
+  default:
+    pipe_barrier(PIPE_ALL);
+    break;
+  }
+}
+
+template <typename Ptr>
+static AICORE inline void PTOAS__DCCI_SINGLE_CACHE_LINE(Ptr ptr) {
+  dcci((__gm__ void*)ptr, cache_line_t::SINGLE_CACHE_LINE);
+}
+
+AICORE void dispatch_meta_finalize(__gm__ int32_t* v1, __gm__ int32_t* v2, __gm__ int32_t* v3, __gm__ int64_t* v4) {
+  using T = float;
+
+  #if defined(__DAV_VEC__)
+  set_mask_norm();
+  set_vector_mask(-1, -1);
+  // pto: %c2_index
+  const int64_t v5 = 2;
+  // pto: %c64_index
+  const int64_t v6 = 64;
+  // pto: %c1_index
+  const int64_t v7 = 1;
+  // pto: %c0_index
+  const int64_t v8 = 0;
+  // pto: %c0_i32
+  const int32_t v9 = 0;
+  for (int64_t v10 = v8; v10 < v6; v10 += v7) {
+    // pto: %acc_inline11508__rv_v2
+    ;
+    int32_t v11;
+    v11 = v9;
+    for (int64_t v12 = v8; v12 < v5; v12 += v7) {
+      // pto: %flat_offset_mul
+      ;
+      int64_t v13 = (int64_t) ((uint64_t) v12 * (uint64_t) v6);
+      // pto: %flat_offset
+      ;
+      int64_t v14 = (int64_t) ((uint64_t) v13 + (uint64_t) v10);
+      // pto: %count_inline11510__tile
+      ;
+      int32_t v15 = (v1)[v14];
+      (v2)[v14] = v15;
+      // pto: %2
+      ;
+      uint32_t v16 = (uint32_t) v11;
+      // pto: %2
+      ;
+      v11 = (int32_t) (v16 + (uint32_t) v15);
+    };
+    (v3)[v10] = v11;
+  }
+  pipe_barrier(PIPE_ALL);
+  dcci((__gm__ void*)0, cache_line_t::ENTIRE_DATA_CACHE);
+  dsb((mem_dsb_t)0);
+  #endif // __DAV_VEC__
+
+  pipe_barrier(PIPE_ALL);
+  dcci((__gm__ void*)0, cache_line_t::ENTIRE_DATA_CACHE);
+  dsb((mem_dsb_t)0);
+  ptoas_auto_sync_tail(PTOAutoSyncTailMode::kBarrierAll);
+  return;
+}

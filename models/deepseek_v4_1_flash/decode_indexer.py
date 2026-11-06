@@ -21,7 +21,6 @@ from index_weight_dsl import project_index_weights
 from index_query_dsl import project_index_query
 from index_score_dsl import dispatch_score_topk
 from index_plan_dsl import plan_index_runs, plan_pool_runs
-from index_route_dsl import classify_candidate_pool, WORKER_TILE as POOL_WORKER_TILE, FLAG_TILE as POOL_FLAG_TILE
 import pypto.language as pl
 from config import (
     B_DYN, FLASH, INDEX_BLOCKS_DYN, INDEX_CACHE_GROUP, INDEX_POOL_BLOCKS_DYN,
@@ -63,59 +62,9 @@ def score_select_reindex(
     weights_ready: pl.Scalar[pl.TASK_ID],
     pool_ready: pl.Scalar[pl.TASK_ID],
 ):
-    """Route identity candidate pools to paged MIX and sparse pools to gathered MIX."""
-    capacity = pl.tensor.dim(pool_block_ids, 1)
-    width = pl.tensor.dim(scores, 1)
-    table_width = pl.tensor.dim(block_table, 1)
-    cache_pages = pl.tensor.dim(index_cache, 0)
-    flags = pl.create_tensor([POOL_WORKER_TILE, POOL_FLAG_TILE], dtype=pl.INT32)
-    plan_tid = classify_candidate_pool(
-        pool_block_ids, pool_block_counts, request_ids, lengths, block_table, flags,
-        num_tokens, width, cache_pages, cache_ready, pool_ready,
-    )
-    dense = pl.cast(1, pl.INT32)
-    for worker in pl.range(POOL_WORKER_TILE):
-        dense = dense * pl.read(flags, [worker, 0])
-    if dense != 0:
-        tokens = pl.tensor.dim(output, 0)
-        dense_width = pl.min(width, table_width * 128)
-        paged_scores = pl.create_tensor([tokens, dense_width], dtype=pl.FP32)
-        selected, scores_tid = score_select_paged(
-            query, query_scale, weights, index_cache, index_cache_scale,
-            block_table, request_ids, lengths, paged_scores, output,
-            num_tokens, plan_tid, query_ready, weights_ready, capacity, False,
-        )
-        result = selected
-    else:
-        result = _score_select_pool(
-            query, query_scale, weights, index_cache, index_cache_scale,
-            block_table, request_ids, lengths, pool_block_ids, pool_block_counts, scores, output,
-            num_tokens, cache_ready, query_ready, weights_ready, plan_tid,
-        )
-    return result
-
-
-@pl.jit.inline(auto_scope=False)
-def _score_select_pool(
-    query: pl.Tensor[[T_DYN, INDEX_H * INDEX_DIM // 2], pl.UINT8],
-    query_scale: pl.Tensor[[T_DYN, INDEX_H * _SCALE_COUNT], pl.FP8E8M0],
-    weights: pl.Tensor[[T_DYN, INDEX_H], pl.BF16],
-    index_cache: pl.Tensor,
-    index_cache_scale: pl.Tensor,
-    block_table: pl.Tensor,
-    request_ids: pl.Tensor,
-    lengths: pl.Tensor,
-    pool_block_ids: pl.Tensor[[T_DYN, INDEX_POOL_BLOCKS_DYN], pl.INT32],
-    pool_block_counts: pl.Tensor[[T_DYN], pl.INT32],
-    scores: pl.Tensor[[T_DYN, INDEX_POOL_POSITIONS_DYN], pl.FP32],
-    output: pl.Tensor[[T_DYN, INDEX_TOPK], pl.INT32],
-    num_tokens: pl.Scalar[pl.INT32],
-    cache_ready: pl.Scalar[pl.TASK_ID],
-    query_ready: pl.Scalar[pl.TASK_ID],
-    weights_ready: pl.Scalar[pl.TASK_ID],
-    pool_ready: pl.Scalar[pl.TASK_ID],
-):
-    """Gather candidate blocks and select compact scores with physical-row mappings."""
+    """统一处理候选块映射，避免 Host 建图读取设备产生的路由标记。"""
+    # 通用候选池路径同时覆盖恒等映射和稀疏映射；按实际块号生成物理行号。
+    # HBG 必须在任务执行前构图，不能根据设备标记选择 Host 分支。
     capacity = pl.tensor.dim(pool_block_ids, 1)
     tokens = pl.tensor.dim(output, 0)
     width = capacity * CANDIDATE_BLOCK_SIZE
@@ -185,12 +134,13 @@ def score_select_paged(
     if c2a:
         direct_short = pl.cast(1, pl.INT32)
     plan_tid = plan_index_runs(request_ids, lengths, runs, num_tokens, width, direct_short)
-    run_count = pl.read(runs, [3, 0])
     workers = pl.cast(pl.system.available_cluster_count(), pl.INDEX)
     panels = (width + 255) // 256
     shards = workers
     if panels > 100:
-        shards = pl.max(workers, (run_count * panels + 99) // 100)
+        # 区间数不超过 Query 容量；按上界分片，确保每片不超过 100 个 panel。
+        # 真实区间数仍由 DSL 在设备上读取，Host 无需等待规划任务。
+        shards = pl.max(workers, (capacity * panels + 99) // 100)
     block_count = (width + CANDIDATE_BLOCK_SIZE - 1) // CANDIDATE_BLOCK_SIZE
     emit_scores = pl.cast(0, pl.INT32)
     if not c2a:

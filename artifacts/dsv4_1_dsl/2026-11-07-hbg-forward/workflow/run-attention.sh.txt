@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd <workspace>/issue75-env/pypto-pr
+source <workspace>/artifacts/dsv41-hbg-forward-20261107/env.sh
+cd "$PYPTO_LIB_ROOT"
+python "$DSV41_WORKSPACE/artifacts/dsv41-hbg-forward-20261107/run.py" "$DSV41_WORKSPACE/artifacts/dsv41-hbg-forward-20261107/attention.py" --label reindex-dense --entry models/deepseek_v4_1_flash/decode_c1a_reindex.py --start-pos 4096 --query-lens 7 --golden-data build_output/_jit_l3_decode_c1a_reindex_20261106_165113_fes39lbk/data -d "$TASK_DEVICE"
+python "$DSV41_WORKSPACE/artifacts/dsv41-hbg-forward-20261107/run.py" "$DSV41_WORKSPACE/artifacts/dsv41-hbg-forward-20261107/attention.py" --label reindex-sparse --entry models/deepseek_v4_1_flash/decode_c1a_reindex.py --start-pos 16384 --query-lens 6 --golden-data build_output/_jit_l3_decode_c1a_reindex_20261106_142151_gsv6kyeh/data -d "$TASK_DEVICE"

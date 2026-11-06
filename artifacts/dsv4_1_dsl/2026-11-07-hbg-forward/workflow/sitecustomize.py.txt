@@ -1,0 +1,19 @@
+"""让本次测试及其 Python 子进程使用显式选择的干净运行时源码。"""
+import sys
+import copy
+import os
+from pathlib import Path
+
+sys.meta_path[:] = [f for f in sys.meta_path if type(f).__module__ != '_editable_skbc_simpler']
+
+# HBG 使用已安装、此前验证过的 f1c21abf7 运行时库。其打包源码与干净快照相同，
+# 继续走标准版本元数据检查，不复制库、不修改构建记录、不覆盖共享运行时工作区。
+from simpler_setup.runtime_builder import RuntimeBuilder
+_get_binaries = RuntimeBuilder.get_binaries
+def _installed_hbg(self, name, **kwargs):
+    if name == 'host_build_graph' and not kwargs.get('build', False):
+        installed = copy.copy(self)
+        installed._LIB_DIR = Path(os.environ['DSV41_HBG_VENV']) / 'lib/python3.12/site-packages/simpler_setup/_assets/build/lib'
+        return _get_binaries(installed, name, **kwargs)
+    return _get_binaries(self, name, **kwargs)
+RuntimeBuilder.get_binaries = _installed_hbg

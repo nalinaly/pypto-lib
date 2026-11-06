@@ -1,0 +1,38 @@
+module attributes {pto.target_arch = "a5"} {
+  func.func @combine_notify(%arg0: !pto.ptr<i32>, %arg1: i32, %arg2: index, %arg3: !pto.ptr<i64>) attributes {pto.kernel_kind = #pto.kernel_kind<vector>} {
+  %c2_index = arith.constant 2 : index
+  %c64_index = arith.constant 64 : index
+  %c128_index = arith.constant 128 : index
+  %c1_index = arith.constant 1 : index
+  %c0_index = arith.constant 0 : index
+  %c4_i64 = arith.constant 4 : i64
+  %combine_arrived__ssa_v0_s0 = arith.muli %c128_index, %c64_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":241:5)
+  %combine_arrived__ssa_v0_view = pto.make_tensor_view %arg0, shape = [%c2_index, %c64_index, %c128_index], strides = [%combine_arrived__ssa_v0_s0, %c128_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?x?xi32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":241:5)
+  scf.for %peer_inline11613__idx_v0 = %c0_index to %c2_index step %c1_index {
+    %0 = arith.index_cast %arg1 : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":243:13)
+    %1 = arith.cmpi ne, %peer_inline11613__idx_v0, %0 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":243:13)
+    scf.if %1 {
+      %2 = pto.load %arg3[%c0_index] : !pto.ptr<i64> -> i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %3 = arith.trunci %2 : i64 to i32 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %4 = arith.index_cast %3 : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %5 = arith.addi %c2_index, %4 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %6 = pto.load %arg3[%5] : !pto.ptr<i64> -> i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %7 = arith.addi %c2_index, %peer_inline11613__idx_v0 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %8 = pto.load %arg3[%7] : !pto.ptr<i64> -> i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %9 = arith.subi %8, %6 : i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %10 = arith.divsi %9, %c4_i64 : i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %11 = arith.index_cast %10 : i64 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %12 = pto.addptr %arg0, %11 : !pto.ptr<i32> -> !pto.ptr<i32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %13 = arith.muli %c128_index, %c64_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %14 = pto.make_tensor_view %12, shape = [%c2_index, %c64_index, %c128_index], strides = [%13, %c128_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?x?xi32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %rank__ssa_v0_idx = arith.index_cast %arg1 : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %15 = arith.maxsi %rank__ssa_v0_idx, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %combine_arrived__ssa_v0_peer_pview = pto.partition_view %14, offsets = [%15, %c0_index, %c0_index], sizes = [%c1_index, %c1_index, %c1_index] : !pto.tensor_view<?x?x?xi32> -> !pto.partition_tensor_view<1x1x1xi32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %16 = arith.addi %arg2, %c1_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      %17 = arith.index_cast %16 : index to i32 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+      pto.comm.tnotify(%combine_arrived__ssa_v0_peer_pview, %17 : !pto.partition_tensor_view<1x1x1xi32>, i32) {notifyOp = #pto<notify_op set>} loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_moe.py":244:17)
+    }
+  }
+  return
+  }
+}

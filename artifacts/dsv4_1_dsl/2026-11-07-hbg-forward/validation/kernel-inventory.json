@@ -1,0 +1,60 @@
+{
+  "forward": {
+    "runtime": {
+      "runtime": "host_build_graph",
+      "aicpu_thread_num": 0,
+      "host_tensor_indices": [
+        67,
+        68
+      ]
+    },
+    "核注册数": 109,
+    "DSL注册数": 83,
+    "原生核": [
+      "v41_rope_rows",
+      "v41_rope_rows_1",
+      "prepare_compressed_lens",
+      "engram_quant",
+      "engram_projection_aic",
+      "engram_projection_aiv",
+      "engram_widen",
+      "engram_gate",
+      "dispatch_meta_publish",
+      "dispatch_meta_wait",
+      "dispatch_meta_finalize",
+      "dispatch_push",
+      "combine_notify",
+      "combine_wait",
+      "ffn_reduce_scatter",
+      "prepare_compressed_lens_0",
+      "moe_signal_clear",
+      "final_rms_norm",
+      "lm_head_dispatch_push",
+      "lm_head_combine_wait",
+      "lm_head_dispatch_gather",
+      "lm_head_matmul",
+      "lm_head_combine_push",
+      "lm_head_combine_gather",
+      "lm_head_signal_retire",
+      "lm_head_greedy_sample"
+    ]
+  },
+  "reindex-dense": {
+    "runtime": {
+      "runtime": "host_build_graph",
+      "aicpu_thread_num": 0
+    },
+    "核注册数": 26,
+    "DSL注册数": 26,
+    "原生核": []
+  },
+  "reindex-sparse": {
+    "runtime": {
+      "runtime": "host_build_graph",
+      "aicpu_thread_num": 0
+    },
+    "核注册数": 26,
+    "DSL注册数": 26,
+    "原生核": []
+  }
+}

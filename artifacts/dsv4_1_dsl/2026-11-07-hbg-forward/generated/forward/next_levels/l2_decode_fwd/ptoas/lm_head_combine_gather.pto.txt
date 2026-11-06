@@ -1,0 +1,37 @@
+module attributes {pto.target_arch = "a5"} {
+  func.func @lm_head_combine_gather(%arg0: !pto.ptr<f32>, %arg1: !pto.ptr<f32>, %arg2: !pto.ptr<i64>, %__pypto_spmd_block_idx: i32, %__pypto_spmd_block_num: i32) attributes {pto.kernel_kind = #pto.kernel_kind<vector>} {
+  %c0_i64 = arith.constant 0 : i64
+  %c16_index = arith.constant 16 : index
+  %c129280_index = arith.constant 129280 : index
+  %c1_index = arith.constant 1 : index
+  %c63_index = arith.constant 63 : index
+  %c24_index = arith.constant 24 : index
+  %c2048_index = arith.constant 2048 : index
+  %c0_index = arith.constant 0 : index
+  %c15_index = arith.constant 15 : index
+  %c256_index = arith.constant 256 : index
+  %c129024_index = arith.constant 129024 : index
+  %logits__ssa_v0_view = pto.make_tensor_view %arg0, shape = [%c16_index, %c129280_index], strides = [%c129280_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":299:5)
+  %logits_window__ssa_v0_view = pto.make_tensor_view %arg1, shape = [%c16_index, %c129280_index], strides = [%c129280_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":299:5)
+  %gblk_inline13829__ssa_v0 = arith.index_cast %__pypto_spmd_block_idx : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":302:9)
+  scf.for %ob_inline13832__idx_v0 = %gblk_inline13829__ssa_v0 to %c63_index step %c24_index {
+    %1 = arith.muli %ob_inline13832__idx_v0, %c2048_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":306:17)
+    %t__tile = pto.alloc_tile addr = %c0_i64 valid_row = %c16_index valid_col = %c2048_index : !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=2048, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":308:17)
+    %2 = arith.maxsi %1, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":308:17)
+    %logits_window__ssa_v0_pview = pto.partition_view %logits_window__ssa_v0_view, offsets = [%c0_index, %2], sizes = [%c16_index, %c2048_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<16x2048xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":308:17)
+    pto.tload ins(%logits_window__ssa_v0_pview : !pto.partition_tensor_view<16x2048xf32>) outs(%t__tile : !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=2048, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":308:17)
+    %3 = arith.maxsi %1, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":308:17)
+    %logits__iter_v3_pview = pto.partition_view %logits__ssa_v0_view, offsets = [%c0_index, %3], sizes = [%c16_index, %c2048_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<16x2048xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":308:17)
+    pto.tstore ins(%t__tile : !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=2048, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%logits__iter_v3_pview : !pto.partition_tensor_view<16x2048xf32>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":308:17)
+  }
+  %4 = arith.cmpi eq, %gblk_inline13829__ssa_v0, %c15_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":311:17)
+  scf.if %4 {
+    %0 = pto.alloc_tile addr = %c0_i64 valid_row = %c16_index valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":314:21)
+    %5 = pto.partition_view %logits_window__ssa_v0_view, offsets = [%c0_index, %c129024_index], sizes = [%c16_index, %c256_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<16x256xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":314:21)
+    pto.tload ins(%5 : !pto.partition_tensor_view<16x256xf32>) outs(%0 : !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":314:21)
+    %logits__rv_v4_pview = pto.partition_view %logits__ssa_v0_view, offsets = [%c0_index, %c129024_index], sizes = [%c16_index, %c256_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<16x256xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":314:21)
+    pto.tstore ins(%0 : !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%logits__rv_v4_pview : !pto.partition_tensor_view<16x256xf32>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":314:21)
+  }
+  return
+  }
+}

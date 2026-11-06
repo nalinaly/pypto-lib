@@ -296,9 +296,8 @@ def moe(
     force_topk: pl.Tensor[[MOE_TOKENS, TOPK], pl.INT32],
 ) -> pl.Tensor[[LOCAL_T_DYN, HC_MULT, D], pl.FP32]:
     """Run delayed mHC pre-mix, MoE, and residual expansion."""
-    t = MOE_TOKENS
-    post_mix = pl.create_tensor([t, HC_MULT], dtype=pl.FP32)
-    residual_mix = pl.create_tensor([t, HC_MULT, HC_MULT], dtype=pl.FP32)
+    post_mix = pl.create_tensor([MOE_TOKENS, HC_MULT], dtype=pl.FP32)
+    residual_mix = pl.create_tensor([MOE_TOKENS, HC_MULT, HC_MULT], dtype=pl.FP32)
     mixes_ready = hc_pre(
         x_hc, pre_mix, hc_ffn_fn, hc_ffn_scale, hc_ffn_base,
         x_mixed, next_pre_mix, post_mix, residual_mix, hf32=True,
@@ -306,10 +305,10 @@ def moe(
 
     # MoE transport and routed-result scope.
     with pl.scope():
-        x_norm_mx = pl.create_tensor([t, D], dtype=pl.FP8E4M3FN)
-        x_norm_scale = pl.create_tensor([1, t * (D // MX_GROUP)], dtype=pl.FP8E8M0)
+        x_norm_mx = pl.create_tensor([MOE_TOKENS, D], dtype=pl.FP8E4M3FN)
+        x_norm_scale = pl.create_tensor([1, MOE_TOKENS * (D // MX_GROUP)], dtype=pl.FP8E8M0)
         indices = pl.create_tensor([MOE_TOKENS, TOPK], dtype=pl.INT32)
-        weights = pl.create_tensor([t, TOPK], dtype=pl.FP32)
+        weights = pl.create_tensor([MOE_TOKENS, TOPK], dtype=pl.FP32)
         gate(
             x_mixed, norm_weight, gate_weight, correction_bias, num_tokens,
             x_norm_mx, x_norm_scale, indices, weights,
@@ -319,7 +318,7 @@ def moe(
         else:
             dispatch_indices = indices
 
-        shared_output = pl.create_tensor([t, D], dtype=pl.BF16)
+        shared_output = pl.create_tensor([MOE_TOKENS, D], dtype=pl.BF16)
         expert_shared(
             x_norm_mx, x_norm_scale,
             shared_w1, shared_w1_scale,
@@ -351,7 +350,7 @@ def moe(
             recv_route_local, recv_meta_local,
             routed_output, input_ready,
         )
-        sublayer = pl.create_tensor([t, D], dtype=pl.BF16)
+        sublayer = pl.create_tensor([MOE_TOKENS, D], dtype=pl.BF16)
         output_ready = combine_scattered(
             shared_output, sublayer,
             routed_output, combine_arrived,

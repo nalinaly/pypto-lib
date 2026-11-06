@@ -1,0 +1,5 @@
+module attributes {pto.target_arch = "a5"} {
+  func.func @lm_head_combine_wait() attributes {pto.kernel_kind = #pto.kernel_kind<vector>} {
+  return
+  }
+}

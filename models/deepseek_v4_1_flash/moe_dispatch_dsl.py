@@ -164,9 +164,9 @@ def gather_local(
 ):
     """保留三个协议依赖，以一组 AIV SPMD 压紧本地接收区。"""
     rows = pl.tensor.dim(payload, 0)
-    width = pl.tensor.dim(payload, 1)
-    local_x = pl.slice(source, [rows, width], [0, 0])
-    local_scale = pl.slice(source_scale, [rows, width // MX_GROUP], [0, 0])
+    # 直接使用维度表达式，保留编译期列宽，避免普通标量别名被当成动态上界。
+    local_x = pl.slice(source, [rows, payload.shape[1]], [0, 0])
+    local_scale = pl.slice(source_scale, [rows, payload.shape[1] // MX_GROUP], [0, 0])
     local_weight = pl.slice(source_weight, [rows, aux_width], [0, 0])
     local_route = pl.slice(source_route, [rows, route_width], [0, 0])
     ready = pl.system.task_dummy(deps=[wait_ready, publish_ready, meta_ready])

@@ -1,0 +1,12 @@
+module attributes {pto.target_arch = "a5"} {
+  func.func @lm_head_signal_retire(%arg0: !pto.ptr<f32>) attributes {pto.kernel_kind = #pto.kernel_kind<vector>} {
+  %c16_index = arith.constant 16 : index
+  %c129280_index = arith.constant 129280 : index
+  %c1_index = arith.constant 1 : index
+  %c0_index = arith.constant 0 : index
+  %logits__phi_v7_view = pto.make_tensor_view %arg0, shape = [%c16_index, %c129280_index], strides = [%c129280_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":330:5)
+  %anchor_inline13840__tile = pto.load %arg0[%c0_index] : !pto.ptr<f32> -> f32 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":334:9)
+  pto.store %anchor_inline13840__tile, %arg0[%c0_index] : !pto.ptr<f32>, f32 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":346:9)
+  return
+  }
+}

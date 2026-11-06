@@ -1,0 +1,15 @@
+"""在 CPU 上装配已编译的整网程序。"""
+import json
+from pathlib import Path
+
+from pypto.ir.distributed_compiled_program import DistributedCompiledProgram
+from pypto.runtime.distributed_runner import _assemble_chip_callables
+
+work = Path(__file__).resolve().parent
+record = json.loads((work / 'forward-compile.json').read_text())
+assert record['passed'], record
+compiled = DistributedCompiledProgram.from_dir(record['work_dir'])
+callables, runtime, _ = _assemble_chip_callables(compiled)
+assert runtime == 'host_build_graph', runtime
+(work / 'forward-build.json').write_text(json.dumps({'通过': True, 'runtime': runtime}) + '\n')
+print('完整 forward 的 HBG 设备代码装配通过', flush=True)

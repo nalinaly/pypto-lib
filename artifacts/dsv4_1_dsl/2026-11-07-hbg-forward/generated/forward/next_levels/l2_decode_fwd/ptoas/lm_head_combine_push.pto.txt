@@ -1,0 +1,71 @@
+module attributes {pto.target_arch = "a5"} {
+  func.func @lm_head_combine_push(%arg0: !pto.ptr<f32>, %arg1: !pto.ptr<f32>, %arg2: i32, %arg3: !pto.ptr<i64>, %__pypto_spmd_block_idx: i32, %__pypto_spmd_block_num: i32) attributes {pto.kernel_kind = #pto.kernel_kind<vector>} {
+  %c0_i64 = arith.constant 0 : i64
+  %c16_index = arith.constant 16 : index
+  %c129280_index = arith.constant 129280 : index
+  %c1_index = arith.constant 1 : index
+  %c63_index = arith.constant 63 : index
+  %c24_index = arith.constant 24 : index
+  %c2048_index = arith.constant 2048 : index
+  %c0_index = arith.constant 0 : index
+  %c2_index = arith.constant 2 : index
+  %c4_i64 = arith.constant 4 : i64
+  %c15_index = arith.constant 15 : index
+  %c256_index = arith.constant 256 : index
+  %c129024_index = arith.constant 129024 : index
+  %logits_window__ssa_v0_view = pto.make_tensor_view %arg0, shape = [%c16_index, %c129280_index], strides = [%c129280_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":239:5)
+  %logits_shards_inline13798__rv_v2_view = pto.make_tensor_view %arg1, shape = [%c16_index, %c129280_index], strides = [%c129280_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":239:5)
+  %blk_inline13818__ssa_v0 = arith.index_cast %__pypto_spmd_block_idx : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":240:9)
+  scf.for %ob_inline13822__idx_v0 = %blk_inline13818__ssa_v0 to %c63_index step %c24_index {
+    %1 = arith.muli %ob_inline13822__idx_v0, %c2048_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":251:17)
+    %tput_stage = pto.alloc_tile addr = %c0_i64 valid_row = %c16_index valid_col = %c2048_index : !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=2048, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %2 = arith.maxsi %1, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %3 = arith.maxsi %1, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %4 = arith.index_cast %arg2 : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %5 = pto.load %arg3[%c0_index] : !pto.ptr<i64> -> i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %6 = arith.trunci %5 : i64 to i32 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %7 = arith.index_cast %6 : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %8 = arith.addi %c2_index, %7 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %9 = pto.load %arg3[%8] : !pto.ptr<i64> -> i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %10 = arith.addi %c2_index, %4 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %11 = pto.load %arg3[%10] : !pto.ptr<i64> -> i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %12 = arith.subi %11, %9 : i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %13 = arith.divsi %12, %c4_i64 : i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %14 = arith.index_cast %13 : i64 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %15 = pto.addptr %arg0, %14 : !pto.ptr<f32> -> !pto.ptr<f32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %16 = pto.make_tensor_view %15, shape = [%c16_index, %c129280_index], strides = [%c129280_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %logits_window__ssa_v0_peer_pview = pto.partition_view %16, offsets = [%c0_index, %2], sizes = [%c16_index, %c2048_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<16x2048xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    %logits_shards_inline13798__rv_v2_local_pview = pto.partition_view %logits_shards_inline13798__rv_v2_view, offsets = [%c0_index, %3], sizes = [%c16_index, %c2048_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<16x2048xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    pto.barrier <PIPE_ALL> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    pto.comm.tput(%logits_window__ssa_v0_peer_pview, %logits_shards_inline13798__rv_v2_local_pview, buf(%tput_stage) : !pto.partition_tensor_view<16x2048xf32>, !pto.partition_tensor_view<16x2048xf32>, !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=2048, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) {atomicType = #pto<atomic_type atomic_none>} loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    pto.barrier <PIPE_ALL> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    pto.cmo.cacheinvalid %logits_window__ssa_v0_peer_pview single_cache_line : !pto.partition_tensor_view<16x2048xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+    pto.fence.barrier_all #pto.fence_scope<gm> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":252:17)
+  }
+  %17 = arith.cmpi eq, %blk_inline13818__ssa_v0, %c15_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":262:17)
+  scf.if %17 {
+    %0 = pto.alloc_tile addr = %c0_i64 valid_row = %c16_index valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %18 = arith.index_cast %arg2 : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %19 = pto.load %arg3[%c0_index] : !pto.ptr<i64> -> i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %20 = arith.trunci %19 : i64 to i32 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %21 = arith.index_cast %20 : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %22 = arith.addi %c2_index, %21 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %23 = pto.load %arg3[%22] : !pto.ptr<i64> -> i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %24 = arith.addi %c2_index, %18 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %25 = pto.load %arg3[%24] : !pto.ptr<i64> -> i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %26 = arith.subi %25, %23 : i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %27 = arith.divsi %26, %c4_i64 : i64 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %28 = arith.index_cast %27 : i64 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %29 = pto.addptr %arg0, %28 : !pto.ptr<f32> -> !pto.ptr<f32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %30 = pto.make_tensor_view %29, shape = [%c16_index, %c129280_index], strides = [%c129280_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %31 = pto.partition_view %30, offsets = [%c0_index, %c129024_index], sizes = [%c16_index, %c256_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<16x256xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    %32 = pto.partition_view %logits_shards_inline13798__rv_v2_view, offsets = [%c0_index, %c129024_index], sizes = [%c16_index, %c256_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<16x256xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    pto.barrier <PIPE_ALL> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    pto.comm.tput(%31, %32, buf(%0) : !pto.partition_tensor_view<16x256xf32>, !pto.partition_tensor_view<16x256xf32>, !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) {atomicType = #pto<atomic_type atomic_none>} loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    pto.barrier <PIPE_ALL> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    pto.cmo.cacheinvalid %31 single_cache_line : !pto.partition_tensor_view<16x256xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+    pto.fence.barrier_all #pto.fence_scope<gm> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/lm_head.py":264:21)
+  }
+  return
+  }
+}

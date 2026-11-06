@@ -1,0 +1,42 @@
+module attributes {pto.target_arch = "a5"} {
+  func.func @engram_widen(%arg0: !pto.ptr<bf16>, %arg1: !pto.ptr<f32>, %arg2: index, %arg3: index, %__pypto_spmd_block_idx: i32, %__pypto_spmd_block_num: i32) attributes {pto.kernel_kind = #pto.kernel_kind<vector>} {
+  %c0_i64 = arith.constant 0 : i64
+  %c8192_i64 = arith.constant 8192 : i64
+  %c25600_index = arith.constant 25600 : index
+  %c1_index = arith.constant 1 : index
+  %c256_index = arith.constant 256 : index
+  %c16_index = arith.constant 16 : index
+  %c0_index = arith.constant 0 : index
+  %kv_inline9572__rv_v2_view = pto.make_tensor_view %arg0, shape = [%arg2, %c25600_index], strides = [%c25600_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xbf16> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":71:5)
+  %kv_fp32_inline9573__ssa_v0_view = pto.make_tensor_view %arg1, shape = [%arg2, %c25600_index], strides = [%c25600_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":71:5)
+  %block_inline9657__ssa_v0 = arith.index_cast %__pypto_spmd_block_idx : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":71:5)
+  %0 = arith.floordivsi %arg3, %c256_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":72:9)
+  %1 = arith.floordivsi %block_inline9657__ssa_v0, %0 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":72:9)
+  %2 = arith.muli %1, %c16_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":72:9)
+  %3 = arith.floordivsi %arg3, %c256_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":73:9)
+  %4 = arith.remsi %block_inline9657__ssa_v0, %3 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":73:9)
+  %5 = arith.cmpi slt, %4, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":73:9)
+  %6 = arith.cmpi slt, %3, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":73:9)
+  %7 = arith.xori %5, %6 : i1 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":73:9)
+  %8 = arith.cmpi ne, %4, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":73:9)
+  %9 = arith.andi %8, %7 : i1 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":73:9)
+  %10 = arith.addi %4, %3 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":73:9)
+  %11 = arith.select %9, %10, %4 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":73:9)
+  %12 = arith.muli %11, %c256_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":73:9)
+  %13 = arith.subi %arg2, %2 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":74:9)
+  %14 = arith.minsi %13, %c16_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":74:9)
+  %value_inline9661__tile = pto.alloc_tile addr = %c0_i64 valid_row = %14 valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=bf16, rows=16, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":75:9)
+  %15 = arith.maxsi %2, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":75:9)
+  %16 = arith.maxsi %12, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":75:9)
+  %kv_inline9572__rv_v2_pview = pto.partition_view %kv_inline9572__rv_v2_view, offsets = [%15, %16], sizes = [%14, %c256_index] : !pto.tensor_view<?x?xbf16> -> !pto.partition_tensor_view<?x256xbf16> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":75:9)
+  pto.tload ins(%kv_inline9572__rv_v2_pview : !pto.partition_tensor_view<?x256xbf16>) outs(%value_inline9661__tile : !pto.tile_buf<loc=vec, dtype=bf16, rows=16, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":75:9)
+  %widened_inline9662__tile = pto.alloc_tile addr = %c8192_i64 valid_row = %14 valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":76:9)
+  pto.tcvt ins(%value_inline9661__tile {rmode = #pto<round_mode ROUND>, satmode = #pto<saturation_mode OFF>} : !pto.tile_buf<loc=vec, dtype=bf16, rows=16, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%widened_inline9662__tile : !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":76:9)
+  pto.set_validshape %widened_inline9662__tile, %14, %c256_index : !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":77:9)
+  %17 = arith.maxsi %2, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":77:9)
+  %18 = arith.maxsi %12, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":77:9)
+  %kv_fp32_inline9573__ssa_v0_pview = pto.partition_view %kv_fp32_inline9573__ssa_v0_view, offsets = [%17, %18], sizes = [%14, %c256_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<?x256xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":77:9)
+  pto.tstore ins(%widened_inline9662__tile : !pto.tile_buf<loc=vec, dtype=f32, rows=16, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%kv_fp32_inline9573__ssa_v0_pview : !pto.partition_tensor_view<?x256xf32>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/engram.py":77:9)
+  return
+  }
+}

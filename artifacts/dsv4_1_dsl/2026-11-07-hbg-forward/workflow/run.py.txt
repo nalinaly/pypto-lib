@@ -1,0 +1,36 @@
+"""在独立导入路径下运行当前编译器，使用干净的异步运行时源码。"""
+import os
+from pathlib import Path
+import runpy
+import sys
+
+# 已安装扩展来自已验证的运行时环境；Python 源码由明确的干净快照提供。
+# 仅移除当前进程的 editable 重定向，不改动已有环境或运行时工作区。
+sys.meta_path[:] = [f for f in sys.meta_path if type(f).__module__ != '_editable_skbc_simpler']
+import torch
+torch.set_num_threads(2)
+torch.set_num_interop_threads(1)
+
+from pypto.runtime import device_runner
+from concurrent.futures import ThreadPoolExecutor
+def bounded_pool(max_workers=None, *args, **kwargs):
+    return ThreadPoolExecutor(min(2, max_workers or 2), *args, **kwargs)
+device_runner.ThreadPoolExecutor = bounded_pool
+
+import _task_interface
+import simpler
+import pypto
+from simpler_setup.compile_pool import compile_worker_budget
+print('执行环境', pypto.__file__, simpler.__file__,
+      getattr(_task_interface, '__build_commit__', 'unknown'), flush=True)
+if sys.argv[1] == '-m':
+    module = sys.argv[2]
+    sys.argv = [module, *sys.argv[3:]]
+    with compile_worker_budget(2):
+        runpy.run_module(module, run_name='__main__', alter_sys=True)
+else:
+    entry = Path(sys.argv[1]).resolve()
+    sys.argv = [str(entry), *sys.argv[2:]]
+    sys.path.insert(0, str(entry.parent))
+    with compile_worker_budget(2):
+        runpy.run_path(str(entry), run_name='__main__')

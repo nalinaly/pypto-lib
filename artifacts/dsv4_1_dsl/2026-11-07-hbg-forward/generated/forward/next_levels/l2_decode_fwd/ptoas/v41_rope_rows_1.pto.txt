@@ -1,0 +1,66 @@
+module attributes {pto.target_arch = "a5"} {
+  func.func @v41_rope_rows_1(%arg0: !pto.ptr<f32>, %arg1: !pto.ptr<f32>, %arg2: !pto.ptr<i32>, %arg3: !pto.ptr<f32>, %arg4: !pto.ptr<f32>, %arg5: i32, %arg6: index, %arg7: index, %__pypto_spmd_block_idx: i32, %__pypto_spmd_block_num: i32) attributes {pto.kernel_kind = #pto.kernel_kind<vector>} {
+  %c0_i64 = arith.constant 0 : i64
+  %c32_index = arith.constant 32 : index
+  %c1_index = arith.constant 1 : index
+  %c0_index = arith.constant 0 : index
+  %c2_index = arith.constant 2 : index
+  %cn1_index = arith.constant -1 : index
+  %cst_6 = arith.constant 1.00000000000000000e+00 : f32
+  %cst_7 = arith.constant 0.00000000000000000e+00 : f32
+  %c2a_rope_cos_inline9470__ssa_v0_view = pto.make_tensor_view %arg0, shape = [%arg6, %c32_index], strides = [%c32_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":97:5)
+  %c2a_rope_sin_inline9471__ssa_v0_view = pto.make_tensor_view %arg1, shape = [%arg6, %c32_index], strides = [%c32_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":97:5)
+  %position_ids__ssa_v0_view = pto.make_tensor_view %arg2, shape = [%arg6], strides = [%c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?xi32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":97:5)
+  %freqs_cos_inline9554__ssa_v0_view = pto.make_tensor_view %arg3, shape = [%arg7, %c32_index], strides = [%c32_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":97:5)
+  %freqs_sin_inline9555__ssa_v0_view = pto.make_tensor_view %arg4, shape = [%arg7, %c32_index], strides = [%c32_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":97:5)
+  %worker_inline9557__ssa_v0 = arith.index_cast %__pypto_spmd_block_idx : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":98:9)
+  %attention_count_inline9463__ssa_v0_idx = arith.index_cast %arg5 : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":99:9)
+  scf.for %token_inline9558__idx_v0 = %worker_inline9557__ssa_v0 to %attention_count_inline9463__ssa_v0_idx step %c32_index {
+    %3 = pto.load %arg2[%token_inline9558__idx_v0] : !pto.ptr<i32> -> i32 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":100:13)
+    %4 = arith.index_cast %3 : i32 to index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":100:13)
+    %5 = arith.cmpi sle, %c0_index, %4 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":102:17)
+    %6 = arith.addi %4, %c1_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":102:17)
+    %7 = arith.remsi %6, %c2_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":102:17)
+    %8 = arith.cmpi slt, %7, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":102:17)
+    %9 = arith.addi %7, %c2_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":102:17)
+    %10 = arith.select %8, %9, %7 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":102:17)
+    %11 = arith.cmpi eq, %10, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":102:17)
+    %12 = arith.andi %5, %11 : i1 loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":102:17)
+    %position_inline9559__phi_v3 = scf.if %12 -> (index) {
+      %13 = arith.subi %4, %c1_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":103:21)
+      scf.yield %13 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":102:17)
+    } else {
+      scf.yield %cn1_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":102:17)
+    }
+    %14 = arith.cmpi sle, %c0_index, %position_inline9559__phi_v3 : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":106:13)
+    scf.if %14 {
+      %t__tile = pto.alloc_tile addr = %c0_i64 valid_row = %c1_index valid_col = %c32_index : !pto.tile_buf<loc=vec, dtype=f32, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":107:17)
+      %15 = arith.maxsi %position_inline9559__phi_v3, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":107:17)
+      %freqs_cos_inline9554__ssa_v0_pview = pto.partition_view %freqs_cos_inline9554__ssa_v0_view, offsets = [%15, %c0_index], sizes = [%c1_index, %c32_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<1x32xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":107:17)
+      pto.tload ins(%freqs_cos_inline9554__ssa_v0_pview : !pto.partition_tensor_view<1x32xf32>) outs(%t__tile : !pto.tile_buf<loc=vec, dtype=f32, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":107:17)
+      %16 = arith.maxsi %token_inline9558__idx_v0, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":107:17)
+      %c2a_rope_cos_inline9470__iter_v1_pview = pto.partition_view %c2a_rope_cos_inline9470__ssa_v0_view, offsets = [%16, %c0_index], sizes = [%c1_index, %c32_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<1x32xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":107:17)
+      pto.tstore ins(%t__tile : !pto.tile_buf<loc=vec, dtype=f32, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%c2a_rope_cos_inline9470__iter_v1_pview : !pto.partition_tensor_view<1x32xf32>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":107:17)
+      %0 = pto.alloc_tile addr = %c0_i64 valid_row = %c1_index valid_col = %c32_index : !pto.tile_buf<loc=vec, dtype=f32, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":108:17)
+      %17 = arith.maxsi %position_inline9559__phi_v3, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":108:17)
+      %freqs_sin_inline9555__ssa_v0_pview = pto.partition_view %freqs_sin_inline9555__ssa_v0_view, offsets = [%17, %c0_index], sizes = [%c1_index, %c32_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<1x32xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":108:17)
+      pto.tload ins(%freqs_sin_inline9555__ssa_v0_pview : !pto.partition_tensor_view<1x32xf32>) outs(%0 : !pto.tile_buf<loc=vec, dtype=f32, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":108:17)
+      %18 = arith.maxsi %token_inline9558__idx_v0, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":108:17)
+      %c2a_rope_sin_inline9471__iter_v1_pview = pto.partition_view %c2a_rope_sin_inline9471__ssa_v0_view, offsets = [%18, %c0_index], sizes = [%c1_index, %c32_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<1x32xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":108:17)
+      pto.tstore ins(%0 : !pto.tile_buf<loc=vec, dtype=f32, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%c2a_rope_sin_inline9471__iter_v1_pview : !pto.partition_tensor_view<1x32xf32>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":108:17)
+    } else {
+      %1 = pto.alloc_tile addr = %c0_i64 valid_row = %c1_index valid_col = %c32_index : !pto.tile_buf<loc=vec, dtype=f32, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":110:17)
+      pto.texpands ins(%cst_6 : f32) outs(%1 : !pto.tile_buf<loc=vec, dtype=f32, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":110:17)
+      %20 = arith.maxsi %token_inline9558__idx_v0, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":110:17)
+      %21 = pto.partition_view %c2a_rope_cos_inline9470__ssa_v0_view, offsets = [%20, %c0_index], sizes = [%c1_index, %c32_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<1x32xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":110:17)
+      pto.tstore ins(%1 : !pto.tile_buf<loc=vec, dtype=f32, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%21 : !pto.partition_tensor_view<1x32xf32>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":110:17)
+      %2 = pto.alloc_tile addr = %c0_i64 valid_row = %c1_index valid_col = %c32_index : !pto.tile_buf<loc=vec, dtype=f32, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":111:17)
+      pto.texpands ins(%cst_7 : f32) outs(%2 : !pto.tile_buf<loc=vec, dtype=f32, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":111:17)
+      %23 = arith.maxsi %token_inline9558__idx_v0, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":111:17)
+      %24 = pto.partition_view %c2a_rope_sin_inline9471__ssa_v0_view, offsets = [%23, %c0_index], sizes = [%c1_index, %c32_index] : !pto.tensor_view<?x?xf32> -> !pto.partition_tensor_view<1x32xf32> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":111:17)
+      pto.tstore ins(%2 : !pto.tile_buf<loc=vec, dtype=f32, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%24 : !pto.partition_tensor_view<1x32xf32>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/rope_tables.py":111:17)
+    }
+  }
+  return
+  }
+}

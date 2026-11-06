@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd <workspace>/issue75-env/pypto-pr
+source <workspace>/artifacts/dsv41-hbg-forward-20261107/env.sh
+cd "$PYPTO_LIB_ROOT"
+exec python "$DSV41_WORKSPACE/artifacts/dsv41-hbg-forward-20261107/run.py" "$DSV41_WORKSPACE/artifacts/dsv41-hbg-forward-20261107/forward.py" -d "$TASK_DEVICE"

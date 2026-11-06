@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+source <workspace>/artifacts/dsv41-hbg-forward-20261107/env.sh
+cd "$PYPTO_ROOT"
+fork_args=(--forked)
+if [[ "${DSV41_NO_FORK:-0}" == 1 ]]; then fork_args=(); fi
+exec python "$DSV41_WORKSPACE/artifacts/dsv41-hbg-forward-20261107/run.py" -m pytest tests/st/runtime/external_kernel/test_cannbotdsl.py --platform=a5 "${fork_args[@]}" -n 0 -q --tb=short --maxfail=3 "$@"

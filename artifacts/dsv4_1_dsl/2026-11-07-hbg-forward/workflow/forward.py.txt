@@ -1,0 +1,129 @@
+"""用当前 DSL 算子执行完整 decode forward，记录实际调度模式和输出冒烟检查。"""
+import json
+import os
+from pathlib import Path
+import runpy
+import sys
+import importlib
+
+import golden
+import torch
+from pypto.pypto_core import ir, passes
+
+work = Path(__file__).resolve().parent
+compile_only = '--compile-only' in sys.argv
+root = Path(os.environ['PYPTO_LIB_ROOT'])
+entry = root / 'models/deepseek_v4_1_flash/decode_fwd.py'
+sys.path.insert(0, str(entry.parent))
+record_path = work / 'forward-compile.json'
+original_run = golden.run
+
+if os.environ.get('DSV41_TRACE_HOST'):
+    from pypto.backend import pto_backend
+    from pypto.backend._host_tensor_args import _HostAccess
+    original_host_indices = pto_backend._host_tensor_indices
+    def trace_host(func):
+        access = _HostAccess(func)
+        access.visit_stmt(func.body)
+        host = {access.root(v) for v in access.host}
+        device = {access.root(v) for v in access.device}
+        mixed = host & device
+        if mixed:
+            print('HOST_MIXED', [v.name_hint for v in func.params if access.root(v) in mixed], flush=True)
+            print('HOST_READS', [v.name_hint for v in access.host], flush=True)
+            print('DEVICE_MIXED', [v.name_hint for v in access.device if access.root(v) in mixed], flush=True)
+            (work / 'host-mixed-ir.txt').write_text(str(func))
+        return original_host_indices(func)
+    pto_backend._host_tensor_indices = trace_host
+
+if os.environ.get('DSV41_TRACE_META'):
+    decorator = importlib.import_module('pypto.jit._tensor_meta')
+    resolve = decorator.resolve_dep_call_metadata
+    def trace_meta(*args, **kwargs):
+        result = resolve(*args, **kwargs)
+        dep = args[0] if args else kwargs['dep']
+        name = dep.__name__
+        if name in ('gather_local', 'gather_grid'):
+            caller = args[1] if len(args) > 1 else kwargs['caller_func']
+            print('META_TRACE', name, caller.__name__, repr(result), flush=True)
+            if name == 'gather_grid':
+                metas = args[2] if len(args) > 2 else kwargs['caller_tensor_meta']
+                print('META_SEED', {k: (repr(v), sorted(v.inexact_axes)) for k,v in metas.items()}, flush=True)
+        return result
+    decorator.resolve_dep_call_metadata = trace_meta
+    extract = decorator.extract_local_tensor_metas
+    def trace_extract(*args, **kwargs):
+        result = extract(*args, **kwargs)
+        fn = args[0] if args else kwargs['func']
+        if fn.__name__ == 'gather_local':
+            print('META_LOCALS', {k: (repr(v), sorted(v.inexact_axes)) for k,v in result.items()}, flush=True)
+        return result
+    decorator.extract_local_tensor_metas = trace_extract
+
+
+def compile_forward(**kwargs):
+    if not compile_only:
+        from types import SimpleNamespace
+        record = json.loads(record_path.read_text())
+        return SimpleNamespace(passed=True, work_dir=record['work_dir'])
+    result = original_run(**kwargs)
+    record_path.write_text(json.dumps({'passed': bool(result.passed), 'error': str(result.error or ''),
+                                      'work_dir': str(result.work_dir), 'runtime': 'host_build_graph'},
+                                     ensure_ascii=False, indent=2) + '\n')
+    return result
+
+
+def install_scheduler_probe():
+    import simpler.worker as worker_module
+    directory = work / 'scheduler'
+    directory.mkdir(exist_ok=True)
+    for previous in directory.glob('*.json'):
+        previous.unlink()
+
+    def observe(chip):
+        record = {'进程': os.getpid(), 'mode': chip.scheduler_runtime_mode,
+                  'publication': chip.scheduler_mode_publish_count}
+        if record['publication']:
+            (directory / f'{os.getpid()}.json').write_text(json.dumps(record) + '\n')
+            print('SCHEDULER_PROBE', json.dumps(record), flush=True)
+
+    original_child = worker_module._finalize_chip_worker_and_publish
+    def child(buf, chip):
+        try:
+            observe(chip)
+        finally:
+            original_child(buf, chip)
+    worker_module._finalize_chip_worker_and_publish = child
+
+    original_teardown = worker_module.Worker._teardown_worker_tree
+    def teardown(self, **kwargs):
+        try:
+            if self.level == 2 and self._chip_worker is not None:
+                observe(self._chip_worker)
+        finally:
+            original_teardown(self, **kwargs)
+    worker_module.Worker._teardown_worker_tree = teardown
+
+
+golden.run = compile_forward
+if not compile_only:
+    assert os.environ.get('TASK_DEVICE'), '设备运行必须通过 task-submit'
+    assert (ir.comm_layout.RANK_ID_OFFSET, ir.comm_layout.WINDOWS_IN_OFFSET) == (0, 16)
+    install_scheduler_probe()
+sys.argv[0] = str(entry)
+with passes.PassContext([], runtime=passes.RuntimeKind.HOST_BUILD_GRAPH):
+    namespace = runpy.run_path(str(entry), run_name='__main__')
+if not compile_only:
+    outputs = namespace['host_outputs']
+    for name, tensor in outputs.items():
+        assert torch.isfinite(tensor).all(), f'{name} 包含非有限值'
+        assert torch.count_nonzero(tensor).item() == 0, f'零权重冒烟的 {name} 应全零'
+        torch.save(tensor, work / (name + '.pt'))
+    modes = [json.loads(p.read_text()) for p in (work / 'scheduler').glob('*.json')]
+    assert len(modes) >= 2 and all(m['mode'] in (1, 2) and m['publication'] > 0 for m in modes), modes
+    (work / 'forward-result.json').write_text(json.dumps({
+        '通过': True, '层数': 40, '请求数': 12, '有效行数': 72,
+        '专家数每卡': namespace['N_LOCAL_EXPERTS'], '设备': os.environ['TASK_DEVICE'],
+        'scheduler': modes, '数值范围': '零权重冒烟；未验证真实权重整网精度',
+    }, ensure_ascii=False, indent=2) + '\n')
+    print('[FWD HBG] 40 层完成，AICore 异步调度已确认，零权重输出检查通过。', flush=True)

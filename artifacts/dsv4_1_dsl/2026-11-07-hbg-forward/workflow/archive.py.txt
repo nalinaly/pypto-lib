@@ -1,0 +1,72 @@
+"""归档最终 HBG 生成物、运行结果和复现入口，不进行摘要校验。"""
+import gzip
+import json
+import re
+import runpy
+import shutil
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[2]
+work = Path(__file__).resolve().parent
+repo = root / 'pypto-a5-dev/pypto-lib-dsv41-dsl'
+target = repo / 'artifacts/dsv4_1_dsl/2026-11-07-hbg-forward'
+target.mkdir(parents=True, exist_ok=True)
+
+def clean(text):
+    return text.replace(str(root), '<workspace>').replace('<user-home>', '<user-home>')
+
+def copy_text(src, dst):
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_text('\n'.join(line.rstrip() for line in clean(src.read_text(errors='replace')).splitlines()).rstrip() + '\n')
+
+records = [('forward', json.loads((work / 'forward-compile.json').read_text())['work_dir'])]
+for label in ('reindex-dense', 'reindex-sparse'):
+    rows = json.loads((work / f'unit-{label}-compiled.json').read_text())
+    records.append((label, rows[0]['work_dir']))
+external = {}
+inventory = {}
+for label, directory in records:
+    directory = Path(directory)
+    for config in directory.rglob('kernel_config.py'):
+        module = runpy.run_path(str(config))
+        kernels = module.get('KERNELS', [])
+        inventory[label] = {
+            'runtime': module.get('RUNTIME_CONFIG', {}),
+            '核注册数': len(kernels),
+            'DSL注册数': sum(bool(k.get('external')) for k in kernels),
+            '原生核': [k['name'] for k in kernels if not k.get('external')],
+        }
+        for k in kernels:
+            if k.get('external'):
+                src = Path(k['source']).parent
+                if src not in external:
+                    external[src] = f'{len(external):03d}-{k["name"]}'
+    for src in directory.rglob('*'):
+        if src.is_file() and src.suffix in ('.cpp', '.pto', '.mlir', '.py'):
+            relative = src.relative_to(directory)
+            if 'build' not in relative.parts:
+                copy_text(src, target / 'generated' / label / (str(relative) + '.txt'))
+for src, label in external.items():
+    for name in ('manifest.json', 'entry.cpp', 'device_source.hpp'):
+        suffix = '' if name.endswith('.json') else '.txt'
+        copy_text(src / name, target / 'generated/external' / label / (name + suffix))
+for src in sorted(Path('/tmp').glob('dsv41-hbg-*.log')):
+    copy_text(src, target / 'validation' / src.name)
+for src in work.glob('*.json'):
+    if src.name != 'progress.json':
+        copy_text(src, target / 'validation' / src.name)
+for src in (work / 'scheduler').glob('*.json'):
+    copy_text(src, target / 'validation/scheduler' / src.name)
+for name in ('env.sh', 'sitecustomize.py', 'run.py', 'forward.py', 'attention.py', 'build-forward.py',
+             'build-attention.py', 'run-forward.sh', 'run-attention.sh', 'run-st.sh', 'archive.py'):
+    copy_text(work / name, target / 'workflow' / (name + '.txt'))
+for name in ('decode_indexer.py', 'decode_moe.py', 'moe_dispatch_dsl.py', 'decode_fwd.py'):
+    copy_text(repo / 'models/deepseek_v4_1_flash' / name, target / 'model-snapshot' / (name + '.txt'))
+outputs = list(work.glob('*.pt')) + list((work / 'device-output').rglob('*.pt'))
+for src in outputs:
+    dst = target / 'device-output' / (str(src.relative_to(work)) + '.gz')
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with src.open('rb') as inp, gzip.open(dst, 'wb', compresslevel=6) as out:
+        shutil.copyfileobj(inp, out)
+(target / 'validation/kernel-inventory.json').write_text(json.dumps(inventory, ensure_ascii=False, indent=2) + '\n')
+print(json.dumps({'归档': str(target), '外部导出目录数': len(external), '清单': inventory}, ensure_ascii=False), flush=True)
