@@ -1,0 +1,68 @@
+"""按原有 32 worker 主体校验连续生产布局及输出保护区。"""
+
+import pypto.language as pl
+from index_route_dsl import ROWS_DYN, CAPACITY_DYN, REQUESTS_DYN, PAGES_DYN, WORKER_TILE, FLAG_TILE
+
+
+@pl.jit
+def validate_native_route(
+    pool_ids: pl.Tensor[[ROWS_DYN, CAPACITY_DYN], pl.INT32],
+    pool_counts: pl.Tensor[[ROWS_DYN], pl.INT32],
+    request_ids: pl.Tensor[[ROWS_DYN], pl.INT32],
+    lengths: pl.Tensor[[ROWS_DYN], pl.INT32],
+    table: pl.Tensor[[REQUESTS_DYN, PAGES_DYN], pl.INT32],
+    flags: pl.InOut[pl.Tensor[[WORKER_TILE + 1, FLAG_TILE], pl.INT32]],
+    num_tokens: pl.Scalar[pl.INT32],
+    width: pl.Scalar[pl.INDEX],
+    cache_pages: pl.Scalar[pl.INDEX],
+):
+    """保留原来的标量检查、FP32 不匹配累积和页号上界检查。"""
+    pool_ids.bind_dynamic(0, ROWS_DYN)
+    pool_ids.bind_dynamic(1, CAPACITY_DYN)
+    pool_counts.bind_dynamic(0, ROWS_DYN)
+    request_ids.bind_dynamic(0, ROWS_DYN)
+    lengths.bind_dynamic(0, ROWS_DYN)
+    table.bind_dynamic(0, REQUESTS_DYN)
+    table.bind_dynamic(1, PAGES_DYN)
+    capacity = pl.tensor.dim(pool_ids, 1)
+    table_width = pl.tensor.dim(table, 1)
+    request_count = pl.tensor.dim(table, 0)
+    cache_ready = pl.system.task_dummy(deps=[])
+    pool_ready = pl.system.task_dummy(deps=[])
+    with pl.spmd(32, name_hint='idx_plan_pool', deps=[cache_ready, pool_ready]) as plan_tid:
+        worker = pl.tile.get_block_idx()
+        dense = pl.cast(1, pl.INT32)
+        mismatch = pl.tile.full([1, 64], dtype=pl.FP32, value=0.0)
+        for token in pl.range(worker, num_tokens, 32):
+            count = pl.max(0, pl.min(pl.read(pool_counts, [token]), capacity))
+            visible = pl.max(0, pl.read(lengths, [token]))
+            request = pl.read(request_ids, [token])
+            if count != (visible + 7) // 8 or visible > width or visible > table_width * 128:
+                dense = pl.cast(0, pl.INT32)
+            if request < 0 or request >= request_count:
+                dense = pl.cast(0, pl.INT32)
+            if dense == 1:
+                for start in pl.range(0, count, 1024):
+                    active = pl.min(1024, count - start)
+                    raw = pl.load(pool_ids, [token, start], [1, 1024], valid_shape=[1, active])
+                    ids = pl.tile.fillpad(raw, pad_value=pl.PadValue.zero)
+                    lanes = pl.tile.arange(0, [1, 1024], dtype=pl.INT32)
+                    expected = pl.add(lanes, pl.cast(start, pl.INT32))
+                    error = pl.abs(pl.cast(pl.sub(ids, expected), pl.FP32))
+                    valid = pl.tile.cmps(lanes, pl.cast(active, pl.INT32), cmp_type=2)
+                    error = pl.tile.select(valid, error, 0.0)
+                    mismatch = pl.add(mismatch, pl.col_sum(pl.reshape(error, [16, 64])))
+                page_count = (visible + 127) // 128
+                for start in pl.range(0, page_count, 128):
+                    active = pl.min(128, page_count - start)
+                    raw_pages = pl.load(table, [request, start], [1, 128], valid_shape=[1, active])
+                    pages = pl.tile.fillpad(raw_pages, pad_value=pl.PadValue.zero)
+                    bad = pl.tile.cmps(pages, pl.cast(cache_pages, pl.INT32), cmp_type=5)
+                    page_errors = pl.tile.select(bad, pl.tile.full([1, 128], dtype=pl.FP32, value=1.0), 0.0)
+                    mismatch = pl.add(mismatch, pl.col_sum(pl.reshape(page_errors, [2, 64])))
+        sums = pl.col_sum(pl.reshape(mismatch, [8, 8]))
+        for lane in pl.unroll(8):
+            if pl.tile.read(sums, [0, lane]) != 0.0:
+                dense = pl.cast(0, pl.INT32)
+        pl.write(flags, [worker, 0], dense)
+    return flags

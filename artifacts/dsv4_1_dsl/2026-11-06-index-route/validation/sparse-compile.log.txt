@@ -1,0 +1,6 @@
+[分支确认] {"分支": "sparse", "Query数": 6, "候选容量": 2048, "候选块数": [2048, 2048, 2048, 2048, 2048, 2048], "可见块数": [2049, 2049, 2049, 2049, 2049, 2049], "目标分支确认": true, "固定输入": "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_c1a_reindex_20261106_142151_gsv6kyeh/data"}
+[RUN] compile ...
+2026-11-06 18:45:03.007 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable '_attended' in function 'attend_packed' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/sparse_attention.py:1695:9
+2026-11-06 18:45:03.007 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'scores_tid' in function 'score_select_reindex' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_indexer.py:83:9
+[RUN] compile done (13.97s)
+[RUN] PASS (13.97s)

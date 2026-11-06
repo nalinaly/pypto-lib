@@ -1,0 +1,113 @@
+[候选池判定] dense
+[RUN] compile ...
+[RUN] compile done (0.11s)
+Traceback (most recent call last):
+  File "<workspace>/artifacts/dsv41-semantic-review/run_case.py", line 21, in <module>
+    runpy.run_path(str(entry), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/index_route_dsl.py", line 258, in <module>
+    result = run(
+             ^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1565, in _run_pipeline
+    compiled = compile_step(cfg, compile_state)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1731, in _compile
+    return fn.compile(config=cfg, **scalar_compile_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1432, in compile
+    compiled, _ordered_args, _run_config = self._resolve_compiled(args, kwargs, allow_signature_mode=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1168, in _resolve_compiled
+    prepared_contexts = self._build_contexts(
+                        ^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1870, in _build_contexts
+    apply_external_spec(contexts[-1], dep._external_builder(contexts[-1]))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 278, in build
+    return _build(target, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 224, in _build
+    exported = exporter.export_source_bundle(kernel, arguments)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/_cannbotdsl_source.py", line 256, in export_source_bundle
+    device, debug, _ = kernel_materialize._materialize_device_function(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/kernel_materialize.py", line 360, in _materialize_device_function
+    _build_device_entry(
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/kernel_materialize.py", line 330, in _build_device_entry
+    _trace_device_entry(fn, call_plan, ir_builder, entry_block)
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/kernel_materialize.py", line 285, in _trace_device_entry
+    result = ir_builder(*ir_args, **ir_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/index_route_dsl.py", line 102, in classify_pool_rows
+    dense = cb.dtypes.int32(0)
+                    ^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/runtime/control_flow.py", line 395, in for_region
+    result = body_fn(iv, *_state_arguments(body_state))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/index_route_dsl.py", line 102, in __cannbotdsl_for_body_0
+    dense = cb.dtypes.int32(0)
+                     ^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/runtime/control_flow.py", line 453, in if_region
+    emit_branch(operation.then_block, then_fn, "then", "scf.if then branch")
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/runtime/control_flow.py", line 441, in emit_branch
+    result = _invoke_state(callback, branch_state) if callback is not None else branch_state
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/runtime/control_flow.py", line 221, in _invoke_state
+    return callback(*_state_arguments(state))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/index_route_dsl.py", line 94, in __cannbotdsl_if_then_6
+    dense = cb.dtypes.int32(0)
+                    ^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/runtime/control_flow.py", line 395, in for_region
+    result = body_fn(iv, *_state_arguments(body_state))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/index_route_dsl.py", line 92, in __cannbotdsl_for_body_7
+    mismatch = _check_panel(ids, state, live, first, cb.dtypes.int32(0), True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/call_context.py", line 72, in dispatch_call
+    return target(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/lang/jit.py", line 64, in __call__
+    return self._invoke(None, self._surface, args, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/lang/jit.py", line 77, in _invoke
+    ir_builder = compile_function(self.fn).function
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/compiler.py", line 139, in compile_function
+    return compile_frontend(fn, options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/compiler.py", line 92, in compile_frontend
+    return FrontendCompiler().compile(fn, options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/compiler.py", line 50, in compile
+    plan = analyze(source)
+           ^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/analysis.py", line 989, in analyze
+    dataflow = analyze_dataflow(source, region_inputs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/dataflow.py", line 1048, in analyze_dataflow
+    return _analyze_dataflow(source, regions)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/dataflow.py", line 1013, in _analyze_dataflow
+    raise source.error(code, message, node=node, hint=hint)
+cannbotdsl.core.frontend.diagnostics.FrontendError: <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/index_route_dsl.py:48:13: FE202_REGION_VALUE_ESCAPE: Region-local value 'correct' cannot escape a dynamic if region.
+48 |             if identity:
+   |             ^^^^^^^^^^^^
+49 |                 expected = rr.varange(first + vector * VECTOR_TILE, cb.dtypes.int32)
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+50 |                 correct = rr.veq(value, expected, mask=active)
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+51 |             else:
+   | ^^^^^^^^^^^^^^^^^
+52 |                 correct = rr.vlts(value, limit, mask=active)
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+hint: Initialize 'correct' before the region or consume it entirely inside the region.

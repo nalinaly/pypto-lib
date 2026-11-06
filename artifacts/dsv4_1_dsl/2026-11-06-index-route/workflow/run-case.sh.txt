@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+work_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+source "$work_dir/../dsv41-semantic-review/env.sh"
+export PYPTO_BUILD_JOBS=2
+export PYPTO_TEST_JOBS=2
+export PYTHONPATH="$PYPTO_LIB_ROOT/models/deepseek_v4_1_flash:$work_dir:$PYTHONPATH"
+cd "$PYPTO_LIB_ROOT"
+exec python "$DSV41_WORKSPACE/artifacts/dsv41-semantic-review/run_case.py" "$@"

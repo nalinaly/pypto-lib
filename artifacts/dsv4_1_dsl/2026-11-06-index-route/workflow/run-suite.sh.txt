@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+work_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+device=${TASK_DEVICE:?请通过 task-submit 分配 A5 设备}
+bash "$work_dir/run-case.sh" "$work_dir/compare-native.py" -d "$device" > /tmp/index-route-core-device.log 2>&1
+for branch in dense sparse; do
+    bash "$work_dir/run-case.sh" "$work_dir/run-reindex.py" --branch "$branch" -d "$device" > "/tmp/index-route-$branch-device.log" 2>&1
+done

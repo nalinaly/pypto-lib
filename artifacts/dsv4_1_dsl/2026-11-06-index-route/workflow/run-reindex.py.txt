@@ -1,0 +1,88 @@
+"""用已通过的固定输入验证 C1A reindex 稠密及稀疏分支。"""
+
+import argparse
+import json
+from pathlib import Path
+import runpy
+import sys
+
+import golden
+import torch
+
+
+work = Path(__file__).resolve().parent
+workspace = work.parents[1]
+entry = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_c1a_reindex.py"
+parser = argparse.ArgumentParser()
+parser.add_argument("--branch", choices=["dense", "sparse"], required=True)
+parser.add_argument("--compile-only", action="store_true")
+parser.add_argument("-d", "--device", type=int, default=0)
+args = parser.parse_args()
+baseline_file = "dsv41-index-plan-dsl/reindex-result.json" if args.branch == "dense" else "dsv41-index-pool-runs-dsl/reindex-result.json"
+baseline = json.loads((work.parent / baseline_file).read_text())
+if not baseline["passed"] or baseline.get("compile_only", False):
+    raise RuntimeError("固定参考必须已通过设备验证")
+fixture = Path(baseline.get("fixture", str(Path(baseline["work_dir"]) / "data")))
+lengths = torch.load(fixture / "in/compressed_lens.pt", weights_only=True)
+counts = torch.load(fixture / "in/pool_block_counts.pt", weights_only=True)
+ids = torch.load(fixture / "in/pool_block_ids.pt", weights_only=True)
+requests = torch.load(fixture / "in/request_ids.pt", weights_only=True)
+table = torch.load(fixture / "in/index_block_table.pt", weights_only=True)
+active = int(torch.load(fixture / "in/num_tokens.pt", weights_only=True))
+visible_blocks = (lengths[:active].clamp_min(0) + 7) // 8
+if args.branch == "sparse":
+    selected = bool(((counts[:active] != visible_blocks) | (lengths[:active] > ids.shape[1] * 8)).all())
+else:
+    selected = bool((counts[:active] == visible_blocks).all())
+    for token in range(active):
+        count, visible, request = int(counts[token]), int(lengths[token]), int(requests[token])
+        selected = selected and visible <= min(ids.shape[1] * 8, table.shape[1] * 128)
+        selected = selected and 0 <= request < table.shape[0]
+        selected = selected and torch.equal(ids[token, :count], torch.arange(count, dtype=torch.int32))
+        selected = selected and bool((table[request, :(visible + 127) // 128] >= 0).all())
+if not selected:
+    raise RuntimeError("固定输入未满足目标分支条件")
+evidence = {"分支": args.branch, "Query数": active, "候选容量": ids.shape[1],
+            "候选块数": counts[:active].tolist(), "可见块数": visible_blocks.tolist(),
+            "目标分支确认": True, "固定输入": str(fixture)}
+(work / f"{args.branch}-routing.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n")
+print("[分支确认] " + json.dumps(evidence, ensure_ascii=False), flush=True)
+original_run = golden.run
+
+
+def capture(name, comparator):
+    def compare(actual, expected, **kwargs):
+        if name in ("output", "next_pre_mix", "topk_indices", "pool_block_ids", "pool_block_counts"):
+            target = work / "device-output" / args.branch
+            target.mkdir(parents=True, exist_ok=True)
+            torch.save(actual.detach().cpu().clone(), target / f"{name}.pt")
+        return comparator(actual, expected, **kwargs)
+    return compare
+
+
+def run(**kwargs):
+    if args.branch == "dense":
+        cache_pages = next(spec.shape[0] for spec in kwargs["specs"] if spec.name == "index_cache")
+        for token in range(active):
+            request, visible = int(requests[token]), int(lengths[token])
+            if bool((table[request, :(visible + 127) // 128] >= cache_pages).any()):
+                raise RuntimeError("固定稠密输入的物理页号超界")
+    kwargs["compare_fn"] = {name: capture(name, compare) for name, compare in kwargs["compare_fn"].items()}
+    if not args.compile_only:
+        compiled = json.loads((work / f"{args.branch}-compile.json").read_text())
+        kwargs["runtime_dir"] = compiled["work_dir"]
+    result = original_run(**kwargs)
+    record = {"passed": bool(result.passed), "error": str(result.error or ""),
+              "work_dir": str(result.work_dir), "compile_only": args.compile_only, "fixture": str(fixture)}
+    suffix = "compile" if args.compile_only else "result"
+    (work / f"{args.branch}-{suffix}.json").write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n")
+    return result
+
+
+golden.run = run
+position, queries = (4096, 7) if args.branch == "dense" else (16384, 6)
+sys.argv = [str(entry), "--start-pos", str(position), "--query-lens", str(queries),
+            "--golden-data", str(fixture), "--save-data", "-d", str(args.device)]
+if args.compile_only:
+    sys.argv += ["--compile-only"]
+runpy.run_path(str(entry), run_name="__main__")

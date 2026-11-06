@@ -21,6 +21,7 @@ from index_weight_dsl import project_index_weights
 from index_query_dsl import project_index_query
 from index_score_dsl import dispatch_score_topk
 from index_plan_dsl import plan_index_runs, plan_pool_runs
+from index_route_dsl import classify_candidate_pool, WORKER_TILE as POOL_WORKER_TILE, FLAG_TILE as POOL_FLAG_TILE
 import pypto.language as pl
 from config import (
     B_DYN, FLASH, INDEX_BLOCKS_DYN, INDEX_CACHE_GROUP, INDEX_POOL_BLOCKS_DYN,
@@ -66,47 +67,14 @@ def score_select_reindex(
     capacity = pl.tensor.dim(pool_block_ids, 1)
     width = pl.tensor.dim(scores, 1)
     table_width = pl.tensor.dim(block_table, 1)
-    request_count = pl.tensor.dim(block_table, 0)
     cache_pages = pl.tensor.dim(index_cache, 0)
-    flags = pl.create_tensor([32, 32], dtype=pl.INT32)
-    with pl.spmd(32, name_hint="idx_plan_pool", deps=[cache_ready, pool_ready]) as plan_tid:
-        worker = pl.tile.get_block_idx()
-        dense = pl.cast(1, pl.INT32)
-        mismatch = pl.tile.full([1, 64], dtype=pl.FP32, value=0.0)
-        for token in pl.range(worker, num_tokens, 32):
-            count = pl.max(0, pl.min(pl.read(pool_block_counts, [token]), capacity))
-            visible = pl.max(0, pl.read(lengths, [token]))
-            request = pl.read(request_ids, [token])
-            if count != (visible + 7) // 8 or visible > width or visible > table_width * 128:
-                dense = pl.cast(0, pl.INT32)
-            if request < 0 or request >= request_count:
-                dense = pl.cast(0, pl.INT32)
-            if dense == 1:
-                for start in pl.range(0, count, 1024):
-                    active = pl.min(1024, count - start)
-                    raw = pl.load(pool_block_ids, [token, start], [1, 1024], valid_shape=[1, active])
-                    ids = pl.tile.fillpad(raw, pad_value=pl.PadValue.zero)
-                    lanes = pl.tile.arange(0, [1, 1024], dtype=pl.INT32)
-                    expected = pl.add(lanes, pl.cast(start, pl.INT32))
-                    error = pl.abs(pl.cast(pl.sub(ids, expected), pl.FP32))
-                    valid = pl.tile.cmps(lanes, pl.cast(active, pl.INT32), cmp_type=2)
-                    error = pl.tile.select(valid, error, 0.0)
-                    mismatch = pl.add(mismatch, pl.col_sum(pl.reshape(error, [16, 64])))
-                page_count = (visible + 127) // 128
-                for start in pl.range(0, page_count, 128):
-                    active = pl.min(128, page_count - start)
-                    raw_pages = pl.load(block_table, [request, start], [1, 128], valid_shape=[1, active])
-                    pages = pl.tile.fillpad(raw_pages, pad_value=pl.PadValue.zero)
-                    bad = pl.tile.cmps(pages, pl.cast(cache_pages, pl.INT32), cmp_type=5)
-                    page_errors = pl.tile.select(bad, pl.tile.full([1, 128], dtype=pl.FP32, value=1.0), 0.0)
-                    mismatch = pl.add(mismatch, pl.col_sum(pl.reshape(page_errors, [2, 64])))
-        sums = pl.col_sum(pl.reshape(mismatch, [8, 8]))
-        for lane in pl.unroll(8):
-            if pl.tile.read(sums, [0, lane]) != 0.0:
-                dense = pl.cast(0, pl.INT32)
-        pl.write(flags, [worker, 0], dense)
+    flags = pl.create_tensor([POOL_WORKER_TILE, POOL_FLAG_TILE], dtype=pl.INT32)
+    plan_tid = classify_candidate_pool(
+        pool_block_ids, pool_block_counts, request_ids, lengths, block_table, flags,
+        num_tokens, width, cache_pages, cache_ready, pool_ready,
+    )
     dense = pl.cast(1, pl.INT32)
-    for worker in pl.range(32):
+    for worker in pl.range(POOL_WORKER_TILE):
         dense = dense * pl.read(flags, [worker, 0])
     if dense != 0:
         tokens = pl.tensor.dim(output, 0)
