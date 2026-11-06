@@ -1,0 +1,92 @@
+"""校验合并任务的原核对照、RMSNorm 回归和 mHC 组合结果。"""
+
+import argparse
+import json
+from pathlib import Path
+import sys
+
+import torch
+
+import hc
+import hc_baseline
+from golden import ratio_allclose, run
+
+
+work = Path(__file__).resolve().parent
+parser = argparse.ArgumentParser()
+parser.add_argument("--compile-only", action="store_true")
+parser.add_argument("-d", "--device", type=int, default=0)
+args = parser.parse_args()
+compiled_path = work / "compiled.json"
+compiled = {} if args.compile_only else json.loads(compiled_path.read_text())
+records = {}
+failures = []
+
+
+def exact(actual, expected, **kwargs):
+    compare = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
+    return compare(actual, expected, **kwargs)
+
+
+def capture(label, name, compare):
+    def check(actual, expected, **kwargs):
+        directory = work / "device-output" / label
+        directory.mkdir(parents=True, exist_ok=True)
+        torch.save(actual.detach().cpu().clone(), directory / f"{name}.pt")
+        return compare(actual, expected, **kwargs)
+    return check
+
+
+for batch in (1, 17, 72):
+    for op in ("native", "head", "head-norm", "pre"):
+        label = f"{op}-{batch}"
+        if op in ("native", "head"):
+            fn = hc_baseline.l2_hc_head if op == "native" else hc.l2_hc_head
+            specs = hc.build_l2_hc_head_specs(batch)
+            golden_fn = hc.golden_l2_hc_head
+            comparisons = {"output": exact}
+        elif op == "head-norm":
+            fn = hc.l2_hc_head_norm
+            specs = hc.build_l2_hc_head_norm_specs(batch)
+            golden_fn = hc.golden_l2_hc_head_norm
+            comparisons = {"output": ratio_allclose(atol=1e-6, rtol=1.0 / 128, max_error_ratio=0.0)}
+        else:
+            fn = hc.l2_hc_pre
+            specs = hc.build_l2_hc_pre_specs(batch)
+            golden_fn = hc.golden_l2_hc_pre
+            coefficient = ratio_allclose(atol=2.5e-5, rtol=5e-3)
+            comparisons = {"output": exact, "pre_mix": coefficient,
+                           "post_mix": coefficient, "residual_mix": coefficient}
+        comparisons = {name: capture(label, name, compare) for name, compare in comparisons.items()}
+        print(f"[合并验证] {label}", flush=True)
+        result = run(
+            fn=fn,
+            specs=specs,
+            golden_fn=golden_fn,
+            config={"backend_type": "a5", "execution_mode": False, "device_id": args.device},
+            compare_fn=comparisons,
+            compile_only=args.compile_only,
+            runtime_dir=None if args.compile_only else compiled[label]["work_dir"],
+            save_data=not args.compile_only,
+        )
+        records[label] = {"passed": bool(result.passed), "error": str(result.error or ""),
+                          "work_dir": str(result.work_dir), "compile_only": args.compile_only}
+        record_path = compiled_path if args.compile_only else work / "device-results.json"
+        record_path.write_text(json.dumps(records, ensure_ascii=False, indent=2) + "\n")
+        if not result.passed:
+            failures.append(label)
+
+if not args.compile_only and not failures:
+    comparisons = []
+    for batch in (1, 17, 72):
+        native = torch.load(work / "device-output" / f"native-{batch}" / "output.pt", weights_only=True)
+        dsl = torch.load(work / "device-output" / f"head-{batch}" / "output.pt", weights_only=True)
+        different = int((native.view(torch.int16) != dsl.view(torch.int16)).sum())
+        comparisons.append({"token数": batch, "不同元素数": different, "元素总数": dsl.numel()})
+        if different:
+            failures.append(f"原核对照-{batch}")
+    (work / "native-comparison.json").write_text(json.dumps(comparisons, ensure_ascii=False, indent=2) + "\n")
+    print("[原核对照] " + json.dumps(comparisons, ensure_ascii=False), flush=True)
+
+if failures:
+    sys.exit("失败用例：" + ", ".join(failures))

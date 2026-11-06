@@ -32,6 +32,19 @@ TASK_TILE = 12
 PROJECT_ROW_TILE = 16
 PROJECT_K_TILE = 64
 MIX_TILE = 32
+COLLAPSE_ROW_TILE = 2
+
+
+@jit
+def _collapse_four(raw, column, p0, p1, p2, p3, mask):
+    """按两两相加顺序合并四路 FP32 加权数据。"""
+    y0 = rr.vmuls(rr.vload(raw, column), p0, mask=mask)
+    y1 = rr.vmuls(rr.vload(raw, D + column), p1, mask=mask)
+    y2 = rr.vmuls(rr.vload(raw, 2 * D + column), p2, mask=mask)
+    y3 = rr.vmuls(rr.vload(raw, 3 * D + column), p3, mask=mask)
+    pair01 = rr.vadd(y0, y1, mask=mask)
+    pair23 = rr.vadd(y2, y3, mask=mask)
+    return rr.vadd(pair01, pair23, mask=mask)
 
 
 @jit
@@ -187,6 +200,26 @@ def project_hf32_tile(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor,
 
 
 @cb.kernel
+def collapse_tile(source: cb.Tensor, pre_mix: cb.Tensor, output: cb.Tensor):
+    """逐行合并最多两个 token 的四路 FP32 状态，并舍入为 BF16。"""
+    raw = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, HC_DIM)))
+    result = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, D)))
+    for row in cb.range(source.shape[0]):
+        cb.mem_copy(raw, cb.tile_slice(source, (1, HC_DIM), (row, 0)))
+        p0 = pre_mix[row, 0]
+        p1 = pre_mix[row, 1]
+        p2 = pre_mix[row, 2]
+        p3 = pre_mix[row, 3]
+        with cb.vf():
+            full = rr.full_mask()
+            for col in range(0, D, VECTOR_TILE):
+                mixed = _collapse_four(raw, col, p0, p1, p2, p3, full)
+                rounded = rr.vcast(mixed, cb.dtypes.bfloat16, mask=full, rounding="rn")
+                rr.vstore_pack(result, col, rounded, full, pack_mode=rr.PackMode.B32_TO_B16)
+        cb.mem_copy(cb.tile_slice(output, (1, D), (row, 0)), result)
+
+
+@cb.kernel
 def collapse_norm_row(source: cb.Tensor, pre_mix: cb.Tensor, weight: cb.Tensor, output: cb.Tensor):
     """对一行执行 FP32 两两求和、BF16 舍入，再执行 RMSNorm。"""
     raw = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, HC_DIM)))
@@ -203,13 +236,7 @@ def collapse_norm_row(source: cb.Tensor, pre_mix: cb.Tensor, weight: cb.Tensor, 
         full = rr.full_mask()
         accum = rr.vdups(0.0, cb.dtypes.float32, mask=full)
         for col in range(0, D, VECTOR_TILE):
-            y0 = rr.vmuls(rr.vload(raw, col), p0, mask=full)
-            y1 = rr.vmuls(rr.vload(raw, D + col), p1, mask=full)
-            y2 = rr.vmuls(rr.vload(raw, 2 * D + col), p2, mask=full)
-            y3 = rr.vmuls(rr.vload(raw, 3 * D + col), p3, mask=full)
-            pair01 = rr.vadd(y0, y1, mask=full)
-            pair23 = rr.vadd(y2, y3, mask=full)
-            mixed = rr.vadd(pair01, pair23, mask=full)
+            mixed = _collapse_four(raw, col, p0, p1, p2, p3, full)
             rounded = rr.vcast(mixed, cb.dtypes.bfloat16, mask=full, rounding="rn")
             value = rr.vcast(rounded, cb.dtypes.float32, mask=full)
             rr.vstore(values, col, value, full)

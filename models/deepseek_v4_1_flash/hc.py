@@ -15,8 +15,8 @@ import torch
 import torch.nn.functional as F
 
 from config import FLASH as M, SP_T_DYN, T_DYN
-from hc_dsl import collapse_norm_row, expand_row, coefficients_row, inverse_rms_row, project_hf32_tile
-from hc_dsl import TASK_TILE, PROJECT_ROW_TILE
+from hc_dsl import collapse_tile, collapse_norm_row, expand_row, coefficients_row, inverse_rms_row, project_hf32_tile
+from hc_dsl import TASK_TILE, PROJECT_ROW_TILE, COLLAPSE_ROW_TILE
 
 
 # 模型配置
@@ -30,13 +30,10 @@ NORM_EPS = M.rms_norm_eps
 
 # 分块参数
 MIX_PAD = 32
-HC_PAD = 8
 LINEAR_T_TILE = 16
 LINEAR_K_TILE = 256
 LINEAR_OK = 4
 LINEAR_K_PER_SPLIT = HC_DIM // LINEAR_OK
-PRE_T_TILE = 2
-HEAD_D_TILE = 5120
 
 # 校验存储维度
 RMS_ROWS_DYN = pl.dynamic("HC_RMS_ROWS")
@@ -144,30 +141,23 @@ def hc_head(
     pre_mix: pl.Tensor,
     output: pl.Tensor,
 ):
-    """Collapse HC streams with the delayed pre-mix and BF16 rounding."""
-    t_dim = pl.tensor.dim(x_hc, 0)
-    x_flat = pl.reshape(x_hc, [t_dim, HC_DIM])
-    for block in pl.spmd((t_dim + PRE_T_TILE - 1) // PRE_T_TILE, name_hint="hc_collapse", allow_early_resolve=True):
-        for t in pl.range(block * PRE_T_TILE, pl.min((block + 1) * PRE_T_TILE, t_dim)):
-            pre_tile = pl.load(pre_mix, [t, 0], [1, HC_PAD], valid_shape=[1, HC_MULT])
-            pre0 = pl.tile.read(pre_tile, [0, 0])
-            pre1 = pl.tile.read(pre_tile, [0, 1])
-            pre2 = pl.tile.read(pre_tile, [0, 2])
-            pre3 = pl.tile.read(pre_tile, [0, 3])
-            for d0 in pl.pipeline(0, D, HEAD_D_TILE, stage=2):
-                x0 = pl.load(x_flat, [t, d0], [1, HEAD_D_TILE])
-                x1 = pl.load(x_flat, [t, D + d0], [1, HEAD_D_TILE])
-                x2 = pl.load(x_flat, [t, 2 * D + d0], [1, HEAD_D_TILE])
-                x3 = pl.load(x_flat, [t, 3 * D + d0], [1, HEAD_D_TILE])
-                y0 = pl.mul(x0, pre0)
-                y1 = pl.mul(x1, pre1)
-                y2 = pl.mul(x2, pre2)
-                y3 = pl.mul(x3, pre3)
-                y01 = pl.add(y0, y1)
-                y23 = pl.add(y2, y3)
-                y_tile = pl.add(y01, y23)
-                y_bf16 = pl.cast(y_tile, target_type=pl.BF16, mode="rint")
-                pl.store(y_bf16, [t, d0], output)
+    """每两行调度一个 DSL AIV 合并任务，保留 FP32 求和和 BF16 舍入。"""
+    tokens = pl.tensor.dim(x_hc, 0)
+    x_flat = pl.reshape(x_hc, [tokens, HC_DIM])
+    for row_tile in pl.parallel(tokens // COLLAPSE_ROW_TILE):
+        row = row_tile * COLLAPSE_ROW_TILE
+        source = x_flat[row:row + COLLAPSE_ROW_TILE, :]
+        pre = pre_mix[row:row + COLLAPSE_ROW_TILE, :]
+        target = output[row:row + COLLAPSE_ROW_TILE, :]
+        with pl.spmd(1, name_hint="dsl_hc_collapse", allow_early_resolve=True):
+            collapse_tile(source, pre, target)
+    if tokens % COLLAPSE_ROW_TILE != 0:
+        last_row = tokens - 1
+        tail_source = x_flat[last_row:last_row + 1, :]
+        tail_pre = pre_mix[last_row:last_row + 1, :]
+        tail_target = output[last_row:last_row + 1, :]
+        with pl.spmd(1, name_hint="dsl_hc_collapse_tail", allow_early_resolve=True):
+            collapse_tile(tail_source, tail_pre, tail_target)
     return output
 
 
@@ -625,17 +615,30 @@ def l2_hc_head(
 
 
 def build_l2_hc_head_specs(batch: int = 33, sequence: int = 1):
-    """Build deterministic inputs and output for stream-collapse validation."""
+    """构造随机 FP32 数据流，以及相消、零权重和 BF16 舍入中点样本。"""
     from golden import TensorSpec
 
     tokens = batch * sequence
     generator = torch.Generator().manual_seed(3)
 
     def init_x_hc():
-        return torch.randn(tokens, HC_MULT, D, generator=generator)
+        value = torch.randn(tokens, HC_MULT, D, generator=generator)
+        if tokens > 0:
+            value[0, :, :8] = torch.tensor([
+                [0, 2**25, 1, 1 + 2**-7, -1, -1 - 2**-7, 2**-20, 1],
+                [0, 2, 2**-7, 2**-7, -2**-7, -2**-7, 0, -2],
+                [0, -(2**27), 0, 0, 0, 0, 0, 4],
+                [0, 8, 0, 0, 0, 0, 0, -8],
+            ])
+        return value
 
     def init_pre_mix():
-        return torch.rand(tokens, HC_MULT, generator=generator)
+        value = torch.rand(tokens, HC_MULT, generator=generator)
+        if tokens > 0:
+            value[0] = torch.tensor([1.0, 0.5, 0.25, 0.125])
+        if tokens > 1:
+            value[1].zero_()
+        return value
 
     return [
         TensorSpec("x_hc", [tokens, HC_MULT, D], torch.float32, init_value=init_x_hc),
@@ -858,7 +861,7 @@ if __name__ == "__main__":
                 "post_mix": ratio_allclose(atol=2.5e-5, rtol=5e-3),
                 "residual_mix": ratio_allclose(atol=2.5e-5, rtol=5e-3),
             }
-            compare_fn["output"] = ratio_allclose(atol=1e-4, rtol=1.0 / 128)
+            compare_fn["output"] = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
         elif name == "post":
             compare_fn = {"output": compare_hc_post_order}
         elif name == "head-norm":
@@ -869,7 +872,7 @@ if __name__ == "__main__":
         elif name == "project":
             compare_fn = {"inv_rms": compare_hc_inverse, "partials": compare_hc_projection}
         else:
-            compare_fn = {"output": ratio_allclose(atol=1e-4, rtol=1.0 / 128)}
+            compare_fn = {"output": ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)}
         config = {"backend_type": args.backend_type, "execution_mode": args.execution_mode}
         config.update(device_id=args.device, enable_chip_swimlane=args.enable_chip_swimlane)
         if name == "project" and args.full_fp32:

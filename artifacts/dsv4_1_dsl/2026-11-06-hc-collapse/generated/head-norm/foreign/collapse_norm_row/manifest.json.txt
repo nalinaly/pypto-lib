@@ -1,0 +1,94 @@
+{
+  "arch": "dav-3510",
+  "core_type": "aiv",
+  "device_abi": {
+    "parameters": [
+      {
+        "alignment": 8,
+        "kind": "pod",
+        "logical_index": 0,
+        "offset": 0,
+        "size": 16
+      },
+      {
+        "alignment": 8,
+        "kind": "pod",
+        "logical_index": 1,
+        "offset": 16,
+        "size": 16
+      },
+      {
+        "alignment": 8,
+        "kind": "pod",
+        "logical_index": 2,
+        "offset": 32,
+        "size": 8
+      },
+      {
+        "alignment": 8,
+        "kind": "pod",
+        "logical_index": 3,
+        "offset": 40,
+        "size": 16
+      }
+    ],
+    "schema": 1,
+    "size": 56,
+    "symbol": "kernel_collapse_norm_row"
+  },
+  "export_backend": "source_bundle",
+  "hard_syncall": null,
+  "parameters": [
+    {
+      "access": "read",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "kind": "tensor",
+      "logical_index": 0,
+      "name": "source"
+    },
+    {
+      "access": "read",
+      "dtype": "f32",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "kind": "tensor",
+      "logical_index": 1,
+      "name": "pre_mix"
+    },
+    {
+      "access": "read",
+      "dtype": "bf16",
+      "dynamic_fields": [],
+      "kind": "tensor",
+      "logical_index": 2,
+      "name": "weight"
+    },
+    {
+      "access": "write",
+      "dtype": "bf16",
+      "dynamic_fields": [
+        {
+          "dimension": 0,
+          "field": "stride",
+          "slot": 0
+        }
+      ],
+      "kind": "tensor",
+      "logical_index": 3,
+      "name": "output"
+    }
+  ],
+  "symbol": "kernel_collapse_norm_row"
+}

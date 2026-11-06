@@ -1,0 +1,123 @@
+"""归档合并任务的实现、编译生成物和已实际完成的校验。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+work = Path(__file__).resolve().parent
+workspace = work.parents[1]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-06-hc-collapse"
+inventory = []
+
+
+def capture(source, destination, binary=False):
+    source = Path(source)
+    target = archive / destination
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(target, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        text = source.read_text().replace(str(workspace), "<workspace>")
+        text = text.replace(str(workspace.parent), "<user-home>")
+        target.write_text("\n".join(line.rstrip() for line in text.splitlines()).rstrip() + "\n")
+    inventory.append({"文件": str(destination), "字节数": target.stat().st_size})
+
+
+def generated(label, directory):
+    for name in ("kernel_config.py", "compiled_meta.json", "distributed_meta.json"):
+        if (directory / name).is_file():
+            capture(directory / name, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*")):
+        if source.suffix in (".cpp", ".py"):
+            capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        for name, source in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name in ("collapse_tile", "collapse_norm_row"):
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(source).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if label == "native":
+        for source in sorted((directory / "kernels").rglob("*.cpp")):
+            capture(source, f"generated/{label}/kernels/{source.name}.txt")
+
+
+compiled = json.loads((work / "compiled.json").read_text())
+if len(compiled) != 12 or not all(record["passed"] for record in compiled.values()):
+    raise RuntimeError("需要完成全部核心入口编译")
+for record in compiled.values():
+    meta = json.loads((Path(record["work_dir"]) / "compiled_meta.json").read_text())
+    if meta["platform"] != "a5":
+        raise RuntimeError("核心入口必须使用 A5 设备模式")
+for label in ("native", "head", "head-norm", "pre"):
+    generated(label, Path(compiled[f"{label}-72"]["work_dir"]))
+moe = json.loads((work / "moe-compile.json").read_text())
+moe_directory = Path(moe["work_dir"])
+generated("moe", moe_directory)
+for directory in sorted((moe_directory / "next_levels").glob("*")):
+    generated("moe/" + directory.name, directory)
+for name in ("hc.py", "hc_dsl.py"):
+    capture(model / "models/deepseek_v4_1_flash" / name, f"model-snapshot/{name}.txt")
+for name in ("hc_baseline.py", "validate.py", "run-moe.py", "run-case.sh", "build-binaries.py", "archive.py"):
+    capture(work / name, f"workflow/{name}.txt")
+capture(workspace / "artifacts/dsv41-semantic-review/run_case.py", "workflow/run_case.py.txt")
+for name in ("compiled.json", "moe-compile.json", "binary-results.json"):
+    capture(work / name, "validation/" + name)
+for name in ("compile", "moe-compile", "binaries", "precommit"):
+    capture(Path(f"/tmp/hc-collapse-{name}.log"), f"validation/{name}.log.txt")
+for name in ("initial-scalar-error.log", "initial-validation-config-error.log"):
+    capture(work / name, "validation/" + name + ".txt")
+
+device_path = work / "device-results.json"
+moe_path = work / "moe-result.json"
+passed = False
+if device_path.is_file() and moe_path.is_file():
+    device = json.loads(device_path.read_text())
+    moe_device = json.loads(moe_path.read_text())
+    passed = len(device) == 12 and all(record["passed"] for record in device.values())
+    passed = passed and moe_device["passed"] and not moe_device["compile_only"]
+    if passed:
+        comparison = json.loads((work / "native-comparison.json").read_text())
+        passed = len(comparison) == 3 and all(row["不同元素数"] == 0 for row in comparison)
+    for name in ("device-results.json", "moe-result.json", "native-comparison.json"):
+        if (work / name).is_file():
+            capture(work / name, "validation/" + name)
+    for label in ("device", "moe-device"):
+        capture(Path(f"/tmp/hc-collapse-{label}.log"), f"validation/{label}.log.txt")
+    for source in sorted((work / "device-output").rglob("*.pt")):
+        relative = source.relative_to(work / "device-output")
+        capture(source, f"device-output/{relative}.gz", binary=True)
+    # 同一动态编译目录保存最后一次运行的输入，其余输入由固定种子重新构造。
+    for label in ("head", "head-norm", "pre"):
+        directory = Path(compiled[f"{label}-72"]["work_dir"]) / "data"
+        for source in sorted(directory.rglob("*.pt")):
+            capture(source, f"fixtures/{label}-72/{source.relative_to(directory)}.gz", binary=True)
+
+summary = {
+    "状态": "PASS" if passed else "待设备验证",
+    "分支": "dsv4.1-dsl",
+    "模型基线": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=model, text=True).strip(),
+    "替换任务": "hc_collapse",
+    "DSL核函数": "collapse_tile",
+    "调度": "每块最多两个 token，尾部单行；同一个 AIV 核函数由 simpler 调度，保留 allow_early_resolve。",
+    "数值契约": "四路 FP32 分别乘以 pre_mix，按 (y0+y1)+(y2+y3) 求和，最终按最近偶数舍入到 BF16。",
+    "共享实现": "collapse_tile 与已有 collapse_norm_row 复用四路加权合并逻辑；hc_head 所有调用方使用相同实现。",
+    "样本": "1/17/72 行，随机 FP32、零权重、正负 BF16 中点及区分求和顺序的相消值。",
+    "编译": "12 项核心调用和 EP2 MoE 入口通过；对应四个动态核心程序及 MoE 子程序共五组 A5 二进制编译通过。",
+    "设备验证": "12 项核心调用、三组原核输出逐位对照及 EP2 MoE 均通过。" if passed else "队列于 15:54 自动进入资源维护，A5 设备验证尚未完成。",
+    "MoE配置": "EP2，每卡 8 个专家，两卡有效 token 数分别为 72 和 17，使用原有三个输出比较器。",
+    "阈值": "head 与 hc_pre 的合并输出收紧为零容差；RMSNorm、mHC 系数和 MoE 的原比较器保持不变。",
+    "初次脚本修正": "临时行数参数改为实际行切片；独立校验脚本显式指定 execution_mode=False，模拟器尝试不计入设备结果。",
+    "通信修改": False,
+    "框架修改": False,
+    "未执行": ["整网", "真实 checkpoint", "正式性能 A/B"],
+    "文件": inventory,
+}
+archive.mkdir(parents=True, exist_ok=True)
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print("已归档：" + summary["状态"] + f"，{len(inventory)} 个文件")

@@ -1,0 +1,20 @@
+"""仅在 CPU 编译 A5 设备和编排二进制，不启动设备运行。"""
+
+import json
+from pathlib import Path
+
+from pypto.runtime import device_runner
+
+
+work = Path(__file__).resolve().parent
+compiled = json.loads((work / "compiled.json").read_text())
+directories = list(dict.fromkeys(Path(record["work_dir"]) for record in compiled.values()))
+moe = Path(json.loads((work / "moe-compile.json").read_text())["work_dir"])
+directories.extend(sorted(path.parent for path in (moe / "next_levels").rglob("kernel_config.py")))
+records = []
+for directory in directories:
+    print("[A5 二进制编译] " + str(directory), flush=True)
+    device_runner._compile_and_assemble(directory, "a5")
+    records.append({"work_dir": str(directory), "platform": "a5", "passed": True})
+    (work / "binary-results.json").write_text(json.dumps(records, ensure_ascii=False, indent=2) + "\n")
+print(f"[A5 二进制编译] 通过 {len(records)} 组", flush=True)

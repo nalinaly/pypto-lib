@@ -1,0 +1,393 @@
+{
+  "状态": "PASS",
+  "分支": "dsv4.1-dsl",
+  "模型基线": "f348d5eb7aae5f7da6a39c796fafa872deccd919",
+  "替换任务": "hc_collapse",
+  "DSL核函数": "collapse_tile",
+  "调度": "每块最多两个 token，尾部单行；同一个 AIV 核函数由 simpler 调度，保留 allow_early_resolve。",
+  "数值契约": "四路 FP32 分别乘以 pre_mix，按 (y0+y1)+(y2+y3) 求和，最终按最近偶数舍入到 BF16。",
+  "共享实现": "collapse_tile 与已有 collapse_norm_row 复用四路加权合并逻辑；hc_head 所有调用方使用相同实现。",
+  "样本": "1/17/72 行，随机 FP32、零权重、正负 BF16 中点及区分求和顺序的相消值。",
+  "编译": "12 项核心调用和 EP2 MoE 入口通过；对应四个动态核心程序及 MoE 子程序共五组 A5 二进制编译通过。",
+  "设备验证": "12 项核心调用、三组原核输出逐位对照及 EP2 MoE 均通过。",
+  "MoE配置": "EP2，每卡 8 个专家，两卡有效 token 数分别为 72 和 17，使用原有三个输出比较器。",
+  "阈值": "head 与 hc_pre 的合并输出收紧为零容差；RMSNorm、mHC 系数和 MoE 的原比较器保持不变。",
+  "初次脚本修正": "临时行数参数改为实际行切片；独立校验脚本显式指定 execution_mode=False，模拟器尝试不计入设备结果。",
+  "通信修改": false,
+  "框架修改": false,
+  "未执行": [
+    "整网",
+    "真实 checkpoint",
+    "正式性能 A/B"
+  ],
+  "文件": [
+    {
+      "文件": "generated/native/kernel_config.py.txt",
+      "字节数": 757
+    },
+    {
+      "文件": "generated/native/compiled_meta.json.txt",
+      "字节数": 1189
+    },
+    {
+      "文件": "generated/native/orchestration/l2_hc_head.cpp.txt",
+      "字节数": 2211
+    },
+    {
+      "文件": "generated/native/kernels/hc_collapse.cpp.txt",
+      "字节数": 18031
+    },
+    {
+      "文件": "generated/head/kernel_config.py.txt",
+      "字节数": 1107
+    },
+    {
+      "文件": "generated/head/compiled_meta.json.txt",
+      "字节数": 1189
+    },
+    {
+      "文件": "generated/head/orchestration/l2_hc_head.cpp.txt",
+      "字节数": 5710
+    },
+    {
+      "文件": "generated/head/foreign/collapse_tile/entry.cpp.txt",
+      "字节数": 2524
+    },
+    {
+      "文件": "generated/head/foreign/collapse_tile/device_source.hpp.txt",
+      "字节数": 30394
+    },
+    {
+      "文件": "generated/head/foreign/collapse_tile/manifest.json.txt",
+      "字节数": 1757
+    },
+    {
+      "文件": "generated/head-norm/kernel_config.py.txt",
+      "字节数": 1130
+    },
+    {
+      "文件": "generated/head-norm/compiled_meta.json.txt",
+      "字节数": 1497
+    },
+    {
+      "文件": "generated/head-norm/orchestration/l2_hc_head_norm.cpp.txt",
+      "字节数": 6914
+    },
+    {
+      "文件": "generated/head-norm/foreign/collapse_norm_row/entry.cpp.txt",
+      "字节数": 2777
+    },
+    {
+      "文件": "generated/head-norm/foreign/collapse_norm_row/device_source.hpp.txt",
+      "字节数": 32141
+    },
+    {
+      "文件": "generated/head-norm/foreign/collapse_norm_row/manifest.json.txt",
+      "字节数": 1773
+    },
+    {
+      "文件": "generated/pre/kernel_config.py.txt",
+      "字节数": 2827
+    },
+    {
+      "文件": "generated/pre/compiled_meta.json.txt",
+      "字节数": 3061
+    },
+    {
+      "文件": "generated/pre/orchestration/l2_hc_pre.cpp.txt",
+      "字节数": 21429
+    },
+    {
+      "文件": "generated/pre/foreign/collapse_tile/entry.cpp.txt",
+      "字节数": 2524
+    },
+    {
+      "文件": "generated/pre/foreign/collapse_tile/device_source.hpp.txt",
+      "字节数": 30394
+    },
+    {
+      "文件": "generated/pre/foreign/collapse_tile/manifest.json.txt",
+      "字节数": 1757
+    },
+    {
+      "文件": "generated/moe/distributed_meta.json.txt",
+      "字节数": 5026
+    },
+    {
+      "文件": "generated/moe/orchestration/host_orch.py.txt",
+      "字节数": 10125
+    },
+    {
+      "文件": "generated/moe/l2_moe/kernel_config.py.txt",
+      "字节数": 14474
+    },
+    {
+      "文件": "generated/moe/l2_moe/orchestration/l2_moe.cpp.txt",
+      "字节数": 145082
+    },
+    {
+      "文件": "generated/moe/l2_moe/foreign/collapse_tile/entry.cpp.txt",
+      "字节数": 2524
+    },
+    {
+      "文件": "generated/moe/l2_moe/foreign/collapse_tile/device_source.hpp.txt",
+      "字节数": 30394
+    },
+    {
+      "文件": "generated/moe/l2_moe/foreign/collapse_tile/manifest.json.txt",
+      "字节数": 1757
+    },
+    {
+      "文件": "model-snapshot/hc.py.txt",
+      "字节数": 38885
+    },
+    {
+      "文件": "model-snapshot/hc_dsl.py.txt",
+      "字节数": 15234
+    },
+    {
+      "文件": "workflow/hc_baseline.py.txt",
+      "字节数": 38794
+    },
+    {
+      "文件": "workflow/validate.py.txt",
+      "字节数": 3908
+    },
+    {
+      "文件": "workflow/run-moe.py.txt",
+      "字节数": 1485
+    },
+    {
+      "文件": "workflow/run-case.sh.txt",
+      "字节数": 387
+    },
+    {
+      "文件": "workflow/build-binaries.py.txt",
+      "字节数": 947
+    },
+    {
+      "文件": "workflow/archive.py.txt",
+      "字节数": 7009
+    },
+    {
+      "文件": "workflow/run_case.py.txt",
+      "字节数": 613
+    },
+    {
+      "文件": "validation/compiled.json",
+      "字节数": 2429
+    },
+    {
+      "文件": "validation/moe-compile.json",
+      "字节数": 172
+    },
+    {
+      "文件": "validation/binary-results.json",
+      "字节数": 862
+    },
+    {
+      "文件": "validation/compile.log.txt",
+      "字节数": 1245
+    },
+    {
+      "文件": "validation/moe-compile.log.txt",
+      "字节数": 249
+    },
+    {
+      "文件": "validation/binaries.log.txt",
+      "字节数": 653
+    },
+    {
+      "文件": "validation/precommit.log.txt",
+      "字节数": 320
+    },
+    {
+      "文件": "validation/initial-scalar-error.log.txt",
+      "字节数": 2599
+    },
+    {
+      "文件": "validation/initial-validation-config-error.log.txt",
+      "字节数": 2110155
+    },
+    {
+      "文件": "validation/device-results.json",
+      "字节数": 2441
+    },
+    {
+      "文件": "validation/moe-result.json",
+      "字节数": 173
+    },
+    {
+      "文件": "validation/native-comparison.json",
+      "字节数": 245
+    },
+    {
+      "文件": "validation/device.log.txt",
+      "字节数": 77754
+    },
+    {
+      "文件": "validation/moe-device.log.txt",
+      "字节数": 32831
+    },
+    {
+      "文件": "device-output/head-1/output.pt.gz",
+      "字节数": 8880
+    },
+    {
+      "文件": "device-output/head-17/output.pt.gz",
+      "字节数": 131740
+    },
+    {
+      "文件": "device-output/head-72/output.pt.gz",
+      "字节数": 579291
+    },
+    {
+      "文件": "device-output/head-norm-1/output.pt.gz",
+      "字节数": 8887
+    },
+    {
+      "文件": "device-output/head-norm-17/output.pt.gz",
+      "字节数": 131609
+    },
+    {
+      "文件": "device-output/head-norm-72/output.pt.gz",
+      "字节数": 577880
+    },
+    {
+      "文件": "device-output/moe-ep2/next_pre_mix.pt.gz",
+      "字节数": 3026
+    },
+    {
+      "文件": "device-output/moe-ep2/x_mixed.pt.gz",
+      "字节数": 1310284
+    },
+    {
+      "文件": "device-output/moe-ep2/x_next.pt.gz",
+      "字节数": 12152017
+    },
+    {
+      "文件": "device-output/native-1/output.pt.gz",
+      "字节数": 8880
+    },
+    {
+      "文件": "device-output/native-17/output.pt.gz",
+      "字节数": 131740
+    },
+    {
+      "文件": "device-output/native-72/output.pt.gz",
+      "字节数": 579291
+    },
+    {
+      "文件": "device-output/pre-1/output.pt.gz",
+      "字节数": 8873
+    },
+    {
+      "文件": "device-output/pre-1/post_mix.pt.gz",
+      "字节数": 625
+    },
+    {
+      "文件": "device-output/pre-1/pre_mix.pt.gz",
+      "字节数": 623
+    },
+    {
+      "文件": "device-output/pre-1/residual_mix.pt.gz",
+      "字节数": 692
+    },
+    {
+      "文件": "device-output/pre-17/output.pt.gz",
+      "字节数": 139113
+    },
+    {
+      "文件": "device-output/pre-17/post_mix.pt.gz",
+      "字节数": 898
+    },
+    {
+      "文件": "device-output/pre-17/pre_mix.pt.gz",
+      "字节数": 886
+    },
+    {
+      "文件": "device-output/pre-17/residual_mix.pt.gz",
+      "字节数": 1691
+    },
+    {
+      "文件": "device-output/pre-72/output.pt.gz",
+      "字节数": 586027
+    },
+    {
+      "文件": "device-output/pre-72/post_mix.pt.gz",
+      "字节数": 1714
+    },
+    {
+      "文件": "device-output/pre-72/pre_mix.pt.gz",
+      "字节数": 1718
+    },
+    {
+      "文件": "device-output/pre-72/residual_mix.pt.gz",
+      "字节数": 4923
+    },
+    {
+      "文件": "fixtures/head-72/in/pre_mix.pt.gz",
+      "字节数": 1713
+    },
+    {
+      "文件": "fixtures/head-72/in/x_hc.pt.gz",
+      "字节数": 5463756
+    },
+    {
+      "文件": "fixtures/head-72/out/output.pt.gz",
+      "字节数": 579291
+    },
+    {
+      "文件": "fixtures/head-norm-72/in/norm_weight.pt.gz",
+      "字节数": 6309
+    },
+    {
+      "文件": "fixtures/head-norm-72/in/pre_mix.pt.gz",
+      "字节数": 1731
+    },
+    {
+      "文件": "fixtures/head-norm-72/in/x_hc.pt.gz",
+      "字节数": 5388476
+    },
+    {
+      "文件": "fixtures/head-norm-72/out/output.pt.gz",
+      "字节数": 577883
+    },
+    {
+      "文件": "fixtures/pre-72/in/base.pt.gz",
+      "字节数": 701
+    },
+    {
+      "文件": "fixtures/pre-72/in/function.pt.gz",
+      "字节数": 1827461
+    },
+    {
+      "文件": "fixtures/pre-72/in/incoming_pre_mix.pt.gz",
+      "字节数": 1733
+    },
+    {
+      "文件": "fixtures/pre-72/in/scale.pt.gz",
+      "字节数": 608
+    },
+    {
+      "文件": "fixtures/pre-72/in/x_hc.pt.gz",
+      "字节数": 5463807
+    },
+    {
+      "文件": "fixtures/pre-72/out/output.pt.gz",
+      "字节数": 586027
+    },
+    {
+      "文件": "fixtures/pre-72/out/post_mix.pt.gz",
+      "字节数": 1709
+    },
+    {
+      "文件": "fixtures/pre-72/out/pre_mix.pt.gz",
+      "字节数": 1719
+    },
+    {
+      "文件": "fixtures/pre-72/out/residual_mix.pt.gz",
+      "字节数": 4920
+    }
+  ]
+}

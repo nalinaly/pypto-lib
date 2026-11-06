@@ -1,0 +1,44 @@
+[合并验证] native-1
+[RUN] compile ...
+2026-11-06 15:50:15.439 I | [perf_hint] 1 hint across 1 site; see <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l2_hc_head_20261106_155015_q_jr7rre/report/perf_hints.log
+[RUN] compile done (0.41s)
+[RUN] PASS (0.41s)
+[合并验证] head-1
+[RUN] compile ...
+[RUN] compile done (0.01s)
+Traceback (most recent call last):
+  File "<workspace>/artifacts/dsv41-semantic-review/run_case.py", line 21, in <module>
+    runpy.run_path(str(entry), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "<workspace>/artifacts/dsv41-hc-collapse-dsl/validate.py", line 62, in <module>
+    result = run(
+             ^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1565, in _run_pipeline
+    compiled = compile_step(cfg, compile_state)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1741, in _compile
+    return fn.compile(*dummy_args, config=cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1432, in compile
+    compiled, _ordered_args, _run_config = self._resolve_compiled(args, kwargs, allow_signature_mode=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1168, in _resolve_compiled
+    prepared_contexts = self._build_contexts(
+                        ^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1870, in _build_contexts
+    apply_external_spec(contexts[-1], dep._external_builder(contexts[-1]))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 278, in build
+    return _build(target, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 220, in _build
+    raise TypeError(
+TypeError: Cannot infer PyPTO DSL parameter 'active_rows'; pass a tensor or typed runtime scalar
