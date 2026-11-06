@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+work_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+device=${TASK_DEVICE:?请通过 task-submit 分配 A5 设备}
+bash "$work_dir/run-case.sh" "$work_dir/compare-native.py" -d "$device" > /tmp/index-pool-runs-core-device.log 2>&1
+bash "$work_dir/run-case.sh" "$work_dir/run-reindex.py" -d "$device" > /tmp/index-pool-runs-reindex-device.log 2>&1

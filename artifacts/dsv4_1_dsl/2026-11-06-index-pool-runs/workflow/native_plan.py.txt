@@ -1,0 +1,28 @@
+"""保留原候选池规划主体，以连续生产布局进行设备对照。"""
+
+import pypto.language as pl
+from index_plan_dsl import INPUT_ROWS_DYN, RUN_COLUMNS_DYN
+
+
+@pl.jit
+def validate_native_pool(
+    pool_counts: pl.Tensor[[INPUT_ROWS_DYN], pl.INT32],
+    runs: pl.InOut[pl.Tensor[[4, RUN_COLUMNS_DYN], pl.INT32]],
+    num_tokens: pl.Scalar[pl.INT32],
+    capacity: pl.Scalar[pl.INDEX],
+):
+    """保留原核的计数截断、每行映射及完成依赖。"""
+    pool_counts.bind_dynamic(0, INPUT_ROWS_DYN)
+    runs.bind_dynamic(1, RUN_COLUMNS_DYN)
+    rows = pl.tensor.dim(pool_counts, 0) - 2
+    counts = pool_counts[1:rows + 1]
+    pool_ready = pl.system.task_dummy(deps=[])
+    with pl.at(level=pl.Level.CORE_GROUP, name_hint="idx_plan_pool_runs", deps=[pool_ready]):
+        for token in pl.range(num_tokens):
+            count = pl.max(0, pl.min(pl.read(counts, [token]), capacity))
+            pl.write(runs, [0, token], pl.cast(token, pl.INT32))
+            pl.write(runs, [1, token], pl.cast(token + 1, pl.INT32))
+            pl.write(runs, [2, token], pl.cast(count * 8, pl.INT32))
+            pl.write(runs, [3, token + 1], pl.cast(token, pl.INT32))
+        pl.write(runs, [3, 0], num_tokens)
+    return runs

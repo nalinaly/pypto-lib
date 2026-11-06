@@ -1,0 +1,82 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "pool_counts",
+      "direction": "In",
+      "shape": [
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "runs",
+      "direction": "InOut",
+      "shape": [
+        5,
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    },
+    {
+      "name": "capacity",
+      "direction": "In",
+      "shape": null,
+      "dtype": "index",
+      "layout": null
+    }
+  ],
+  "lowered_params": [
+    {
+      "name": "pool_counts",
+      "direction": "In",
+      "shape": [
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "runs",
+      "direction": "InOut",
+      "shape": [
+        5,
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    },
+    {
+      "name": "capacity",
+      "direction": "In",
+      "shape": null,
+      "dtype": "index",
+      "layout": null
+    }
+  ],
+  "num_return_types": 1,
+  "return_aliases": [
+    1
+  ],
+  "platform": "a5",
+  "backend_type": "Ascend950"
+}

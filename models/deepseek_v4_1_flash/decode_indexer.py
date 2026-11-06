@@ -20,7 +20,7 @@ from index_key_dsl import publish_index_rows
 from index_weight_dsl import project_index_weights
 from index_query_dsl import project_index_query
 from index_score_dsl import dispatch_score_topk
-from index_plan_dsl import plan_index_runs
+from index_plan_dsl import plan_index_runs, plan_pool_runs
 import pypto.language as pl
 from config import (
     B_DYN, FLASH, INDEX_BLOCKS_DYN, INDEX_CACHE_GROUP, INDEX_POOL_BLOCKS_DYN,
@@ -164,14 +164,7 @@ def _score_select_pool(
         index_cache, index_cache_scale, block_table, request_ids, lengths, pool_block_ids, pool_block_counts,
         payloads, scales, valid, physical, num_tokens, cache_ready, pool_ready,
     )
-    with pl.at(level=pl.Level.CORE_GROUP, name_hint="idx_plan_pool_runs", deps=[pool_ready]) as runs_tid:
-        for token in pl.range(num_tokens):
-            count = pl.max(0, pl.min(pl.read(pool_block_counts, [token]), capacity))
-            pl.write(runs, [0, token], pl.cast(token, pl.INT32))
-            pl.write(runs, [1, token], pl.cast(token + 1, pl.INT32))
-            pl.write(runs, [2, token], pl.cast(count * 8, pl.INT32))
-            pl.write(runs, [3, token + 1], pl.cast(token, pl.INT32))
-        pl.write(runs, [3, 0], num_tokens)
+    runs_tid = plan_pool_runs(pool_block_counts, runs, num_tokens, capacity, pool_ready)
     workers = pl.cast(pl.system.available_cluster_count(), pl.INDEX)
     candidate_keys = pl.create_tensor([tokens, workers * INDEX_TOPK], dtype=pl.UINT16)
     candidate_indices = pl.create_tensor([tokens, workers * INDEX_TOPK], dtype=pl.INT32)

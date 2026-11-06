@@ -1,0 +1,62 @@
+"""使用已通过的固定输入，验证完整 C1A reindex 稀疏分支及候选池规划。"""
+
+import json
+from pathlib import Path
+import runpy
+import sys
+
+import golden
+import torch
+
+
+work = Path(__file__).resolve().parent
+workspace = work.parents[1]
+entry = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_c1a_reindex.py"
+baseline = json.loads((work.parent / "dsv41-index-gather-dsl/baseline-result.json").read_text())
+if not baseline["passed"] or baseline.get("compile_only", False):
+    raise RuntimeError("固定输入必须来自通过设备校验的基线")
+fixture = Path(baseline["work_dir"]) / "data"
+lengths = torch.load(fixture / "in/compressed_lens.pt", weights_only=True)
+counts = torch.load(fixture / "in/pool_block_counts.pt", weights_only=True)
+ids = torch.load(fixture / "in/pool_block_ids.pt", weights_only=True)
+tokens = int(torch.load(fixture / "in/num_tokens.pt", weights_only=True))
+visible_blocks = (lengths[:tokens].clamp_min(0) + 7) // 8
+sparse = (counts[:tokens] != visible_blocks) | (lengths[:tokens] > ids.shape[1] * 8)
+if not bool(sparse.all()):
+    raise RuntimeError("固定输入必须让全部 Query 进入稀疏分支")
+evidence = {"Query数": tokens, "候选容量": ids.shape[1], "候选块数": counts[:tokens].tolist(),
+            "可见块数": visible_blocks.tolist(), "全部进入稀疏分支": True,
+            "固定输入": str(fixture)}
+(work / "routing-evidence.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n")
+print("[稀疏分支确认] " + json.dumps(evidence, ensure_ascii=False), flush=True)
+compile_only = "--compile-only" in sys.argv
+original_run = golden.run
+
+
+def capture(name, comparator):
+    def compare(actual, expected, **kwargs):
+        if name in ("output", "next_pre_mix", "topk_indices", "pool_block_ids", "pool_block_counts"):
+            directory = work / "device-output/reindex"
+            directory.mkdir(parents=True, exist_ok=True)
+            torch.save(actual.detach().cpu().clone(), directory / f"{name}.pt")
+        return comparator(actual, expected, **kwargs)
+    return compare
+
+
+def run(**kwargs):
+    kwargs["compare_fn"] = {name: capture(name, compare) for name, compare in kwargs["compare_fn"].items()}
+    if not compile_only:
+        previous = json.loads((work / "reindex-compile.json").read_text())
+        kwargs["runtime_dir"] = previous["work_dir"]
+    result = original_run(**kwargs)
+    record = {"passed": bool(result.passed), "error": str(result.error or ""),
+              "work_dir": str(result.work_dir), "compile_only": compile_only, "fixture": str(fixture)}
+    name = "reindex-compile.json" if compile_only else "reindex-result.json"
+    (work / name).write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n")
+    return result
+
+
+golden.run = run
+sys.argv = [str(entry), "--start-pos", "16384", "--query-lens", "6",
+            "--golden-data", str(fixture), "--save-data", *sys.argv[1:]]
+runpy.run_path(str(entry), run_name="__main__")

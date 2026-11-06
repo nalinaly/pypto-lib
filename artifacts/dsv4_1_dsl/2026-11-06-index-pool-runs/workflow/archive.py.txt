@@ -1,0 +1,126 @@
+"""归档稀疏候选池运行区间规划的实际设备验证和生成物。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+work = Path(__file__).resolve().parent
+workspace = work.parents[1]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-06-index-pool-runs"
+inventory = []
+
+
+def capture(source, target, binary=False):
+    source = Path(source)
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        text = source.read_text().replace(str(workspace), "<workspace>")
+        text = text.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in text.splitlines()).rstrip() + "\n")
+    inventory.append({"文件": str(target), "字节数": destination.stat().st_size})
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json", "distributed_meta.json"):
+        if (directory / name).is_file():
+            capture(directory / name, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*")):
+        if source.suffix in (".cpp", ".py"):
+            capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        for name, source in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name == "plan_pool_rows":
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(source).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if label == "native":
+        for source in sorted((directory / "kernels").rglob("*.cpp")):
+            capture(source, f"generated/{label}/kernels/{source.name}.txt")
+    if fixtures:
+        for source in sorted((directory / "data").rglob("*.pt")):
+            relative = source.relative_to(directory / "data")
+            capture(source, f"fixtures/{label}/{relative}.gz", binary=True)
+
+
+def require_log(label, passes, outputs=None):
+    source = Path(f"/tmp/index-pool-runs-{label}.log")
+    content = source.read_text()
+    if len(re.findall(r"^\[RUN\] PASS", content, re.MULTILINE)) != passes:
+        raise RuntimeError(label + " 的通过数量不符")
+    if outputs is not None and len(re.findall(r"^\[RUN\]   '[^']+' PASS", content, re.MULTILINE)) != outputs:
+        raise RuntimeError(label + " 的输出通过数量不符")
+    capture(source, f"validation/{label}.log.txt")
+
+
+records = json.loads((work / "device-results.json").read_text())
+comparison = json.loads((work / "native-comparison.json").read_text())
+integration = json.loads((work / "reindex-result.json").read_text())
+routing = json.loads((work / "routing-evidence.json").read_text())
+if len(records) != 12 or not all(row["passed"] and not row["compile_only"] for row in records):
+    raise RuntimeError("全部 12 项核心设备用例必须通过")
+if len(comparison) != 5 or any(row["不同元素数"] for row in comparison):
+    raise RuntimeError("五组原核对照必须逐项一致")
+if not integration["passed"] or integration["compile_only"] or not routing["全部进入稀疏分支"]:
+    raise RuntimeError("完整 reindex 必须实际经过稀疏分支并通过设备验证")
+require_log("core-compile", 12)
+require_log("reindex-compile", 1)
+require_log("core-device", 12, 12)
+require_log("reindex-device", 1, 11)
+for name in ("initial-compile", "binaries", "precommit"):
+    capture(Path(f"/tmp/index-pool-runs-{name}.log"), f"validation/{name}.log.txt")
+for name in ("compiled.json", "binary-results.json", "device-results.json", "native-comparison.json",
+             "reindex-compile.json", "reindex-result.json", "routing-evidence.json"):
+    capture(work / name, "validation/" + name)
+for name in ("decode_indexer.py", "index_plan_dsl.py"):
+    capture(model / "models/deepseek_v4_1_flash" / name, f"model-snapshot/{name}.txt")
+for name in ("decode_indexer_baseline.py", "native_plan.py", "compare-native.py", "run-reindex.py",
+             "run-case.sh", "run-suite.sh", "build-binaries.py", "archive.py"):
+    capture(work / name, f"workflow/{name}.txt")
+capture(workspace / "artifacts/dsv41-semantic-review/run_case.py", "workflow/run_case.py.txt")
+for label, suffix in (("native", "-native"), ("dsl", "-dsl"), ("request-regression", "-request-1")):
+    row = next(row for row in reversed(records) if row["label"].endswith(suffix))
+    generated(label, Path(row["work_dir"]), fixtures=True)
+root = Path(integration["work_dir"])
+generated("reindex", root)
+for child in sorted((root / "next_levels").glob("*")):
+    generated("reindex/" + child.name, child)
+for source in sorted((work / "device-output").rglob("*.pt")):
+    relative = source.relative_to(work / "device-output")
+    capture(source, f"device-output/{relative}.gz", binary=True)
+fixture = Path(integration["fixture"])
+for name in ("compressed_lens", "pool_block_ids", "pool_block_counts", "request_ids", "num_tokens"):
+    capture(fixture / "in" / f"{name}.pt", f"routing-inputs/{name}.pt.gz", binary=True)
+
+summary = {
+    "状态": "PASS",
+    "分支": "dsv4.1-dsl",
+    "模型基线": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=model, text=True).strip(),
+    "替换任务": "idx_plan_pool_runs",
+    "新任务": "dsl_idx_plan_pool_runs",
+    "核函数": "plan_pool_rows",
+    "调度": "单个 AIV worker，保留 pool_ready 依赖，与候选缓存收集保持原有依赖关系；下游 MIX 同时等待收集和规划完成。",
+    "契约": "每个有效 Query 独立成组；起止为 token/token+1，候选行数为 max(0,min(count,capacity))*8，逐行映射为 token，总组数为 num_tokens。其余输出不写。",
+    "设备验证": "五组原核与 DSL 完整元数据逐项一致；额外两组原有请求规划回归通过，共 12 次设备运行。",
+    "边界": "零有效 Query、单 Query、17/72 行、部分有效行、零候选容量、负数及超容量计数、输入偏移、DSL 非连续输出视图与保护区。",
+    "完整集成": "固定已通过的输入及 CPU 参考，start-pos=16384、6 Query，全部 11 项原有比较器通过。",
+    "分支确认": "每个 Query 可见 2049 块，但只保留 2048 个候选块，全部进入稀疏分支。",
+    "原核布局": "按连续生产布局对照，DSL 额外验证带父行距的输出视图；不使用已知 PyPTO 标量写入视图缺陷作为数值参考。",
+    "框架修改": False,
+    "通信修改": False,
+    "阈值降低": False,
+    "编译": "12 项核心入口和完整 reindex 入口通过，对应四组 A5 二进制编译通过。",
+    "未执行": ["整网", "真实 checkpoint", "正式性能 A/B"],
+    "输出说明": "device-output 是比较器 actual 保存的真实设备结果；fixtures/*/out 是 CPU 参考。同一动态编译目录保留最后一次输入，其余用例可按固定构造器重建。",
+    "文件": inventory,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"已归档 {len(inventory)} 个文件，全部验证通过")

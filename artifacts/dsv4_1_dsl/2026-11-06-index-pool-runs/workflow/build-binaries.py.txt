@@ -1,0 +1,20 @@
+"""在 CPU 编译 A5 核函数及编排，不占用设备。"""
+
+import json
+from pathlib import Path
+
+from pypto.runtime import device_runner
+
+
+work = Path(__file__).resolve().parent
+records = json.loads((work / "compiled.json").read_text())
+directories = list(dict.fromkeys(Path(record["work_dir"]) for record in records))
+reindex = json.loads((work / "reindex-compile.json").read_text())
+directories.extend(sorted(path.parent for path in (Path(reindex["work_dir"]) / "next_levels").rglob("kernel_config.py")))
+results = []
+for directory in directories:
+    print("[A5 二进制编译] " + str(directory), flush=True)
+    device_runner._compile_and_assemble(directory, "a5")
+    results.append({"work_dir": str(directory), "platform": "a5", "passed": True})
+(work / "binary-results.json").write_text(json.dumps(results, ensure_ascii=False, indent=2) + "\n")
+print(f"[A5 二进制编译] 通过 {len(results)} 组", flush=True)
