@@ -1,0 +1,140 @@
+import torch
+from simpler.task_interface import CallConfig, CommBufferSpec, DataType, TaskArgs, TensorArgType
+from pypto.runtime.tensor_arg import make_tensor_arg
+from pypto.runtime.distributed_runner import add_chip_tensor_arg, _submit_chip
+
+def _alloc_intermediates(tensors, world_size=1):
+    tensors["__comm_d0_ord"] = [torch.zeros((1,), dtype=torch.int32).share_memory_() for _ in range(max(world_size, 1))]
+
+def l3_prefill_c1a_full(orch, _args, config, *, tensors, callables, sub_ids, _keep, world_size, _domain_provider=None):
+    num_tokens__ssa_v0 = tensors["num_tokens__ssa_v0"]
+    V41_T_DYN = tensors["x_hc__ssa_v0"].shape[1]
+    V41_ORI_BLOCKS_DYN = tensors["window_cache__ssa_v0"].shape[1]
+    V41_CMP_BLOCKS_DYN = tensors["compressed_cache__ssa_v0"].shape[1]
+    V41_INDEX_BLOCKS_DYN = tensors["index_cache__ssa_v0"].shape[1]
+    V41_B_DYN = tensors["index_block_table__ssa_v0"].shape[1]
+    V41_TABLE_DYN = tensors["index_block_table__ssa_v0"].shape[2]
+    V41_INDEX_POOL_BLOCKS_DYN = tensors["pool_block_ids__ssa_v0"].shape[2]
+    with (_domain_provider or orch.allocate_domain)(
+        name="comm_d0",
+        workers=[*range(world_size)],
+        window_size=((((83886080 + 63) // 64) * 64)) + ((((4 + 63) // 64) * 64)),
+        buffers=[
+            CommBufferSpec(name="output_window_buf__ssa_v0", dtype="opaque", count=83886080, nbytes=(((83886080 + 63) // 64) * 64)),
+            CommBufferSpec(name="output_arrived_buf__ssa_v0", dtype="opaque", count=4, nbytes=(((4 + 63) // 64) * 64)),
+        ],
+    ) as __comm_d0:
+        t__tmp_v0 = world_size
+        for rank__idx_v0 in range(0, t__tmp_v0, 1):
+            tensors["wq_a_scale_r__ssa_v0"] = tensors["wq_a_scale__ssa_v0"][rank__idx_v0, 0:160, 0:1280]
+            tensors["wq_b_scale_r__ssa_v0"] = tensors["wq_b_scale__ssa_v0"][rank__idx_v0, 0:40, 0:32768]
+            tensors["wkv_scale_r__ssa_v0"] = tensors["wkv_scale__ssa_v0"][rank__idx_v0, 0:160, 0:512]
+            tensors["wo_b_scale_r__ssa_v0"] = tensors["wo_b_scale__ssa_v0"][rank__idx_v0, 0:256, 0:5120]
+            tensors["index_wq_b_scale_r__ssa_v0"] = tensors["index_wq_b_scale__ssa_v0"][rank__idx_v0, 0:40, 0:4096]
+            tensors["t__tmp_v1"] = tensors["x_hc__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:4, 0:5120]
+            tensors["t__tmp_v2"] = tensors["pre_mix__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:4]
+            tensors["t__tmp_v3"] = tensors["hc_attn_fn__ssa_v0"][rank__idx_v0, 0:24, 0:20480]
+            tensors["t__tmp_v4"] = tensors["hc_attn_scale__ssa_v0"][rank__idx_v0, 0:3]
+            tensors["t__tmp_v5"] = tensors["hc_attn_base__ssa_v0"][rank__idx_v0, 0:24]
+            tensors["t__tmp_v6"] = tensors["attn_norm_weight__ssa_v0"][rank__idx_v0, 0:5120]
+            tensors["t__tmp_v7"] = tensors["wq_a__ssa_v0"][rank__idx_v0, 0:5120, 0:1280]
+            tensors["t__tmp_v8"] = tensors["q_norm_weight__ssa_v0"][rank__idx_v0, 0:1280]
+            tensors["t__tmp_v9"] = tensors["wq_b__ssa_v0"][rank__idx_v0, 0:1280, 0:32768]
+            tensors["t__tmp_v10"] = tensors["wkv__ssa_v0"][rank__idx_v0, 0:5120, 0:512]
+            tensors["t__tmp_v11"] = tensors["kv_norm_weight__ssa_v0"][rank__idx_v0, 0:512]
+            tensors["t__tmp_v12"] = tensors["attn_sink__ssa_v0"][rank__idx_v0, 0:64]
+            tensors["t__tmp_v13"] = tensors["wo_a__ssa_v0"][rank__idx_v0, 0:8, 0:4096, 0:1024]
+            tensors["t__tmp_v14"] = tensors["wo_a_scale__ssa_v0"][rank__idx_v0, 0:8, 0:128, 0:1024]
+            tensors["t__tmp_v15"] = tensors["wo_b__ssa_v0"][rank__idx_v0, 0:8192, 0:5120]
+            tensors["t__tmp_v16"] = tensors["rope_cos__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:32]
+            tensors["t__tmp_v17"] = tensors["rope_sin__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:32]
+            tensors["t__tmp_v18"] = tensors["window_slots__ssa_v0"][rank__idx_v0, 0:V41_T_DYN]
+            tensors["t__tmp_v19"] = tensors["window_indices__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:128]
+            tensors["t__tmp_v20"] = tensors["window_cache__ssa_v0"][rank__idx_v0, 0:V41_ORI_BLOCKS_DYN, 0:128, 0:1, 0:512]
+            tensors["t__tmp_v21"] = tensors["window_cache_scale__ssa_v0"][rank__idx_v0, 0:V41_ORI_BLOCKS_DYN, 0:128, 0:1, 0:16]
+            tensors["t__tmp_v22"] = tensors["compressed_cache__ssa_v0"][rank__idx_v0, 0:V41_CMP_BLOCKS_DYN, 0:128, 0:1, 0:256]
+            tensors["t__tmp_v23"] = tensors["compressed_cache_scale__ssa_v0"][rank__idx_v0, 0:V41_CMP_BLOCKS_DYN, 0:128, 0:1, 0:32]
+            tensors["t__tmp_v24"] = tensors["request_ids__ssa_v0"][rank__idx_v0, 0:V41_T_DYN]
+            tensors["t__tmp_v25"] = tensors["compressed_lens__ssa_v0"][rank__idx_v0, 0:V41_T_DYN]
+            tensors["t__tmp_v26"] = tensors["index_cache__ssa_v0"][rank__idx_v0, 0:V41_INDEX_BLOCKS_DYN, 0:128, 0:1, 0:64]
+            tensors["t__tmp_v27"] = tensors["index_cache_scale__ssa_v0"][rank__idx_v0, 0:V41_INDEX_BLOCKS_DYN, 0:128, 0:1, 0:4]
+            tensors["t__tmp_v28"] = tensors["index_block_table__ssa_v0"][rank__idx_v0, 0:V41_B_DYN, 0:V41_TABLE_DYN]
+            tensors["t__tmp_v29"] = tensors["compressed_rope_cos__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:32]
+            tensors["t__tmp_v30"] = tensors["compressed_rope_sin__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:32]
+            tensors["t__tmp_v31"] = tensors["compressor_wkv__ssa_v0"][rank__idx_v0, 0:5120, 0:512]
+            tensors["t__tmp_v32"] = tensors["compressor_norm_weight__ssa_v0"][rank__idx_v0, 0:512]
+            tensors["t__tmp_v33"] = tensors["compressed_slots__ssa_v0"][rank__idx_v0, 0:V41_T_DYN]
+            tensors["t__tmp_v34"] = tensors["index_wk__ssa_v0"][rank__idx_v0, 0:512, 0:128]
+            tensors["t__tmp_v35"] = tensors["index_norm_weight__ssa_v0"][rank__idx_v0, 0:128]
+            tensors["t__tmp_v36"] = tensors["index_wq_b__ssa_v0"][rank__idx_v0, 0:1280, 0:4096]
+            tensors["t__tmp_v37"] = tensors["index_weights_proj__ssa_v0"][rank__idx_v0, 0:5120, 0:32]
+            tensors["t__tmp_v38"] = tensors["topk_indices__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:512]
+            tensors["t__tmp_v39"] = tensors["pool_block_ids__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:V41_INDEX_POOL_BLOCKS_DYN]
+            tensors["t__tmp_v40"] = tensors["pool_block_counts__ssa_v0"][rank__idx_v0, 0:V41_T_DYN]
+            tensors["t__tmp_v41"] = tensors["next_pre_mix__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:4]
+            tensors["t__tmp_v42"] = tensors["hidden__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:5120]
+            tensors["t__tmp_v43"] = tensors["attn_input__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:5120]
+            tensors["t__tmp_v44"] = tensors["attn_out__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:5120]
+            tensors["t__tmp_v45"] = tensors["output__ssa_v0"][rank__idx_v0, 0:V41_T_DYN, 0:4, 0:5120]
+            _ta_0 = TaskArgs()
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v1"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 0)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v2"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 1)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v3"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 2)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v4"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 3)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v5"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 4)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v6"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 5)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v7"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 6)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["wq_a_scale_r__ssa_v0"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 7)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v8"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 8)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v9"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 9)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["wq_b_scale_r__ssa_v0"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 10)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v10"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 11)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["wkv_scale_r__ssa_v0"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 12)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v11"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 13)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v12"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 14)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v13"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 15)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v14"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 16)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v15"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 17)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["wo_b_scale_r__ssa_v0"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 18)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v16"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 19)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v17"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 20)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v18"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 21)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v19"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 22)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v20"], TensorArgType.INOUT, callables, "l2_prefill_c1a_full", 23)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v21"], TensorArgType.INOUT, callables, "l2_prefill_c1a_full", 24)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v22"], TensorArgType.INOUT, callables, "l2_prefill_c1a_full", 25)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v23"], TensorArgType.INOUT, callables, "l2_prefill_c1a_full", 26)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v24"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 27)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v25"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 28)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v26"], TensorArgType.INOUT, callables, "l2_prefill_c1a_full", 29)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v27"], TensorArgType.INOUT, callables, "l2_prefill_c1a_full", 30)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v28"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 31)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v29"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 32)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v30"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 33)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v31"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 34)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v32"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 35)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v33"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 36)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v34"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 37)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v35"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 38)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v36"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 39)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["index_wq_b_scale_r__ssa_v0"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 40)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v37"], TensorArgType.INPUT, callables, "l2_prefill_c1a_full", 41)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v38"], TensorArgType.OUTPUT_EXISTING, callables, "l2_prefill_c1a_full", 42)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v39"], TensorArgType.OUTPUT_EXISTING, callables, "l2_prefill_c1a_full", 43)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v40"], TensorArgType.OUTPUT_EXISTING, callables, "l2_prefill_c1a_full", 44)
+            _ta_0.add_tensor(__comm_d0[rank__idx_v0].buffers["output_window_buf__ssa_v0"].tensor(shapes=(8192, 5120), dtype=DataType.BFLOAT16), TensorArgType.OUTPUT_EXISTING)
+            _ta_0.add_tensor(__comm_d0[rank__idx_v0].buffers["output_arrived_buf__ssa_v0"].tensor(shapes=(1, 1), dtype=DataType.INT32), TensorArgType.INOUT)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v41"], TensorArgType.OUTPUT_EXISTING, callables, "l2_prefill_c1a_full", 47)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v42"], TensorArgType.OUTPUT_EXISTING, callables, "l2_prefill_c1a_full", 48)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v43"], TensorArgType.OUTPUT_EXISTING, callables, "l2_prefill_c1a_full", 49)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v44"], TensorArgType.INOUT, callables, "l2_prefill_c1a_full", 50)
+            add_chip_tensor_arg(_ta_0, orch._worker, tensors["t__tmp_v45"], TensorArgType.INOUT, callables, "l2_prefill_c1a_full", 51)
+            _ta_0.add_tensor(make_tensor_arg(orch._worker, tensors["__comm_d0_ord"][rank__idx_v0]), TensorArgType.INOUT)
+            _ta_0.add_scalar(rank__idx_v0)
+            _ta_0.add_scalar(num_tokens__ssa_v0)
+            _ta_0.add_scalar(__comm_d0[rank__idx_v0].device_ctx)
+            _ta_0.add_scalar(__comm_d0[rank__idx_v0].device_ctx)
+            _keep.append(_ta_0)
+            _submit_chip(orch, callables["l2_prefill_c1a_full"], _ta_0, config, rank__idx_v0)
+
+l3_prefill_c1a_full._pypto_distributed_entry = True

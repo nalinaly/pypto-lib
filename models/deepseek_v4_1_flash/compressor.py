@@ -8,9 +8,9 @@
 # -----------------------------------------------------------------------------------------------------------
 """Compression projections, rotary embedding, cache publication, and ratio-2 ring state."""
 
-import pypto.language as pl
 import torch
 
+from compressor_dsl import c1a_compressor_project as c1a_compressor_project
 from compressor_publish_dsl import c1a_compressor_publish as c1a_compressor_publish
 from config import FLASH as M
 from quant import unpack_bf16_nz
@@ -18,47 +18,7 @@ from rmsnorm import golden_rms_norm
 
 
 # 模型配置
-D = M.hidden_size
-HEAD_DIM = M.head_dim
-ROPE_DIM = M.qk_rope_head_dim
-EPS = M.rms_norm_eps
 STATE_WIDTH = 2 * M.head_dim
-
-# 分块参数
-C1A_PROJ_M_TILE = 48
-C1A_PROJ_N_TILE = 64
-C1A_PROJ_K_TILE = 512
-
-
-@pl.jit.inline(auto_scope=False)
-def c1a_compressor_project(
-    source: pl.Tensor,
-    weight: pl.Tensor[[D, HEAD_DIM], pl.BF16, pl.NZ],
-    output: pl.Tensor,
-    num_tokens: pl.Scalar[pl.INT32],
-    ready: pl.Scalar[pl.TASK_ID],
-):
-    """Project NZ weights with full-height Cube tiles and store active rows."""
-    blocks = (num_tokens + C1A_PROJ_M_TILE - 1) // C1A_PROJ_M_TILE * (HEAD_DIM // C1A_PROJ_N_TILE)
-    workers = pl.max(blocks, 1)
-    with pl.spmd(workers, name_hint="proj_cmp", deps=[ready]) as completed:
-        with pl.at(level=pl.Level.CORE_GROUP):
-            block = pl.tile.get_block_idx()
-            row = block // (HEAD_DIM // C1A_PROJ_N_TILE) * C1A_PROJ_M_TILE
-            col = block % (HEAD_DIM // C1A_PROJ_N_TILE) * C1A_PROJ_N_TILE
-            rows = pl.max(pl.min(C1A_PROJ_M_TILE, num_tokens - row), 0)
-            a = pl.load(source, [row, 0], [C1A_PROJ_M_TILE, C1A_PROJ_K_TILE], valid_shape=[rows, C1A_PROJ_K_TILE], target_memory=pl.Mem.Mat)
-            b = pl.load(weight, [0, col], [C1A_PROJ_K_TILE, C1A_PROJ_N_TILE], target_memory=pl.Mem.Mat)
-            full_a = pl.set_validshape(a, C1A_PROJ_M_TILE, C1A_PROJ_K_TILE)
-            acc = pl.matmul(full_a, b)
-            for k in pl.pipeline(C1A_PROJ_K_TILE, D, C1A_PROJ_K_TILE, stage=2):
-                a = pl.load(source, [row, k], [C1A_PROJ_M_TILE, C1A_PROJ_K_TILE], valid_shape=[rows, C1A_PROJ_K_TILE], target_memory=pl.Mem.Mat)
-                b = pl.load(weight, [k, col], [C1A_PROJ_K_TILE, C1A_PROJ_N_TILE], target_memory=pl.Mem.Mat)
-                full_a = pl.set_validshape(a, C1A_PROJ_M_TILE, C1A_PROJ_K_TILE)
-                acc = pl.matmul_acc(acc, full_a, b)
-            value = pl.set_validshape(acc, rows, C1A_PROJ_N_TILE)
-            output = pl.store(value, [row, col], output)
-    return output, completed
 
 
 def golden_c1a_compressor(

@@ -1,0 +1,579 @@
+{
+  "schema": 3,
+  "supported_execution_modes": [
+    "program"
+  ],
+  "params": [
+    {
+      "name": "x_hc__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        -1,
+        4,
+        5120
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "pre_mix__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        -1,
+        4
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "hc_attn_fn__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        24,
+        20480
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "hc_attn_scale__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        3
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "hc_attn_base__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        24
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "attn_norm_weight__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        5120
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "wq_a__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        5120,
+        1280
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "wq_a_scale__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        160,
+        1280
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "q_norm_weight__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        1280
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "wq_b__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        1280,
+        32768
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "wq_b_scale__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        40,
+        32768
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "wkv__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        5120,
+        512
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "wkv_scale__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        160,
+        512
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "kv_norm_weight__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        512
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "attn_sink__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        64
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "wo_a__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        8,
+        4096,
+        1024
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "wo_a_scale__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        8,
+        128,
+        1024
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "wo_b__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        8192,
+        5120
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "wo_b_scale__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        256,
+        5120
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "rope_cos__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        -1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "rope_sin__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        -1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "window_slots__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        -1
+      ],
+      "dtype": "int64",
+      "layout": "ND"
+    },
+    {
+      "name": "window_indices__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        -1,
+        128
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "window_cache__ssa_v0",
+      "direction": "InOut",
+      "shape": [
+        1,
+        -1,
+        128,
+        1,
+        512
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "window_cache_scale__ssa_v0",
+      "direction": "InOut",
+      "shape": [
+        1,
+        -1,
+        128,
+        1,
+        16
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "compressed_cache__ssa_v0",
+      "direction": "InOut",
+      "shape": [
+        1,
+        -1,
+        128,
+        1,
+        256
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "compressed_cache_scale__ssa_v0",
+      "direction": "InOut",
+      "shape": [
+        1,
+        -1,
+        128,
+        1,
+        32
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "request_ids__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "compressed_lens__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "index_cache__ssa_v0",
+      "direction": "InOut",
+      "shape": [
+        1,
+        -1,
+        128,
+        1,
+        64
+      ],
+      "dtype": "uint8",
+      "layout": "ND"
+    },
+    {
+      "name": "index_cache_scale__ssa_v0",
+      "direction": "InOut",
+      "shape": [
+        1,
+        -1,
+        128,
+        1,
+        4
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "index_block_table__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        -1,
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "compressed_rope_cos__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        -1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "compressed_rope_sin__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        -1,
+        32
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "compressor_wkv__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        5120,
+        512
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "compressor_norm_weight__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        512
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "compressed_slots__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        -1
+      ],
+      "dtype": "int64",
+      "layout": "ND"
+    },
+    {
+      "name": "index_wk__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        512,
+        128
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "index_norm_weight__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        128
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "index_wq_b__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        1280,
+        4096
+      ],
+      "dtype": "fp8e4m3fn",
+      "layout": "ND"
+    },
+    {
+      "name": "index_wq_b_scale__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        40,
+        4096
+      ],
+      "dtype": "fp8e8m0",
+      "layout": "ND"
+    },
+    {
+      "name": "index_weights_proj__ssa_v0",
+      "direction": "In",
+      "shape": [
+        1,
+        5120,
+        32
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "topk_indices__ssa_v0",
+      "direction": "Out",
+      "shape": [
+        1,
+        -1,
+        512
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "pool_block_ids__ssa_v0",
+      "direction": "Out",
+      "shape": [
+        1,
+        -1,
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "pool_block_counts__ssa_v0",
+      "direction": "Out",
+      "shape": [
+        1,
+        -1
+      ],
+      "dtype": "int32",
+      "layout": "ND"
+    },
+    {
+      "name": "next_pre_mix__ssa_v0",
+      "direction": "Out",
+      "shape": [
+        1,
+        -1,
+        4
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "hidden__ssa_v0",
+      "direction": "Out",
+      "shape": [
+        1,
+        -1,
+        5120
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "attn_input__ssa_v0",
+      "direction": "Out",
+      "shape": [
+        1,
+        -1,
+        5120
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "attn_out__ssa_v0",
+      "direction": "InOut",
+      "shape": [
+        1,
+        -1,
+        5120
+      ],
+      "dtype": "bfloat16",
+      "layout": "ND"
+    },
+    {
+      "name": "output__ssa_v0",
+      "direction": "Out",
+      "shape": [
+        1,
+        -1,
+        4,
+        5120
+      ],
+      "dtype": "fp32",
+      "layout": "ND"
+    },
+    {
+      "name": "num_tokens__ssa_v0",
+      "direction": "In",
+      "shape": null,
+      "dtype": "int32",
+      "layout": null
+    }
+  ],
+  "num_return_types": 1,
+  "platform": "a5",
+  "backend_type": "Ascend950",
+  "distributed_config": {
+    "device_ids": [
+      0
+    ],
+    "num_sub_workers": 0,
+    "runtime": "tensormap_and_ringbuffer",
+    "aicpu_thread_num": 0
+  }
+}

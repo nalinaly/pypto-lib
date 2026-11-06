@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 顺序执行真实设备对照、C2A 投影回归和完整 C1A 固定参考回放。
+projection_workspace=<workspace>
+projection_runner="$projection_workspace/artifacts/dsv41-index-query-dsl/run-case.sh"
+projection_work="$projection_workspace/artifacts/dsv41-c1a-projection-dsl"
+projection_fixture="$projection_workspace/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_c1a_full_20261106_105330_ow_omtjh/data"
+bash "$projection_runner" "$projection_work/compare_native.py" 2>&1 | tee /tmp/c1a-projection-cases.log
+bash "$projection_runner" models/deepseek_v4_1_flash/compressor_dsl.py --op c2a 2>&1 | tee /tmp/c1a-projection-c2a.log
+bash "$projection_runner" models/deepseek_v4_1_flash/decode_c1a_full.py --golden-data "$projection_fixture" --save-data 2>&1 | tee /tmp/c1a-projection-full.log

@@ -6,7 +6,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-"""使用 CANNBotDSL 实现 BF16 C2A 压缩投影，并以 FP32 累加。"""
+"""使用 CANNBotDSL 实现 C1A/C2A 压缩投影，并以 FP32 累加。"""
 
 import cannbotdsl as cb
 import pypto.language as pl
@@ -24,6 +24,9 @@ ROW_TILE = 80
 COLUMN_TILE = 64
 REDUCTION_TILE = 256
 TASK_TILE = 32
+C1A_ROW_TILE = 48
+C1A_COLUMN_TILE = 64
+C1A_REDUCTION_TILE = 512
 
 
 @cb.kernel
@@ -33,6 +36,42 @@ def project_compressor_tile(
 ):
     """连续执行 K256 BF16 Cube 累加，投影一个 M80/N64 分块。"""
     project_bf16_nz(source, weight, output, column, active_rows, ROW_TILE, COLUMN_TILE, REDUCTION_TILE)
+
+
+@cb.kernel
+def project_c1a_compressor(
+    source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor, num_tokens: cb.ScalarValue,
+):
+    """每个 worker 计算一个 M48/N64 分块，按 K512 累加后舍入为 BF16。"""
+    block = cb.get_block_idx()
+    row_tile = block // (HEAD_DIM // C1A_COLUMN_TILE)
+    column = block % (HEAD_DIM // C1A_COLUMN_TILE)
+    row = row_tile * C1A_ROW_TILE
+    active = num_tokens - row
+    if active > C1A_ROW_TILE:
+        active = C1A_ROW_TILE
+    if active > 0:
+        tile = cb.tile_slice(source, (C1A_ROW_TILE, D), (row_tile, 0))
+        projected = cb.tile_slice(output, (C1A_ROW_TILE, C1A_COLUMN_TILE), (row_tile, column))
+        project_bf16_nz(
+            tile, weight, projected, column, active,
+            C1A_ROW_TILE, C1A_COLUMN_TILE, C1A_REDUCTION_TILE,
+        )
+
+
+@pl.jit.inline(auto_scope=False)
+def c1a_compressor_project(
+    source: pl.Tensor, weight: pl.Tensor[[D, HEAD_DIM], pl.BF16, pl.NZ], output: pl.Tensor,
+    num_tokens: pl.Scalar[pl.INT32], ready: pl.Scalar[pl.TASK_ID],
+):
+    """在输入依赖完成后，使用单个 AIC SPMD 任务投影所有有效 C1A 行。"""
+    storage = pl.reshape(weight, [D * HEAD_DIM])
+    raw_weight = pl.reshape(storage, [HEAD_DIM // 16, D * 16])
+    blocks = (num_tokens + C1A_ROW_TILE - 1) // C1A_ROW_TILE * (HEAD_DIM // C1A_COLUMN_TILE)
+    workers = pl.max(blocks, 1)
+    with pl.spmd(workers, name_hint="dsl_c1a_proj_cmp", deps=[ready]) as completed:
+        project_c1a_compressor(source, raw_weight, output, num_tokens)
+    return output, completed
 
 
 @pl.jit.inline(auto_scope=False)
@@ -97,6 +136,19 @@ def validate_projection(
     return kv_out, score_out
 
 
+@pl.jit
+def validate_c1a_projection(
+    source: pl.Tensor, weight: pl.Tensor[[D, HEAD_DIM], pl.BF16, pl.NZ],
+    output: pl.InOut[pl.Tensor], num_tokens: pl.Scalar[pl.INT32],
+):
+    """校验 C1A 生产投影路径，并保留一行额外输出保护区。"""
+    rows = pl.tensor.dim(source, 0)
+    target = pl.slice(output, [rows, HEAD_DIM], [0, 0])
+    ready = pl.system.task_dummy(deps=[])
+    c1a_compressor_project(source, weight, target, num_tokens, ready)
+    return output
+
+
 def golden_projection(tensors):
     """将 BF16 操作数投影为 FP32，中间不对输出舍入。"""
     import torch
@@ -108,6 +160,20 @@ def golden_projection(tensors):
     for weight, output in (("wkv", "kv_out"), ("wgate", "score_out")):
         values = torch.matmul(source, unpack_bf16_nz(tensors[weight]).float())
         tensors[output][:active].copy_(values)
+
+
+def golden_c1a_projection(tensors):
+    """按 K512 依次累加 FP32 部分和，最终一次舍入为 BF16。"""
+    import torch
+    from quant import unpack_bf16_nz
+
+    active = int(tensors["num_tokens"])
+    source = tensors["source"][:active].float()
+    weight = unpack_bf16_nz(tensors["weight"]).float()
+    value = torch.zeros((active, HEAD_DIM), dtype=torch.float32)
+    for k in range(0, D, C1A_REDUCTION_TILE):
+        value = value + source[:, k:k + C1A_REDUCTION_TILE] @ weight[k:k + C1A_REDUCTION_TILE]
+    tensors["output"][:active].copy_(value.bfloat16())
 
 
 def build_projection_specs(rows=80, active=72, layout_case=False):
@@ -139,11 +205,46 @@ def build_projection_specs(rows=80, active=72, layout_case=False):
     ]
 
 
-def projection_comparator(tolerance):
-    """限制有效 FP32 输出的误差，并要求非有效输出逐位保持不变。"""
+def build_c1a_projection_specs(rows=80, active=72, kind="random"):
+    """构造 NZ 分块坐标、BF16 舍入中点和非有效输入 NaN 哨兵。"""
+    import torch
+    from golden import ScalarSpec, TensorSpec
+    from quant import pack_bf16_nz
+
+    generator = torch.Generator().manual_seed(3511)
+    if kind == "random":
+        source = torch.randn(rows, D, generator=generator).bfloat16()
+        weight = (torch.randn(D, HEAD_DIM, generator=generator) / D**0.5).bfloat16()
+    elif kind == "ties":
+        source = torch.zeros(rows, D, dtype=torch.bfloat16)
+        source[:, 0] = 1.0
+        source[:, C1A_REDUCTION_TILE] = 1.0
+        weight = torch.zeros(D, HEAD_DIM, dtype=torch.bfloat16)
+        column = torch.arange(HEAD_DIM)
+        sign = torch.where(column % 2 == 0, 1.0, -1.0)
+        weight[0] = ((1.0 + (column // 2 % 4) / 128) * sign).bfloat16()
+        weight[C1A_REDUCTION_TILE] = (sign / 256).bfloat16()
+    else:
+        row = torch.arange(rows).reshape(-1, 1)
+        k = torch.arange(D)
+        source = (((row * 3 + k) % 16 - 8).float() / 8).bfloat16()
+        k = k.reshape(-1, 1)
+        column = torch.arange(HEAD_DIM)
+        weight = (((k * 3 + column * 5 + k // 512 + column // 64) % 8 - 4).float() / 16).bfloat16()
+    source[active:] = float("nan")
+    return [
+        TensorSpec("source", [rows, D], torch.bfloat16, init_value=source),
+        TensorSpec("weight", [D, HEAD_DIM], torch.bfloat16, init_value=pack_bf16_nz(weight)),
+        TensorSpec("output", [rows + 1, HEAD_DIM], torch.bfloat16, init_value=-37.0),
+        ScalarSpec("num_tokens", torch.int32, active),
+    ]
+
+
+def projection_comparator(tolerance, rtol=None):
+    """限制有效输出的误差，并要求非有效输出和保护行完全相同。"""
     from golden import ratio_allclose
 
-    compare_active = ratio_allclose(atol=tolerance, rtol=tolerance, max_error_ratio=0.0)
+    compare_active = ratio_allclose(atol=tolerance, rtol=tolerance if rtol is None else rtol, max_error_ratio=0.0)
     compare_tail = ratio_allclose(atol=0.0, rtol=0.0, max_error_ratio=0.0)
 
     def compare(actual, expected, *, inputs, **kwargs):
@@ -161,11 +262,13 @@ if __name__ == "__main__":
     import argparse
     from golden import run
 
-    parser = argparse.ArgumentParser(description="Validate BF16 C2A compressor projections on A5.")
+    parser = argparse.ArgumentParser(description="校验 A5 上的 C1A/C2A BF16 压缩投影。")
     parser.add_argument("-d", "--device", type=int, default=0)
     parser.add_argument("--compile-only", action="store_true")
+    parser.add_argument("--op", choices=("c1a", "c2a", "all"), default="c2a")
     args = parser.parse_args()
-    for rows, active, layout_case in ((17, 15, True), (17, 0, True), (80, 72, False), (81, 81, True), (321, 321, True)):
+    c2a_cases = ((17, 15, True), (17, 0, True), (80, 72, False), (81, 81, True), (321, 321, True))
+    for rows, active, layout_case in c2a_cases if args.op in ("c2a", "all") else ():
         print(f"[C2A_PROJECTION_DSL] rows={rows} active={active} layout_case={layout_case}", flush=True)
         tolerance = 0.0 if layout_case else 1e-4
         compare = projection_comparator(tolerance)
@@ -180,3 +283,21 @@ if __name__ == "__main__":
         )
         if not result.passed:
             raise SystemExit(result.error or 1)
+        print(f"[产物] {result.work_dir}", flush=True)
+    c1a_cases = ((17, 15, "layout"), (17, 0, "layout"), (1, 1, "ties"),
+                 (49, 49, "layout"), (80, 72, "random"), (193, 193, "layout"))
+    for rows, active, kind in c1a_cases if args.op in ("c1a", "all") else ():
+        print(f"[C1A_PROJECTION_DSL] {rows=} {active=} {kind=}", flush=True)
+        compare = projection_comparator(1e-4, 1 / 128) if kind == "random" else projection_comparator(0.0)
+        result = run(
+            fn=validate_c1a_projection,
+            specs=build_c1a_projection_specs(rows, active, kind),
+            golden_fn=golden_c1a_projection,
+            compare_fn={"output": compare},
+            config=dict(backend_type="a5", execution_mode=False, device_id=args.device),
+            compile_only=args.compile_only,
+            save_data=True,
+        )
+        if not result.passed:
+            raise SystemExit(result.error or 1)
+        print(f"[产物] {result.work_dir}", flush=True)

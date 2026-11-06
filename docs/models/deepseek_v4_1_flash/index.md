@@ -576,8 +576,8 @@ before the DSL loads the existing `[N/16, K/16, 16, 16]` faces.
 
 KV and gate tasks are independent. PyPTO preserves the caller's readiness
 dependency, bounds the completion pool, and joins both projections before
-pooling or cache publication. C1A projections, C2A pooling, ring state,
-quantization and communication kernels retain their implementations. The
+pooling or cache publication. The C2A projection change preserves pooling,
+ring state, quantization and communication contracts. The
 obsolete PyPTO C2A projection body and tiling constants are removed. Neither
 PyPTO nor CANNBotDSL requires a framework change.
 
@@ -611,14 +611,52 @@ python models/deepseek_v4_1_flash/decode_layer.py --ep 2 --layer-id 2 -d "$TASK_
 The shared prefill caller is compiled with the new interface. Its complete
 device execution is outside this decode validation scope.
 
+## C1A compressor projection in one DSL AIC task
+
+[`compressor_dsl.py`](../../../models/deepseek_v4_1_flash/compressor_dsl.py)
+also provides `c1a_compressor_project`, replacing the native PyPTO `proj_cmp`
+body for decode and the shared prefill caller. A single `dsl_c1a_proj_cmp`
+SPMD launch assigns one M48/N64 output tile to each AIC worker. It projects
+BF16 `[T, 5120]` inputs with the existing NZ `[5120, 512]` weights, accumulates
+consecutive K512 steps in FP32, and rounds once to BF16 when storing output.
+
+The implementation reuses
+[`bf16_projection_dsl.py`](../../../models/deepseek_v4_1_flash/bf16_projection_dsl.py)
+without changing that helper or the C2A compute path. PyPTO/simpler preserves
+the input readiness dependency and the projection completion handle consumed
+by cache publication. Inactive output rows and the zero-token launch retain
+their initial contents. This is local AIC compute without cross-device
+communication or a launch-wide barrier.
+
+Together with the AIV publisher below, the complete C1A compression branch
+now uses DSL compute from projection through FP4 cache publication. The
+projection and publication retain their two existing task boundaries.
+
+With an A5 device allocated through the task queue:
+
+```bash
+python models/deepseek_v4_1_flash/compressor_dsl.py --op c1a -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/compressor_dsl.py --op c2a -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/decode_c1a_full.py -d "$TASK_DEVICE"
+```
+
+The six C1A cases cover NZ coordinates, zero active tokens, inactive NaN
+inputs, a partial M48 tile, BF16 midpoint rounding, 72 active decode rows,
+and 193 rows dispatched to 40 workers. Structured cases use zero tolerance
+against the CPU reference. The random case uses `atol=1e-4, rtol=1/128` with
+no outliers; inactive output and guard rows always require exact equality.
+Actual device outputs also match the archived PyPTO implementation bytewise
+in all six cases, including the random case. See the
+[projection evidence archive](../../../artifacts/dsv4_1_dsl/2026-11-06-c1a-projection/README.txt).
+
 ## C1A cache publication in one DSL AIV task
 
 [`compressor_publish_dsl.py`](../../../models/deepseek_v4_1_flash/compressor_publish_dsl.py)
 replaces the native `c1a_compress` task for both decode and the shared prefill
 caller. One `dsl_c1a_compress` AIV task performs RMSNorm, writes the unrotated
 BF16 latent for Indexer, applies adjacent-pair RoPE to the last 64 elements,
-and publishes packed E2M1 cache rows with group-16 BF16 scales. The upstream
-C1A projection retains its current implementation.
+and publishes packed E2M1 cache rows with group-16 BF16 scales. Its upstream
+C1A projection uses the DSL AIC task described above.
 
 PyPTO/simpler keeps the cache-ready and projection-ready dependencies and
 launches at most eight workers. A physical cache page belongs to one worker;
