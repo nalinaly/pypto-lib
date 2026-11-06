@@ -35,7 +35,7 @@ SCORE_COLUMNS_DYN = pl.dynamic("INIT_SCORE_COLUMNS")
 
 @cb.kernel
 def zero_bf16_rows(output: cb.Tensor):
-    """将给定行视图的 D 列写为 BF16 正零。"""
+    """按 block 分配给定行视图，将 D 列写为 BF16 正零。"""
     row = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, D)))
     bits = row.view(dtype=cb.dtypes.uint16)
     with cb.vf():
@@ -43,7 +43,7 @@ def zero_bf16_rows(output: cb.Tensor):
         zero = rr.vdups(0, cb.dtypes.uint16, mask=mask16)
         for col in range(0, D, ZERO_VECTOR_TILE):
             rr.vstore(bits, col, zero, mask16)
-    for index in cb.range(output.shape[0]):
+    for index in cb.range(cb.get_block_idx(), output.shape[0], cb.get_block_num()):
         cb.mem_copy(cb.tile_slice(output, (1, D), (index, 0)), row)
 
 
@@ -75,24 +75,26 @@ def initialize_routes(
 
 @pl.jit.inline(auto_scope=False)
 def zero_bf16_padding(x: pl.Tensor, valid_rows: pl.Scalar[pl.INT32]):
-    """保留有效行，仅调度无效行的 BF16 清零任务。"""
+    """只将无效尾部视图提交为多核清零任务。"""
     tokens = pl.tensor.dim(x, 0)
-    first = pl.max(0, pl.cast(valid_rows, pl.INDEX))
-    for row in pl.parallel(first, tokens):
-        target = x[row:row + 1, 0:D]
-        with pl.spmd(1, name_hint="dsl_decode_sp_zero_padding"):
+    first = pl.min(tokens, pl.max(0, pl.cast(valid_rows, pl.INDEX)))
+    if first < tokens:
+        target = x[first:tokens, 0:D]
+        workers = pl.min(tokens - first, pl.system.available_aiv_count())
+        with pl.spmd(workers, name_hint="dsl_decode_sp_zero_padding"):
             zero_bf16_rows(target)
     return x
 
 
 @pl.jit.inline(auto_scope=False)
 def zero_attention_output(output: pl.Tensor):
-    """按最多八行分块初始化未使用的 Attention 输出。"""
+    """以单次 SPMD 提交未使用输出的清零。"""
     rows = pl.tensor.dim(output, 0)
-    for row in pl.parallel(0, rows, OUTPUT_ROW_TILE):
-        live = pl.min(OUTPUT_ROW_TILE, rows - row)
-        target = pl.slice(output, [live, D], [row, 0])
-        with pl.spmd(1, name_hint="dsl_unused_attention_output"):
+    if rows > 0:
+        target = output[:, 0:D]
+        tiles = (rows + OUTPUT_ROW_TILE - 1) // OUTPUT_ROW_TILE
+        workers = pl.min(tiles, pl.system.available_aiv_count())
+        with pl.spmd(workers, name_hint="dsl_unused_attention_output"):
             zero_bf16_rows(target)
     return output
 

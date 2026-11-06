@@ -1,0 +1,3856 @@
+[
+  {
+    "用例": "window-0",
+    "层级": ".",
+    "核名": "window_kv_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/000-window_kv_grid"
+  },
+  {
+    "用例": "index-query-0",
+    "层级": ".",
+    "核名": "project_query_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/001-project_query_grid_aic"
+  },
+  {
+    "用例": "index-query-0",
+    "层级": ".",
+    "核名": "project_query_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/001-project_query_grid_aic"
+  },
+  {
+    "用例": "index-query-1",
+    "层级": ".",
+    "核名": "project_query_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/002-project_query_grid_aic"
+  },
+  {
+    "用例": "index-query-1",
+    "层级": ".",
+    "核名": "project_query_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/002-project_query_grid_aic"
+  },
+  {
+    "用例": "index-query-3",
+    "层级": ".",
+    "核名": "project_query_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/003-project_query_grid_aic"
+  },
+  {
+    "用例": "index-query-3",
+    "层级": ".",
+    "核名": "project_query_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/003-project_query_grid_aic"
+  },
+  {
+    "用例": "index-query-4",
+    "层级": ".",
+    "核名": "project_query_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/004-project_query_grid_aic"
+  },
+  {
+    "用例": "index-query-4",
+    "层级": ".",
+    "核名": "project_query_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/004-project_query_grid_aic"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "collapse_norm_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/005-collapse_norm_grid"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "zero_bf16_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/006-zero_bf16_rows"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "quantize_bf16_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/007-quantize_bf16_grid"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "project_q_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/008-project_q_a"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "normalize_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/009-normalize_quant_grid"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "project_q_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/010-project_q_b"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "query_rope_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/011-query_rope_grid"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "project_kv",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "window_kv_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/013-window_kv_grid"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "swa_queries_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/014-swa_queries_aic"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "swa_queries_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/014-swa_queries_aic"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "rope_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/018-rope_quant_grid"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "project_o_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/019-project_o_a"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "quantize_bf16_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/020-quantize_bf16_grid__2"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "project_o_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/021-project_o_b"
+  },
+  {
+    "用例": "attn-swa-0",
+    "层级": "next_levels/l2_decode_swa",
+    "核名": "expand_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/022-expand_grid"
+  },
+  {
+    "用例": "o-mx-0",
+    "层级": ".",
+    "核名": "project_o_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/023-project_o_b"
+  },
+  {
+    "用例": "index-weight-0",
+    "层级": ".",
+    "核名": "project_index_weight_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/024-project_index_weight_grid"
+  },
+  {
+    "用例": "index-weight-0",
+    "层级": ".",
+    "核名": "reduce_index_weight_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/025-reduce_index_weight_grid"
+  },
+  {
+    "用例": "index-weight-1",
+    "层级": ".",
+    "核名": "project_index_weight_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/026-project_index_weight_grid"
+  },
+  {
+    "用例": "index-weight-1",
+    "层级": ".",
+    "核名": "reduce_index_weight_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/027-reduce_index_weight_grid"
+  },
+  {
+    "用例": "index-weight-3",
+    "层级": ".",
+    "核名": "project_index_weight_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/028-project_index_weight_grid"
+  },
+  {
+    "用例": "index-weight-3",
+    "层级": ".",
+    "核名": "reduce_index_weight_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/029-reduce_index_weight_grid"
+  },
+  {
+    "用例": "index-weight-4",
+    "层级": ".",
+    "核名": "project_index_weight_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/030-project_index_weight_grid"
+  },
+  {
+    "用例": "index-weight-4",
+    "层级": ".",
+    "核名": "reduce_index_weight_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/031-reduce_index_weight_grid"
+  },
+  {
+    "用例": "o-rope-zero-0",
+    "层级": ".",
+    "核名": "rope_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/032-rope_quant_grid"
+  },
+  {
+    "用例": "hc72-0",
+    "层级": ".",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "hc72-0",
+    "层级": ".",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "hc72-0",
+    "层级": ".",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "hc72-0",
+    "层级": ".",
+    "核名": "collapse_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/033-collapse_grid"
+  },
+  {
+    "用例": "hc72-0",
+    "层级": ".",
+    "核名": "collapse_tail",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/034-collapse_tail"
+  },
+  {
+    "用例": "hc72-1",
+    "层级": ".",
+    "核名": "expand_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/022-expand_grid"
+  },
+  {
+    "用例": "hc72-2",
+    "层级": ".",
+    "核名": "collapse_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/033-collapse_grid"
+  },
+  {
+    "用例": "hc72-2",
+    "层级": ".",
+    "核名": "collapse_tail",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/034-collapse_tail"
+  },
+  {
+    "用例": "hc72-3",
+    "层级": ".",
+    "核名": "collapse_norm_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/005-collapse_norm_grid"
+  },
+  {
+    "用例": "hc72-4",
+    "层级": ".",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "hc72-5",
+    "层级": ".",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "hc72-5",
+    "层级": ".",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "collapse_norm_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/005-collapse_norm_grid"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "quantize_bf16_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/007-quantize_bf16_grid"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_q_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/008-project_q_a"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "normalize_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/009-normalize_quant_grid"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_q_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/010-project_q_b"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "query_rope_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/011-query_rope_grid"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_kv",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "window_kv_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/013-window_kv_grid"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_query_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_query_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_index_weight_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/036-project_index_weight_grid"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "reduce_index_weight_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/037-reduce_index_weight_grid"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "classify_pool_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/038-classify_pool_rows"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "plan_runs",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/039-plan_runs"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "score_topk_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "score_topk_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "gather_pool",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/041-gather_pool"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "plan_pool_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/042-plan_pool_rows"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "score_topk_mix__2_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/043-score_topk_mix__2_aic"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "score_topk_mix__2_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/043-score_topk_mix__2_aic"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "sparse_attention_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "sparse_attention_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "rope_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/018-rope_quant_grid"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_o_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/019-project_o_a"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "quantize_bf16_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/020-quantize_bf16_grid__2"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_o_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/021-project_o_b"
+  },
+  {
+    "用例": "attn-reindex-sparse-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "expand_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/022-expand_grid"
+  },
+  {
+    "用例": "index-key-proj-0",
+    "层级": ".",
+    "核名": "project_index_key_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/045-project_index_key_grid"
+  },
+  {
+    "用例": "index-key-proj-1",
+    "层级": ".",
+    "核名": "project_index_key_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/046-project_index_key_grid"
+  },
+  {
+    "用例": "index-key-proj-3",
+    "层级": ".",
+    "核名": "project_index_key_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/047-project_index_key_grid"
+  },
+  {
+    "用例": "index-key-proj-4",
+    "层级": ".",
+    "核名": "project_index_key_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/048-project_index_key_grid"
+  },
+  {
+    "用例": "hc33-0",
+    "层级": ".",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "hc33-0",
+    "层级": ".",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "hc33-0",
+    "层级": ".",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "hc33-0",
+    "层级": ".",
+    "核名": "collapse_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/033-collapse_grid"
+  },
+  {
+    "用例": "hc33-0",
+    "层级": ".",
+    "核名": "collapse_tail",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/034-collapse_tail"
+  },
+  {
+    "用例": "hc33-1",
+    "层级": ".",
+    "核名": "expand_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/022-expand_grid"
+  },
+  {
+    "用例": "hc33-2",
+    "层级": ".",
+    "核名": "collapse_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/033-collapse_grid"
+  },
+  {
+    "用例": "hc33-2",
+    "层级": ".",
+    "核名": "collapse_tail",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/034-collapse_tail"
+  },
+  {
+    "用例": "hc33-3",
+    "层级": ".",
+    "核名": "collapse_norm_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/005-collapse_norm_grid"
+  },
+  {
+    "用例": "hc33-4",
+    "层级": ".",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "hc33-5",
+    "层级": ".",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "hc33-5",
+    "层级": ".",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "collapse_norm_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/005-collapse_norm_grid"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "quantize_bf16_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/007-quantize_bf16_grid"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "project_q_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/008-project_q_a"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "normalize_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/009-normalize_quant_grid"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "project_q_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/010-project_q_b"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "query_rope_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/011-query_rope_grid"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "project_kv",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "window_kv_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/013-window_kv_grid"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "sparse_attention_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "sparse_attention_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "rope_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/018-rope_quant_grid"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "project_o_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/019-project_o_a"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "quantize_bf16_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/020-quantize_bf16_grid__2"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "project_o_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/021-project_o_b"
+  },
+  {
+    "用例": "attn-c2a-reuse-0",
+    "层级": "next_levels/l2_decode_c2a_reuse",
+    "核名": "expand_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/022-expand_grid"
+  },
+  {
+    "用例": "shared-proj80-0",
+    "层级": ".",
+    "核名": "project_shared_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/049-project_shared_grid"
+  },
+  {
+    "用例": "shared-proj80-1",
+    "层级": ".",
+    "核名": "project_shared_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/050-project_shared_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "collapse_norm_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/005-collapse_norm_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "quantize_bf16_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/007-quantize_bf16_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "project_q_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/008-project_q_a"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "normalize_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/009-normalize_quant_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "project_q_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/010-project_q_b"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "query_rope_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/011-query_rope_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "project_kv",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "window_kv_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/013-window_kv_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "project_c1a_compressor",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/051-project_c1a_compressor"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "publish_c1a",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/052-publish_c1a"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "project_index_key_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/053-project_index_key_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "publish_index_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/054-publish_index_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "project_query_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "project_query_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "project_index_weight_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/036-project_index_weight_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "reduce_index_weight_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/037-reduce_index_weight_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "plan_runs",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/039-plan_runs"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "score_topk_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "score_topk_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "generate_pool",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/055-generate_pool"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "sparse_attention_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "sparse_attention_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "rope_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/018-rope_quant_grid"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "project_o_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/019-project_o_a"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "quantize_bf16_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/020-quantize_bf16_grid__2"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "project_o_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/021-project_o_b"
+  },
+  {
+    "用例": "attn-c1a-full-0",
+    "层级": "next_levels/l2_decode_c1a_full",
+    "核名": "expand_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/022-expand_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "zero_bf16_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/006-zero_bf16_rows"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "collapse_norm_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/005-collapse_norm_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "quantize_bf16_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/007-quantize_bf16_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_q_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/008-project_q_a"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "normalize_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/009-normalize_quant_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_q_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/010-project_q_b"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "query_rope_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/011-query_rope_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_kv",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "window_kv_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/013-window_kv_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "swa_queries_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/014-swa_queries_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "swa_queries_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/014-swa_queries_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "rope_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/018-rope_quant_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_o_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/019-project_o_a"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "quantize_bf16_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/020-quantize_bf16_grid__2"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_o_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/021-project_o_b"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "expand_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/022-expand_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_kv__2",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_c2a_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/056-project_c2a_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "clear_latent",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/057-clear_latent"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "pool_state_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/058-pool_state_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "publish_compressed_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/059-publish_compressed_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_index_key_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/053-project_index_key_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "publish_index_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/054-publish_index_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_query_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_query_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_index_weight_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/036-project_index_weight_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "reduce_index_weight_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/037-reduce_index_weight_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "plan_runs",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/039-plan_runs"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "sparse_attention_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "sparse_attention_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid__3",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_kv__3",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid__4",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid__5",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_kv__4",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_c1a_compressor",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/051-project_c1a_compressor"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "publish_c1a",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/052-publish_c1a"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_query_grid__2_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_query_grid__2_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix__2_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix__2_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "generate_pool",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/055-generate_pool"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_kv__5",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_query_grid__3_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_query_grid__3_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "classify_pool_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/038-classify_pool_rows"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix__3_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix__3_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "gather_pool",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/041-gather_pool"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "plan_pool_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/042-plan_pool_rows"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix__4_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/043-score_topk_mix__2_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix__4_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/043-score_topk_mix__2_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid__6",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_kv__6",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid__7",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "collapse_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/033-collapse_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "collapse_tail",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/034-collapse_tail"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "normalize_gate_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/060-normalize_gate_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "quantize_gate_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/061-quantize_gate_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "initialize_routes",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/062-initialize_routes"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_gate_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/063-project_gate_grid_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_gate_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/063-project_gate_grid_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "route_gate_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/064-route_gate_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_shared_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/065-project_shared_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "shared_swiglu_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/066-shared_swiglu_quant_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_shared_grid__2",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/067-project_shared_grid__2"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "stage_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/068-stage_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "dispatch_meta_publish",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "dispatch_meta_wait",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "dispatch_meta_finalize",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "dispatch_push",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "combine_notify",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "combine_wait",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "gather_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/069-gather_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_up_worker_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/070-project_up_worker_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_up_worker_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/070-project_up_worker_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "activate_worker",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/071-activate_worker"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_down_worker_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/072-project_down_worker_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_down_worker_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/072-project_down_worker_aic"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "ffn_reduce_scatter",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "combine_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/073-combine_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "expand_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/074-expand_grid"
+  },
+  {
+    "用例": "layer0-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "moe_signal_clear",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "collapse_norm_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/005-collapse_norm_grid"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "quantize_bf16_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/007-quantize_bf16_grid"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "project_q_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/008-project_q_a"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "normalize_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/009-normalize_quant_grid"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "project_q_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/010-project_q_b"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "query_rope_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/011-query_rope_grid"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "project_kv",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "window_kv_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/013-window_kv_grid"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "sparse_attention_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "sparse_attention_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "rope_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/018-rope_quant_grid"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "project_o_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/019-project_o_a"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "quantize_bf16_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/020-quantize_bf16_grid__2"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "project_o_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/021-project_o_b"
+  },
+  {
+    "用例": "attn-c1a-reuse-0",
+    "层级": "next_levels/l2_decode_c1a_reuse",
+    "核名": "expand_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/022-expand_grid"
+  },
+  {
+    "用例": "shared-act80-0",
+    "层级": ".",
+    "核名": "shared_swiglu_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/066-shared_swiglu_quant_grid"
+  },
+  {
+    "用例": "routed-0",
+    "层级": ".",
+    "核名": "unpack_weight_probe",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/075-unpack_weight_probe"
+  },
+  {
+    "用例": "routed-1",
+    "层级": ".",
+    "核名": "projection_probe_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/076-projection_probe_aic"
+  },
+  {
+    "用例": "routed-1",
+    "层级": ".",
+    "核名": "projection_probe_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/076-projection_probe_aic"
+  },
+  {
+    "用例": "routed-2",
+    "层级": ".",
+    "核名": "activate_worker",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/077-activate_worker"
+  },
+  {
+    "用例": "combine-0",
+    "层级": ".",
+    "核名": "combine_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/078-combine_grid"
+  },
+  {
+    "用例": "combine-2",
+    "层级": ".",
+    "核名": "combine_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/079-combine_grid"
+  },
+  {
+    "用例": "compressor-pool-0",
+    "层级": ".",
+    "核名": "clear_latent",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/080-clear_latent"
+  },
+  {
+    "用例": "compressor-pool-0",
+    "层级": ".",
+    "核名": "pool_state_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/081-pool_state_grid"
+  },
+  {
+    "用例": "compressor-pool-0",
+    "层级": ".",
+    "核名": "publish_compressed_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/082-publish_compressed_grid"
+  },
+  {
+    "用例": "compressor-pool-2",
+    "层级": ".",
+    "核名": "clear_latent",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/080-clear_latent"
+  },
+  {
+    "用例": "compressor-pool-2",
+    "层级": ".",
+    "核名": "pool_state_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/083-pool_state_grid"
+  },
+  {
+    "用例": "compressor-pool-2",
+    "层级": ".",
+    "核名": "publish_compressed_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/084-publish_compressed_grid"
+  },
+  {
+    "用例": "compressor-pool-3",
+    "层级": ".",
+    "核名": "clear_latent",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/080-clear_latent"
+  },
+  {
+    "用例": "compressor-pool-3",
+    "层级": ".",
+    "核名": "pool_state_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/085-pool_state_grid"
+  },
+  {
+    "用例": "compressor-pool-3",
+    "层级": ".",
+    "核名": "publish_compressed_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/086-publish_compressed_grid"
+  },
+  {
+    "用例": "compressor-pool-5",
+    "层级": ".",
+    "核名": "clear_latent",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/080-clear_latent"
+  },
+  {
+    "用例": "compressor-pool-5",
+    "层级": ".",
+    "核名": "pool_state_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/081-pool_state_grid"
+  },
+  {
+    "用例": "compressor-pool-5",
+    "层级": ".",
+    "核名": "publish_compressed_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/082-publish_compressed_grid"
+  },
+  {
+    "用例": "compressor-pool-5",
+    "层级": ".",
+    "核名": "consume_c2a_state",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "window-replay-0",
+    "层级": ".",
+    "核名": "window_kv_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/087-window_kv_grid"
+  },
+  {
+    "用例": "window-replay-0",
+    "层级": ".",
+    "核名": "consume_window_kv",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "collapse_norm_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/005-collapse_norm_grid"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "quantize_bf16_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/007-quantize_bf16_grid"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_q_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/008-project_q_a"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "normalize_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/009-normalize_quant_grid"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_q_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/010-project_q_b"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "query_rope_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/011-query_rope_grid"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_kv",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "window_kv_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/013-window_kv_grid"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_query_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_query_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_index_weight_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/036-project_index_weight_grid"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "reduce_index_weight_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/037-reduce_index_weight_grid"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "classify_pool_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/038-classify_pool_rows"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "plan_runs",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/039-plan_runs"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "score_topk_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "score_topk_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "gather_pool",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/041-gather_pool"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "plan_pool_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/042-plan_pool_rows"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "score_topk_mix__2_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/043-score_topk_mix__2_aic"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "score_topk_mix__2_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/043-score_topk_mix__2_aic"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "sparse_attention_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "sparse_attention_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "rope_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/018-rope_quant_grid"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_o_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/019-project_o_a"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "quantize_bf16_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/020-quantize_bf16_grid__2"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "project_o_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/021-project_o_b"
+  },
+  {
+    "用例": "attn-reindex-dense-0",
+    "层级": "next_levels/l2_decode_c1a_reindex",
+    "核名": "expand_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/022-expand_grid"
+  },
+  {
+    "用例": "o-rope72-0",
+    "层级": ".",
+    "核名": "rope_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/088-rope_quant_grid"
+  },
+  {
+    "用例": "qbranch-0",
+    "层级": ".",
+    "核名": "normalize_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/089-normalize_quant_grid"
+  },
+  {
+    "用例": "qbranch-3",
+    "层级": ".",
+    "核名": "quantize_bf16_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/090-quantize_bf16_grid"
+  },
+  {
+    "用例": "qbranch-3",
+    "层级": ".",
+    "核名": "project_q_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/010-project_q_b"
+  },
+  {
+    "用例": "qbranch-3",
+    "层级": ".",
+    "核名": "query_rope_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/011-query_rope_grid"
+  },
+  {
+    "用例": "qkv-0",
+    "层级": ".",
+    "核名": "quantize_bf16_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/007-quantize_bf16_grid"
+  },
+  {
+    "用例": "qkv-0",
+    "层级": ".",
+    "核名": "project_q_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/008-project_q_a"
+  },
+  {
+    "用例": "qkv-0",
+    "层级": ".",
+    "核名": "project_kv",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "gate-0",
+    "层级": ".",
+    "核名": "quantize_gate_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/091-quantize_gate_grid"
+  },
+  {
+    "用例": "gate-1",
+    "层级": ".",
+    "核名": "route_gate_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/092-route_gate_grid"
+  },
+  {
+    "用例": "shared-proj17-0",
+    "层级": ".",
+    "核名": "project_shared_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/049-project_shared_grid"
+  },
+  {
+    "用例": "shared-proj17-1",
+    "层级": ".",
+    "核名": "project_shared_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/050-project_shared_grid"
+  },
+  {
+    "用例": "index-key-0",
+    "层级": ".",
+    "核名": "publish_index_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/093-publish_index_grid"
+  },
+  {
+    "用例": "index-key-1",
+    "层级": ".",
+    "核名": "publish_index_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/094-publish_index_grid"
+  },
+  {
+    "用例": "index-key-3",
+    "层级": ".",
+    "核名": "publish_index_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/095-publish_index_grid"
+  },
+  {
+    "用例": "index-key-4",
+    "层级": ".",
+    "核名": "publish_index_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/096-publish_index_grid"
+  },
+  {
+    "用例": "o-rope-tail-0",
+    "层级": ".",
+    "核名": "rope_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/097-rope_quant_grid"
+  },
+  {
+    "用例": "init-0",
+    "层级": ".",
+    "核名": "zero_bf16_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/006-zero_bf16_rows"
+  },
+  {
+    "用例": "init-5",
+    "层级": ".",
+    "核名": "zero_bf16_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/006-zero_bf16_rows"
+  },
+  {
+    "用例": "init-8",
+    "层级": ".",
+    "核名": "initialize_routes",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/098-initialize_routes"
+  },
+  {
+    "用例": "shared-act16-0",
+    "层级": ".",
+    "核名": "shared_swiglu_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/099-shared_swiglu_quant_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "collapse_norm_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/005-collapse_norm_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "quantize_bf16_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/007-quantize_bf16_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "project_q_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/008-project_q_a"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "normalize_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/009-normalize_quant_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "project_q_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/010-project_q_b"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "query_rope_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/011-query_rope_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "project_kv",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "window_kv_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/013-window_kv_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "project_c2a_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/056-project_c2a_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "clear_latent",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/057-clear_latent"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "pool_state_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/058-pool_state_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "publish_compressed_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/059-publish_compressed_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "project_index_key_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/053-project_index_key_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "publish_index_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/054-publish_index_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "project_query_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "project_query_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "project_index_weight_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/036-project_index_weight_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "reduce_index_weight_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/037-reduce_index_weight_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "plan_runs",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/039-plan_runs"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "score_topk_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "score_topk_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "sparse_attention_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "sparse_attention_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "rope_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/018-rope_quant_grid"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "project_o_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/019-project_o_a"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "quantize_bf16_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/020-quantize_bf16_grid__2"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "project_o_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/021-project_o_b"
+  },
+  {
+    "用例": "attn-c2a-full-0",
+    "层级": "next_levels/l2_decode_c2a_full",
+    "核名": "expand_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/022-expand_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "zero_bf16_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/006-zero_bf16_rows"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "collapse_norm_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/005-collapse_norm_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "quantize_bf16_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/007-quantize_bf16_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_q_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/008-project_q_a"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "normalize_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/009-normalize_quant_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_q_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/010-project_q_b"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "query_rope_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/011-query_rope_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_kv",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "window_kv_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/013-window_kv_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "swa_queries_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/014-swa_queries_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "swa_queries_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/014-swa_queries_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "rope_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/018-rope_quant_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_o_a",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/019-project_o_a"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "quantize_bf16_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/020-quantize_bf16_grid__2"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_o_b",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/021-project_o_b"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "expand_grid__2",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/022-expand_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_kv__2",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_c2a_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/056-project_c2a_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "clear_latent",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/057-clear_latent"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "pool_state_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/058-pool_state_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "publish_compressed_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/059-publish_compressed_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_index_key_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/053-project_index_key_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "publish_index_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/054-publish_index_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_query_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_query_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_index_weight_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/036-project_index_weight_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "reduce_index_weight_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/037-reduce_index_weight_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "plan_runs",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/039-plan_runs"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "sparse_attention_mix_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "sparse_attention_mix_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/044-sparse_attention_mix_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid__3",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_kv__3",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid__4",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid__5",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_kv__4",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_c1a_compressor",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/051-project_c1a_compressor"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "publish_c1a",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/052-publish_c1a"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_query_grid__2_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_query_grid__2_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix__2_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix__2_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "generate_pool",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/055-generate_pool"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_kv__5",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_query_grid__3_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_query_grid__3_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/035-project_query_grid_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "classify_pool_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/038-classify_pool_rows"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix__3_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix__3_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/040-score_topk_mix_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "gather_pool",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/041-gather_pool"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "plan_pool_rows",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/042-plan_pool_rows"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix__4_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/043-score_topk_mix__2_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "score_topk_mix__4_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/043-score_topk_mix__2_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid__6",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_kv__6",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/012-project_kv"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid__7",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "collapse_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/033-collapse_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "collapse_tail",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/034-collapse_tail"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "normalize_gate_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/060-normalize_gate_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "quantize_gate_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/061-quantize_gate_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "initialize_routes",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/062-initialize_routes"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_gate_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/063-project_gate_grid_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_gate_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/063-project_gate_grid_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "route_gate_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/064-route_gate_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_shared_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/065-project_shared_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "shared_swiglu_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/066-shared_swiglu_quant_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_shared_grid__2",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/067-project_shared_grid__2"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "stage_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/068-stage_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "dispatch_meta_publish",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "dispatch_meta_wait",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "dispatch_meta_finalize",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "dispatch_push",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "combine_notify",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "combine_wait",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "gather_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/069-gather_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_up_worker_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/070-project_up_worker_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_up_worker_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/070-project_up_worker_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "activate_worker",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/071-activate_worker"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_down_worker_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/072-project_down_worker_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "project_down_worker_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/072-project_down_worker_aic"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "ffn_reduce_scatter",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "combine_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/073-combine_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "expand_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/074-expand_grid"
+  },
+  {
+    "用例": "layer2-ep2-0",
+    "层级": "next_levels/l2_decode_layer",
+    "核名": "moe_signal_clear",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "compressor-proj-0",
+    "层级": ".",
+    "核名": "project_c2a_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/100-project_c2a_grid"
+  },
+  {
+    "用例": "compressor-proj-2",
+    "层级": ".",
+    "核名": "project_c2a_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/101-project_c2a_grid"
+  },
+  {
+    "用例": "compressor-proj-3",
+    "层级": ".",
+    "核名": "project_c2a_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/102-project_c2a_grid"
+  },
+  {
+    "用例": "compressor-proj-4",
+    "层级": ".",
+    "核名": "project_c2a_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/103-project_c2a_grid"
+  },
+  {
+    "用例": "dispatch-0",
+    "层级": ".",
+    "核名": "stage_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/104-stage_grid"
+  },
+  {
+    "用例": "dispatch-9",
+    "层级": ".",
+    "核名": "stage_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/068-stage_grid"
+  },
+  {
+    "用例": "dispatch-10",
+    "层级": ".",
+    "核名": "gather_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/105-gather_grid"
+  },
+  {
+    "用例": "dispatch-13",
+    "层级": ".",
+    "核名": "gather_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/106-gather_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "inverse_rms_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/015-inverse_rms_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "project_hf32_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/016-project_hf32_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "coefficients_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/017-coefficients_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "collapse_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/033-collapse_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "collapse_tail",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/034-collapse_tail"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "normalize_gate_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/060-normalize_gate_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "quantize_gate_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/061-quantize_gate_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "initialize_routes",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/062-initialize_routes"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "project_gate_grid_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/107-project_gate_grid_aic"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "project_gate_grid_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/107-project_gate_grid_aic"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "route_gate_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/064-route_gate_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "project_shared_grid",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/065-project_shared_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "shared_swiglu_quant_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/066-shared_swiglu_quant_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "project_shared_grid__2",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/067-project_shared_grid__2"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "stage_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/068-stage_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "dispatch_meta_publish",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "dispatch_meta_wait",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "dispatch_meta_finalize",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "dispatch_push",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "combine_notify",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "combine_wait",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "gather_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/108-gather_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "project_up_worker_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/109-project_up_worker_aic"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "project_up_worker_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/109-project_up_worker_aic"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "activate_worker",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/110-activate_worker"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "project_down_worker_aic",
+    "核类型": "aic",
+    "DSL": true,
+    "导出目录": "generated/external/111-project_down_worker_aic"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "project_down_worker_aiv",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/111-project_down_worker_aic"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "ffn_reduce_scatter",
+    "核类型": "aiv",
+    "DSL": false
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "combine_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/073-combine_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "expand_grid",
+    "核类型": "aiv",
+    "DSL": true,
+    "导出目录": "generated/external/074-expand_grid"
+  },
+  {
+    "用例": "moe-ep2",
+    "层级": "next_levels/l2_moe",
+    "核名": "moe_signal_clear",
+    "核类型": "aiv",
+    "DSL": false
+  }
+]

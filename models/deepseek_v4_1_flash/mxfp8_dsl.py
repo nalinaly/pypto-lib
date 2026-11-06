@@ -78,8 +78,8 @@ def _quant_upward_row(values, payload, codes, row, width):
         rr.vstore_first(codes, scale_offset, code)
 
 
-@cb.kernel
-def quantize_bf16_tile(
+@jit
+def _quantize_bf16_tile(
     source: cb.Tensor, output: cb.Tensor, scales: cb.Tensor,
     num_tokens: cb.ScalarValue, row_tile: cb.ScalarValue,
 ):
@@ -166,30 +166,31 @@ def _mx_project(payload, weight, activation_scale, weight_scale, output, column,
     cb.mem_copy(output[0:valid_rows, None], valid)
 
 
+@cb.kernel
+def quantize_bf16_grid(source: cb.Tensor, payload: cb.Tensor, scales: cb.Tensor, active_rows: cb.ScalarValue):
+    """每个 block 循环处理互不重叠的 M16/K256 量化分块。"""
+    columns = payload.shape[1] // QUANT_TILE
+    tiles = payload.shape[0] // ROW_TILE * columns
+    for work in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row_tile = work // columns
+        column = work % columns
+        row = row_tile * ROW_TILE
+        first = min(row, source.shape[0])
+        live = max(0, min(ROW_TILE, active_rows - row))
+        begin = column * QUANT_TILE
+        src = source[first:first + live, begin:begin + QUANT_TILE]
+        dst = cb.tile_slice(payload, (ROW_TILE, QUANT_TILE), (row_tile, column))
+        offset = row * (payload.shape[1] // MX_GROUP) + column * ROW_TILE * (QUANT_TILE // MX_GROUP)
+        factors = scales[0:1, offset:offset + ROW_TILE * (QUANT_TILE // MX_GROUP)]
+        _quantize_bf16_tile(src, dst, factors, active_rows, row_tile)
+
+
 @pl.jit.inline(auto_scope=False)
 def quantize_matrix(source: pl.Tensor, payload: pl.Tensor, scales: pl.Tensor,
                     active_rows: pl.Scalar[pl.INT32]):
-    """将 BF16 行量化为带填充的数据，以及按 M16 配对存储的 E8M0 缩放值。"""
-    width = pl.tensor.dim(payload, 1)
-    row_tiles = pl.tensor.dim(payload, 0) // ROW_TILE
-    ready = pl.system.task_dummy(deps=[])
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for i in pl.range(TASK_TILE):
-        completed[i] = ready
-    for row_tile in pl.range(row_tiles):
-        for column in pl.parallel(width // QUANT_TILE):
-            t0 = row_tile * ROW_TILE
-            k0 = column * QUANT_TILE
-            rows = pl.max(pl.min(ROW_TILE, active_rows - t0), 0)
-            source_start = pl.min(t0, pl.tensor.dim(source, 0))
-            src = pl.slice(source, [ROW_TILE, QUANT_TILE], [source_start, k0], valid_shape=[rows, QUANT_TILE])
-            dst = pl.slice(payload, [ROW_TILE, QUANT_TILE], [t0, k0])
-            scale_offset = t0 * (width // MX_GROUP) + column * ROW_TILE * (QUANT_TILE // MX_GROUP)
-            factors = pl.slice(scales, [1, ROW_TILE * (QUANT_TILE // MX_GROUP)], [0, scale_offset])
-            work = row_tile * (width // QUANT_TILE) + column
-            previous = completed[work % TASK_TILE]
-            with pl.spmd(1, name_hint="dsl_mxfp8_quant", deps=[previous]) as done:
-                quantize_bf16_tile(src, dst, factors, active_rows, row_tile)
-            completed[work % TASK_TILE] = done
-    joined = pl.system.task_dummy(deps=[completed])
-    return joined
+    """由一组 AIV SPMD 量化所有 M16/K256 分块，并返回整组完成依赖。"""
+    tiles = pl.tensor.dim(payload, 0) // ROW_TILE * (pl.tensor.dim(payload, 1) // QUANT_TILE)
+    workers = pl.max(1, pl.min(TASK_TILE, tiles))
+    with pl.spmd(workers, name_hint="dsl_mxfp8_quant") as done:
+        quantize_bf16_grid(source, payload, scales, active_rows)
+    return done

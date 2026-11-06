@@ -9,12 +9,13 @@
 """使用 CANNBotDSL 实现 C2A 双行池化、归一化、FP4 缓存发布和环形状态更新。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
 import pypto.language as pl
 
 from compressor_vector_dsl import CompressedRow, golden_normalize_latent, normalize_latent
-from config import FLASH as M
+from config import FLASH as M, STATE_CAPACITY
 
 
 # 模型配置
@@ -37,12 +38,12 @@ def clear_latent(latent: cb.Tensor, num_tokens: cb.ScalarValue):
         zero = rr.vdups(0.0, cb.dtypes.bfloat16, mask=clear_mask)
         for col in range(0, HEAD_DIM, VECTOR_TILE * 2):
             rr.vstore(zero_row, col, zero, clear_mask)
-    for token in cb.range(num_tokens):
+    for token in cb.range(cb.get_block_idx(), num_tokens, cb.get_block_num()):
         cb.mem_copy(cb.tile_slice(latent, (1, HEAD_DIM), (token, 0)), zero_row)
 
 
-@cb.kernel
-def pool_state_block(
+@jit
+def _pool_state_block(
     kv: cb.Tensor, score: cb.Tensor, state: cb.Tensor, positions: cb.Tensor,
     weight: cb.Tensor, latent: cb.Tensor, starts: cb.Tensor, requests: cb.Tensor, blocks: cb.Tensor,
     num_tokens: cb.ScalarValue, block: cb.ScalarValue,
@@ -105,8 +106,8 @@ def pool_state_block(
                     cb.mem_copy(cb.tile_slice(state, (1, HEAD_DIM), (target, 1)), current_score)
 
 
-@cb.kernel
-def publish_compressed_page(
+@jit
+def _publish_compressed_page(
     latent: cb.Tensor, positions: cb.Tensor, starts: cb.Tensor, requests: cb.Tensor, blocks: cb.Tensor,
     slots: cb.Tensor, cosine: cb.Tensor, sine: cb.Tensor, cache: cb.Tensor, scales: cb.Tensor,
     num_tokens: cb.ScalarValue, num_blocks: cb.ScalarValue, page: cb.ScalarValue,
@@ -137,34 +138,52 @@ def publish_compressed_page(
 @pl.jit.inline(auto_scope=False)
 def _clear_task(latent: pl.Tensor, active: pl.Scalar[pl.INDEX], ready: pl.Scalar[pl.TASK_ID]):
     """使用显式类型的有效行数调度 latent 初始化。"""
-    with pl.spmd(1, name_hint="dsl_c2a_clear", deps=[ready]) as done:
+    workers = pl.max(1, pl.min(TASK_TILE, active))
+    with pl.spmd(workers, name_hint="dsl_c2a_clear", deps=[ready]) as done:
         clear_latent(latent, active)
     return done
 
 
-@pl.jit.inline(auto_scope=False)
-def _pool_task(
-    kv: pl.Tensor, score: pl.Tensor, state: pl.Tensor, positions: pl.Tensor,
-    weight: pl.Tensor, latent: pl.Tensor, starts: pl.Tensor, requests: pl.Tensor, blocks: pl.Tensor,
-    active: pl.Scalar[pl.INDEX], block: pl.Scalar[pl.INDEX], ready: pl.Scalar[pl.TASK_ID],
-):
-    """提交单个物理状态块的池化和状态更新任务。"""
-    with pl.spmd(1, name_hint="dsl_c2a_pool_state", deps=[ready]) as done:
-        pool_state_block(kv, score, state, positions, weight, latent, starts, requests, blocks, active, block)
-    return done
+@cb.kernel
+def pool_state_grid(kv: cb.Tensor, score: cb.Tensor, state_cache: cb.Tensor, positions: cb.Tensor,
+                    weight: cb.Tensor, latent: cb.Tensor, starts: cb.Tensor, requests: cb.Tensor,
+                    blocks: cb.Tensor, num_tokens: cb.ScalarValue):
+    """同一物理状态块由一个 block 处理，保留先读历史后写状态的顺序。"""
+    active = min(kv.shape[0], max(num_tokens, 0))
+    for block in cb.range(cb.get_block_idx(), state_cache.shape[0], cb.get_block_num()):
+        # 整数索引保留单例轴，显式恢复块内二维布局。
+        block_view = state_cache[block, None, None]
+        state = block_view.view(state_cache.shape[1], 2 * HEAD_DIM)
+        _pool_state_block(kv, score, state, positions, weight, latent, starts, requests, blocks, active, block)
+
+
+@cb.kernel
+def publish_compressed_grid(latent: cb.Tensor, positions: cb.Tensor, starts: cb.Tensor,
+                            requests: cb.Tensor, blocks: cb.Tensor, slots: cb.Tensor,
+                            cosine: cb.Tensor, sine: cb.Tensor, cache: cb.Tensor, scales: cb.Tensor,
+                            active: cb.ScalarValue, num_blocks: cb.ScalarValue):
+    """同一物理页由一个 block 按 token 顺序发布。"""
+    pages = cache.shape[0] // PAGE_SIZE
+    for page in cb.range(cb.get_block_idx(), pages, cb.get_block_num()):
+        begin = page * PAGE_SIZE
+        payload = cache[begin:begin + PAGE_SIZE, None]
+        factors = scales[begin:begin + PAGE_SIZE, None]
+        _publish_compressed_page(latent, positions, starts, requests, blocks, slots, cosine, sine,
+                                 payload, factors, active, num_blocks, page)
 
 
 @pl.jit.inline(auto_scope=False)
 def _publish_task(
     latent: pl.Tensor, positions: pl.Tensor, starts: pl.Tensor, requests: pl.Tensor, blocks: pl.Tensor,
     slots: pl.Tensor, cosine: pl.Tensor, sine: pl.Tensor, cache: pl.Tensor, scales: pl.Tensor,
-    active: pl.Scalar[pl.INDEX], num_blocks: pl.Scalar[pl.INDEX], page: pl.Scalar[pl.INDEX],
-    ready: pl.Scalar[pl.TASK_ID],
+    active: pl.Scalar[pl.INDEX], num_blocks: pl.Scalar[pl.INDEX], ready: pl.Scalar[pl.TASK_ID],
 ):
-    """提交单个压缩缓存物理页的旋转和量化发布任务。"""
-    with pl.spmd(1, name_hint="dsl_c2a_publish", deps=[ready]) as done:
-        publish_compressed_page(latent, positions, starts, requests, blocks, slots, cosine, sine,
-                                cache, scales, active, num_blocks, page)
+    """保留有效行及状态块数量的标量类型，提交全部压缩缓存页。"""
+    pages = pl.tensor.dim(cache, 0) // PAGE_SIZE
+    workers = pl.max(1, pl.min(TASK_TILE, pages))
+    with pl.spmd(workers, name_hint="dsl_c2a_publish", deps=[ready]) as done:
+        publish_compressed_grid(latent, positions, starts, requests, blocks, slots, cosine, sine,
+                                cache, scales, active, num_blocks)
     return done
 
 
@@ -176,37 +195,19 @@ def c2a_compressor_publish(
     state_ready: pl.Scalar[pl.TASK_ID], cosine: pl.Tensor, sine: pl.Tensor, slots: pl.Tensor,
     cache: pl.Tensor, scales: pl.Tensor,
 ):
-    """由 simpler 调度互斥状态块和缓存页，并返回所有写入的完成依赖。"""
-    rows = pl.tensor.dim(kv_proj, 0)
-    active = pl.min(rows, pl.max(pl.cast(num_tokens, pl.INDEX), 0))
+    """依次提交清零、按物理状态块池化和按物理页发布三个 SPMD 阶段。"""
+    active = pl.min(pl.tensor.dim(kv_proj, 0), pl.max(pl.cast(num_tokens, pl.INDEX), 0))
     cleared = _clear_task(latent, active, state_ready)
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for slot in pl.range(TASK_TILE):
-        completed[slot] = cleared
     num_blocks = pl.tensor.dim(state_cache, 0)
-    capacity = pl.tensor.dim(state_cache, 1)
-    for block in pl.parallel(num_blocks):
-        state_view = pl.slice(state_cache, [1, capacity, 2 * HEAD_DIM], [block, 0, 0])
-        state = pl.reshape(state_view, [capacity, 2 * HEAD_DIM])
-        previous = completed[block % TASK_TILE]
-        done = _pool_task(kv_proj, score_proj, state, position_ids, norm_weight, latent,
-                          query_start_loc, token_to_req_indices, state_block_table, active, block, previous)
-        completed[block % TASK_TILE] = done
-    pooled = pl.system.task_dummy(deps=[completed])
-    page_completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for slot in pl.range(TASK_TILE):
-        page_completed[slot] = pooled
+    workers = pl.max(1, pl.min(TASK_TILE, num_blocks))
+    with pl.spmd(workers, name_hint="dsl_c2a_pool_state", deps=[cleared]) as pooled:
+        pool_state_grid(kv_proj, score_proj, state_cache, position_ids, norm_weight, latent,
+                        query_start_loc, token_to_req_indices, state_block_table, num_tokens)
     pages = pl.tensor.dim(cache, 0)
-    payload_rows = pl.reshape(cache, [pages * PAGE_SIZE, HEAD_DIM // 2])
-    scale_rows = pl.reshape(scales, [pages * PAGE_SIZE, HEAD_DIM // CACHE_GROUP])
-    for page in pl.parallel(pages):
-        payload = pl.slice(payload_rows, [PAGE_SIZE, HEAD_DIM // 2], [page * PAGE_SIZE, 0])
-        factors = pl.slice(scale_rows, [PAGE_SIZE, HEAD_DIM // CACHE_GROUP], [page * PAGE_SIZE, 0])
-        previous = page_completed[page % TASK_TILE]
-        done = _publish_task(latent, position_ids, query_start_loc, token_to_req_indices, state_block_table,
-                             slots, cosine, sine, payload, factors, active, num_blocks, page, previous)
-        page_completed[page % TASK_TILE] = done
-    published = pl.system.task_dummy(deps=[page_completed])
+    payload = pl.reshape(cache, [pages * PAGE_SIZE, HEAD_DIM // 2])
+    factors = pl.reshape(scales, [pages * PAGE_SIZE, HEAD_DIM // CACHE_GROUP])
+    published = _publish_task(latent, position_ids, query_start_loc, token_to_req_indices, state_block_table,
+                              slots, cosine, sine, payload, factors, active, num_blocks, pooled)
     return published
 
 
@@ -363,7 +364,7 @@ def build_compression_specs(rows=17, active=15, *, random_scores=False, shared_b
         positions[start:end] = torch.arange(end - start, dtype=torch.int32) + 3 + request * 2
         requests[start:end] = request
     blocks = torch.tensor([[2], [0], [2 if shared_block else 1]], dtype=torch.int32)
-    state = torch.randn(4, 4, 2 * HEAD_DIM, generator=generator)
+    state = torch.randn(4, STATE_CAPACITY, 2 * HEAD_DIM, generator=generator)
     if not random_scores:
         state[:, :, HEAD_DIM:].zero_()
     if rows >= 17:

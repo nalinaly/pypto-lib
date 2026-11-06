@@ -208,7 +208,11 @@ def dispatch(
             if dst != my_rank:
                 pld.system.notify(target=data_arrived, peer=dst, offsets=[my_rank, 0, 0], value=moe_epoch, op=pld.NotifyOp.Set)
 
-    with pl.at(level=pl.Level.CORE_GROUP, name_hint="dispatch_wait", deps=[_publish_tid]) as _wait_tid:
+    # 与上游一致：等待锚定到数据发送，通知与等待可以独立完成。
+    with pl.at(
+        level=pl.Level.CORE_GROUP, name_hint="dispatch_wait",
+        deps=[_push_tid], no_dep_args=[data_arrived],
+    ) as _wait_tid:
         for src in pl.range(N_RANKS):
             if src != my_rank:
                 pld.system.defer_wait(signal=data_arrived, offsets=[src, 0, 0], expected=moe_epoch, cmp=pld.WaitCmp.Ge)
@@ -219,7 +223,7 @@ def dispatch(
     return gather_local(
         recv_x, recv_scale, recv_weights, recv_routes, recv_meta_local, recv_count_out,
         flat_x, recv_scale_out, flat_weights, flat_routes,
-        _wait_tid, _push_tid, _meta_tid, AUX_PAD, IDX_PAD,
+        _wait_tid, _publish_tid, _meta_tid, AUX_PAD, IDX_PAD,
     )
 
 
@@ -239,12 +243,17 @@ def combine_scattered(
             if peer != my_rank:
                 pld.system.notify(target=combine_arrived, peer=peer, offsets=[my_rank, 0, 0], value=moe_epoch, op=pld.NotifyOp.Set)
 
-    with pl.at(level=pl.Level.CORE_GROUP, name_hint="combine_wait", deps=[notify_tid]) as _cwait_tid:
+    with pl.at(
+        level=pl.Level.CORE_GROUP, name_hint="combine_wait",
+        deps=[scatter_done], no_dep_args=[combine_arrived],
+    ) as _cwait_tid:
         for src in pl.range(N_RANKS):
             if src != my_rank:
                 pld.system.defer_wait(signal=combine_arrived, offsets=[src, 0, 0], expected=moe_epoch, cmp=pld.WaitCmp.Ge)
 
-    return combine_local(shared_output, routed_output, ffn_out, num_tokens, _cwait_tid)
+    # 本地归约同时等待远端到达和本端通知，防止下一轮清理抢先发生。
+    ready = pl.system.task_dummy(deps=[_cwait_tid, notify_tid])
+    return combine_local(shared_output, routed_output, ffn_out, num_tokens, ready)
 
 
 @pl.jit.inline(auto_scope=False)
@@ -255,7 +264,7 @@ def moe(
     hc_ffn_scale: pl.Tensor[[3], pl.FP32],
     hc_ffn_base: pl.Tensor[[MIX_HC], pl.FP32],
     norm_weight: pl.Tensor[[D], pl.BF16],
-    gate_weight: pl.Tensor[[N_EXPERTS, D], pl.FP32],
+    gate_weight: pl.Tensor[[N_EXPERTS, D], pl.BF16],
     correction_bias: pl.Tensor[[N_EXPERTS], pl.FP32],
     routed_w1: pl.Tensor[[N_LOCAL_EXPERTS, MX_W1_PACKED_ROWS, MX_PACKED_LANE_COLS], pl.UINT8],
     routed_w1_scale: pl.Tensor[[N_LOCAL_EXPERTS * (D // MX_GROUP), MOE_INTER], pl.FP8E8M0, pl.MX_B_NN],
@@ -364,7 +373,7 @@ def l2_moe(
     hc_ffn_scale: pl.Tensor[[3], pl.FP32],
     hc_ffn_base: pl.Tensor[[MIX_HC], pl.FP32],
     norm_weight: pl.Tensor[[D], pl.BF16],
-    gate_weight: pl.Tensor[[N_EXPERTS, D], pl.FP32],
+    gate_weight: pl.Tensor[[N_EXPERTS, D], pl.BF16],
     correction_bias: pl.Tensor[[N_EXPERTS], pl.FP32],
     routed_w1: pl.Tensor[[N_LOCAL_EXPERTS, MX_W1_PACKED_ROWS, MX_PACKED_LANE_COLS], pl.UINT8],
     routed_w1_scale: pl.Tensor[[N_LOCAL_EXPERTS * (D // MX_GROUP), MOE_INTER], pl.FP8E8M0, pl.MX_B_NN],
@@ -424,7 +433,7 @@ def l3_moe(
     hc_ffn_scale: pl.Tensor[[EP_SIZE, 3], pl.FP32],
     hc_ffn_base: pl.Tensor[[EP_SIZE, MIX_HC], pl.FP32],
     norm_weight: pl.Tensor[[EP_SIZE, D], pl.BF16],
-    gate_weight: pl.Tensor[[EP_SIZE, N_EXPERTS, D], pl.FP32],
+    gate_weight: pl.Tensor[[EP_SIZE, N_EXPERTS, D], pl.BF16],
     correction_bias: pl.Tensor[[EP_SIZE, N_EXPERTS], pl.FP32],
     routed_w1: pl.Tensor[[EP_SIZE, N_LOCAL_EXPERTS, MX_W1_PACKED_ROWS, MX_PACKED_LANE_COLS], pl.UINT8],
     routed_w1_scale: pl.Tensor[[EP_SIZE, N_LOCAL_EXPERTS * (D // MX_GROUP), MOE_INTER], pl.FP8E8M0],
@@ -528,7 +537,7 @@ def build_moe_specs(num_tokens=MOE_TOKENS, *, initialize=True):
     torch.manual_seed(41)
     x = (torch.randn(EP_SIZE, MOE_TOKENS, D) * 0.25).to(torch.bfloat16)
     norm_weight = torch.ones(EP_SIZE, D, dtype=torch.bfloat16)
-    gate_weight = torch.randn(N_EXPERTS, D) / D ** 0.5
+    gate_weight = (torch.randn(N_EXPERTS, D) / D ** 0.5).bfloat16()
     gate_weight = gate_weight.unsqueeze(0).expand(EP_SIZE, -1, -1).contiguous()
     correction_bias = _route_bias().unsqueeze(0).expand(EP_SIZE, -1).contiguous()
 
@@ -609,7 +618,7 @@ def build_moe_specs(num_tokens=MOE_TOKENS, *, initialize=True):
             specs.append(ScalarSpec(name, torch.int32, 1, compile_runtime=True))
             continue
         dtype = torch.float32
-        if name == "norm_weight" or name == "x_mixed":
+        if name in ("norm_weight", "x_mixed", "gate_weight"):
             dtype = torch.bfloat16
         elif name == "num_tokens" or name == "force_topk":
             dtype = torch.int32

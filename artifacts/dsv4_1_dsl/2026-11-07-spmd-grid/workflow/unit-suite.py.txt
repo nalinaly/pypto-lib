@@ -1,0 +1,31 @@
+"""顺序运行本轮受影响的既有叶子验证入口。"""
+import argparse,json,os,subprocess
+from pathlib import Path
+work=Path(__file__).resolve().parent
+model=work.parents[1]/'pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash'
+parser=argparse.ArgumentParser()
+parser.add_argument('--compile-only',action='store_true')
+parser.add_argument('--labels',default='')
+parser.add_argument('--cases',default='unit-cases.json')
+parser.add_argument('-d','--device')
+args=parser.parse_args()
+selected=set(args.labels.split(',')) if args.labels else None
+if not args.compile_only and not os.environ.get('TASK_DEVICE'):
+    raise SystemExit('设备验证必须通过 task-submit')
+failures=[]
+for label,filename,flags in json.loads((work/args.cases).read_text()):
+    if selected and label not in selected:continue
+    suffix='compile' if args.compile_only else 'device'
+    log=work/f'unit-{label}-{suffix}.log'
+    command=['bash',str(work/'run-case.sh'),str(work/'run-entry.py'),'--label',label,'--entry',str(model/filename),*flags]
+    command+=['--compile-only'] if args.compile_only else ['-d',os.environ['TASK_DEVICE']]
+    print(f'[{suffix}] {label}',flush=True)
+    with log.open('w') as output:
+        result=subprocess.run(command,stdout=output,stderr=subprocess.STDOUT)
+    if result.returncode:
+        failures.append(label)
+        print(log.read_text()[-3500:],flush=True)
+        if not args.compile_only:
+            break
+print('失败入口：'+str(failures),flush=True)
+if failures:raise SystemExit(1)

@@ -1,0 +1,5618 @@
+{
+  "sites": [
+    {
+      "file": "q_branch_dsl.py",
+      "line": 153,
+      "fn": "q_branch_dsl.normalize_quant",
+      "blocks": "workers",
+      "hint": "'dsl_q_norm_quant'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "qkv_proj_rope.q_proj_rope",
+        "qkv_proj_rope.q_norm_validation"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "q_branch_dsl.py",
+      "line": 166,
+      "fn": "q_branch_dsl.qb_projection",
+      "blocks": "workers",
+      "hint": "'dsl_q_proj_b'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "qkv_proj_rope.q_proj_rope",
+        "qkv_proj_rope.qb_rope_validation"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "q_branch_dsl.py",
+      "line": 196,
+      "fn": "q_branch_dsl.query_rope",
+      "blocks": "workers",
+      "hint": "'dsl_q_rope'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "qkv_proj_rope.q_proj_rope",
+        "qkv_proj_rope.qb_rope_validation"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "qkv_proj_dsl.py",
+      "line": 72,
+      "fn": "qkv_proj_dsl.qa_projection",
+      "blocks": "Q_LORA // CUBE_TILE",
+      "hint": "'dsl_q_proj_a'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "qkv_proj_dsl.input_projection_validation",
+        "qkv_proj_rope.q_proj_rope"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "qkv_proj_dsl.py",
+      "line": 85,
+      "fn": "qkv_proj_dsl.kv_proj",
+      "blocks": "workers",
+      "hint": "'dsl_kv_proj'",
+      "loops": [],
+      "sync_start": "True",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "dspark_context_kv.dspark_context_kv",
+        "qkv_proj_dsl.input_projection_validation",
+        "dspark_attention.dspark_attention",
+        "decode_c1a_reuse.decode_c1a_reuse",
+        "prefill_c2a_full.prefill_c2a_full_attention",
+        "prefill_swa.prefill_swa_attention",
+        "prefill_c2a_reuse.prefill_c2a_reuse_attention",
+        "decode_c1a_full.decode_c1a_full",
+        "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+        "decode_c2a_reuse.decode_c2a_reuse",
+        "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+        "decode_c1a_reindex.decode_c1a_reindex",
+        "decode_c2a_full.decode_c2a_full",
+        "decode_swa.decode_swa",
+        "prefill_c1a_full.prefill_c1a_full_attention"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "hc.py",
+      "line": 56,
+      "fn": "hc.hc_sinkhorn",
+      "blocks": "workers",
+      "hint": "'dsl_mhc_sinkhorn'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "hc.hc_pre",
+        "hc.l2_hc_sinkhorn",
+        "decode_c1a_reuse.decode_c1a_reuse",
+        "decode_c1a_full.decode_c1a_full",
+        "decode_c2a_reuse.decode_c2a_reuse",
+        "decode_c1a_reindex.decode_c1a_reindex",
+        "decode_c2a_full.decode_c2a_full",
+        "decode_swa.decode_swa"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "hc.py",
+      "line": 70,
+      "fn": "hc.hc_project_into",
+      "blocks": "rms_workers",
+      "hint": "'dsl_mhc_rms'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "hc.hc_project",
+        "hc.l2_hc_project",
+        "hc.l2_hc_project_fp32"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "hc.py",
+      "line": 77,
+      "fn": "hc.hc_project_into",
+      "blocks": "workers",
+      "hint": "'dsl_mhc_hf32'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "hc.hc_project",
+        "hc.l2_hc_project",
+        "hc.l2_hc_project_fp32"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "hc.py",
+      "line": 80,
+      "fn": "hc.hc_project_into",
+      "blocks": "t_linear // LINEAR_T_TILE * LINEAR_OK",
+      "hint": "'mhc_linear'",
+      "loops": [
+        "task in pl.spmd(t_linear // LINEAR_T_TILE * LINEAR_OK, name_hint='mhc_linear')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "hc.hc_project",
+        "hc.l2_hc_project",
+        "hc.l2_hc_project_fp32"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "hc.py",
+      "line": 129,
+      "fn": "hc.hc_head",
+      "blocks": "workers",
+      "hint": "'dsl_hc_collapse'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "hc.hc_pre",
+        "hc.l2_hc_head",
+        "prefill_fwd.l2_prefill_fwd",
+        "lm_head._final_output",
+        "dspark_drafter._dspark_drafter"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "hc.py",
+      "line": 136,
+      "fn": "hc.hc_head",
+      "blocks": "1",
+      "hint": "'dsl_hc_collapse_tail'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "hc.hc_pre",
+        "hc.l2_hc_head",
+        "prefill_fwd.l2_prefill_fwd",
+        "lm_head._final_output",
+        "dspark_drafter._dspark_drafter"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "hc.py",
+      "line": 148,
+      "fn": "hc.hc_head_norm",
+      "blocks": "workers",
+      "hint": "'dsl_hc_collapse_norm'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "hc.l2_hc_head_norm",
+        "decode_c1a_reuse.decode_c1a_reuse",
+        "decode_c1a_full.decode_c1a_full",
+        "decode_c2a_reuse.decode_c2a_reuse",
+        "decode_c1a_reindex.decode_c1a_reindex",
+        "decode_c2a_full.decode_c2a_full",
+        "decode_swa.decode_swa"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "hc.py",
+      "line": 186,
+      "fn": "hc.hc_post",
+      "blocks": "workers",
+      "hint": "'dsl_hc_post'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "hc.l2_hc_post",
+        "decode_c1a_reuse.decode_c1a_reuse",
+        "prefill_fwd.l2_prefill_fwd",
+        "decode_moe.moe",
+        "prefill_c2a_reuse.prefill_c2a_reuse",
+        "o_proj.o_proj_with_hc_validation",
+        "prefill_moe.prefill_moe",
+        "prefill_moe.prefill_ffn_restore",
+        "dspark_drafter.draft_layer",
+        "decode_c1a_full.decode_c1a_full",
+        "prefill_c1a_reuse.prefill_c1a_reuse",
+        "decode_c2a_reuse.decode_c2a_reuse",
+        "prefill_c1a_reindex.prefill_c1a_reindex",
+        "decode_c1a_reindex.decode_c1a_reindex",
+        "decode_c2a_full.decode_c2a_full",
+        "decode_swa.decode_swa",
+        "prefill_c1a_full.prefill_c1a_full"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "hc.py",
+      "line": 212,
+      "fn": "hc.prefill_sp_post",
+      "blocks": "tokens * HC_MULT",
+      "hint": "'sp_mhc_post'",
+      "loops": [
+        "block in pl.spmd(tokens * HC_MULT, name_hint='sp_mhc_post')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c2a_full.prefill_c2a_full_sp",
+        "prefill_swa.prefill_swa",
+        "prefill_c2a_reuse.prefill_c2a_reuse_sp",
+        "prefill_c1a_reuse.l2_prefill_c1a_reuse_sharded",
+        "prefill_c1a_reindex.l2_prefill_c1a_reindex_sharded",
+        "prefill_c1a_full.l2_prefill_c1a_full_sharded"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "hc.py",
+      "line": 224,
+      "fn": "hc.prefill_sp_post",
+      "blocks": "tokens",
+      "hint": "'sp_mix_zero_padding'",
+      "loops": [
+        "row in pl.spmd(tokens, name_hint='sp_mix_zero_padding')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c2a_full.prefill_c2a_full_sp",
+        "prefill_swa.prefill_swa",
+        "prefill_c2a_reuse.prefill_c2a_reuse_sp",
+        "prefill_c1a_reuse.l2_prefill_c1a_reuse_sharded",
+        "prefill_c1a_reindex.l2_prefill_c1a_reindex_sharded",
+        "prefill_c1a_full.l2_prefill_c1a_full_sharded"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_markov.py",
+      "line": 101,
+      "fn": "dspark_markov.markov_head",
+      "blocks": "batch",
+      "hint": "'dspark_markov_embedding'",
+      "loops": [
+        "request in pl.spmd(batch, name_hint='dspark_markov_embedding')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_markov._sample_step"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_markov.py",
+      "line": 108,
+      "fn": "dspark_markov.markov_head",
+      "blocks": "MARKOV_CORES",
+      "hint": "'dspark_markov_bias'",
+      "loops": [
+        "worker in pl.spmd(MARKOV_CORES, name_hint='dspark_markov_bias')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_markov._sample_step"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_markov.py",
+      "line": 140,
+      "fn": "dspark_markov.markov_greedy_step",
+      "blocks": "batch",
+      "hint": "'dspark_markov_greedy'",
+      "loops": [
+        "worker in pl.spmd(batch, name_hint='dspark_markov_greedy')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_markov._sample_step"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_markov.py",
+      "line": 201,
+      "fn": "dspark_markov._sample_step",
+      "blocks": "MARKOV_CORES",
+      "hint": "'dspark_markov_logits_step'",
+      "loops": [
+        "worker in pl.spmd(MARKOV_CORES, name_hint='dspark_markov_logits_step')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_markov._markov_sample"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_markov.py",
+      "line": 209,
+      "fn": "dspark_markov._sample_step",
+      "blocks": "MARKOV_CORES",
+      "hint": "'dspark_markov_hidden_step'",
+      "loops": [
+        "worker in pl.spmd(MARKOV_CORES, name_hint='dspark_markov_hidden_step')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_markov._markov_sample"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_markov.py",
+      "line": 218,
+      "fn": "dspark_markov._sample_step",
+      "blocks": "1",
+      "hint": "'dspark_markov_advance'",
+      "loops": [
+        "worker in pl.spmd(1, name_hint='dspark_markov_advance')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_markov._markov_sample"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_markov.py",
+      "line": 245,
+      "fn": "dspark_markov._markov_sample",
+      "blocks": "1",
+      "hint": "'dspark_markov_anchor'",
+      "loops": [
+        "worker in pl.spmd(1, name_hint='dspark_markov_anchor')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "dspark_markov.py",
+      "line": 340,
+      "fn": "dspark_markov._markov_sample_from_hidden",
+      "blocks": "(rows + 7) // 8",
+      "hint": "'dspark_final_norm'",
+      "loops": [
+        "block in pl.spmd((rows + 7) // 8, name_hint='dspark_final_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "dspark_markov.py",
+      "line": 350,
+      "fn": "dspark_markov._markov_sample_from_hidden",
+      "blocks": "MAX_LOGIT_ROWS",
+      "hint": "'dspark_logit_rows'",
+      "loops": [
+        "chunk in pl.range(chunks)",
+        "row in pl.spmd(MAX_LOGIT_ROWS, name_hint='dspark_logit_rows')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "dspark_markov.py",
+      "line": 371,
+      "fn": "dspark_markov._markov_sample_from_hidden",
+      "blocks": "MAX_LOGIT_ROWS",
+      "hint": "'dspark_pack_logits'",
+      "loops": [
+        "chunk in pl.range(chunks)",
+        "row in pl.spmd(MAX_LOGIT_ROWS, name_hint='dspark_pack_logits')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "dspark_markov.py",
+      "line": 379,
+      "fn": "dspark_markov._markov_sample_from_hidden",
+      "blocks": "batch",
+      "hint": "'dspark_markov_anchor'",
+      "loops": [
+        "request in pl.spmd(batch, name_hint='dspark_markov_anchor')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "dspark_attention.py",
+      "line": 44,
+      "fn": "dspark_attention.gather_dspark_window",
+      "blocks": "num_tokens * (DSPARK_SWA_INDEX_WIDTH // 16)",
+      "hint": "'dspark_cache_gather'",
+      "loops": [
+        "block in pl.spmd(num_tokens * (DSPARK_SWA_INDEX_WIDTH // 16), name_hint='dspark_cache_gather')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_attention.dspark_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_attention.py",
+      "line": 76,
+      "fn": "dspark_attention.attend_dspark_window",
+      "blocks": "num_tokens * (LOCAL_H // M_TILE)",
+      "hint": "'dspark_online_attention'",
+      "loops": [
+        "block in pl.spmd(num_tokens * (LOCAL_H // M_TILE), name_hint='dspark_online_attention')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_attention.dspark_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 91,
+      "fn": "prefill_indexer.publish_index_cache",
+      "blocks": "num_tokens",
+      "hint": "'c1a_index_publish'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.publish_c1a_index_key"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 177,
+      "fn": "prefill_indexer.quantize_index_query",
+      "blocks": "32",
+      "hint": "'c1a_index_query_fp4_as_fp8'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[entry_deps[0]]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.prepare_prefill_index_query"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 359,
+      "fn": "prefill_indexer._index_rope",
+      "blocks": "workers",
+      "hint": "'prefill_index_rope'",
+      "loops": [
+        "worker in pl.spmd(workers, name_hint='prefill_index_rope')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.prepare_prefill_index_query",
+        "prefill_indexer.publish_c1a_index_key",
+        "prefill_indexer.publish_c2a_index_key"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 397,
+      "fn": "prefill_indexer.project_index_weights",
+      "blocks": "(num_tokens + M_TILE - 1) // M_TILE",
+      "hint": "'c1a_index_weights_scale'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.prepare_prefill_index_query"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 485,
+      "fn": "prefill_indexer._prefill_index_scores",
+      "blocks": "32",
+      "hint": "'prefill_index_score_clear'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.prefill_indexer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 502,
+      "fn": "prefill_indexer._prefill_index_scores",
+      "blocks": "32",
+      "hint": "'prefill_index_mx_scores'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[plan_tid, clear_tid]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.prefill_indexer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 711,
+      "fn": "prefill_indexer._select_c1a_topk",
+      "blocks": "num_tokens",
+      "hint": "'prefill_index_topk_groups'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.prefill_indexer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 734,
+      "fn": "prefill_indexer._select_c1a_topk",
+      "blocks": "num_tokens",
+      "hint": "'prefill_index_topk_merge'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[group_tid]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.prefill_indexer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 777,
+      "fn": "prefill_indexer._select_c2a_topk",
+      "blocks": "num_tokens",
+      "hint": "'prefill_c2a_topk'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.prefill_indexer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 850,
+      "fn": "prefill_indexer.publish_index_key",
+      "blocks": "num_tokens",
+      "hint": "'c2a_index_publish'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[cache_ready]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.publish_c2a_index_key"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 909,
+      "fn": "prefill_indexer.prefill_index_key_project",
+      "blocks": "norm_blocks",
+      "hint": "'prefill_c2a_index_norm'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[pool_ready]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.publish_c2a_index_key"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 943,
+      "fn": "prefill_indexer.publish_c1a_index_key",
+      "blocks": "pl.max(1, norm_blocks)",
+      "hint": "'attention_rmsnorm'",
+      "loops": [
+        "norm_worker in pl.spmd(pl.max(1, norm_blocks), name_hint='attention_rmsnorm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c1a_full.prefill_publish_decoder"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_indexer.py",
+      "line": 996,
+      "fn": "prefill_indexer._clear_inactive_pool",
+      "blocks": "32",
+      "hint": "'prefill_inactive_pool_ids'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.prefill_indexer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "swa_dsl.py",
+      "line": 182,
+      "fn": "swa_dsl.swa_attention_dsl",
+      "blocks": "workers",
+      "hint": "'dsl_swa'",
+      "loops": [],
+      "sync_start": "True",
+      "deps": "[source_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "sparse_attention.swa_attention_partial"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "gate.py",
+      "line": 71,
+      "fn": "gate.gate_normalized",
+      "blocks": "T_PAD // GATE_INPUT_TILE",
+      "hint": "'gate_normalized_input'",
+      "loops": [
+        "block in pl.spmd(T_PAD // GATE_INPUT_TILE, name_hint='gate_normalized_input')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_moe.prefill_moe",
+        "prefill_moe.prefill_moe_sublayer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "compressor_pool_dsl.py",
+      "line": 142,
+      "fn": "compressor_pool_dsl._clear_task",
+      "blocks": "workers",
+      "hint": "'dsl_c2a_clear'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "compressor_pool_dsl.c2a_compressor_publish"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "compressor_pool_dsl.py",
+      "line": 184,
+      "fn": "compressor_pool_dsl._publish_task",
+      "blocks": "workers",
+      "hint": "'dsl_c2a_publish'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "compressor_pool_dsl.c2a_compressor_publish"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "compressor_pool_dsl.py",
+      "line": 203,
+      "fn": "compressor_pool_dsl.c2a_compressor_publish",
+      "blocks": "workers",
+      "hint": "'dsl_c2a_pool_state'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[cleared]",
+      "decode_reachable": true,
+      "callers": [
+        "compressor_pool_dsl.validate_compression",
+        "compressor_pool_dsl.validate_replay",
+        "prefill_c2a_full.prefill_c2a_full_attention",
+        "decode_c2a_full.decode_c2a_full"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "engram.py",
+      "line": 71,
+      "fn": "engram.engram_cast_to_fp32",
+      "blocks": "(rows + T_TILE - 1) // T_TILE * (width // N_TILE)",
+      "hint": "'engram_widen'",
+      "loops": [
+        "block in pl.spmd((rows + T_TILE - 1) // T_TILE * (width // N_TILE), name_hint='engram_widen')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "engram.engram_from_rows",
+        "engram.engram",
+        "engram.engram_tp"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "engram.py",
+      "line": 94,
+      "fn": "engram.engram_gate",
+      "blocks": "t_blocks * HC_MULT",
+      "hint": "'engram_gate'",
+      "loops": [
+        "block in pl.spmd(t_blocks * HC_MULT, name_hint='engram_gate')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "engram.engram_from_rows",
+        "engram.engram",
+        "engram.engram_tp"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "engram.py",
+      "line": 173,
+      "fn": "engram.engram",
+      "blocks": "t_blocks * n_blocks",
+      "hint": "'engram_matmul'",
+      "loops": [
+        "block in pl.spmd(t_blocks * n_blocks, name_hint='engram_matmul')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "engram.l2_engram"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "engram.py",
+      "line": 276,
+      "fn": "engram.engram_tp",
+      "blocks": "t_blocks",
+      "hint": "'engram_tp_gather'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "engram.l2_engram_tp"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "engram.py",
+      "line": 346,
+      "fn": "engram.engram_tp",
+      "blocks": "t_blocks * n_blocks",
+      "hint": "'engram_tp_matmul'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[wait_tid]",
+      "decode_reachable": false,
+      "callers": [
+        "engram.l2_engram_tp"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_fwd.py",
+      "line": 379,
+      "fn": "prefill_fwd._prefill_moe",
+      "blocks": "1",
+      "hint": "'prefill_moe_rows'",
+      "loops": [
+        "round_id in pl.range(rounds)"
+      ],
+      "sync_start": "False",
+      "deps": "[round_completion[0]]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd.l2_prefill_fwd"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_fwd.py",
+      "line": 400,
+      "fn": "prefill_fwd._prefill_moe",
+      "blocks": "32",
+      "hint": "'prefill_moe_results'",
+      "loops": [
+        "round_id in pl.range(rounds)"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd.l2_prefill_fwd"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_fwd.py",
+      "line": 410,
+      "fn": "prefill_fwd._prefill_moe",
+      "blocks": "1",
+      "hint": "'prefill_moe_pre_mix'",
+      "loops": [
+        "round_id in pl.range(rounds)"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd.l2_prefill_fwd"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_fwd.py",
+      "line": 642,
+      "fn": "prefill_fwd.l2_prefill_fwd",
+      "blocks": "(norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "layer in pl.range(N_LAYERS)",
+        "norm_block in pl.spmd((norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd.l3_prefill_fwd"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_fwd.py",
+      "line": 678,
+      "fn": "prefill_fwd.l2_prefill_fwd",
+      "blocks": "(norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "layer in pl.range(N_LAYERS)",
+        "norm_block in pl.spmd((norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd.l3_prefill_fwd"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_c2a_full.py",
+      "line": 296,
+      "fn": "prefill_c2a_full.prefill_c2a_full_sp",
+      "blocks": "(hc_norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "hc_norm_block in pl.spmd((hc_norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c2a_full.l2_prefill_c2a_full"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_c2a_full.py",
+      "line": 304,
+      "fn": "prefill_c2a_full.prefill_c2a_full_sp",
+      "blocks": "group_tokens",
+      "hint": "'sp_topk_padding'",
+      "loops": [
+        "row in pl.spmd(group_tokens, name_hint='sp_topk_padding')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c2a_full.l2_prefill_c2a_full"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 120,
+      "fn": "sparse_attention.gather_window_batched",
+      "blocks": "workers",
+      "hint": "'swa_gather'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "sparse_attention.swa_attention_partial"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 202,
+      "fn": "sparse_attention.gather_window_packed544",
+      "blocks": "workers",
+      "hint": "'swa_gather_packed'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "sparse_attention._swa_attention_packed_partial"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 293,
+      "fn": "sparse_attention.attend_window_tiled",
+      "blocks": "workers",
+      "hint": "'swa_attn'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "sparse_attention.swa_attention_partial",
+        "sparse_attention._swa_attention_packed_partial"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 379,
+      "fn": "sparse_attention.decode_shared_cache",
+      "blocks": "workers",
+      "hint": "'swa_decode_cache'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "sparse_attention.swa_attention_partial"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 409,
+      "fn": "sparse_attention.decode_shared_cache_packed",
+      "blocks": "workers",
+      "hint": "'swa_decode_packed'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "sparse_attention._swa_attention_packed_partial"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 449,
+      "fn": "sparse_attention.analyze_index_runs",
+      "blocks": "workers",
+      "hint": "'swa_plan_runs'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "sparse_attention.swa_attention_partial",
+        "sparse_attention._swa_attention_packed_partial",
+        "prefill_swa.prefill_swa_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 502,
+      "fn": "sparse_attention.decode_shared_cache_after_publish",
+      "blocks": "workers",
+      "hint": "'swa_decode_cache'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[publish_ready]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_swa.prefill_swa_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 544,
+      "fn": "sparse_attention.attend_shared_cache",
+      "blocks": "workers",
+      "hint": "'swa_attn_shared'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready, index_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "sparse_attention.swa_attention_partial",
+        "sparse_attention._swa_attention_packed_partial",
+        "prefill_swa.prefill_swa_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 662,
+      "fn": "sparse_attention.attend_shared_cache_plain",
+      "blocks": "workers",
+      "hint": "'swa_attn_shared'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "sparse_attention.swa_attention_partial",
+        "sparse_attention._swa_attention_packed_partial"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1203,
+      "fn": "sparse_attention.gather_packed",
+      "blocks": "workers",
+      "hint": "name_hint",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "sparse_attention.gather_packed_chunk",
+        "sparse_attention._attend_packed_block",
+        "sparse_attention.attend_packed_cohorts",
+        "sparse_attention.l2_gather_packed"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1264,
+      "fn": "sparse_attention.make_attend_selected_chunk",
+      "blocks": "workers",
+      "hint": "name_hint",
+      "loops": [],
+      "sync_start": "sync_start",
+      "deps": "[gather_ready]",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1333,
+      "fn": "sparse_attention._attend_cube",
+      "blocks": "workers",
+      "hint": "'sparse_online_cube'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[selected_ready]",
+      "decode_reachable": false,
+      "callers": [
+        "sparse_attention._attend_padded"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1406,
+      "fn": "sparse_attention._attend_padded",
+      "blocks": "workers",
+      "hint": "'sparse_pad_heads'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1426,
+      "fn": "sparse_attention._attend_padded",
+      "blocks": "workers",
+      "hint": "'sparse_unpad_heads'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[cube_ready]",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1457,
+      "fn": "sparse_attention._attend_bf16_block",
+      "blocks": "workers_q",
+      "hint": "'sparse_bf16_query'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[previous]",
+      "decode_reachable": false,
+      "callers": [
+        "sparse_attention.attend_bf16"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1472,
+      "fn": "sparse_attention._attend_bf16_block",
+      "blocks": "workers_kv",
+      "hint": "'sparse_bf16_gather'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[previous]",
+      "decode_reachable": false,
+      "callers": [
+        "sparse_attention.attend_bf16"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1503,
+      "fn": "sparse_attention._attend_bf16_block",
+      "blocks": "workers_q",
+      "hint": "'sparse_bf16_output'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[attended]",
+      "decode_reachable": false,
+      "callers": [
+        "sparse_attention.attend_bf16"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1526,
+      "fn": "sparse_attention.decode_packed_caches",
+      "blocks": "workers",
+      "hint": "'sparse_shared_window_decode'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "sparse_attention._attend_cache_shared"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1545,
+      "fn": "sparse_attention.decode_packed_caches",
+      "blocks": "workers",
+      "hint": "'sparse_shared_compressed_decode'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "sparse_attention._attend_cache_shared"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1581,
+      "fn": "sparse_attention.gather_decoded_caches",
+      "blocks": "workers",
+      "hint": "'sparse_shared_cache_gather'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[window_ready, compressed_ready, previous]",
+      "decode_reachable": true,
+      "callers": [
+        "sparse_attention._attend_cache_shared"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1701,
+      "fn": "sparse_attention.attend_packed",
+      "blocks": "1",
+      "hint": "'sparse_query_ready'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[source_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "decode_c1a_reuse.decode_c1a_reuse",
+        "sparse_attention.l2_sparse_attention",
+        "sparse_attention.l2_c2a_attention",
+        "decode_c1a_full.decode_c1a_full",
+        "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+        "decode_c2a_reuse.decode_c2a_reuse",
+        "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+        "decode_c1a_reindex.decode_c1a_reindex",
+        "decode_c2a_full.decode_c2a_full",
+        "prefill_c1a_full.prefill_c1a_full_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention.py",
+      "line": 1755,
+      "fn": "sparse_attention.attend_bf16",
+      "blocks": "1",
+      "hint": "'sparse_bf16_ready'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "sparse_attention.l2_sparse_attention_bf16"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "window_kv_dsl.py",
+      "line": 145,
+      "fn": "window_kv_dsl.window_publish",
+      "blocks": "workers",
+      "hint": "'dsl_window_kv'",
+      "loops": [],
+      "sync_start": "True",
+      "deps": "[cache_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "dspark_context_kv.dspark_context_kv",
+        "dspark_attention.dspark_attention",
+        "decode_c1a_reuse.decode_c1a_reuse",
+        "prefill_c2a_full.prefill_c2a_full_attention",
+        "window_kv_dsl.window_kv_program",
+        "window_kv_dsl.window_kv_replay_program",
+        "prefill_swa.prefill_swa_attention",
+        "prefill_c2a_reuse.prefill_c2a_reuse_attention",
+        "decode_c1a_full.decode_c1a_full",
+        "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+        "decode_c2a_reuse.decode_c2a_reuse",
+        "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+        "decode_c1a_reindex.decode_c1a_reindex",
+        "decode_c2a_full.decode_c2a_full",
+        "decode_swa.decode_swa",
+        "prefill_c1a_full.prefill_c1a_full_attention"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "decode_moe.py",
+      "line": 168,
+      "fn": "decode_moe.dispatch",
+      "blocks": "N_RANKS * N_LOCAL",
+      "hint": "'dispatch_push'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[_stage_tid]",
+      "decode_reachable": true,
+      "callers": [
+        "decode_moe.moe"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "gemm.py",
+      "line": 60,
+      "fn": "gemm.gemm_mxfp8_to_bf16",
+      "blocks": "workers",
+      "hint": "name_hint",
+      "loops": [
+        "worker in pl.spmd(workers, name_hint=name_hint, sync_start=True)"
+      ],
+      "sync_start": "True",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "gemm.gemm_bf16_via_mxfp8_to_bf16_staged"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "gemm.py",
+      "line": 123,
+      "fn": "gemm.gemm_bf16_via_mxfp8_to_bf16_staged",
+      "blocks": "width // (MX_K_TILE * quant_chunks)",
+      "hint": "quant_name",
+      "loops": [
+        "group in pl.parallel(group_count)",
+        "mt in pl.parallel((num_tokens + MX_M_TILE - 1) // MX_M_TILE)",
+        "block in pl.spmd(width // (MX_K_TILE * quant_chunks), name_hint=quant_name)"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "engram.engram_from_rows"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "gemm.py",
+      "line": 157,
+      "fn": "gemm.gemm_bf16_via_mxfp8_to_bf16_fused",
+      "blocks": "workers",
+      "hint": "name_hint",
+      "loops": [
+        "mt in pl.parallel((num_tokens + 31) // 32)",
+        "worker in pl.spmd(workers, name_hint=name_hint, sync_start=True)"
+      ],
+      "sync_start": "True",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.prepare_prefill_index_query"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "gemm.py",
+      "line": 199,
+      "fn": "gemm.gemm_bf16_to_bf16",
+      "blocks": "task_workers",
+      "hint": "name_hint",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[entry_deps[0]]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_indexer.project_index_weights",
+        "prefill_indexer.prefill_index_key_project",
+        "prefill_indexer.publish_c1a_index_key"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "index_score_dsl.py",
+      "line": 533,
+      "fn": "index_score_dsl.dispatch_score_topk",
+      "blocks": "workers",
+      "hint": "'dsl_idx_score_topk'",
+      "loops": [],
+      "sync_start": "True",
+      "deps": "[cache_ready, query_ready, weights_ready, plan_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "decode_indexer._score_select_pool",
+        "decode_indexer.score_select_paged"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "index_score_dsl.py",
+      "line": 589,
+      "fn": "index_score_dsl.validate_score",
+      "blocks": "workers",
+      "hint": "'dsl_idx_score_topk'",
+      "loops": [],
+      "sync_start": "True",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": true
+    },
+    {
+      "file": "initialization_dsl.py",
+      "line": 84,
+      "fn": "initialization_dsl.zero_bf16_padding",
+      "blocks": "workers",
+      "hint": "'dsl_decode_sp_zero_padding'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "prefill_fwd.l2_prefill_fwd",
+        "initialization_dsl.validate_padding",
+        "prefill_swa.prefill_swa",
+        "dspark_drafter.draft_layer",
+        "decode_swa.decode_swa"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "initialization_dsl.py",
+      "line": 97,
+      "fn": "initialization_dsl.zero_attention_output",
+      "blocks": "workers",
+      "hint": "'dsl_unused_attention_output'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "initialization_dsl.validate_output",
+        "decode_layer.l2_decode_layer"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "initialization_dsl.py",
+      "line": 108,
+      "fn": "initialization_dsl.initialize_gate",
+      "blocks": "1",
+      "hint": "'dsl_gate_pre_route'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "gate.gate_from_bf16",
+        "initialization_dsl.validate_gate_init"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "compressor_publish_dsl.py",
+      "line": 88,
+      "fn": "compressor_publish_dsl.c1a_compressor_publish",
+      "blocks": "workers",
+      "hint": "'dsl_c1a_compress'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[cache_ready, source_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "compressor_publish_dsl.validate_publication",
+        "decode_c1a_full.decode_c1a_full",
+        "prefill_c1a_full.prefill_publish_decoder"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "index_pool_dsl.py",
+      "line": 247,
+      "fn": "index_pool_dsl.select_candidate_block_pool",
+      "blocks": "workers",
+      "hint": "'dsl_index_pool'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[scores_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "prefill_indexer.prefill_indexer",
+        "index_pool_dsl.validate_pool",
+        "decode_c1a_full.decode_c1a_full"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "expert_shared_dsl.py",
+      "line": 103,
+      "fn": "expert_shared_dsl.shared_swiglu_quant",
+      "blocks": "workers",
+      "hint": "'dsl_sh_act_quant'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "expert_shared_dsl.shared_swiglu_quant_validation",
+        "expert_shared.expert_shared"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "expert_routed_dsl.py",
+      "line": 262,
+      "fn": "expert_routed_dsl.routed_ffn",
+      "blocks": "workers",
+      "hint": "'dsl_routed_up'",
+      "loops": [],
+      "sync_start": "True",
+      "deps": "[input_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "expert_routed._expert_routed_partials"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "expert_routed_dsl.py",
+      "line": 267,
+      "fn": "expert_routed_dsl.routed_ffn",
+      "blocks": "WORKER_TILE",
+      "hint": "'dsl_routed_act_quant'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[up_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "expert_routed._expert_routed_partials"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "expert_routed_dsl.py",
+      "line": 271,
+      "fn": "expert_routed_dsl.routed_ffn",
+      "blocks": "workers",
+      "hint": "'dsl_routed_down'",
+      "loops": [],
+      "sync_start": "True",
+      "deps": "[activation_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "expert_routed._expert_routed_partials"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "expert_routed_dsl.py",
+      "line": 293,
+      "fn": "expert_routed_dsl.validate_projection",
+      "blocks": "1",
+      "hint": "'dsl_routed_projection'",
+      "loops": [],
+      "sync_start": "True",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": true
+    },
+    {
+      "file": "expert_routed_dsl.py",
+      "line": 303,
+      "fn": "expert_routed_dsl.validate_activation",
+      "blocks": "WORKER_TILE",
+      "hint": "'dsl_routed_act_quant'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": true
+    },
+    {
+      "file": "lm_head.py",
+      "line": 150,
+      "fn": "lm_head.lm_head",
+      "blocks": "MAX_LOGIT_ROWS",
+      "hint": "'lm_head_dispatch_push'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_markov._markov_sample_from_hidden",
+        "lm_head.lm_head_with_sampling"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "lm_head.py",
+      "line": 200,
+      "fn": "lm_head.lm_head",
+      "blocks": "D // HIDDEN_GATHER_TILE",
+      "hint": "'lm_head_dispatch_gather'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[_dwait_tid]",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_markov._markov_sample_from_hidden",
+        "lm_head.lm_head_with_sampling"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "lm_head.py",
+      "line": 209,
+      "fn": "lm_head.lm_head",
+      "blocks": "FUSED_LM_HEAD_CORES",
+      "hint": "'lm_head_matmul'",
+      "loops": [
+        "lm_core in pl.spmd(FUSED_LM_HEAD_CORES, name_hint='lm_head_matmul')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_markov._markov_sample_from_hidden",
+        "lm_head.lm_head_with_sampling"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "lm_head.py",
+      "line": 239,
+      "fn": "lm_head.lm_head",
+      "blocks": "LOGITS_COMM_BLOCKS",
+      "hint": "'lm_head_combine_push'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_markov._markov_sample_from_hidden",
+        "lm_head.lm_head_with_sampling"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "lm_head.py",
+      "line": 299,
+      "fn": "lm_head.lm_head",
+      "blocks": "LOGITS_COMM_BLOCKS",
+      "hint": "'lm_head_combine_gather'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[_cwait_tid]",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_markov._markov_sample_from_hidden",
+        "lm_head.lm_head_with_sampling"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "lm_head.py",
+      "line": 356,
+      "fn": "lm_head.greedy_sample",
+      "blocks": "MAX_LOGIT_ROWS",
+      "hint": "'lm_head_greedy_sample'",
+      "loops": [
+        "row in pl.spmd(MAX_LOGIT_ROWS, name_hint='lm_head_greedy_sample')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "lm_head.lm_head_with_sampling"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "lm_head.py",
+      "line": 553,
+      "fn": "lm_head._final_output",
+      "blocks": "(rows + 7) // 8",
+      "hint": "'final_rms_norm'",
+      "loops": [
+        "norm_block in pl.spmd((rows + 7) // 8, name_hint='final_rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "prefill_swa.py",
+      "line": 97,
+      "fn": "prefill_swa.prefill_swa_attention",
+      "blocks": "WORKER_TILE",
+      "hint": "'prefill_swa_begin'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[cache_ready]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd.prefill_attention",
+        "prefill_swa.prefill_swa"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_swa.py",
+      "line": 129,
+      "fn": "prefill_swa.prefill_swa_attention",
+      "blocks": "WORKER_TILE",
+      "hint": "'prefill_swa_stage'",
+      "loops": [
+        "start in pl.range(0, num_tokens, QUERY_TILE)"
+      ],
+      "sync_start": "False",
+      "deps": "[chunk_done]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd.prefill_attention",
+        "prefill_swa.prefill_swa"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_swa.py",
+      "line": 158,
+      "fn": "prefill_swa.prefill_swa_attention",
+      "blocks": "WORKER_TILE",
+      "hint": "'prefill_swa_collect'",
+      "loops": [
+        "start in pl.range(0, num_tokens, QUERY_TILE)"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd.prefill_attention",
+        "prefill_swa.prefill_swa"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_swa.py",
+      "line": 219,
+      "fn": "prefill_swa.prefill_swa",
+      "blocks": "(norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "norm_block in pl.spmd((norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_swa.l2_prefill_swa"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "gate_dsl.py",
+      "line": 290,
+      "fn": "gate_dsl.normalize_gate",
+      "blocks": "workers",
+      "hint": "'dsl_gate_norm'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "gate.gate"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "gate_dsl.py",
+      "line": 300,
+      "fn": "gate_dsl.quantize_gate",
+      "blocks": "workers",
+      "hint": "'dsl_gate_quant'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "gate.gate_from_bf16",
+        "gate_dsl.validate_gate_quant"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "gate_dsl.py",
+      "line": 316,
+      "fn": "gate_dsl.project_gate",
+      "blocks": "workers",
+      "hint": "'dsl_gate'",
+      "loops": [],
+      "sync_start": "True",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "gate.gate_from_bf16"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "gate_dsl.py",
+      "line": 331,
+      "fn": "gate_dsl.route_gate",
+      "blocks": "workers",
+      "hint": "'dsl_route_sort'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "gate.gate_from_bf16",
+        "gate_dsl.validate_gate_routes"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "prefill_c2a_reuse.py",
+      "line": 200,
+      "fn": "prefill_c2a_reuse.prefill_c2a_reuse_sp",
+      "blocks": "(hc_norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "hc_norm_block in pl.spmd((hc_norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c2a_reuse.l2_prefill_c2a_reuse"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_c2a_reuse.py",
+      "line": 281,
+      "fn": "prefill_c2a_reuse.prefill_c2a_reuse",
+      "blocks": "(hc_norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "hc_norm_block in pl.spmd((hc_norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_layer.l2_prefill_layer_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "o_proj.py",
+      "line": 132,
+      "fn": "o_proj.o_proj",
+      "blocks": "quant_workers",
+      "hint": "'rope_quant_o_vf'",
+      "loops": [
+        "group_start in pl.parallel(0, total_rows, 80)"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "dspark_attention.dspark_attention",
+        "decode_c1a_reuse.decode_c1a_reuse",
+        "prefill_c2a_full.prefill_c2a_full_attention",
+        "prefill_swa.prefill_swa_attention",
+        "prefill_c2a_reuse.prefill_c2a_reuse_attention",
+        "o_proj.o_proj_validation",
+        "o_proj.o_proj_with_hc_validation",
+        "decode_c1a_full.decode_c1a_full",
+        "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+        "decode_c2a_reuse.decode_c2a_reuse",
+        "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+        "decode_c1a_reindex.decode_c1a_reindex",
+        "decode_c2a_full.decode_c2a_full",
+        "decode_swa.decode_swa",
+        "prefill_c1a_full.prefill_c1a_full_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "o_proj.py",
+      "line": 145,
+      "fn": "o_proj.o_proj",
+      "blocks": "oa_workers",
+      "hint": "'proj_o_a'",
+      "loops": [
+        "group_start in pl.parallel(0, total_rows, 80)"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "dspark_attention.dspark_attention",
+        "decode_c1a_reuse.decode_c1a_reuse",
+        "prefill_c2a_full.prefill_c2a_full_attention",
+        "prefill_swa.prefill_swa_attention",
+        "prefill_c2a_reuse.prefill_c2a_reuse_attention",
+        "o_proj.o_proj_validation",
+        "o_proj.o_proj_with_hc_validation",
+        "decode_c1a_full.decode_c1a_full",
+        "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+        "decode_c2a_reuse.decode_c2a_reuse",
+        "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+        "decode_c1a_reindex.decode_c1a_reindex",
+        "decode_c2a_full.decode_c2a_full",
+        "decode_swa.decode_swa",
+        "prefill_c1a_full.prefill_c1a_full_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "o_proj.py",
+      "line": 155,
+      "fn": "o_proj.o_proj",
+      "blocks": "output_workers",
+      "hint": "'quant_o_a'",
+      "loops": [
+        "group_start in pl.parallel(0, total_rows, 80)",
+        "worker in pl.spmd(output_workers, name_hint='quant_o_a')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "dspark_attention.dspark_attention",
+        "decode_c1a_reuse.decode_c1a_reuse",
+        "prefill_c2a_full.prefill_c2a_full_attention",
+        "prefill_swa.prefill_swa_attention",
+        "prefill_c2a_reuse.prefill_c2a_reuse_attention",
+        "o_proj.o_proj_validation",
+        "o_proj.o_proj_with_hc_validation",
+        "decode_c1a_full.decode_c1a_full",
+        "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+        "decode_c2a_reuse.decode_c2a_reuse",
+        "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+        "decode_c1a_reindex.decode_c1a_reindex",
+        "decode_c2a_full.decode_c2a_full",
+        "decode_swa.decode_swa",
+        "prefill_c1a_full.prefill_c1a_full_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "o_proj.py",
+      "line": 170,
+      "fn": "o_proj.o_proj",
+      "blocks": "D // O_B_N_TILE",
+      "hint": "'proj_o_b'",
+      "loops": [
+        "group_start in pl.parallel(0, total_rows, 80)"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "dspark_attention.dspark_attention",
+        "decode_c1a_reuse.decode_c1a_reuse",
+        "prefill_c2a_full.prefill_c2a_full_attention",
+        "prefill_swa.prefill_swa_attention",
+        "prefill_c2a_reuse.prefill_c2a_reuse_attention",
+        "o_proj.o_proj_validation",
+        "o_proj.o_proj_with_hc_validation",
+        "decode_c1a_full.decode_c1a_full",
+        "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+        "decode_c2a_reuse.decode_c2a_reuse",
+        "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+        "decode_c1a_reindex.decode_c1a_reindex",
+        "decode_c2a_full.decode_c2a_full",
+        "decode_swa.decode_swa",
+        "prefill_c1a_full.prefill_c1a_full_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "o_proj.py",
+      "line": 284,
+      "fn": "o_proj.prefill_sp_output_reduce_scatter",
+      "blocks": "64",
+      "hint": "'sp_reduce_scatter'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[wait_tid]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c2a_full.prefill_c2a_full_sp",
+        "prefill_swa.prefill_swa",
+        "prefill_c2a_reuse.prefill_c2a_reuse_sp",
+        "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+        "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+        "prefill_c1a_full.prefill_c1a_full_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "o_proj.py",
+      "line": 330,
+      "fn": "o_proj.prefill_tp_output_all_reduce",
+      "blocks": "64",
+      "hint": "'prefill_tp_publish'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[reuse_tid]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd.prefill_attention",
+        "prefill_c2a_reuse.prefill_c2a_reuse",
+        "prefill_moe.prefill_ffn_restore",
+        "dspark_drafter.draft_layer",
+        "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+        "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+        "prefill_c1a_full.prefill_c1a_full_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "o_proj.py",
+      "line": 348,
+      "fn": "o_proj.prefill_tp_output_all_reduce",
+      "blocks": "64",
+      "hint": "'prefill_tp_reduce'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[wait_tid]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd.prefill_attention",
+        "prefill_c2a_reuse.prefill_c2a_reuse",
+        "prefill_moe.prefill_ffn_restore",
+        "dspark_drafter.draft_layer",
+        "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+        "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+        "prefill_c1a_full.prefill_c1a_full_attention"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_moe.py",
+      "line": 138,
+      "fn": "prefill_moe.dispatch",
+      "blocks": "T",
+      "hint": "'dispatch_fp8_raw_copy'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_moe.prefill_moe",
+        "prefill_moe.prefill_moe_sublayer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_moe.py",
+      "line": 145,
+      "fn": "prefill_moe.dispatch",
+      "blocks": "T * K_SCALE // SCALE_COPY_TILE",
+      "hint": "'dispatch_e8m0_raw_copy'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_moe.prefill_moe",
+        "prefill_moe.prefill_moe_sublayer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_moe.py",
+      "line": 221,
+      "fn": "prefill_moe.dispatch",
+      "blocks": "N_RANKS * N_LOCAL",
+      "hint": "'dispatch_push'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[_reuse_tid, _stage_tid]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_moe.prefill_moe",
+        "prefill_moe.prefill_moe_sublayer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_moe.py",
+      "line": 323,
+      "fn": "prefill_moe.dispatch",
+      "blocks": "N_LOCAL * ((RECV_MAX + RECV_TILE - 1) // RECV_TILE)",
+      "hint": "'dispatch_scale_pack'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[_gather_tid]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_moe.prefill_moe",
+        "prefill_moe.prefill_moe_sublayer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_moe.py",
+      "line": 369,
+      "fn": "prefill_moe.combine_scattered",
+      "blocks": "T",
+      "hint": "'combine_reduce'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[_cwait_tid, output_ready]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_moe.prefill_moe",
+        "prefill_moe.prefill_moe_sublayer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_moe.py",
+      "line": 432,
+      "fn": "prefill_moe.prefill_moe",
+      "blocks": "(norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "norm_block in pl.spmd((norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd._prefill_moe",
+        "prefill_moe.l2_prefill_moe",
+        "dspark_drafter.draft_layer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_moe.py",
+      "line": 438,
+      "fn": "prefill_moe.prefill_moe",
+      "blocks": "t",
+      "hint": "'moe_output_zero'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd._prefill_moe",
+        "prefill_moe.l2_prefill_moe",
+        "dspark_drafter.draft_layer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_moe.py",
+      "line": 663,
+      "fn": "prefill_moe._compact_local_tokens",
+      "blocks": "tokens",
+      "hint": "'prefill_moe_compact'",
+      "loops": [
+        "row in pl.spmd(tokens, name_hint='prefill_moe_compact')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_moe.prefill_moe_sublayer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_moe.py",
+      "line": 683,
+      "fn": "prefill_moe._scatter_local_tokens",
+      "blocks": "tokens",
+      "hint": "'prefill_moe_scatter_zero'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_moe.prefill_moe_sublayer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_moe.py",
+      "line": 687,
+      "fn": "prefill_moe._scatter_local_tokens",
+      "blocks": "tokens",
+      "hint": "'prefill_moe_scatter'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[zero_tid, compact_ready]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_moe.prefill_moe_sublayer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_moe.py",
+      "line": 748,
+      "fn": "prefill_moe.prefill_moe_sublayer",
+      "blocks": "(norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "norm_block in pl.spmd((norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_layer.l2_prefill_layer_moe"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_moe.py",
+      "line": 754,
+      "fn": "prefill_moe.prefill_moe_sublayer",
+      "blocks": "TOKENS",
+      "hint": "'moe_output_zero'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_layer.l2_prefill_layer_moe"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_drafter.py",
+      "line": 174,
+      "fn": "dspark_drafter.dspark_proj",
+      "blocks": "(num_tokens + 15) // 16 * (D // 128)",
+      "hint": "'dspark_main_proj'",
+      "loops": [
+        "block in pl.spmd((num_tokens + 15) // 16 * (D // 128), name_hint='dspark_main_proj')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_drafter.dspark_proj_test",
+        "dspark_drafter._dspark_drafter"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_drafter.py",
+      "line": 186,
+      "fn": "dspark_drafter.dspark_proj",
+      "blocks": "(num_tokens + 7) // 8",
+      "hint": "'dspark_main_norm'",
+      "loops": [
+        "block in pl.spmd((num_tokens + 7) // 8, name_hint='dspark_main_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_drafter.dspark_proj_test",
+        "dspark_drafter._dspark_drafter"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_drafter.py",
+      "line": 216,
+      "fn": "dspark_drafter.dspark_metadata",
+      "blocks": "1",
+      "hint": "'dspark_query_metadata'",
+      "loops": [
+        "worker in pl.spmd(1, name_hint='dspark_query_metadata')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_drafter._dspark_drafter",
+        "dspark_drafter.dspark_metadata_test"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_drafter.py",
+      "line": 258,
+      "fn": "dspark_drafter.select_dspark_anchor_ids",
+      "blocks": "batch",
+      "hint": "'dspark_select_anchor'",
+      "loops": [
+        "request in pl.spmd(batch, name_hint='dspark_select_anchor')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_drafter._dspark_drafter"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_drafter.py",
+      "line": 341,
+      "fn": "dspark_drafter.draft_layer",
+      "blocks": "(tokens + 7) // 8",
+      "hint": "'dspark_attn_norm'",
+      "loops": [
+        "block in pl.spmd((tokens + 7) // 8, name_hint='dspark_attn_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "dspark_drafter._dspark_drafter"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "dspark_drafter.py",
+      "line": 586,
+      "fn": "dspark_drafter._dspark_drafter",
+      "blocks": "C.MOE_TOKENS",
+      "hint": "'dspark_pad_queries'",
+      "loops": [
+        "chunk in pl.range((batch + DSPARK_CHUNK_REQUESTS - 1) // DSPARK_CHUNK_REQUESTS)",
+        "token in pl.spmd(C.MOE_TOKENS, name_hint='dspark_pad_queries')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "dspark_drafter.py",
+      "line": 608,
+      "fn": "dspark_drafter._dspark_drafter",
+      "blocks": "C.MOE_TOKENS",
+      "hint": "'dspark_initial_pre_mix'",
+      "loops": [
+        "chunk in pl.range((batch + DSPARK_CHUNK_REQUESTS - 1) // DSPARK_CHUNK_REQUESTS)",
+        "token in pl.spmd(C.MOE_TOKENS, name_hint='dspark_initial_pre_mix')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "dspark_drafter.py",
+      "line": 717,
+      "fn": "dspark_drafter._dspark_drafter",
+      "blocks": "active_tokens",
+      "hint": "'dspark_head_unpad'",
+      "loops": [
+        "chunk in pl.range((batch + DSPARK_CHUNK_REQUESTS - 1) // DSPARK_CHUNK_REQUESTS)",
+        "row in pl.spmd(active_tokens, name_hint='dspark_head_unpad')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "rmsnorm.py",
+      "line": 160,
+      "fn": "rmsnorm.make_norm_with_deps",
+      "blocks": "workers",
+      "hint": "name_hint",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "expert_routed.py",
+      "line": 154,
+      "fn": "expert_routed.expert_routed_scatter",
+      "blocks": "64",
+      "hint": "'ffn_reduce_scatter'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[down_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "decode_moe.moe",
+        "prefill_moe.prefill_moe",
+        "prefill_moe.prefill_moe_sublayer"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "expert_routed.py",
+      "line": 217,
+      "fn": "expert_routed.local_compute_test",
+      "blocks": "64",
+      "hint": "'ffn_reduce'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[down_ready]",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "index_plan_dsl.py",
+      "line": 94,
+      "fn": "index_plan_dsl.plan_index_runs",
+      "blocks": "1",
+      "hint": "'dsl_idx_plan_req'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "index_plan_dsl.validate_plan",
+        "decode_indexer.score_select_paged"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "index_plan_dsl.py",
+      "line": 105,
+      "fn": "index_plan_dsl.plan_pool_runs",
+      "blocks": "1",
+      "hint": "'dsl_idx_plan_pool_runs'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[pool_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "index_plan_dsl.validate_pool_plan",
+        "decode_indexer._score_select_pool"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "mxfp8_dsl.py",
+      "line": 194,
+      "fn": "mxfp8_dsl.quantize_matrix",
+      "blocks": "workers",
+      "hint": "'dsl_mxfp8_quant'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "qkv_proj_dsl.quantize_projection_input",
+        "qkv_proj_dsl.input_projection_validation",
+        "o_proj.o_proj",
+        "qkv_proj_rope.qb_rope_validation"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "input_pack.py",
+      "line": 65,
+      "fn": "input_pack.gather_rows",
+      "blocks": "SPMD_BLOCKS",
+      "hint": "'gather_rows'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[source_ready]",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd._prefill_moe",
+        "prefill_fwd.l2_prefill_fwd"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "input_pack.py",
+      "line": 91,
+      "fn": "input_pack.pack_x_hc",
+      "blocks": "SPMD_BLOCKS",
+      "hint": "'pack_x_hc'",
+      "loops": [
+        "block in pl.spmd(SPMD_BLOCKS, name_hint='pack_x_hc')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd.l2_prefill_fwd",
+        "dspark_drafter._dspark_drafter",
+        "input_pack.l2_input_pack"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_c1a_reuse.py",
+      "line": 292,
+      "fn": "prefill_c1a_reuse.l2_prefill_c1a_reuse_sharded",
+      "blocks": "(hc_norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "hc_norm_block in pl.spmd((hc_norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c1a_reuse.l3_prefill_c1a_reuse_sharded"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_c1a_reuse.py",
+      "line": 475,
+      "fn": "prefill_c1a_reuse.prefill_c1a_reuse",
+      "blocks": "(norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "norm_block in pl.spmd((norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c1a_reuse.l2_prefill_c1a_reuse"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "expert_shared_projection_dsl.py",
+      "line": 120,
+      "fn": "expert_shared_projection_dsl.project_shared",
+      "blocks": "workers",
+      "hint": "'dsl_shared_projection'",
+      "loops": [],
+      "sync_start": "True",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "expert_shared_projection_dsl.validate_gate_projection",
+        "expert_shared_projection_dsl.validate_down_projection",
+        "expert_shared.expert_shared"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "index_query_dsl.py",
+      "line": 118,
+      "fn": "index_query_dsl.project_index_query",
+      "blocks": "workers",
+      "hint": "'dsl_idx_q'",
+      "loops": [],
+      "sync_start": "True",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "index_query_dsl.validate_query",
+        "decode_indexer.c1a_index"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "compressor_dsl.py",
+      "line": 73,
+      "fn": "compressor_dsl.c1a_compressor_project",
+      "blocks": "workers",
+      "hint": "'dsl_c1a_proj_cmp'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "decode_c1a_full.decode_c1a_full",
+        "compressor_dsl.validate_c1a_projection",
+        "prefill_c1a_full.prefill_publish_decoder"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "compressor_dsl.py",
+      "line": 115,
+      "fn": "compressor_dsl.c2a_compressor_project",
+      "blocks": "workers",
+      "hint": "'dsl_proj_cmp'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[input_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "prefill_c2a_full.prefill_c2a_full_attention",
+        "compressor_dsl.validate_projection",
+        "decode_c2a_full.decode_c2a_full"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "moe_combine_dsl.py",
+      "line": 86,
+      "fn": "moe_combine_dsl.combine_local",
+      "blocks": "workers",
+      "hint": "'dsl_combine_reduce'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "decode_moe.combine_scattered",
+        "moe_combine_dsl.validate_combine"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "o_proj_dsl.py",
+      "line": 154,
+      "fn": "o_proj_dsl.rope_quant",
+      "blocks": "workers",
+      "hint": "'dsl_o_rope_quant'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "o_proj.o_proj",
+        "o_proj_dsl.rope_quant_validation"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "o_proj_dsl.py",
+      "line": 166,
+      "fn": "o_proj_dsl.grouped_projection",
+      "blocks": "workers",
+      "hint": "'dsl_o_proj_a'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "o_proj.o_proj"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "o_proj_dsl.py",
+      "line": 178,
+      "fn": "o_proj_dsl.output_projection",
+      "blocks": "workers",
+      "hint": "'dsl_o_proj_b'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "o_proj.o_proj"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "o_proj_dsl.py",
+      "line": 247,
+      "fn": "o_proj_dsl.mx_projection_validation",
+      "blocks": "256 // CUBE_TILE",
+      "hint": "'dsl_mx_projection'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": true
+    },
+    {
+      "file": "index_projection_dsl.py",
+      "line": 61,
+      "fn": "index_projection_dsl.project_index_key",
+      "blocks": "workers",
+      "hint": "'dsl_proj_idx_k'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "decode_c1a_full.decode_c1a_full",
+        "index_projection_dsl.validate_projection",
+        "decode_indexer.decode_c2a_indexer"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "prefill_c1a_reindex.py",
+      "line": 339,
+      "fn": "prefill_c1a_reindex.l2_prefill_c1a_reindex_sharded",
+      "blocks": "(hc_norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "hc_norm_block in pl.spmd((hc_norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c1a_reindex.l3_prefill_c1a_reindex_sharded"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_c1a_reindex.py",
+      "line": 345,
+      "fn": "prefill_c1a_reindex.l2_prefill_c1a_reindex_sharded",
+      "blocks": "group_tokens",
+      "hint": "'c1a_sp_inactive_topk'",
+      "loops": [
+        "row in pl.spmd(group_tokens, name_hint='c1a_sp_inactive_topk')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c1a_reindex.l3_prefill_c1a_reindex_sharded"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_c1a_reindex.py",
+      "line": 548,
+      "fn": "prefill_c1a_reindex.prefill_c1a_reindex",
+      "blocks": "(norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "norm_block in pl.spmd((norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c1a_reindex.l2_prefill_c1a_reindex"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "sparse_attention_dsl.py",
+      "line": 266,
+      "fn": "sparse_attention_dsl.sparse_attention_dsl",
+      "blocks": "workers",
+      "hint": "'dsl_sparse_attn'",
+      "loops": [],
+      "sync_start": "True",
+      "deps": "[source_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "sparse_attention.attend_packed",
+        "sparse_attention_dsl.validate_sparse_attention"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "index_gather_dsl.py",
+      "line": 125,
+      "fn": "index_gather_dsl.gather_candidate_cache",
+      "blocks": "WORKER_TILE",
+      "hint": "'dsl_idx_gather_pool'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[cache_ready, pool_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "index_gather_dsl.validate_gather",
+        "decode_indexer._score_select_pool"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "index_key_dsl.py",
+      "line": 113,
+      "fn": "index_key_dsl.publish_index_rows",
+      "blocks": "workers",
+      "hint": "'dsl_idx_k_norm_rope_publish'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[cache_ready, kv_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "decode_c1a_full.decode_c1a_full",
+        "index_key_dsl.validate_publication",
+        "decode_indexer.decode_c2a_indexer"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "vision.py",
+      "line": 91,
+      "fn": "vision.linear_inline",
+      "blocks": "32",
+      "hint": "'vision_linear'",
+      "loops": [
+        "worker in pl.spmd(32, name_hint='vision_linear')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "vision._make_vit",
+        "vision._make_aligner"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "vision.py",
+      "line": 125,
+      "fn": "vision._make_norm",
+      "blocks": "32",
+      "hint": "'vision_rmsnorm'",
+      "loops": [
+        "worker in pl.spmd(32, name_hint='vision_rmsnorm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "vision._make_vit"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "vision.py",
+      "line": 166,
+      "fn": "vision.add_inline",
+      "blocks": "32",
+      "hint": "'vision_residual'",
+      "loops": [
+        "worker in pl.spmd(32, name_hint='vision_residual')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "vision._make_vit"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "vision.py",
+      "line": 198,
+      "fn": "vision._make_attention",
+      "blocks": "32",
+      "hint": "'vision_split_half_rope'",
+      "loops": [
+        "worker in pl.spmd(32, name_hint='vision_split_half_rope')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "vision._make_vit"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "vision.py",
+      "line": 232,
+      "fn": "vision._make_attention",
+      "blocks": "32",
+      "hint": "'vision_attention'",
+      "loops": [
+        "worker in pl.spmd(32, name_hint='vision_attention')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "vision._make_vit"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "vision.py",
+      "line": 299,
+      "fn": "vision._make_swiglu",
+      "blocks": "32",
+      "hint": "'vision_swiglu'",
+      "loops": [
+        "worker in pl.spmd(32, name_hint='vision_swiglu')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "vision._make_vit"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "vision.py",
+      "line": 412,
+      "fn": "vision._make_aligner",
+      "blocks": "32",
+      "hint": "'vision_unshuffle'",
+      "loops": [
+        "worker in pl.spmd(32, name_hint='vision_unshuffle')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "vision.make_vision_program"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "vision.py",
+      "line": 434,
+      "fn": "vision._make_aligner",
+      "blocks": "32",
+      "hint": "'vision_gelu'",
+      "loops": [
+        "worker in pl.spmd(32, name_hint='vision_gelu')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "vision.make_vision_program"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_cp_allgather.py",
+      "line": 63,
+      "fn": "prefill_cp_allgather.make_prefill_sp_input_allgather",
+      "blocks": "64",
+      "hint": "'sp_gather_copy'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[wait_tid]",
+      "decode_reachable": false,
+      "callers": [],
+      "dsl": false
+    },
+    {
+      "file": "rope_tables.py",
+      "line": 97,
+      "fn": "rope_tables.materialize_rope_rows",
+      "blocks": "32",
+      "hint": "'v41_rope_rows'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_fwd.l2_prefill_fwd",
+        "prefill_c2a_full.l2_prefill_c2a_full",
+        "decode_fwd.decode_encoder"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "moe_dispatch_dsl.py",
+      "line": 79,
+      "fn": "moe_dispatch_dsl.stage_local",
+      "blocks": "workers",
+      "hint": "'dsl_dispatch_stage'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": true,
+      "callers": [
+        "decode_moe.dispatch",
+        "moe_dispatch_dsl.validate_stage"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "moe_dispatch_dsl.py",
+      "line": 174,
+      "fn": "moe_dispatch_dsl.gather_local",
+      "blocks": "workers",
+      "hint": "'dsl_dispatch_gather'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "decode_moe.dispatch",
+        "moe_dispatch_dsl.validate_gather"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "index_weight_dsl.py",
+      "line": 112,
+      "fn": "index_weight_dsl.project_index_weights",
+      "blocks": "workers",
+      "hint": "'dsl_proj_idx_w'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[ready]",
+      "decode_reachable": true,
+      "callers": [
+        "index_weight_dsl.validate_projection",
+        "decode_indexer.c1a_index"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "index_weight_dsl.py",
+      "line": 116,
+      "fn": "index_weight_dsl.project_index_weights",
+      "blocks": "merge_workers",
+      "hint": "'dsl_reduce_idx_w'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[projected]",
+      "decode_reachable": true,
+      "callers": [
+        "index_weight_dsl.validate_projection",
+        "decode_indexer.c1a_index"
+      ],
+      "dsl": true
+    },
+    {
+      "file": "prefill_c1a_full.py",
+      "line": 683,
+      "fn": "prefill_c1a_full.l2_prefill_c1a_full_sharded",
+      "blocks": "(hc_norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "hc_norm_block in pl.spmd((hc_norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c1a_full.l3_prefill_c1a_full_sharded"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_c1a_full.py",
+      "line": 689,
+      "fn": "prefill_c1a_full.l2_prefill_c1a_full_sharded",
+      "blocks": "group_tokens",
+      "hint": "'c1a_sp_inactive_topk'",
+      "loops": [
+        "row in pl.spmd(group_tokens, name_hint='c1a_sp_inactive_topk')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c1a_full.l3_prefill_c1a_full_sharded"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "prefill_c1a_full.py",
+      "line": 1139,
+      "fn": "prefill_c1a_full.prefill_c1a_full",
+      "blocks": "(norm_tokens + 7) // 8",
+      "hint": "'rms_norm'",
+      "loops": [
+        "norm_block in pl.spmd((norm_tokens + 7) // 8, name_hint='rms_norm')"
+      ],
+      "sync_start": "False",
+      "deps": "",
+      "decode_reachable": false,
+      "callers": [
+        "prefill_c1a_full.l2_prefill_c1a_full"
+      ],
+      "dsl": false
+    },
+    {
+      "file": "index_route_dsl.py",
+      "line": 131,
+      "fn": "index_route_dsl.classify_candidate_pool",
+      "blocks": "WORKER_TILE",
+      "hint": "'dsl_idx_plan_pool'",
+      "loops": [],
+      "sync_start": "False",
+      "deps": "[cache_ready, pool_ready]",
+      "decode_reachable": true,
+      "callers": [
+        "index_route_dsl.validate_route",
+        "decode_indexer.score_select_reindex"
+      ],
+      "dsl": true
+    }
+  ],
+  "call_graph": {
+    "dspark_context_kv.golden_context_kv_cache": [
+      "gemm.golden_mxfp8_linear_grouped_sum",
+      "qkv_proj_rope.golden_rope_interleave",
+      "quant.quantize_mxfp8_cache",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "dspark_context_kv.dspark_context_kv": [
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "window_kv_dsl.window_publish"
+    ],
+    "dspark_context_kv.dspark_context_kv_test": [
+      "dspark_context_kv.dspark_context_kv"
+    ],
+    "dspark_context_kv._compare_context_cache": [],
+    "q_branch_dsl._normalize_quant_rows": [
+      "mxfp8_dsl._quant_row"
+    ],
+    "q_branch_dsl.project_q_b": [
+      "mxfp8_dsl._mx_project"
+    ],
+    "q_branch_dsl._query_rope_head": [],
+    "q_branch_dsl.normalize_quant_grid": [
+      "q_branch_dsl._normalize_quant_rows"
+    ],
+    "q_branch_dsl.normalize_quant": [
+      "q_branch_dsl.normalize_quant_grid"
+    ],
+    "q_branch_dsl.qb_projection": [
+      "q_branch_dsl.project_q_b"
+    ],
+    "q_branch_dsl.query_rope_grid": [
+      "q_branch_dsl._query_rope_head"
+    ],
+    "q_branch_dsl.query_rope": [
+      "q_branch_dsl.query_rope_grid"
+    ],
+    "qkv_proj_dsl.project_q_a": [
+      "mxfp8_dsl._mx_project"
+    ],
+    "qkv_proj_dsl.project_kv": [
+      "mxfp8_dsl._mx_project"
+    ],
+    "qkv_proj_dsl.quantize_projection_input": [
+      "mxfp8_dsl.quantize_matrix"
+    ],
+    "qkv_proj_dsl.qa_projection": [
+      "qkv_proj_dsl.project_q_a"
+    ],
+    "qkv_proj_dsl.kv_proj": [
+      "qkv_proj_dsl.project_kv"
+    ],
+    "qkv_proj_dsl.input_projection_validation": [
+      "mxfp8_dsl.quantize_matrix",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.qa_projection"
+    ],
+    "qkv_proj_dsl.golden_input_projection": [],
+    "qkv_proj_dsl.build_input_projection_specs": [],
+    "hc.hc_sinkhorn": [
+      "hc_dsl.coefficients_grid"
+    ],
+    "hc.hc_project_into": [
+      "hc_dsl.inverse_rms_grid",
+      "hc_dsl.project_hf32_grid"
+    ],
+    "hc.hc_project": [
+      "hc.hc_project_into"
+    ],
+    "hc.hc_head": [
+      "hc_dsl.collapse_grid",
+      "hc_dsl.collapse_tail"
+    ],
+    "hc.hc_head_norm": [
+      "hc_dsl.collapse_norm_grid"
+    ],
+    "hc.hc_pre": [
+      "hc.hc_head",
+      "hc.hc_project",
+      "hc.hc_sinkhorn"
+    ],
+    "hc.hc_post": [
+      "hc_dsl.expand_grid"
+    ],
+    "hc.prefill_sp_post": [],
+    "hc._round_hf32": [],
+    "hc.golden_mhc_mixes": [
+      "hc._round_hf32",
+      "hc.golden_hc_coefficients"
+    ],
+    "hc.golden_hc_coefficients": [],
+    "hc.golden_hc_collapse": [],
+    "hc.golden_hc_post": [],
+    "hc.golden_l2_hc_pre": [
+      "hc.golden_hc_collapse",
+      "hc.golden_mhc_mixes"
+    ],
+    "hc.golden_l2_hc_post": [
+      "hc.golden_hc_post"
+    ],
+    "hc.golden_l2_hc_head": [
+      "hc.golden_hc_collapse"
+    ],
+    "hc.golden_l2_hc_head_norm": [
+      "hc.golden_hc_collapse"
+    ],
+    "hc.golden_l2_hc_sinkhorn": [
+      "hc.golden_hc_coefficients"
+    ],
+    "hc.golden_l2_hc_project": [
+      "hc._round_hf32"
+    ],
+    "hc.compare_hc_projection": [],
+    "hc.compare_hc_inverse": [],
+    "hc.compare_hc_post_order": [],
+    "hc.make_hc_inputs": [],
+    "hc.l2_hc_pre": [
+      "hc.hc_pre"
+    ],
+    "hc.build_l2_hc_pre_specs": [],
+    "hc.l2_hc_post": [
+      "hc.hc_post"
+    ],
+    "hc.build_l2_hc_post_specs": [],
+    "hc.l2_hc_head": [
+      "hc.hc_head"
+    ],
+    "hc.build_l2_hc_head_specs": [],
+    "hc.l2_hc_head_norm": [
+      "hc.hc_head_norm"
+    ],
+    "hc.build_l2_hc_head_norm_specs": [],
+    "hc.l2_hc_sinkhorn": [
+      "hc.hc_sinkhorn"
+    ],
+    "hc.build_l2_hc_sinkhorn_specs": [],
+    "hc.l2_hc_project": [
+      "hc.hc_project_into"
+    ],
+    "hc.l2_hc_project_fp32": [
+      "hc.hc_project_into"
+    ],
+    "hc.build_l2_hc_project_specs": [],
+    "attention_cache_dsl.dequantize_fp8": [],
+    "attention_cache_dsl.store_nz": [],
+    "attention_cache_dsl.dequantize_fp4": [],
+    "dspark_markov.golden_markov_sample": [],
+    "dspark_markov.golden_markov_from_state": [
+      "dspark_markov.golden_markov_sample"
+    ],
+    "dspark_markov.markov_head": [],
+    "dspark_markov.markov_greedy_step": [],
+    "dspark_markov._sample_step": [
+      "dspark_markov.markov_greedy_step",
+      "dspark_markov.markov_head"
+    ],
+    "dspark_markov._markov_sample": [
+      "dspark_markov._sample_step"
+    ],
+    "dspark_markov._markov_sample_from_hidden": [
+      "lm_head.lm_head",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "dspark_markov.l3_markov_sample_from_hidden": [],
+    "dspark_attention.gather_dspark_window": [],
+    "dspark_attention.attend_dspark_window": [],
+    "dspark_attention.dspark_attention": [
+      "dspark_attention.attend_dspark_window",
+      "dspark_attention.gather_dspark_window",
+      "o_proj.o_proj",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "window_kv_dsl.window_publish"
+    ],
+    "dspark_attention.dspark_attention_test": [
+      "dspark_attention.dspark_attention"
+    ],
+    "dspark_attention.make_attention_inputs": [],
+    "prefill_indexer._index_key_decode_lut": [],
+    "prefill_indexer.publish_index_cache": [],
+    "prefill_indexer.quantize_index_query": [],
+    "prefill_indexer.materialize_index_topk": [],
+    "prefill_indexer._index_rope": [],
+    "prefill_indexer.project_index_weights": [
+      "gemm.gemm_bf16_to_bf16"
+    ],
+    "prefill_indexer.prepare_prefill_index_query": [
+      "gemm.gemm_bf16_via_mxfp8_to_bf16_fused",
+      "prefill_indexer._index_rope",
+      "prefill_indexer.project_index_weights",
+      "prefill_indexer.quantize_index_query"
+    ],
+    "prefill_indexer._prefill_index_scores": [
+      "prefill_indexer._index_key_decode_lut"
+    ],
+    "prefill_indexer._merge_topk_pairs": [],
+    "prefill_indexer._merge_topk_level": [
+      "prefill_indexer._merge_topk_pairs"
+    ],
+    "prefill_indexer._sort_topk_leaf": [],
+    "prefill_indexer._select_c1a_topk": [
+      "prefill_indexer._merge_topk_level",
+      "prefill_indexer._merge_topk_pairs",
+      "prefill_indexer._sort_topk_leaf",
+      "prefill_indexer.materialize_index_topk"
+    ],
+    "prefill_indexer._select_c2a_topk": [],
+    "prefill_indexer.publish_index_key": [],
+    "prefill_indexer.prefill_index_key_project": [
+      "gemm.gemm_bf16_to_bf16"
+    ],
+    "prefill_indexer.publish_c1a_index_key": [
+      "gemm.gemm_bf16_to_bf16",
+      "prefill_indexer._index_rope",
+      "prefill_indexer.publish_index_cache",
+      "rmsnorm.rms_norm"
+    ],
+    "prefill_indexer.publish_c2a_index_key": [
+      "prefill_indexer._index_rope",
+      "prefill_indexer.prefill_index_key_project",
+      "prefill_indexer.publish_index_key"
+    ],
+    "prefill_indexer._clear_inactive_pool": [],
+    "prefill_indexer.prefill_indexer": [
+      "index_pool_dsl.select_candidate_block_pool",
+      "prefill_indexer._clear_inactive_pool",
+      "prefill_indexer._prefill_index_scores",
+      "prefill_indexer._select_c1a_topk",
+      "prefill_indexer._select_c2a_topk",
+      "prefill_indexer.prepare_prefill_index_query"
+    ],
+    "prefill_indexer.golden_index_query_fp4": [
+      "quant.dequantize_mxfp4_cache",
+      "quant.quantize_mxfp4_cache"
+    ],
+    "prefill_indexer.golden_index_key": [
+      "qkv_proj_rope.golden_rope_interleave",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "prefill_indexer.golden_prefill_indexer": [
+      "gemm.golden_gemm_bf16_via_mxfp8_to_bf16_sequential",
+      "prefill_indexer.golden_index_query_fp4",
+      "qkv_proj_rope.golden_rope_tail"
+    ],
+    "prefill_indexer.golden_prefill_index_scores": [
+      "prefill_indexer.golden_prefill_indexer",
+      "quant.dequantize_mxfp4_cache"
+    ],
+    "prefill_layer._command_line_int": [],
+    "prefill_layer.l2_prefill_layer_attention": [
+      "o_proj.retire_prefill_signals",
+      "prefill_c2a_reuse.prefill_c2a_reuse"
+    ],
+    "prefill_layer.l2_prefill_layer_moe": [
+      "prefill_moe.clear_moe_signals",
+      "prefill_moe.prefill_moe_sublayer"
+    ],
+    "prefill_layer.l2_prefill_layer_restore": [
+      "o_proj.retire_prefill_signals",
+      "prefill_moe.prefill_ffn_restore"
+    ],
+    "prefill_layer.l3_prefill_layer": [
+      "prefill_layer.l2_prefill_layer_attention",
+      "prefill_layer.l2_prefill_layer_moe",
+      "prefill_layer.l2_prefill_layer_restore"
+    ],
+    "prefill_layer.make_ffn_hc_inputs": [],
+    "prefill_layer.make_moe_replicated_inputs": [],
+    "prefill_layer.make_moe_rank_inputs": [
+      "expert_routed.gen_routed_mxfp4_weights"
+    ],
+    "prefill_layer.make_token_owners": [],
+    "prefill_layer.golden_moe_sublayer": [
+      "hc.golden_hc_collapse",
+      "hc.golden_hc_post",
+      "hc.golden_mhc_mixes",
+      "prefill_layer.golden_moe_rows"
+    ],
+    "prefill_layer.golden_moe_rows": [
+      "prefill_moe._golden_moe_core"
+    ],
+    "prefill_layer.make_layer_golden": [
+      "hc.golden_hc_collapse",
+      "hc.golden_hc_post",
+      "hc.golden_mhc_mixes",
+      "prefill_c2a_full.reference_attention",
+      "prefill_layer.golden_moe_sublayer",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "prefill_layer.compare_ffn_input": [
+      "hc.golden_hc_collapse",
+      "prefill_c2a_full._report"
+    ],
+    "prefill_layer.compare_hc_mixes_output": [
+      "hc.golden_mhc_mixes"
+    ],
+    "prefill_layer.compare_expanded_stream": [
+      "hc.golden_hc_post",
+      "hc.golden_mhc_mixes",
+      "prefill_c2a_full._report"
+    ],
+    "prefill_layer.routing_flips": [
+      "gate.golden_gate_reference",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "prefill_layer.compare_ffn_owned": [
+      "prefill_c2a_full._report"
+    ],
+    "prefill_layer.compare_ffn_output": [
+      "prefill_c2a_full._report",
+      "prefill_layer.routing_flips"
+    ],
+    "prefill_layer.make_layer_compare": [
+      "prefill_layer.compare_expanded_stream",
+      "prefill_layer.compare_ffn_output",
+      "prefill_layer.compare_ffn_owned",
+      "prefill_layer.compare_hc_mixes_output"
+    ],
+    "prefill_layer.build_specs": [
+      "hc.make_hc_inputs",
+      "prefill_c2a_full.make_attention_inputs",
+      "prefill_layer.make_ffn_hc_inputs",
+      "prefill_layer.make_moe_rank_inputs",
+      "prefill_layer.make_moe_replicated_inputs",
+      "prefill_layer.make_token_owners"
+    ],
+    "swa_dsl._swa_query": [
+      "attention_cache_dsl.dequantize_fp8",
+      "attention_cache_dsl.store_nz"
+    ],
+    "swa_dsl.swa_queries": [
+      "swa_dsl._swa_query"
+    ],
+    "swa_dsl.swa_attention_dsl": [
+      "swa_dsl.swa_queries"
+    ],
+    "gate.golden_gate_reference": [],
+    "gate.gate_normalized": [
+      "gate.gate_from_bf16"
+    ],
+    "gate.gate_from_bf16": [
+      "gate_dsl.project_gate",
+      "gate_dsl.quantize_gate",
+      "gate_dsl.route_gate",
+      "initialization_dsl.initialize_gate"
+    ],
+    "gate.gate": [
+      "gate.gate_from_bf16",
+      "gate_dsl.normalize_gate"
+    ],
+    "gate.l2_gate": [
+      "gate.gate"
+    ],
+    "gate._golden_gate_scores": [],
+    "gate._golden_gate_core": [],
+    "gate.golden_gate_core": [
+      "gate._golden_gate_core",
+      "gate._golden_gate_scores"
+    ],
+    "gate.golden_gate_normalized_core": [
+      "gate._golden_gate_core"
+    ],
+    "gate.build_tensor_specs": [],
+    "gate.gate_indices_compare": [
+      "gate._golden_gate_scores"
+    ],
+    "gate.mxfp8_activation_value_compare": [],
+    "compressor_pool_dsl.clear_latent": [],
+    "compressor_pool_dsl._pool_state_block": [
+      "compressor_vector_dsl.normalize_latent"
+    ],
+    "compressor_pool_dsl._publish_compressed_page": [],
+    "compressor_pool_dsl._clear_task": [
+      "compressor_pool_dsl.clear_latent"
+    ],
+    "compressor_pool_dsl.pool_state_grid": [
+      "compressor_pool_dsl._pool_state_block"
+    ],
+    "compressor_pool_dsl.publish_compressed_grid": [
+      "compressor_pool_dsl._publish_compressed_page"
+    ],
+    "compressor_pool_dsl._publish_task": [
+      "compressor_pool_dsl.publish_compressed_grid"
+    ],
+    "compressor_pool_dsl.c2a_compressor_publish": [
+      "compressor_pool_dsl._clear_task",
+      "compressor_pool_dsl._publish_task",
+      "compressor_pool_dsl.pool_state_grid"
+    ],
+    "compressor_pool_dsl.validate_compression": [
+      "compressor_pool_dsl.c2a_compressor_publish"
+    ],
+    "compressor_pool_dsl.golden_compression": [
+      "compressor_vector_dsl.golden_normalize_latent"
+    ],
+    "compressor_pool_dsl.validate_replay": [
+      "compressor_pool_dsl.c2a_compressor_publish"
+    ],
+    "compressor_pool_dsl.golden_replay": [
+      "compressor_pool_dsl.golden_compression"
+    ],
+    "compressor_pool_dsl.build_compression_specs": [],
+    "compressor_pool_dsl.build_replay_specs": [
+      "compressor_pool_dsl.build_compression_specs"
+    ],
+    "compressor_pool_dsl.compare_latent": [],
+    "index_topk_dsl.encode_score": [],
+    "index_topk_dsl.decode_score": [],
+    "index_topk_dsl._histogram": [],
+    "index_topk_dsl._select_bin": [],
+    "index_topk_dsl.stable_topk": [
+      "index_topk_dsl._histogram",
+      "index_topk_dsl._select_bin"
+    ],
+    "decode_c1a_reuse.decode_c1a_reuse": [
+      "hc.hc_head_norm",
+      "hc.hc_post",
+      "hc.hc_project",
+      "hc.hc_sinkhorn",
+      "o_proj.o_proj",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "sparse_attention.attend_packed",
+      "window_kv_dsl.window_publish"
+    ],
+    "decode_c1a_reuse.l2_decode_c1a_reuse": [
+      "decode_c1a_reuse.decode_c1a_reuse"
+    ],
+    "decode_c1a_reuse.l3_decode_c1a_reuse": [
+      "decode_c1a_reuse.l2_decode_c1a_reuse"
+    ],
+    "engram._parse_tp_size": [],
+    "engram.engram_cast_to_fp32": [],
+    "engram.engram_gate": [],
+    "engram.engram_from_rows": [
+      "engram.engram_cast_to_fp32",
+      "engram.engram_gate",
+      "gemm.gemm_bf16_via_mxfp8_to_bf16_staged"
+    ],
+    "engram.engram": [
+      "engram.engram_cast_to_fp32",
+      "engram.engram_gate"
+    ],
+    "engram.golden_engram": [],
+    "engram.l2_engram": [
+      "engram.engram"
+    ],
+    "engram.engram_tp": [
+      "engram.engram_cast_to_fp32",
+      "engram.engram_gate"
+    ],
+    "engram.l2_engram_tp": [
+      "engram.engram_tp"
+    ],
+    "engram.l3_engram": [
+      "engram.l2_engram_tp"
+    ],
+    "engram.build_engram_tensor_specs": [],
+    "engram.golden_engram_case": [
+      "engram.golden_engram"
+    ],
+    "engram.build_engram_tp_tensor_specs": [],
+    "engram.golden_engram_tp_case": [
+      "engram.golden_engram"
+    ],
+    "hc_dsl._collapse_four": [],
+    "hc_dsl._sum_four": [],
+    "hc_dsl._softmax_four": [
+      "hc_dsl._sum_four"
+    ],
+    "hc_dsl._coefficients_row": [
+      "hc_dsl._softmax_four",
+      "hc_dsl._sum_four"
+    ],
+    "hc_dsl._inverse_rms_row": [],
+    "hc_dsl._project_hf32_tile": [],
+    "hc_dsl._collapse_tile": [
+      "hc_dsl._collapse_four"
+    ],
+    "hc_dsl._collapse_norm_row": [
+      "hc_dsl._collapse_four"
+    ],
+    "hc_dsl._expand_row": [],
+    "hc_dsl.coefficients_grid": [
+      "hc_dsl._coefficients_row"
+    ],
+    "hc_dsl.inverse_rms_grid": [
+      "hc_dsl._inverse_rms_row"
+    ],
+    "hc_dsl.project_hf32_grid": [
+      "hc_dsl._project_hf32_tile"
+    ],
+    "hc_dsl.collapse_grid": [
+      "hc_dsl._collapse_tile"
+    ],
+    "hc_dsl.collapse_tail": [
+      "hc_dsl._collapse_tile"
+    ],
+    "hc_dsl.collapse_norm_grid": [
+      "hc_dsl._collapse_norm_row"
+    ],
+    "hc_dsl.expand_grid": [
+      "hc_dsl._expand_row"
+    ],
+    "prefill_fwd.prefill_attention": [
+      "o_proj.prefill_tp_output_all_reduce",
+      "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+      "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+      "prefill_c2a_full.prefill_c2a_full_attention",
+      "prefill_c2a_reuse.prefill_c2a_reuse_attention",
+      "prefill_swa.prefill_swa_attention"
+    ],
+    "prefill_fwd._prefill_moe": [
+      "input_pack.gather_rows",
+      "prefill_moe.prefill_moe"
+    ],
+    "prefill_fwd.l2_prefill_fwd": [
+      "engram.engram_from_rows",
+      "hc.hc_head",
+      "hc.hc_post",
+      "hc.hc_pre",
+      "initialization_dsl.zero_bf16_padding",
+      "input_pack.gather_rows",
+      "input_pack.pack_x_hc",
+      "input_pack.prepare_compressed_lens",
+      "o_proj.retire_prefill_signals",
+      "prefill_c1a_full.prefill_publish_decoder",
+      "prefill_fwd._prefill_moe",
+      "prefill_fwd.prefill_attention",
+      "prefill_moe.clear_moe_signals",
+      "rmsnorm.rms_norm_tiled",
+      "rope_tables.materialize_rope_rows"
+    ],
+    "prefill_fwd.l3_prefill_fwd": [
+      "prefill_fwd.l2_prefill_fwd"
+    ],
+    "prefill_fwd.forward_weight_layouts": [],
+    "prefill_fwd.prepare_prefill_inputs": [
+      "prefill_fwd.validate_prefill_caches",
+      "rope_tables.prepare_forward_rope_tables",
+      "utils.paged_slots",
+      "utils.window_metadata"
+    ],
+    "prefill_fwd.prepare_resident_inputs": [
+      "prefill_fwd.prepare_prefill_inputs"
+    ],
+    "prefill_fwd.generate": [
+      "prefill_fwd.prepare_resident_inputs"
+    ],
+    "prefill_fwd.build_tensor_specs": [
+      "prefill_fwd.forward_weight_layouts",
+      "prefill_fwd.prepare_prefill_inputs"
+    ],
+    "prefill_fwd.validate_prefill_caches": [],
+    "prefill_c2a_full.prefill_c2a_full_attention": [
+      "compressor_dsl.c2a_compressor_project",
+      "compressor_pool_dsl.c2a_compressor_publish",
+      "o_proj.o_proj",
+      "prefill_indexer.prefill_indexer",
+      "prefill_indexer.publish_c2a_index_key",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "sparse_attention.gather_packed_chunk",
+      "window_kv_dsl.window_publish"
+    ],
+    "prefill_c2a_full.prefill_c2a_full_sp": [
+      "hc.hc_pre",
+      "hc.prefill_sp_post",
+      "o_proj.prefill_sp_output_reduce_scatter",
+      "prefill_c2a_full.prefill_c2a_full_attention",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "prefill_c2a_full._write_rows": [],
+    "prefill_c2a_full._flat_cache_rows": [
+      "quant.dequantize_mxfp4_cache"
+    ],
+    "prefill_c2a_full.golden_reference_c2a": [
+      "gemm.golden_gemm_bf16_via_mxfp8_to_bf16_sequential",
+      "o_proj.golden_o_proj",
+      "prefill_c2a_full._flat_cache_rows",
+      "prefill_c2a_full._write_rows",
+      "qkv_proj_rope.golden_rope_tail",
+      "quant.quantize_mxfp4_cache",
+      "quant.quantize_mxfp8_cache",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "prefill_c2a_full._weight": [
+      "quant.pack_mx_b_scale",
+      "quant.quantize_mxfp8_upward_reference"
+    ],
+    "prefill_c2a_full._plan": [],
+    "prefill_c2a_full.make_c2a_inputs": [
+      "prefill_c2a_full._plan",
+      "prefill_c2a_full._weight",
+      "quant.quantize_grouped_mxfp8_weight",
+      "quant.quantize_mxfp4_cache",
+      "quant.quantize_mxfp8_cache",
+      "rope_tables.precompute_rope_tables",
+      "utils.paged_slots",
+      "utils.window_metadata"
+    ],
+    "prefill_c2a_full.make_attention_inputs": [],
+    "prefill_c2a_full.reference_attention": [],
+    "prefill_c2a_full.golden_prefill_c2a": [
+      "hc.golden_hc_collapse",
+      "hc.golden_hc_post",
+      "hc.golden_mhc_mixes",
+      "prefill_c2a_full.reference_attention",
+      "rmsnorm.golden_rms_norm",
+      "utils.token_shards"
+    ],
+    "prefill_c2a_full._report": [],
+    "prefill_c2a_full.make_compare": [],
+    "prefill_c2a_full.l2_prefill_c2a_full": [
+      "o_proj.retire_prefill_signals",
+      "prefill_c2a_full.prefill_c2a_full_sp",
+      "rope_tables.materialize_rope_rows"
+    ],
+    "prefill_c2a_full.l3_prefill_c2a_full": [
+      "prefill_c2a_full.l2_prefill_c2a_full"
+    ],
+    "prefill_c2a_full.build_specs": [
+      "hc.make_hc_inputs",
+      "prefill_c2a_full.make_attention_inputs"
+    ],
+    "sparse_attention.gather_window_batched": [],
+    "sparse_attention.gather_window_packed544": [],
+    "sparse_attention.attend_window_tiled": [],
+    "sparse_attention.decode_shared_cache": [],
+    "sparse_attention.decode_shared_cache_packed": [],
+    "sparse_attention.analyze_index_runs": [],
+    "sparse_attention.decode_shared_cache_after_publish": [],
+    "sparse_attention.attend_shared_cache": [],
+    "sparse_attention.attend_shared_cache_plain": [],
+    "sparse_attention.swa_attention_partial": [
+      "sparse_attention.analyze_index_runs",
+      "sparse_attention.attend_shared_cache",
+      "sparse_attention.attend_shared_cache_plain",
+      "sparse_attention.attend_window_tiled",
+      "sparse_attention.decode_shared_cache",
+      "sparse_attention.gather_window_batched",
+      "swa_dsl.swa_attention_dsl"
+    ],
+    "sparse_attention.swa_attention": [
+      "sparse_attention.swa_attention_partial"
+    ],
+    "sparse_attention._swa_attention_packed_partial": [
+      "sparse_attention.analyze_index_runs",
+      "sparse_attention.attend_shared_cache",
+      "sparse_attention.attend_shared_cache_plain",
+      "sparse_attention.attend_window_tiled",
+      "sparse_attention.decode_shared_cache_packed",
+      "sparse_attention.gather_window_packed544"
+    ],
+    "sparse_attention.swa_attention_packed": [
+      "sparse_attention._swa_attention_packed_partial"
+    ],
+    "sparse_attention.l2_sparse_attention_swa": [
+      "sparse_attention.swa_attention"
+    ],
+    "sparse_attention.l2_sparse_attention_swa_packed": [
+      "sparse_attention.swa_attention_packed"
+    ],
+    "sparse_attention.swa_official_reference": [
+      "gemm.golden_gemm_bf16_via_mxfp8_to_bf16_sequential",
+      "o_proj.golden_grouped_output",
+      "qkv_proj_rope.golden_rope_tail",
+      "quant.quantize_mxfp8_cache",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "sparse_attention.make_swa_inputs": [
+      "quant.pack_mx_b_scale",
+      "quant.quantize_grouped_mxfp8_weight",
+      "quant.quantize_mxfp8_cache",
+      "quant.quantize_mxfp8_upward_reference"
+    ],
+    "sparse_attention.make_packed_swa_inputs": [
+      "quant.quantize_mxfp8_cache",
+      "sparse_attention.make_swa_inputs",
+      "utils.packed_query_lengths",
+      "utils.window_metadata"
+    ],
+    "sparse_attention.golden_prefill_c1a_attention": [],
+    "sparse_attention.golden_paged_sparse_attention_stats": [],
+    "sparse_attention.golden_paged_sparse_attention": [
+      "sparse_attention.golden_merge_attention_stats",
+      "sparse_attention.golden_paged_sparse_attention_stats"
+    ],
+    "sparse_attention.golden_merge_attention_stats": [],
+    "sparse_attention._gather_packed_rows": [],
+    "sparse_attention.gather_packed": [
+      "sparse_attention._gather_packed_rows"
+    ],
+    "sparse_attention.gather_packed_chunk": [
+      "sparse_attention.gather_packed"
+    ],
+    "sparse_attention.make_attend_selected_chunk": [],
+    "sparse_attention._attend_cube": [],
+    "sparse_attention._attend_padded": [
+      "sparse_attention._attend_cube"
+    ],
+    "sparse_attention._attend_bf16_block": [],
+    "sparse_attention.decode_packed_caches": [],
+    "sparse_attention.gather_decoded_caches": [],
+    "sparse_attention._attend_cache_shared": [
+      "sparse_attention.decode_packed_caches",
+      "sparse_attention.gather_decoded_caches"
+    ],
+    "sparse_attention._attend_packed_block": [
+      "sparse_attention.gather_packed"
+    ],
+    "sparse_attention.attend_packed": [
+      "sparse_attention._attend_cache_shared",
+      "sparse_attention._attend_packed_block",
+      "sparse_attention.attend_packed_cohorts",
+      "sparse_attention_dsl.sparse_attention_dsl"
+    ],
+    "sparse_attention.attend_bf16": [
+      "sparse_attention._attend_bf16_block"
+    ],
+    "sparse_attention.l2_sparse_attention": [
+      "sparse_attention.attend_packed"
+    ],
+    "sparse_attention.attend_packed_cohorts": [
+      "sparse_attention.gather_packed"
+    ],
+    "sparse_attention.l2_c2a_attention": [
+      "sparse_attention.attend_packed"
+    ],
+    "sparse_attention.l2_gather_packed": [
+      "sparse_attention.gather_packed"
+    ],
+    "sparse_attention.l2_sparse_attention_bf16": [
+      "sparse_attention.attend_bf16"
+    ],
+    "sparse_attention.golden_gather_packed": [
+      "quant.dequantize_mxfp4_cache",
+      "quant.dequantize_mxfp8_cache"
+    ],
+    "sparse_attention.validate_gather_packed": [],
+    "sparse_attention.swa_core_reference": [],
+    "sparse_attention.make_swa_case": [
+      "quant.quantize_mxfp8_cache",
+      "sparse_attention.swa_core_reference"
+    ],
+    "sparse_attention.build_swa_specs": [],
+    "sparse_attention.golden_swa_core": [
+      "sparse_attention.swa_core_reference"
+    ],
+    "sparse_attention.compare_swa_core": [],
+    "sparse_attention.validate_swa_core": [
+      "sparse_attention.build_swa_specs",
+      "sparse_attention.make_swa_case"
+    ],
+    "sparse_attention.golden_swa_attention": [
+      "o_proj.golden_o_proj",
+      "qkv_proj_rope.golden_qkv_proj_rope",
+      "quant.dequantize_mxfp8_cache",
+      "sparse_attention.golden_merge_attention_stats",
+      "sparse_attention.golden_paged_sparse_attention_stats",
+      "utils._publish_quantized_cache"
+    ],
+    "sparse_attention.golden_compressed_attention": [
+      "compressor.golden_c1a_compressor",
+      "compressor.golden_c2a_compressor",
+      "o_proj.golden_o_proj",
+      "qkv_proj_rope.golden_qkv_proj_rope",
+      "qkv_proj_rope.golden_rope_interleave",
+      "quant.dequantize_mxfp4_cache",
+      "quant.dequantize_mxfp8_cache",
+      "quant.quantize_mxfp4_cache",
+      "utils._publish_quantized_cache"
+    ],
+    "utils.parse_decode_startpos": [],
+    "utils.parse_decode_query_lens": [],
+    "utils.configure_decode_workload": [],
+    "utils.packed_query_lengths": [],
+    "utils.paged_slots": [],
+    "utils.window_metadata": [
+      "utils.paged_slots"
+    ],
+    "utils.upload_forward_inputs": [],
+    "utils.token_shards": [],
+    "utils._copy_cache_rows": [],
+    "utils._publish_quantized_cache": [
+      "utils._copy_cache_rows"
+    ],
+    "utils.decode_cache_views": [],
+    "utils.prepare_decode_inputs": [],
+    "window_kv_dsl._window_kv_page": [],
+    "window_kv_dsl.window_kv_grid": [
+      "window_kv_dsl._window_kv_page"
+    ],
+    "window_kv_dsl.window_publish": [
+      "window_kv_dsl.window_kv_grid"
+    ],
+    "window_kv_dsl.window_kv_program": [
+      "window_kv_dsl.window_publish"
+    ],
+    "window_kv_dsl.window_kv_replay_program": [
+      "window_kv_dsl.window_publish"
+    ],
+    "window_kv_dsl.golden_window_kv": [
+      "quant.quantize_mxfp8_cache"
+    ],
+    "window_kv_dsl.golden_window_kv_replay": [
+      "window_kv_dsl.golden_window_kv"
+    ],
+    "window_kv_dsl.compare_payload_bytes": [],
+    "window_kv_dsl.build_tensor_specs": [],
+    "window_kv_dsl.build_replay_specs": [
+      "window_kv_dsl.build_tensor_specs"
+    ],
+    "config._parse_parallel_size": [],
+    "config.get_ep_size": [
+      "config._parse_parallel_size"
+    ],
+    "config.set_moe_tokens": [],
+    "decode_moe._parse_experts_per_rank": [],
+    "decode_moe.clear_moe_signals": [],
+    "decode_moe.dispatch": [
+      "moe_dispatch_dsl.gather_local",
+      "moe_dispatch_dsl.stage_local"
+    ],
+    "decode_moe.combine_scattered": [
+      "moe_combine_dsl.combine_local"
+    ],
+    "decode_moe.moe": [
+      "decode_moe.combine_scattered",
+      "decode_moe.dispatch",
+      "expert_routed.expert_routed_scatter",
+      "expert_shared.expert_shared",
+      "gate.gate",
+      "hc.hc_post",
+      "hc.hc_pre"
+    ],
+    "decode_moe.l2_moe": [
+      "decode_moe.clear_moe_signals",
+      "decode_moe.moe"
+    ],
+    "decode_moe.l3_moe": [
+      "decode_moe.l2_moe"
+    ],
+    "decode_moe._normalise_num_tokens": [],
+    "decode_moe._route_bias": [],
+    "decode_moe.build_moe_specs": [
+      "decode_moe._normalise_num_tokens",
+      "decode_moe._route_bias"
+    ],
+    "decode_moe.golden_moe": [
+      "decode_moe._normalise_num_tokens"
+    ],
+    "decode_moe._local_mhc_compare": [
+      "decode_moe._normalise_num_tokens"
+    ],
+    "gemm.gemm_mxfp8_to_bf16": [],
+    "gemm.gemm_bf16_via_mxfp8_to_bf16_staged": [
+      "gemm.gemm_mxfp8_to_bf16",
+      "quant.quantize_bf16_to_mxfp8"
+    ],
+    "gemm.gemm_bf16_via_mxfp8_to_bf16_fused": [
+      "quant.quantize_bf16_to_mxfp8"
+    ],
+    "gemm.gemm_bf16_to_bf16": [],
+    "gemm.golden_mxfp8_linear_grouped_sum": [
+      "quant._quantize_mxfp8_activation",
+      "quant.decode_e8m0",
+      "quant.unpack_mx_b_scale"
+    ],
+    "gemm.golden_gemm_bf16_via_mxfp8_to_bf16_sequential": [
+      "quant._quantize_mxfp8_activation",
+      "quant.decode_e8m0",
+      "quant.unpack_mx_b_scale"
+    ],
+    "gemm.golden_gemm_mxfp8_to_fp32_dequantized": [
+      "quant.decode_e8m0"
+    ],
+    "index_score_dsl._view": [],
+    "index_score_dsl._prepare_weights": [],
+    "index_score_dsl._cache_panel": [
+      "index_topk_dsl.encode_score"
+    ],
+    "index_score_dsl._block_join": [],
+    "index_score_dsl._store_scores": [
+      "index_topk_dsl.decode_score"
+    ],
+    "index_score_dsl._physical_indices": [],
+    "index_score_dsl.score_topk_mix": [
+      "index_score_dsl._block_join",
+      "index_score_dsl._cache_panel",
+      "index_score_dsl._physical_indices",
+      "index_score_dsl._prepare_weights",
+      "index_score_dsl._store_scores",
+      "index_score_dsl._view",
+      "index_topk_dsl.stable_topk"
+    ],
+    "index_score_dsl.dispatch_score_topk": [
+      "index_score_dsl.score_topk_mix"
+    ],
+    "index_score_dsl.validate_score": [
+      "index_score_dsl.score_topk_mix"
+    ],
+    "index_score_dsl.golden_score": [],
+    "index_score_dsl.build_score_specs": [],
+    "initialization_dsl.zero_bf16_rows": [],
+    "initialization_dsl.initialize_routes": [],
+    "initialization_dsl.zero_bf16_padding": [
+      "initialization_dsl.zero_bf16_rows"
+    ],
+    "initialization_dsl.zero_attention_output": [
+      "initialization_dsl.zero_bf16_rows"
+    ],
+    "initialization_dsl.initialize_gate": [
+      "initialization_dsl.initialize_routes"
+    ],
+    "initialization_dsl.validate_padding": [
+      "initialization_dsl.zero_bf16_padding"
+    ],
+    "initialization_dsl.validate_output": [
+      "initialization_dsl.zero_attention_output"
+    ],
+    "initialization_dsl.validate_gate_init": [
+      "initialization_dsl.initialize_gate"
+    ],
+    "initialization_dsl.golden_padding": [],
+    "initialization_dsl.golden_output": [],
+    "initialization_dsl.golden_gate_init": [],
+    "initialization_dsl.build_init_specs": [],
+    "compressor_publish_dsl.publish_c1a": [
+      "compressor_vector_dsl.normalize_latent"
+    ],
+    "compressor_publish_dsl.c1a_compressor_publish": [
+      "compressor_publish_dsl.publish_c1a"
+    ],
+    "compressor_publish_dsl.validate_publication": [
+      "compressor_publish_dsl.c1a_compressor_publish"
+    ],
+    "compressor_publish_dsl.golden_publication": [
+      "compressor_vector_dsl.golden_normalize_latent"
+    ],
+    "compressor_publish_dsl.build_publication_specs": [],
+    "index_pool_dsl.visible_block_count": [],
+    "index_pool_dsl.generate_pool": [
+      "index_pool_dsl.visible_block_count"
+    ],
+    "index_pool_dsl.select_candidate_block_pool": [
+      "index_pool_dsl.generate_pool"
+    ],
+    "index_pool_dsl.validate_pool": [
+      "index_pool_dsl.select_candidate_block_pool"
+    ],
+    "index_pool_dsl.index_pool_block_capacity": [],
+    "index_pool_dsl.golden_select_candidate_block_pool": [
+      "index_pool_dsl.index_pool_block_capacity"
+    ],
+    "index_pool_dsl.golden_pool": [
+      "index_pool_dsl.golden_select_candidate_block_pool"
+    ],
+    "index_pool_dsl.build_pool_specs": [
+      "index_pool_dsl.index_pool_block_capacity"
+    ],
+    "expert_shared_dsl._shared_swiglu_quant_tile": [
+      "mxfp8_dsl._quant_upward_row"
+    ],
+    "expert_shared_dsl.shared_swiglu_quant_grid": [
+      "expert_shared_dsl._shared_swiglu_quant_tile"
+    ],
+    "expert_shared_dsl.shared_swiglu_quant": [
+      "expert_shared_dsl.shared_swiglu_quant_grid"
+    ],
+    "expert_shared_dsl.shared_swiglu_quant_validation": [
+      "expert_shared_dsl.shared_swiglu_quant"
+    ],
+    "expert_shared_dsl.golden_shared_swiglu_quant": [],
+    "expert_shared_dsl.build_swiglu_quant_specs": [],
+    "expert_routed_dsl._unpack_weight": [],
+    "expert_routed_dsl._project_tile": [
+      "expert_routed_dsl._unpack_weight"
+    ],
+    "expert_routed_dsl.unpack_weight_probe": [
+      "expert_routed_dsl._unpack_weight"
+    ],
+    "expert_routed_dsl.project_up_worker": [
+      "expert_routed_dsl._project_tile"
+    ],
+    "expert_routed_dsl.activate_worker": [
+      "mxfp8_dsl._quant_upward_row"
+    ],
+    "expert_routed_dsl.project_down_worker": [
+      "expert_routed_dsl._project_tile"
+    ],
+    "expert_routed_dsl.routed_ffn": [
+      "expert_routed_dsl.activate_worker",
+      "expert_routed_dsl.project_down_worker",
+      "expert_routed_dsl.project_up_worker"
+    ],
+    "expert_routed_dsl.projection_probe": [
+      "expert_routed_dsl._project_tile"
+    ],
+    "expert_routed_dsl.validate_unpack": [
+      "expert_routed_dsl.unpack_weight_probe"
+    ],
+    "expert_routed_dsl.validate_projection": [
+      "expert_routed_dsl.projection_probe"
+    ],
+    "expert_routed_dsl.validate_activation": [
+      "expert_routed_dsl.activate_worker"
+    ],
+    "expert_routed_dsl.golden_activation": [],
+    "expert_routed_dsl.build_activation_specs": [],
+    "expert_routed_dsl.golden_unpack": [],
+    "expert_routed_dsl.build_unpack_specs": [],
+    "expert_routed_dsl.golden_projection": [],
+    "expert_routed_dsl.build_projection_specs": [],
+    "index_vector_dsl.rope_quantize_row": [],
+    "lm_head._parse_int_argv": [],
+    "lm_head.lm_head": [],
+    "lm_head.greedy_sample": [],
+    "lm_head.lm_head_with_sampling": [
+      "lm_head.greedy_sample",
+      "lm_head.lm_head"
+    ],
+    "lm_head.l2_lm_head": [
+      "lm_head.lm_head_with_sampling"
+    ],
+    "lm_head.l3_final_output": [],
+    "lm_head._final_output": [
+      "hc.hc_head",
+      "lm_head.lm_head_with_sampling",
+      "rmsnorm.rms_norm_tiled_compensated"
+    ],
+    "lm_head.l3_lm_head": [
+      "lm_head.l2_lm_head"
+    ],
+    "lm_head.golden_lm_head": [],
+    "lm_head.golden_final_output": [
+      "hc.golden_hc_collapse",
+      "lm_head.golden_lm_head",
+      "rmsnorm.golden_rms_norm_tiled"
+    ],
+    "lm_head.build_tensor_specs": [],
+    "lm_head.compare_sampled_ids": [],
+    "prefill_swa.prefill_swa_attention": [
+      "o_proj.o_proj",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "sparse_attention.analyze_index_runs",
+      "sparse_attention.attend_shared_cache",
+      "sparse_attention.decode_shared_cache_after_publish",
+      "window_kv_dsl.window_publish"
+    ],
+    "prefill_swa.prefill_swa": [
+      "hc.hc_pre",
+      "hc.prefill_sp_post",
+      "initialization_dsl.zero_bf16_padding",
+      "o_proj.prefill_sp_output_reduce_scatter",
+      "prefill_swa.prefill_swa_attention",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "prefill_swa.make_hc_inputs": [],
+    "prefill_swa.l2_prefill_swa": [
+      "o_proj.retire_prefill_signals",
+      "prefill_swa.prefill_swa"
+    ],
+    "prefill_swa.l3_prefill_swa": [
+      "prefill_swa.l2_prefill_swa"
+    ],
+    "prefill_swa.build_hc_specs": [
+      "prefill_swa.make_hc_inputs",
+      "sparse_attention.make_packed_swa_inputs",
+      "sparse_attention.make_swa_inputs"
+    ],
+    "prefill_swa.reference_attention": [
+      "sparse_attention.swa_official_reference"
+    ],
+    "prefill_swa.golden_prefill_swa_case": [
+      "hc.golden_hc_collapse",
+      "hc.golden_hc_post",
+      "hc.golden_mhc_mixes",
+      "prefill_swa.reference_attention",
+      "rmsnorm.golden_rms_norm",
+      "utils.token_shards"
+    ],
+    "gate_dsl._project_scores": [],
+    "gate_dsl._normalize_rows": [],
+    "gate_dsl._quantize_rows": [
+      "mxfp8_dsl._quant_upward_row"
+    ],
+    "gate_dsl._select_routes": [],
+    "gate_dsl.normalize_gate_grid": [
+      "gate_dsl._normalize_rows"
+    ],
+    "gate_dsl.quantize_gate_grid": [
+      "gate_dsl._quantize_rows"
+    ],
+    "gate_dsl.project_gate_grid": [
+      "gate_dsl._project_scores"
+    ],
+    "gate_dsl.route_gate_grid": [
+      "gate_dsl._select_routes"
+    ],
+    "gate_dsl.normalize_gate": [
+      "gate_dsl.normalize_gate_grid"
+    ],
+    "gate_dsl.quantize_gate": [
+      "gate_dsl.quantize_gate_grid"
+    ],
+    "gate_dsl.project_gate": [
+      "gate_dsl.project_gate_grid"
+    ],
+    "gate_dsl.route_gate": [
+      "gate_dsl.route_gate_grid"
+    ],
+    "gate_dsl.validate_gate_quant": [
+      "gate_dsl.quantize_gate"
+    ],
+    "gate_dsl.validate_gate_routes": [
+      "gate_dsl.route_gate"
+    ],
+    "gate_dsl.golden_gate_quant": [],
+    "gate_dsl.golden_gate_routes": [],
+    "gate_dsl.build_quant_specs": [],
+    "gate_dsl.build_route_specs": [],
+    "prefill_c2a_reuse.prefill_c2a_reuse_attention": [
+      "o_proj.o_proj",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "sparse_attention.gather_packed_chunk",
+      "window_kv_dsl.window_publish"
+    ],
+    "prefill_c2a_reuse.prefill_c2a_reuse_sp": [
+      "hc.hc_pre",
+      "hc.prefill_sp_post",
+      "o_proj.prefill_sp_output_reduce_scatter",
+      "prefill_c2a_reuse.prefill_c2a_reuse_attention",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "prefill_c2a_reuse.prefill_c2a_reuse": [
+      "hc.hc_post",
+      "hc.hc_pre",
+      "o_proj.prefill_tp_output_all_reduce",
+      "prefill_c2a_reuse.prefill_c2a_reuse_attention",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "prefill_c2a_reuse.l2_prefill_c2a_reuse": [
+      "o_proj.retire_prefill_signals",
+      "prefill_c2a_reuse.prefill_c2a_reuse_sp"
+    ],
+    "prefill_c2a_reuse.l3_prefill_c2a_reuse": [
+      "prefill_c2a_reuse.l2_prefill_c2a_reuse"
+    ],
+    "prefill_c2a_reuse.golden_reference_c2a_reuse": [
+      "gemm.golden_gemm_bf16_via_mxfp8_to_bf16_sequential",
+      "o_proj.golden_o_proj",
+      "prefill_c2a_full._flat_cache_rows",
+      "prefill_c2a_full._write_rows",
+      "qkv_proj_rope.golden_rope_tail",
+      "quant.quantize_mxfp8_cache",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "prefill_c2a_reuse.make_c2a_reuse_inputs": [
+      "prefill_c2a_full.golden_reference_c2a",
+      "prefill_c2a_full.make_c2a_inputs"
+    ],
+    "o_proj._rope_quant_o_vf": [],
+    "o_proj._o_proj_a": [],
+    "o_proj._o_proj_b": [],
+    "o_proj.o_proj": [
+      "mxfp8_dsl.quantize_matrix",
+      "o_proj._o_proj_a",
+      "o_proj._o_proj_b",
+      "o_proj._rope_quant_o_vf",
+      "o_proj_dsl.grouped_projection",
+      "o_proj_dsl.output_projection",
+      "o_proj_dsl.rope_quant",
+      "quant.quantize_bf16_to_mxfp8"
+    ],
+    "o_proj.grouped_mxfp8_linear": [
+      "quant._quantize_mxfp8_activation",
+      "quant.decode_e8m0",
+      "quant.unpack_mx_b_scale"
+    ],
+    "o_proj.golden_grouped_output": [
+      "o_proj.grouped_mxfp8_linear"
+    ],
+    "o_proj.golden_o_proj": [
+      "gemm.golden_gemm_bf16_via_mxfp8_to_bf16_sequential",
+      "gemm.golden_mxfp8_linear_grouped_sum",
+      "o_proj.golden_grouped_output",
+      "qkv_proj_rope.golden_rope_interleave"
+    ],
+    "o_proj.retire_prefill_signals": [],
+    "o_proj.prefill_sp_output_reduce_scatter": [],
+    "o_proj.prefill_tp_output_all_reduce": [],
+    "o_proj.o_proj_validation": [
+      "o_proj.o_proj"
+    ],
+    "o_proj.o_proj_with_hc_validation": [
+      "hc.hc_post",
+      "o_proj.o_proj"
+    ],
+    "o_proj.build_o_proj_specs": [],
+    "o_proj.golden_o_proj_validation": [
+      "o_proj.golden_o_proj"
+    ],
+    "o_proj.build_o_proj_hc_post_specs": [
+      "o_proj.build_o_proj_specs"
+    ],
+    "o_proj.golden_o_proj_hc_post_validation": [
+      "o_proj.golden_o_proj_validation"
+    ],
+    "o_proj.compare_o_proj_hc_post": [],
+    "compressor.golden_c1a_compressor": [
+      "quant.unpack_bf16_nz",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "compressor.golden_c2a_compressor": [
+      "quant.unpack_bf16_nz",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "prefill_moe._parse_int_option": [],
+    "prefill_moe.clear_moe_signals": [],
+    "prefill_moe.dispatch": [],
+    "prefill_moe.combine_scattered": [],
+    "prefill_moe.prefill_moe": [
+      "expert_routed.expert_routed_scatter",
+      "expert_shared.expert_shared",
+      "gate.gate_normalized",
+      "hc.hc_post",
+      "hc.hc_pre",
+      "prefill_moe.combine_scattered",
+      "prefill_moe.dispatch",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "prefill_moe.l2_prefill_moe": [
+      "prefill_moe.clear_moe_signals",
+      "prefill_moe.prefill_moe"
+    ],
+    "prefill_moe.l3_prefill_moe": [
+      "prefill_moe.l2_prefill_moe"
+    ],
+    "prefill_moe._local_token_count": [],
+    "prefill_moe._compact_local_tokens": [
+      "prefill_moe._local_token_count"
+    ],
+    "prefill_moe._scatter_local_tokens": [
+      "prefill_moe._local_token_count"
+    ],
+    "prefill_moe.prefill_moe_sublayer": [
+      "expert_routed.expert_routed_scatter",
+      "expert_shared.expert_shared",
+      "gate.gate_normalized",
+      "hc.hc_pre",
+      "prefill_moe._compact_local_tokens",
+      "prefill_moe._local_token_count",
+      "prefill_moe._scatter_local_tokens",
+      "prefill_moe.combine_scattered",
+      "prefill_moe.dispatch",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "prefill_moe.prefill_ffn_restore": [
+      "hc.hc_post",
+      "o_proj.prefill_tp_output_all_reduce"
+    ],
+    "prefill_moe._gen_routed_mx_weights_fixture": [],
+    "prefill_moe._fp8_dtype": [],
+    "prefill_moe._e8m0_dtype": [],
+    "prefill_moe._normalise_num_tokens": [],
+    "prefill_moe._route_bias": [],
+    "prefill_moe._build_moe_tensor_specs": [
+      "prefill_moe._e8m0_dtype",
+      "prefill_moe._fp8_dtype",
+      "prefill_moe._gen_routed_mx_weights_fixture",
+      "prefill_moe._normalise_num_tokens",
+      "prefill_moe._route_bias"
+    ],
+    "prefill_moe.build_tensor_specs": [
+      "prefill_moe._build_moe_tensor_specs"
+    ],
+    "prefill_moe._golden_moe_core": [
+      "prefill_moe._e8m0_dtype",
+      "prefill_moe._fp8_dtype",
+      "prefill_moe._normalise_num_tokens",
+      "rmsnorm.golden_rms_norm_tiled"
+    ],
+    "prefill_moe.golden_moe": [
+      "hc.golden_hc_collapse",
+      "hc.golden_hc_post",
+      "hc.golden_mhc_mixes",
+      "prefill_moe._golden_moe_core"
+    ],
+    "prefill_moe._local_mhc_compare": [
+      "prefill_moe._normalise_num_tokens"
+    ],
+    "bf16_projection_dsl.project_bf16_nz": [],
+    "dspark_drafter.golden_main_projection": [
+      "rmsnorm.golden_rms_norm_tiled"
+    ],
+    "dspark_drafter.golden_query_block": [],
+    "dspark_drafter.golden_anchor_ids": [],
+    "dspark_drafter.golden_query_metadata": [
+      "dspark_drafter.golden_query_block",
+      "utils.paged_slots"
+    ],
+    "dspark_drafter.dspark_proj": [
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "dspark_drafter.dspark_proj_test": [
+      "dspark_drafter.dspark_proj"
+    ],
+    "dspark_drafter.dspark_metadata": [],
+    "dspark_drafter.select_dspark_anchor_ids": [],
+    "dspark_drafter.draft_layer": [
+      "dspark_attention.dspark_attention",
+      "hc.hc_post",
+      "hc.hc_pre",
+      "initialization_dsl.zero_bf16_padding",
+      "o_proj.prefill_tp_output_all_reduce",
+      "prefill_moe.prefill_moe",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "dspark_drafter._dspark_drafter": [
+      "dspark_context_kv.dspark_context_kv",
+      "dspark_drafter.draft_layer",
+      "dspark_drafter.dspark_metadata",
+      "dspark_drafter.dspark_proj",
+      "dspark_drafter.select_dspark_anchor_ids",
+      "hc.hc_head",
+      "input_pack.pack_x_hc"
+    ],
+    "dspark_drafter.l3_dspark_drafter": [],
+    "dspark_drafter.dspark_metadata_test": [
+      "dspark_drafter.dspark_metadata"
+    ],
+    "rmsnorm._rms_norm_tiled": [],
+    "rmsnorm.rms_norm_tiled": [
+      "rmsnorm._rms_norm_tiled"
+    ],
+    "rmsnorm.rms_norm_tiled_compensated": [
+      "rmsnorm._rms_norm_tiled"
+    ],
+    "rmsnorm.rms_norm": [],
+    "rmsnorm.golden_rms_norm_tiled": [],
+    "rmsnorm.golden_rms_norm": [],
+    "rmsnorm.make_norm_with_deps": [
+      "rmsnorm.rms_norm"
+    ],
+    "expert_routed._expert_routed_partials": [
+      "expert_routed_dsl.routed_ffn"
+    ],
+    "expert_routed._reduce_ffn_tile": [],
+    "expert_routed.expert_routed_scatter": [
+      "expert_routed._expert_routed_partials",
+      "expert_routed._reduce_ffn_tile"
+    ],
+    "expert_routed.local_compute_test": [
+      "expert_routed._expert_routed_partials",
+      "expert_routed._reduce_ffn_tile"
+    ],
+    "expert_routed.golden_expert_routed": [
+      "quant.unpack_mxfp4_weight_tiles"
+    ],
+    "expert_routed.gen_routed_mxfp4_weights": [
+      "quant.pack_mxfp4_weight_tiles"
+    ],
+    "expert_routed.golden_local_compute": [
+      "expert_routed.golden_expert_routed"
+    ],
+    "expert_routed.compare_local_compute": [],
+    "expert_routed.validation_counts": [],
+    "expert_routed.build_tensor_specs": [
+      "expert_routed.gen_routed_mxfp4_weights",
+      "expert_routed.validation_counts"
+    ],
+    "index_plan_dsl.plan_runs": [],
+    "index_plan_dsl.plan_pool_rows": [],
+    "index_plan_dsl.plan_index_runs": [
+      "index_plan_dsl.plan_runs"
+    ],
+    "index_plan_dsl.plan_pool_runs": [
+      "index_plan_dsl.plan_pool_rows"
+    ],
+    "index_plan_dsl.validate_plan": [
+      "index_plan_dsl.plan_index_runs"
+    ],
+    "index_plan_dsl.validate_pool_plan": [
+      "index_plan_dsl.plan_pool_runs"
+    ],
+    "index_plan_dsl.golden_plan": [],
+    "index_plan_dsl.golden_pool_plan": [],
+    "index_plan_dsl.build_plan_specs": [],
+    "index_plan_dsl.build_pool_plan_specs": [],
+    "decode_c1a_full.decode_c1a_full": [
+      "compressor_dsl.c1a_compressor_project",
+      "compressor_publish_dsl.c1a_compressor_publish",
+      "decode_indexer.c1a_index",
+      "decode_indexer.score_select_paged",
+      "hc.hc_head_norm",
+      "hc.hc_post",
+      "hc.hc_project",
+      "hc.hc_sinkhorn",
+      "index_key_dsl.publish_index_rows",
+      "index_pool_dsl.select_candidate_block_pool",
+      "index_projection_dsl.project_index_key",
+      "o_proj.o_proj",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "sparse_attention.attend_packed",
+      "window_kv_dsl.window_publish"
+    ],
+    "decode_c1a_full.l2_decode_c1a_full": [
+      "decode_c1a_full.decode_c1a_full"
+    ],
+    "decode_c1a_full.l3_decode_c1a_full": [
+      "decode_c1a_full.l2_decode_c1a_full"
+    ],
+    "decode_c1a_full.golden_c1a": [],
+    "decode_c1a_full.build_c1a_specs": [],
+    "mxfp8_dsl._quant_row": [],
+    "mxfp8_dsl._quant_upward_row": [],
+    "mxfp8_dsl._quantize_bf16_tile": [
+      "mxfp8_dsl._quant_row"
+    ],
+    "mxfp8_dsl._mx_accumulate": [],
+    "mxfp8_dsl._mx_project": [
+      "mxfp8_dsl._mx_accumulate"
+    ],
+    "mxfp8_dsl.quantize_bf16_grid": [
+      "mxfp8_dsl._quantize_bf16_tile"
+    ],
+    "mxfp8_dsl.quantize_matrix": [
+      "mxfp8_dsl.quantize_bf16_grid"
+    ],
+    "input_pack.prepare_compressed_lens": [],
+    "input_pack.gather_rows": [],
+    "input_pack.pack_x_hc": [],
+    "input_pack.l2_input_pack": [
+      "input_pack.pack_x_hc"
+    ],
+    "input_pack.golden_pack_x_hc": [],
+    "input_pack.build_tensor_specs": [],
+    "prefill_c1a_reuse.prefill_c1a_reuse_attention": [
+      "o_proj.o_proj",
+      "o_proj.prefill_sp_output_reduce_scatter",
+      "o_proj.prefill_tp_output_all_reduce",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "sparse_attention.attend_packed",
+      "window_kv_dsl.window_publish"
+    ],
+    "prefill_c1a_reuse.golden_prefill_attn_c1a_reuse": [
+      "sparse_attention.golden_compressed_attention"
+    ],
+    "prefill_c1a_reuse.l2_prefill_c1a_reuse_sharded": [
+      "hc.hc_pre",
+      "hc.prefill_sp_post",
+      "o_proj.retire_prefill_signals",
+      "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "prefill_c1a_reuse.l3_prefill_c1a_reuse_sharded": [
+      "prefill_c1a_reuse.l2_prefill_c1a_reuse_sharded"
+    ],
+    "prefill_c1a_reuse.prefill_c1a_reuse": [
+      "hc.hc_post",
+      "hc.hc_pre",
+      "prefill_c1a_reuse.prefill_c1a_reuse_attention",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "prefill_c1a_reuse.l2_prefill_c1a_reuse": [
+      "o_proj.retire_prefill_signals",
+      "prefill_c1a_reuse.prefill_c1a_reuse"
+    ],
+    "prefill_c1a_reuse.l3_prefill_c1a_reuse": [
+      "prefill_c1a_reuse.l2_prefill_c1a_reuse"
+    ],
+    "prefill_c1a_reuse.build_hc_tensor_specs": [
+      "hc.golden_mhc_mixes",
+      "prefill_c1a_full.make_fixture_values"
+    ],
+    "prefill_c1a_reuse.golden_prefill_c1a_reuse_case": [
+      "hc.golden_hc_collapse",
+      "hc.golden_hc_post",
+      "hc.golden_mhc_mixes",
+      "prefill_c1a_full.apply_distributed_golden",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "expert_shared_projection_dsl._project_tile": [],
+    "expert_shared_projection_dsl.project_shared_grid": [
+      "expert_shared_projection_dsl._project_tile"
+    ],
+    "expert_shared_projection_dsl.project_shared": [
+      "expert_shared_projection_dsl.project_shared_grid"
+    ],
+    "expert_shared_projection_dsl.validate_gate_projection": [
+      "expert_shared_projection_dsl.project_shared"
+    ],
+    "expert_shared_projection_dsl.validate_down_projection": [
+      "expert_shared_projection_dsl.project_shared"
+    ],
+    "expert_shared_projection_dsl.golden_projection": [],
+    "expert_shared_projection_dsl.projection_specs": [],
+    "index_query_dsl._project_query_mix": [
+      "index_vector_dsl.rope_quantize_row",
+      "mxfp8_dsl._mx_accumulate"
+    ],
+    "index_query_dsl.project_query_grid": [
+      "index_query_dsl._project_query_mix"
+    ],
+    "index_query_dsl.project_index_query": [
+      "index_query_dsl.project_query_grid"
+    ],
+    "index_query_dsl.validate_query": [
+      "index_query_dsl.project_index_query"
+    ],
+    "index_query_dsl.golden_query": [],
+    "index_query_dsl.build_query_specs": [],
+    "decode_c2a_reuse.decode_c2a_reuse": [
+      "hc.hc_head_norm",
+      "hc.hc_post",
+      "hc.hc_project",
+      "hc.hc_sinkhorn",
+      "o_proj.o_proj",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "sparse_attention.attend_packed",
+      "window_kv_dsl.window_publish"
+    ],
+    "decode_c2a_reuse.l2_decode_c2a_reuse": [
+      "decode_c2a_reuse.decode_c2a_reuse"
+    ],
+    "decode_c2a_reuse.l3_decode_c2a_reuse": [
+      "decode_c2a_reuse.l2_decode_c2a_reuse"
+    ],
+    "compressor_dsl._project_compressor_tile": [
+      "bf16_projection_dsl.project_bf16_nz"
+    ],
+    "compressor_dsl.project_c1a_compressor": [
+      "bf16_projection_dsl.project_bf16_nz"
+    ],
+    "compressor_dsl.c1a_compressor_project": [
+      "compressor_dsl.project_c1a_compressor"
+    ],
+    "compressor_dsl.project_c2a_grid": [
+      "compressor_dsl._project_compressor_tile"
+    ],
+    "compressor_dsl.c2a_compressor_project": [
+      "compressor_dsl.project_c2a_grid"
+    ],
+    "compressor_dsl.validate_projection": [
+      "compressor_dsl.c2a_compressor_project"
+    ],
+    "compressor_dsl.validate_c1a_projection": [
+      "compressor_dsl.c1a_compressor_project"
+    ],
+    "compressor_dsl.golden_projection": [],
+    "compressor_dsl.golden_c1a_projection": [],
+    "compressor_dsl.build_projection_specs": [],
+    "compressor_dsl.build_c1a_projection_specs": [],
+    "compressor_dsl.projection_comparator": [],
+    "moe_combine_dsl._combine_rows": [],
+    "moe_combine_dsl.combine_grid": [
+      "moe_combine_dsl._combine_rows"
+    ],
+    "moe_combine_dsl.combine_local": [
+      "moe_combine_dsl.combine_grid"
+    ],
+    "moe_combine_dsl.validate_combine": [
+      "moe_combine_dsl.combine_local"
+    ],
+    "moe_combine_dsl.golden_combine": [],
+    "moe_combine_dsl.build_combine_specs": [],
+    "compressor_vector_dsl.normalize_latent": [],
+    "compressor_vector_dsl.golden_normalize_latent": [],
+    "o_proj_dsl._rope_quant_head": [
+      "mxfp8_dsl._quant_row"
+    ],
+    "o_proj_dsl.project_o_a": [
+      "mxfp8_dsl._mx_project"
+    ],
+    "o_proj_dsl.project_o_b": [
+      "mxfp8_dsl._mx_project"
+    ],
+    "o_proj_dsl.rope_quant_grid": [
+      "o_proj_dsl._rope_quant_head"
+    ],
+    "o_proj_dsl.rope_quant": [
+      "o_proj_dsl.rope_quant_grid"
+    ],
+    "o_proj_dsl.grouped_projection": [
+      "o_proj_dsl.project_o_a"
+    ],
+    "o_proj_dsl.output_projection": [
+      "o_proj_dsl.project_o_b"
+    ],
+    "o_proj_dsl.rope_quant_validation": [
+      "o_proj_dsl.rope_quant"
+    ],
+    "o_proj_dsl.golden_rope_quant": [],
+    "o_proj_dsl.build_rope_specs": [],
+    "o_proj_dsl.mx_projection_validation": [
+      "o_proj_dsl.project_o_b"
+    ],
+    "o_proj_dsl.build_mx_specs": [],
+    "o_proj_dsl.golden_mx_projection": [],
+    "index_projection_dsl._project_index_key_tile": [
+      "bf16_projection_dsl.project_bf16_nz"
+    ],
+    "index_projection_dsl.project_index_key_grid": [
+      "index_projection_dsl._project_index_key_tile"
+    ],
+    "index_projection_dsl.project_index_key": [
+      "index_projection_dsl.project_index_key_grid"
+    ],
+    "index_projection_dsl.validate_projection": [
+      "index_projection_dsl.project_index_key"
+    ],
+    "index_projection_dsl.golden_projection": [],
+    "index_projection_dsl.build_projection_specs": [],
+    "index_projection_dsl.projection_comparator": [],
+    "prefill_c1a_reindex.prefill_c1a_reindex_attention": [
+      "o_proj.o_proj",
+      "o_proj.prefill_sp_output_reduce_scatter",
+      "o_proj.prefill_tp_output_all_reduce",
+      "prefill_indexer.prefill_indexer",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "sparse_attention.attend_packed",
+      "window_kv_dsl.window_publish"
+    ],
+    "prefill_c1a_reindex.golden_prefill_attn_c1a_reindex": [
+      "sparse_attention.golden_compressed_attention"
+    ],
+    "prefill_c1a_reindex.l2_prefill_c1a_reindex_sharded": [
+      "hc.hc_pre",
+      "hc.prefill_sp_post",
+      "o_proj.retire_prefill_signals",
+      "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "prefill_c1a_reindex.l3_prefill_c1a_reindex_sharded": [
+      "prefill_c1a_reindex.l2_prefill_c1a_reindex_sharded"
+    ],
+    "prefill_c1a_reindex.prefill_c1a_reindex": [
+      "hc.hc_post",
+      "hc.hc_pre",
+      "prefill_c1a_reindex.prefill_c1a_reindex_attention",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "prefill_c1a_reindex.l2_prefill_c1a_reindex": [
+      "o_proj.retire_prefill_signals",
+      "prefill_c1a_reindex.prefill_c1a_reindex"
+    ],
+    "prefill_c1a_reindex.l3_prefill_c1a_reindex": [
+      "prefill_c1a_reindex.l2_prefill_c1a_reindex"
+    ],
+    "prefill_c1a_reindex.build_hc_tensor_specs": [
+      "hc.golden_mhc_mixes",
+      "prefill_c1a_full.make_fixture_values"
+    ],
+    "prefill_c1a_reindex.golden_prefill_c1a_reindex_case": [
+      "hc.golden_hc_collapse",
+      "hc.golden_hc_post",
+      "hc.golden_mhc_mixes",
+      "prefill_c1a_full.apply_distributed_golden",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "decode_fwd.decode_encoder": [
+      "decode_c2a_full.decode_c2a_full",
+      "decode_c2a_reuse.decode_c2a_reuse",
+      "decode_moe.moe",
+      "decode_swa.decode_swa",
+      "engram.engram_from_rows",
+      "input_pack.prepare_compressed_lens",
+      "rope_tables.materialize_rope_rows"
+    ],
+    "decode_fwd.decode_decoder": [
+      "decode_c1a_full.decode_c1a_full",
+      "decode_c1a_reindex.decode_c1a_reindex",
+      "decode_c1a_reuse.decode_c1a_reuse",
+      "decode_moe.clear_moe_signals",
+      "decode_moe.moe",
+      "input_pack.prepare_compressed_lens"
+    ],
+    "decode_fwd.l2_decode_fwd": [
+      "decode_fwd.decode_decoder",
+      "decode_fwd.decode_encoder"
+    ],
+    "decode_fwd.l3_decode_fwd": [
+      "decode_fwd.l2_decode_fwd"
+    ],
+    "decode_fwd._torch_dtype": [],
+    "decode_fwd._fixture_extent": [],
+    "decode_fwd.build_tensor_specs": [
+      "decode_fwd._fixture_extent",
+      "decode_fwd._torch_dtype",
+      "rope_tables.prepare_forward_rope_tables",
+      "utils.paged_slots",
+      "utils.window_metadata"
+    ],
+    "sparse_attention_dsl.sparse_attention_mix": [],
+    "sparse_attention_dsl.sparse_attention_dsl": [
+      "sparse_attention_dsl.sparse_attention_mix"
+    ],
+    "sparse_attention_dsl.validate_sparse_attention": [
+      "sparse_attention_dsl.sparse_attention_dsl"
+    ],
+    "sparse_attention_dsl.golden_selected_attention": [],
+    "sparse_attention_dsl.golden_sparse": [
+      "sparse_attention_dsl.golden_selected_attention"
+    ],
+    "sparse_attention_dsl.build_sparse_specs": [],
+    "index_gather_dsl.gather_pool": [],
+    "index_gather_dsl.gather_candidate_cache": [
+      "index_gather_dsl.gather_pool"
+    ],
+    "index_gather_dsl.validate_gather": [
+      "index_gather_dsl.gather_candidate_cache"
+    ],
+    "index_gather_dsl.golden_gather": [],
+    "index_gather_dsl.build_gather_specs": [],
+    "index_gather_dsl.compare_bytes": [],
+    "index_key_dsl._publish_index_page": [
+      "index_vector_dsl.rope_quantize_row"
+    ],
+    "index_key_dsl.publish_index_grid": [
+      "index_key_dsl._publish_index_page"
+    ],
+    "index_key_dsl.publish_index_rows": [
+      "index_key_dsl.publish_index_grid"
+    ],
+    "index_key_dsl.validate_publication": [
+      "index_key_dsl.publish_index_rows"
+    ],
+    "index_key_dsl.golden_publication": [],
+    "index_key_dsl.compare_bytes": [],
+    "index_key_dsl.build_publication_specs": [],
+    "decode_c1a_reindex.decode_c1a_reindex": [
+      "decode_indexer.c1a_index",
+      "decode_indexer.score_select_reindex",
+      "hc.hc_head_norm",
+      "hc.hc_post",
+      "hc.hc_project",
+      "hc.hc_sinkhorn",
+      "o_proj.o_proj",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "sparse_attention.attend_packed",
+      "window_kv_dsl.window_publish"
+    ],
+    "decode_c1a_reindex.l2_decode_c1a_reindex": [
+      "decode_c1a_reindex.decode_c1a_reindex"
+    ],
+    "decode_c1a_reindex.l3_decode_c1a_reindex": [
+      "decode_c1a_reindex.l2_decode_c1a_reindex"
+    ],
+    "vision.vision_rope": [],
+    "vision.linear_inline": [],
+    "vision._make_norm": [],
+    "vision.add_inline": [],
+    "vision._make_attention": [],
+    "vision._make_swiglu": [],
+    "vision._make_vit": [
+      "vision._make_attention",
+      "vision._make_norm",
+      "vision._make_swiglu",
+      "vision.add_inline",
+      "vision.linear_inline"
+    ],
+    "vision._make_aligner": [
+      "vision.linear_inline"
+    ],
+    "vision.make_vision_program": [
+      "vision._make_aligner",
+      "vision._make_vit"
+    ],
+    "vision.load_vision_weights": [],
+    "vision._golden_norm": [],
+    "vision.golden_vision": [
+      "vision._golden_norm"
+    ],
+    "vision.build_inputs": [
+      "vision.load_vision_weights",
+      "vision.vision_rope"
+    ],
+    "vision.accuracy": [],
+    "vision.validation_comparators": [],
+    "prefill_cp_allgather.make_prefill_sp_input_allgather": [],
+    "rope_tables.precompute_rope_tables": [],
+    "rope_tables.prepare_forward_rope_tables": [
+      "rope_tables.precompute_rope_tables"
+    ],
+    "rope_tables.materialize_rope_rows": [],
+    "expert_shared.expert_shared": [
+      "expert_shared_dsl.shared_swiglu_quant",
+      "expert_shared_projection_dsl.project_shared"
+    ],
+    "expert_shared.l2_expert_shared": [
+      "expert_shared.expert_shared"
+    ],
+    "expert_shared.golden_expert_shared": [],
+    "expert_shared.build_tensor_specs": [],
+    "moe_dispatch_dsl._stage_rows": [],
+    "moe_dispatch_dsl.stage_grid": [
+      "moe_dispatch_dsl._stage_rows"
+    ],
+    "moe_dispatch_dsl.stage_local": [
+      "moe_dispatch_dsl.stage_grid"
+    ],
+    "moe_dispatch_dsl._gather_rows": [],
+    "moe_dispatch_dsl.gather_grid": [
+      "moe_dispatch_dsl._gather_rows"
+    ],
+    "moe_dispatch_dsl.gather_local": [
+      "moe_dispatch_dsl.gather_grid"
+    ],
+    "moe_dispatch_dsl.validate_stage": [
+      "moe_dispatch_dsl.stage_local"
+    ],
+    "moe_dispatch_dsl.validate_gather": [
+      "moe_dispatch_dsl.gather_local"
+    ],
+    "moe_dispatch_dsl.golden_stage": [],
+    "moe_dispatch_dsl.build_stage_specs": [],
+    "moe_dispatch_dsl.golden_gather": [],
+    "moe_dispatch_dsl.build_gather_specs": [],
+    "quant.quantize_bf16_to_mxfp8": [],
+    "quant.decode_e8m0": [],
+    "quant.encode_e8m0": [],
+    "quant.pack_fp8_nz": [],
+    "quant.unpack_fp8_nz": [],
+    "quant.pack_bf16_nz": [],
+    "quant.unpack_bf16_nz": [],
+    "quant.pack_mx_b_scale": [],
+    "quant.unpack_mx_b_scale": [],
+    "quant._nearest_fp4_indices": [],
+    "quant._pack_fp4": [],
+    "quant._unpack_fp4": [],
+    "quant.quantize_mxfp4_weight": [
+      "quant._nearest_fp4_indices",
+      "quant._pack_fp4",
+      "quant.encode_e8m0"
+    ],
+    "quant.quantize_mxfp8_cache": [],
+    "quant.dequantize_mxfp8_cache": [],
+    "quant.quantize_mxfp4_cache": [
+      "quant._nearest_fp4_indices",
+      "quant._pack_fp4",
+      "quant.encode_e8m0"
+    ],
+    "quant.dequantize_mxfp4_cache": [
+      "quant._unpack_fp4",
+      "quant.decode_e8m0"
+    ],
+    "quant._quantize_mxfp8_activation": [
+      "quant._ocp_e8m0_codes_from_amax",
+      "quant.decode_e8m0"
+    ],
+    "quant.quantize_mxfp8_upward_reference": [],
+    "quant.quantize_grouped_mxfp8_weight": [
+      "quant._quantize_mxfp8_activation",
+      "quant.encode_e8m0",
+      "quant.pack_fp8_nz",
+      "quant.pack_mx_b_scale"
+    ],
+    "quant._ocp_e8m0_codes_from_amax": [],
+    "quant.pack_mx_a_scale": [],
+    "quant.unpack_mx_a_scale": [],
+    "quant.quantize_mxfp8_upward_e8m0": [],
+    "quant.generate_mxfp8_weight_kn": [
+      "quant._ocp_e8m0_codes_from_amax",
+      "quant.decode_e8m0",
+      "quant.pack_mx_b_scale"
+    ],
+    "quant.unpack_mx_scale_codes": [
+      "quant.unpack_mx_a_scale",
+      "quant.unpack_mx_b_scale"
+    ],
+    "quant._pack_mxfp4_nibbles_kn_tiles": [],
+    "quant.pack_mxfp4_weight_tiles": [
+      "quant._pack_mxfp4_nibbles_kn_tiles"
+    ],
+    "quant.unpack_mxfp4_weight_tiles": [],
+    "decode_c2a_full.decode_c2a_full": [
+      "compressor_dsl.c2a_compressor_project",
+      "compressor_pool_dsl.c2a_compressor_publish",
+      "decode_indexer.decode_c2a_indexer",
+      "hc.hc_head_norm",
+      "hc.hc_post",
+      "hc.hc_project",
+      "hc.hc_sinkhorn",
+      "o_proj.o_proj",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "sparse_attention.attend_packed",
+      "window_kv_dsl.window_publish"
+    ],
+    "decode_c2a_full.l2_decode_c2a_full": [
+      "decode_c2a_full.decode_c2a_full"
+    ],
+    "decode_c2a_full.l3_decode_c2a_full": [
+      "decode_c2a_full.l2_decode_c2a_full"
+    ],
+    "decode_c2a_full.golden_c2a": [],
+    "decode_c2a_full.build_c2a_specs": [
+      "decode_c2a_full.golden_c2a"
+    ],
+    "decode_c2a_full.c2a_comparators": [],
+    "index_weight_dsl._project_index_weight_tile": [
+      "bf16_projection_dsl.project_bf16_nz"
+    ],
+    "index_weight_dsl._reduce_index_weight_tile": [],
+    "index_weight_dsl.project_index_weight_grid": [
+      "index_weight_dsl._project_index_weight_tile"
+    ],
+    "index_weight_dsl.reduce_index_weight_grid": [
+      "index_weight_dsl._reduce_index_weight_tile"
+    ],
+    "index_weight_dsl.project_index_weights": [
+      "index_weight_dsl.project_index_weight_grid",
+      "index_weight_dsl.reduce_index_weight_grid"
+    ],
+    "index_weight_dsl.validate_projection": [
+      "index_weight_dsl.project_index_weights"
+    ],
+    "index_weight_dsl.golden_projection": [],
+    "index_weight_dsl.build_projection_specs": [],
+    "index_weight_dsl.projection_comparator": [],
+    "decode_layer.l2_decode_layer": [
+      "decode_c1a_full.decode_c1a_full",
+      "decode_c1a_reindex.decode_c1a_reindex",
+      "decode_c1a_reuse.decode_c1a_reuse",
+      "decode_c2a_full.decode_c2a_full",
+      "decode_c2a_reuse.decode_c2a_reuse",
+      "decode_moe.clear_moe_signals",
+      "decode_moe.moe",
+      "decode_swa.decode_swa",
+      "initialization_dsl.zero_attention_output"
+    ],
+    "decode_layer.l3_decode_layer": [
+      "decode_layer.l2_decode_layer"
+    ],
+    "decode_layer.decode_layer_kind": [],
+    "decode_layer._select_inputs": [],
+    "decode_layer._golden_expert": [],
+    "decode_layer._dequantize_mxfp8": [
+      "quant.decode_e8m0"
+    ],
+    "decode_layer.golden_decode_moe": [
+      "decode_layer._dequantize_mxfp8",
+      "decode_layer._golden_expert",
+      "gate.golden_gate_reference",
+      "quant.dequantize_mxfp4_cache",
+      "quant.unpack_mx_b_scale",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "decode_layer.golden_decode_layer": [
+      "decode_layer._select_inputs",
+      "decode_layer.golden_decode_moe",
+      "decode_swa.golden_swa",
+      "hc.golden_hc_collapse",
+      "hc.golden_hc_post",
+      "hc.golden_mhc_mixes"
+    ],
+    "decode_layer._torch_dtype": [],
+    "decode_layer._fixture_extent": [],
+    "decode_layer.build_tensor_specs": [
+      "decode_layer._fixture_extent",
+      "decode_layer._fixture_moe_counts",
+      "decode_layer._torch_dtype",
+      "decode_layer.decode_layer_kind"
+    ],
+    "decode_layer._fixture_moe_counts": [],
+    "decode_layer.golden_l3_decode_layer": [
+      "decode_c2a_full.golden_c2a",
+      "decode_layer.decode_layer_kind"
+    ],
+    "decode_layer._compare_active_rows_per_rank": [],
+    "decode_layer._compare_c2a_per_rank": [],
+    "decode_layer._compare_moe_from_actual_attention": [],
+    "decode_layer._compare_next_pre_mix_from_actual_attention": [
+      "decode_layer._compare_active_rows_per_rank",
+      "hc.golden_mhc_mixes"
+    ],
+    "decode_layer._mxfp8_weight": [
+      "quant.pack_mx_b_scale"
+    ],
+    "decode_layer._attention_values": [
+      "decode_layer._mxfp8_weight",
+      "quant.quantize_grouped_mxfp8_weight",
+      "quant.quantize_mxfp4_cache",
+      "quant.quantize_mxfp8_cache"
+    ],
+    "decode_layer.make_decode_layer_golden_inputs": [
+      "decode_layer._attention_values",
+      "quant.pack_mx_b_scale",
+      "quant.quantize_mxfp4_weight"
+    ],
+    "decode_swa.decode_swa": [
+      "hc.hc_head_norm",
+      "hc.hc_post",
+      "hc.hc_project",
+      "hc.hc_sinkhorn",
+      "initialization_dsl.zero_bf16_padding",
+      "o_proj.o_proj",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "sparse_attention.swa_attention_partial",
+      "window_kv_dsl.window_publish"
+    ],
+    "decode_swa.l2_decode_swa": [
+      "decode_swa.decode_swa"
+    ],
+    "decode_swa.l3_decode_swa": [
+      "decode_swa.l2_decode_swa"
+    ],
+    "decode_swa.build_swa_specs": [],
+    "decode_swa.golden_swa": [],
+    "prefill_c1a_full.prefill_c1a_full_attention": [
+      "o_proj.o_proj",
+      "o_proj.prefill_sp_output_reduce_scatter",
+      "o_proj.prefill_tp_output_all_reduce",
+      "prefill_c1a_full.prefill_publish_decoder",
+      "prefill_indexer.prefill_indexer",
+      "qkv_proj_dsl.kv_proj",
+      "qkv_proj_dsl.quantize_projection_input",
+      "qkv_proj_rope.q_proj_rope",
+      "sparse_attention.attend_packed",
+      "window_kv_dsl.window_publish"
+    ],
+    "prefill_c1a_full._ranked": [],
+    "prefill_c1a_full._fp8_weight": [],
+    "prefill_c1a_full._ranked_fp8_weight": [
+      "prefill_c1a_full._fp8_weight",
+      "prefill_c1a_full._ranked"
+    ],
+    "prefill_c1a_full._case_metadata": [],
+    "prefill_c1a_full.fixture_token_count": [
+      "prefill_c1a_full._case_metadata"
+    ],
+    "prefill_c1a_full.make_fixture_values": [
+      "index_pool_dsl.index_pool_block_capacity",
+      "prefill_c1a_full._case_metadata",
+      "prefill_c1a_full._ranked",
+      "prefill_c1a_full._ranked_fp8_weight"
+    ],
+    "prefill_c1a_full._copy_storage": [],
+    "prefill_c1a_full._reduce_tp_partials": [],
+    "prefill_c1a_full.apply_distributed_golden": [
+      "prefill_c1a_full._copy_storage",
+      "prefill_c1a_full._reduce_tp_partials"
+    ],
+    "prefill_c1a_full._physical_to_logical": [],
+    "prefill_c1a_full.topk_indices_compare": [
+      "prefill_c1a_full._physical_to_logical"
+    ],
+    "prefill_c1a_full.wrap_attention_compare": [],
+    "prefill_c1a_full.golden_prefill_attn_c1a_full": [
+      "sparse_attention.golden_compressed_attention"
+    ],
+    "prefill_c1a_full.prefill_publish_decoder": [
+      "compressor_dsl.c1a_compressor_project",
+      "compressor_publish_dsl.c1a_compressor_publish",
+      "prefill_indexer.publish_c1a_index_key"
+    ],
+    "prefill_c1a_full.l2_prefill_c1a_full_sharded": [
+      "hc.hc_pre",
+      "hc.prefill_sp_post",
+      "o_proj.retire_prefill_signals",
+      "prefill_c1a_full.prefill_c1a_full_attention",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "prefill_c1a_full.l3_prefill_c1a_full_sharded": [
+      "prefill_c1a_full.l2_prefill_c1a_full_sharded"
+    ],
+    "prefill_c1a_full.c1a_sp_reference_attention": [],
+    "prefill_c1a_full.build_c1a_sp_specs": [
+      "hc.make_hc_inputs",
+      "prefill_c1a_full.make_fixture_values",
+      "utils.token_shards"
+    ],
+    "prefill_c1a_full.make_c1a_sp_compare": [
+      "prefill_c1a_full.topk_indices_compare"
+    ],
+    "prefill_c1a_full.golden_c1a_sp": [
+      "hc.golden_hc_collapse",
+      "hc.golden_hc_post",
+      "hc.golden_mhc_mixes",
+      "prefill_c1a_full.c1a_sp_reference_attention",
+      "rmsnorm.golden_rms_norm",
+      "utils.token_shards"
+    ],
+    "prefill_c1a_full.validate_c1a_sp": [
+      "prefill_c1a_full.build_c1a_sp_specs",
+      "prefill_c1a_full.make_c1a_sp_compare"
+    ],
+    "prefill_c1a_full.prefill_c1a_full": [
+      "hc.hc_post",
+      "hc.hc_pre",
+      "prefill_c1a_full.prefill_c1a_full_attention",
+      "rmsnorm.rms_norm_tiled"
+    ],
+    "prefill_c1a_full.l2_prefill_c1a_full": [
+      "o_proj.retire_prefill_signals",
+      "prefill_c1a_full.prefill_c1a_full"
+    ],
+    "prefill_c1a_full.l3_prefill_c1a_full": [
+      "prefill_c1a_full.l2_prefill_c1a_full"
+    ],
+    "prefill_c1a_full.build_hc_tensor_specs": [
+      "hc.golden_mhc_mixes",
+      "prefill_c1a_full.make_fixture_values"
+    ],
+    "prefill_c1a_full.golden_prefill_c1a_full_case": [
+      "hc.golden_hc_collapse",
+      "hc.golden_hc_post",
+      "hc.golden_mhc_mixes",
+      "prefill_c1a_full.apply_distributed_golden",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "index_route_dsl._check_identity_panel": [],
+    "index_route_dsl._check_page_panel": [],
+    "index_route_dsl.classify_pool_rows": [
+      "index_route_dsl._check_identity_panel",
+      "index_route_dsl._check_page_panel"
+    ],
+    "index_route_dsl.classify_candidate_pool": [
+      "index_route_dsl.classify_pool_rows"
+    ],
+    "index_route_dsl.validate_route": [
+      "index_route_dsl.classify_candidate_pool"
+    ],
+    "index_route_dsl.golden_route": [],
+    "index_route_dsl.build_route_specs": [],
+    "qkv_proj_rope.q_proj_rope": [
+      "q_branch_dsl.normalize_quant",
+      "q_branch_dsl.qb_projection",
+      "q_branch_dsl.query_rope",
+      "qkv_proj_dsl.qa_projection"
+    ],
+    "qkv_proj_rope.q_norm_validation": [
+      "q_branch_dsl.normalize_quant"
+    ],
+    "qkv_proj_rope.qb_rope_validation": [
+      "mxfp8_dsl.quantize_matrix",
+      "q_branch_dsl.qb_projection",
+      "q_branch_dsl.query_rope"
+    ],
+    "qkv_proj_rope.golden_rope_interleave": [],
+    "qkv_proj_rope.golden_rope_tail": [
+      "qkv_proj_rope.golden_rope_interleave"
+    ],
+    "qkv_proj_rope.golden_qkv_proj_rope": [
+      "gemm.golden_gemm_bf16_via_mxfp8_to_bf16_sequential",
+      "gemm.golden_mxfp8_linear_grouped_sum",
+      "qkv_proj_rope.golden_rope_tail",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "qkv_proj_rope._golden_q_payload": [],
+    "qkv_proj_rope.golden_q_norm": [
+      "qkv_proj_rope._golden_q_payload",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "qkv_proj_rope.golden_qb_rope": [
+      "gemm.golden_gemm_bf16_via_mxfp8_to_bf16_sequential",
+      "qkv_proj_rope._golden_q_payload",
+      "qkv_proj_rope.golden_rope_tail"
+    ],
+    "qkv_proj_rope.build_q_branch_specs": [],
+    "decode_indexer.score_select_reindex": [
+      "decode_indexer._score_select_pool",
+      "decode_indexer.score_select_paged",
+      "index_route_dsl.classify_candidate_pool"
+    ],
+    "decode_indexer._score_select_pool": [
+      "index_gather_dsl.gather_candidate_cache",
+      "index_plan_dsl.plan_pool_runs",
+      "index_score_dsl.dispatch_score_topk"
+    ],
+    "decode_indexer.score_select_paged": [
+      "index_plan_dsl.plan_index_runs",
+      "index_score_dsl.dispatch_score_topk"
+    ],
+    "decode_indexer.c1a_index": [
+      "index_query_dsl.project_index_query",
+      "index_weight_dsl.project_index_weights"
+    ],
+    "decode_indexer.decode_c2a_indexer": [
+      "decode_indexer.c1a_index",
+      "decode_indexer.score_select_paged",
+      "index_key_dsl.publish_index_rows",
+      "index_projection_dsl.project_index_key"
+    ],
+    "decode_indexer.mapped_fp4_cache_compare": [],
+    "decode_indexer.golden_index_query_fp4": [
+      "quant.dequantize_mxfp4_cache",
+      "quant.quantize_mxfp4_cache"
+    ],
+    "decode_indexer.golden_index_key": [
+      "qkv_proj_rope.golden_rope_interleave",
+      "rmsnorm.golden_rms_norm"
+    ],
+    "decode_indexer.golden_index_weighted_sum": [],
+    "decode_indexer.golden_c1a_index_scores": [
+      "decode_indexer.golden_index_query_fp4",
+      "decode_indexer.golden_index_weighted_sum",
+      "gemm.golden_gemm_bf16_via_mxfp8_to_bf16_sequential",
+      "quant.dequantize_mxfp4_cache"
+    ],
+    "decode_indexer.golden_pool_index_scores": [],
+    "decode_indexer.golden_c1a_index_topk": [],
+    "decode_indexer._select_shared_c2a_topk": [],
+    "decode_indexer.golden_c2a_index": [
+      "decode_indexer._select_shared_c2a_topk",
+      "decode_indexer.golden_index_query_fp4",
+      "decode_indexer.golden_index_weighted_sum",
+      "gemm.golden_gemm_bf16_via_mxfp8_to_bf16_sequential",
+      "qkv_proj_rope.golden_rope_tail",
+      "quant.dequantize_mxfp4_cache"
+    ]
+  },
+  "reachable": [
+    "attention_cache_dsl.dequantize_fp8",
+    "attention_cache_dsl.store_nz",
+    "bf16_projection_dsl.project_bf16_nz",
+    "compressor_dsl._project_compressor_tile",
+    "compressor_dsl.c1a_compressor_project",
+    "compressor_dsl.c2a_compressor_project",
+    "compressor_dsl.project_c1a_compressor",
+    "compressor_dsl.project_c2a_grid",
+    "compressor_pool_dsl._clear_task",
+    "compressor_pool_dsl._pool_state_block",
+    "compressor_pool_dsl._publish_compressed_page",
+    "compressor_pool_dsl._publish_task",
+    "compressor_pool_dsl.c2a_compressor_publish",
+    "compressor_pool_dsl.clear_latent",
+    "compressor_pool_dsl.pool_state_grid",
+    "compressor_pool_dsl.publish_compressed_grid",
+    "compressor_publish_dsl.c1a_compressor_publish",
+    "compressor_publish_dsl.publish_c1a",
+    "compressor_vector_dsl.normalize_latent",
+    "decode_c1a_full.decode_c1a_full",
+    "decode_c1a_reindex.decode_c1a_reindex",
+    "decode_c1a_reuse.decode_c1a_reuse",
+    "decode_c2a_full.decode_c2a_full",
+    "decode_c2a_reuse.decode_c2a_reuse",
+    "decode_indexer._score_select_pool",
+    "decode_indexer.c1a_index",
+    "decode_indexer.decode_c2a_indexer",
+    "decode_indexer.score_select_paged",
+    "decode_indexer.score_select_reindex",
+    "decode_layer.l2_decode_layer",
+    "decode_layer.l3_decode_layer",
+    "decode_moe.clear_moe_signals",
+    "decode_moe.combine_scattered",
+    "decode_moe.dispatch",
+    "decode_moe.moe",
+    "decode_swa.decode_swa",
+    "expert_routed._expert_routed_partials",
+    "expert_routed._reduce_ffn_tile",
+    "expert_routed.expert_routed_scatter",
+    "expert_routed_dsl._project_tile",
+    "expert_routed_dsl._unpack_weight",
+    "expert_routed_dsl.activate_worker",
+    "expert_routed_dsl.project_down_worker",
+    "expert_routed_dsl.project_up_worker",
+    "expert_routed_dsl.routed_ffn",
+    "expert_shared.expert_shared",
+    "expert_shared_dsl._shared_swiglu_quant_tile",
+    "expert_shared_dsl.shared_swiglu_quant",
+    "expert_shared_dsl.shared_swiglu_quant_grid",
+    "expert_shared_projection_dsl._project_tile",
+    "expert_shared_projection_dsl.project_shared",
+    "expert_shared_projection_dsl.project_shared_grid",
+    "gate.gate",
+    "gate.gate_from_bf16",
+    "gate_dsl._normalize_rows",
+    "gate_dsl._project_scores",
+    "gate_dsl._quantize_rows",
+    "gate_dsl._select_routes",
+    "gate_dsl.normalize_gate",
+    "gate_dsl.normalize_gate_grid",
+    "gate_dsl.project_gate",
+    "gate_dsl.project_gate_grid",
+    "gate_dsl.quantize_gate",
+    "gate_dsl.quantize_gate_grid",
+    "gate_dsl.route_gate",
+    "gate_dsl.route_gate_grid",
+    "hc.hc_head",
+    "hc.hc_head_norm",
+    "hc.hc_post",
+    "hc.hc_pre",
+    "hc.hc_project",
+    "hc.hc_project_into",
+    "hc.hc_sinkhorn",
+    "hc_dsl._coefficients_row",
+    "hc_dsl._collapse_four",
+    "hc_dsl._collapse_norm_row",
+    "hc_dsl._collapse_tile",
+    "hc_dsl._expand_row",
+    "hc_dsl._inverse_rms_row",
+    "hc_dsl._project_hf32_tile",
+    "hc_dsl._softmax_four",
+    "hc_dsl._sum_four",
+    "hc_dsl.coefficients_grid",
+    "hc_dsl.collapse_grid",
+    "hc_dsl.collapse_norm_grid",
+    "hc_dsl.collapse_tail",
+    "hc_dsl.expand_grid",
+    "hc_dsl.inverse_rms_grid",
+    "hc_dsl.project_hf32_grid",
+    "index_gather_dsl.gather_candidate_cache",
+    "index_gather_dsl.gather_pool",
+    "index_key_dsl._publish_index_page",
+    "index_key_dsl.publish_index_grid",
+    "index_key_dsl.publish_index_rows",
+    "index_plan_dsl.plan_index_runs",
+    "index_plan_dsl.plan_pool_rows",
+    "index_plan_dsl.plan_pool_runs",
+    "index_plan_dsl.plan_runs",
+    "index_pool_dsl.generate_pool",
+    "index_pool_dsl.select_candidate_block_pool",
+    "index_pool_dsl.visible_block_count",
+    "index_projection_dsl._project_index_key_tile",
+    "index_projection_dsl.project_index_key",
+    "index_projection_dsl.project_index_key_grid",
+    "index_query_dsl._project_query_mix",
+    "index_query_dsl.project_index_query",
+    "index_query_dsl.project_query_grid",
+    "index_route_dsl._check_identity_panel",
+    "index_route_dsl._check_page_panel",
+    "index_route_dsl.classify_candidate_pool",
+    "index_route_dsl.classify_pool_rows",
+    "index_score_dsl._block_join",
+    "index_score_dsl._cache_panel",
+    "index_score_dsl._physical_indices",
+    "index_score_dsl._prepare_weights",
+    "index_score_dsl._store_scores",
+    "index_score_dsl._view",
+    "index_score_dsl.dispatch_score_topk",
+    "index_score_dsl.score_topk_mix",
+    "index_topk_dsl._histogram",
+    "index_topk_dsl._select_bin",
+    "index_topk_dsl.decode_score",
+    "index_topk_dsl.encode_score",
+    "index_topk_dsl.stable_topk",
+    "index_vector_dsl.rope_quantize_row",
+    "index_weight_dsl._project_index_weight_tile",
+    "index_weight_dsl._reduce_index_weight_tile",
+    "index_weight_dsl.project_index_weight_grid",
+    "index_weight_dsl.project_index_weights",
+    "index_weight_dsl.reduce_index_weight_grid",
+    "initialization_dsl.initialize_gate",
+    "initialization_dsl.initialize_routes",
+    "initialization_dsl.zero_attention_output",
+    "initialization_dsl.zero_bf16_padding",
+    "initialization_dsl.zero_bf16_rows",
+    "moe_combine_dsl._combine_rows",
+    "moe_combine_dsl.combine_grid",
+    "moe_combine_dsl.combine_local",
+    "moe_dispatch_dsl._gather_rows",
+    "moe_dispatch_dsl._stage_rows",
+    "moe_dispatch_dsl.gather_grid",
+    "moe_dispatch_dsl.gather_local",
+    "moe_dispatch_dsl.stage_grid",
+    "moe_dispatch_dsl.stage_local",
+    "mxfp8_dsl._mx_accumulate",
+    "mxfp8_dsl._mx_project",
+    "mxfp8_dsl._quant_row",
+    "mxfp8_dsl._quant_upward_row",
+    "mxfp8_dsl._quantize_bf16_tile",
+    "mxfp8_dsl.quantize_bf16_grid",
+    "mxfp8_dsl.quantize_matrix",
+    "o_proj._o_proj_a",
+    "o_proj._o_proj_b",
+    "o_proj._rope_quant_o_vf",
+    "o_proj.o_proj",
+    "o_proj_dsl._rope_quant_head",
+    "o_proj_dsl.grouped_projection",
+    "o_proj_dsl.output_projection",
+    "o_proj_dsl.project_o_a",
+    "o_proj_dsl.project_o_b",
+    "o_proj_dsl.rope_quant",
+    "o_proj_dsl.rope_quant_grid",
+    "q_branch_dsl._normalize_quant_rows",
+    "q_branch_dsl._query_rope_head",
+    "q_branch_dsl.normalize_quant",
+    "q_branch_dsl.normalize_quant_grid",
+    "q_branch_dsl.project_q_b",
+    "q_branch_dsl.qb_projection",
+    "q_branch_dsl.query_rope",
+    "q_branch_dsl.query_rope_grid",
+    "qkv_proj_dsl.kv_proj",
+    "qkv_proj_dsl.project_kv",
+    "qkv_proj_dsl.project_q_a",
+    "qkv_proj_dsl.qa_projection",
+    "qkv_proj_dsl.quantize_projection_input",
+    "qkv_proj_rope.q_proj_rope",
+    "quant.quantize_bf16_to_mxfp8",
+    "sparse_attention._attend_cache_shared",
+    "sparse_attention._attend_packed_block",
+    "sparse_attention._gather_packed_rows",
+    "sparse_attention.analyze_index_runs",
+    "sparse_attention.attend_packed",
+    "sparse_attention.attend_packed_cohorts",
+    "sparse_attention.attend_shared_cache",
+    "sparse_attention.attend_shared_cache_plain",
+    "sparse_attention.attend_window_tiled",
+    "sparse_attention.decode_packed_caches",
+    "sparse_attention.decode_shared_cache",
+    "sparse_attention.gather_decoded_caches",
+    "sparse_attention.gather_packed",
+    "sparse_attention.gather_window_batched",
+    "sparse_attention.swa_attention_partial",
+    "sparse_attention_dsl.sparse_attention_dsl",
+    "sparse_attention_dsl.sparse_attention_mix",
+    "swa_dsl._swa_query",
+    "swa_dsl.swa_attention_dsl",
+    "swa_dsl.swa_queries",
+    "window_kv_dsl._window_kv_page",
+    "window_kv_dsl.window_kv_grid",
+    "window_kv_dsl.window_publish"
+  ]
+}

@@ -1,0 +1,30 @@
+module attributes {pto.target_arch = "a5"} {
+  func.func @consume_window_kv(%arg0: !pto.ptr<bf16>, %arg1: !pto.ptr<f8E4M3FN>, %arg2: !pto.ptr<f8E4M3FN>, %arg3: !pto.ptr<bf16>, %arg4: index) attributes {pto.kernel_kind = #pto.kernel_kind<vector>} {
+  %c0_i64 = arith.constant 0 : i64
+  %c16_index = arith.constant 16 : index
+  %c1_index = arith.constant 1 : index
+  %c512_index = arith.constant 512 : index
+  %c0_index = arith.constant 0 : index
+  %scale_snapshot__ssa_v0_view = pto.make_tensor_view %arg0, shape = [%arg4, %c16_index], strides = [%c16_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xbf16> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":203:9)
+  %snapshot__ssa_v0_view = pto.make_tensor_view %arg1, shape = [%arg4, %c512_index], strides = [%c512_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf8E4M3FN> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":203:9)
+  %cache_rows__ssa_v0_view = pto.make_tensor_view %arg2, shape = [%arg4, %c512_index], strides = [%c512_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xf8E4M3FN> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":203:9)
+  %factor_rows__ssa_v0_view = pto.make_tensor_view %arg3, shape = [%arg4, %c16_index], strides = [%c16_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xbf16> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":203:9)
+  scf.for %row__idx_v0 = %c0_index to %arg4 step %c1_index {
+    %payload__ssa_v0 = pto.alloc_tile addr = %c0_i64 valid_row = %c1_index valid_col = %c512_index : !pto.tile_buf<loc=vec, dtype=f8E4M3FN, rows=1, cols=512, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":205:17)
+    %0 = arith.maxsi %row__idx_v0, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":205:17)
+    %cache_rows__ssa_v0_pview = pto.partition_view %cache_rows__ssa_v0_view, offsets = [%0, %c0_index], sizes = [%c1_index, %c512_index] : !pto.tensor_view<?x?xf8E4M3FN> -> !pto.partition_tensor_view<1x512xf8E4M3FN> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":205:17)
+    pto.tload ins(%cache_rows__ssa_v0_pview : !pto.partition_tensor_view<1x512xf8E4M3FN>) outs(%payload__ssa_v0 : !pto.tile_buf<loc=vec, dtype=f8E4M3FN, rows=1, cols=512, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":205:17)
+    %1 = arith.maxsi %row__idx_v0, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":206:17)
+    %snapshot__iter_v1_pview = pto.partition_view %snapshot__ssa_v0_view, offsets = [%1, %c0_index], sizes = [%c1_index, %c512_index] : !pto.tensor_view<?x?xf8E4M3FN> -> !pto.partition_tensor_view<1x512xf8E4M3FN> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":206:17)
+    pto.tstore ins(%payload__ssa_v0 : !pto.tile_buf<loc=vec, dtype=f8E4M3FN, rows=1, cols=512, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%snapshot__iter_v1_pview : !pto.partition_tensor_view<1x512xf8E4M3FN>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":206:17)
+    %factor__ssa_v0 = pto.alloc_tile addr = %c0_i64 valid_row = %c1_index valid_col = %c16_index : !pto.tile_buf<loc=vec, dtype=bf16, rows=1, cols=16, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":207:17)
+    %2 = arith.maxsi %row__idx_v0, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":207:17)
+    %factor_rows__ssa_v0_pview = pto.partition_view %factor_rows__ssa_v0_view, offsets = [%2, %c0_index], sizes = [%c1_index, %c16_index] : !pto.tensor_view<?x?xbf16> -> !pto.partition_tensor_view<1x16xbf16> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":207:17)
+    pto.tload ins(%factor_rows__ssa_v0_pview : !pto.partition_tensor_view<1x16xbf16>) outs(%factor__ssa_v0 : !pto.tile_buf<loc=vec, dtype=bf16, rows=1, cols=16, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":207:17)
+    %3 = arith.maxsi %row__idx_v0, %c0_index : index loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":208:17)
+    %scale_snapshot__iter_v1_pview = pto.partition_view %scale_snapshot__ssa_v0_view, offsets = [%3, %c0_index], sizes = [%c1_index, %c16_index] : !pto.tensor_view<?x?xbf16> -> !pto.partition_tensor_view<1x16xbf16> loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":208:17)
+    pto.tstore ins(%factor__ssa_v0 : !pto.tile_buf<loc=vec, dtype=bf16, rows=1, cols=16, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%scale_snapshot__iter_v1_pview : !pto.partition_tensor_view<1x16xbf16>) loc("<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/window_kv_dsl.py":208:17)
+  }
+  return
+  }
+}

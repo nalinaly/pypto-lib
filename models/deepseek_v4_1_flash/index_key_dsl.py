@@ -9,6 +9,7 @@
 """使用 CANNBotDSL 归一化、旋转并发布带 group-32 E8M0 缩放值的 FP4 Indexer Key。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
 import pypto.language as pl
@@ -29,8 +30,8 @@ VECTOR_TILE = 64
 TASK_TILE = 12
 
 
-@cb.kernel
-def publish_index_page(
+@jit
+def _publish_index_page(
     source: cb.Tensor, weight: cb.Tensor, cosine: cb.Tensor, sine: cb.Tensor, slots: cb.Tensor,
     cache: cb.Tensor, scales: cb.Tensor, num_tokens: cb.ScalarValue, page: cb.ScalarValue,
 ):
@@ -85,16 +86,17 @@ def publish_index_page(
     cb.mem_copy(scale_bytes, factors)
 
 
-@pl.jit.inline(auto_scope=False)
-def _publish_task(
-    source: pl.Tensor, weight: pl.Tensor, cosine: pl.Tensor, sine: pl.Tensor, slots: pl.Tensor,
-    cache: pl.Tensor, scales: pl.Tensor, active: pl.Scalar[pl.INDEX], page: pl.Scalar[pl.INDEX],
-    ready: pl.Scalar[pl.TASK_ID],
-):
-    """在输入和缓存依赖完成后，提交一个物理页的本卡 AIV 任务。"""
-    with pl.spmd(1, name_hint="dsl_idx_k_norm_rope_publish", deps=[ready]) as done:
-        publish_index_page(source, weight, cosine, sine, slots, cache, scales, active, page)
-    return done
+@cb.kernel
+def publish_index_grid(source: cb.Tensor, weight: cb.Tensor, cosine: cb.Tensor, sine: cb.Tensor,
+                       slots: cb.Tensor, cache: cb.Tensor, scales: cb.Tensor, num_tokens: cb.ScalarValue):
+    """按物理页分工，保留同页重复槽位的发布顺序。"""
+    active = min(source.shape[0], min(slots.shape[0], max(num_tokens, 0)))
+    pages = cache.shape[0] // PAGE_SIZE
+    for page in cb.range(cb.get_block_idx(), pages, cb.get_block_num()):
+        begin = page * PAGE_SIZE
+        payload = cache[begin:begin + PAGE_SIZE, None]
+        factors = scales[begin:begin + PAGE_SIZE, None]
+        _publish_index_page(source, weight, cosine, sine, slots, payload, factors, active, page)
 
 
 @pl.jit.inline(auto_scope=False)
@@ -103,24 +105,14 @@ def publish_index_rows(
     cache: pl.Tensor, scales: pl.Tensor, num_tokens: pl.Scalar[pl.INT32],
     cache_ready: pl.Scalar[pl.TASK_ID], kv_ready: pl.Scalar[pl.TASK_ID],
 ):
-    """由 simpler 调度互不重叠的物理页，并汇合全部缓存发布任务。"""
-    active = pl.min(pl.tensor.dim(source, 0), pl.max(pl.cast(num_tokens, pl.INDEX), 0))
-    active = pl.min(active, pl.tensor.dim(slots, 0))
-    ready = pl.system.task_dummy(deps=[cache_ready, kv_ready])
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for slot in pl.range(TASK_TILE):
-        completed[slot] = ready
+    """保留缓存和 Key 依赖，以一组 SPMD 完成全部物理页发布。"""
     pages = pl.tensor.dim(cache, 0)
-    payload_rows = pl.reshape(cache, [pages * PAGE_SIZE, INDEX_DIM // 2])
-    scale_rows = pl.reshape(scales, [pages * PAGE_SIZE, INDEX_DIM // CACHE_GROUP])
-    for page in pl.parallel(pages):
-        payload = payload_rows[page * PAGE_SIZE:(page + 1) * PAGE_SIZE, :]
-        factors = scale_rows[page * PAGE_SIZE:(page + 1) * PAGE_SIZE, :]
-        previous = completed[page % TASK_TILE]
-        done = _publish_task(source, weight, cosine, sine, slots, payload, factors, active, page, previous)
-        completed[page % TASK_TILE] = done
-    published = pl.system.task_dummy(deps=[completed])
-    return published
+    payload = pl.reshape(cache, [pages * PAGE_SIZE, INDEX_DIM // 2])
+    factors = pl.reshape(scales, [pages * PAGE_SIZE, INDEX_DIM // CACHE_GROUP])
+    workers = pl.max(1, pl.min(TASK_TILE, pages))
+    with pl.spmd(workers, name_hint="dsl_idx_k_norm_rope_publish", deps=[cache_ready, kv_ready]) as done:
+        publish_index_grid(source, weight, cosine, sine, slots, payload, factors, num_tokens)
+    return done
 
 
 @pl.jit

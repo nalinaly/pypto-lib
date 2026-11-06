@@ -116,7 +116,7 @@ def l2_decode_layer(
     hc_ffn_scale: pl.Tensor[[3], pl.FP32],
     hc_ffn_base: pl.Tensor[[MIX_HC], pl.FP32],
     ffn_norm_weight: pl.Tensor[[D], pl.BF16],
-    gate_weight: pl.Tensor[[N_EXPERTS, D], pl.FP32],
+    gate_weight: pl.Tensor[[N_EXPERTS, D], pl.BF16],
     correction_bias: pl.Tensor[[N_EXPERTS], pl.FP32],
     routed_w1: pl.Tensor[[N_LOCAL_EXPERTS, MX_W1_PACKED_ROWS, MX_PACKED_LANE_COLS], pl.UINT8],
     routed_w1_scale: pl.Tensor[[N_LOCAL_EXPERTS * (D // MX_GROUP), MOE_INTER], pl.FP8E8M0, pl.MX_B_NN],
@@ -375,7 +375,7 @@ def l3_decode_layer(
     hc_ffn_scale: pl.Tensor[[EP_SIZE, 3], pl.FP32],
     hc_ffn_base: pl.Tensor[[EP_SIZE, MIX_HC], pl.FP32],
     ffn_norm_weight: pl.Tensor[[EP_SIZE, D], pl.BF16],
-    gate_weight: pl.Tensor[[EP_SIZE, N_EXPERTS, D], pl.FP32],
+    gate_weight: pl.Tensor[[EP_SIZE, N_EXPERTS, D], pl.BF16],
     correction_bias: pl.Tensor[[EP_SIZE, N_EXPERTS], pl.FP32],
     routed_w1: pl.Tensor[[EP_SIZE, N_LOCAL_EXPERTS, MX_W1_PACKED_ROWS, MX_PACKED_LANE_COLS], pl.UINT8],
     routed_w1_scale: pl.Tensor[[EP_SIZE, N_LOCAL_EXPERTS * (D // MX_GROUP), MOE_INTER], pl.FP8E8M0],
@@ -1061,7 +1061,7 @@ def _attention_values() -> dict[str, torch.Tensor | None]:
         "query_start_loc": torch.tensor([0, 2], dtype=torch.int32),
         "token_to_req_indices": torch.tensor([0, 0], dtype=torch.int32),
         "state_block_table": torch.tensor([[1]], dtype=torch.int32),
-        "state_cache": torch.zeros(2, 4, 128),
+        "state_cache": torch.zeros(2, STATE_CAPACITY, 128),
         "compressor_norm_weight": torch.ones(64, dtype=torch.bfloat16),
         "compressed_slots": torch.tensor([-1, 0]),
         "index_wk": pack_bf16_nz(torch.randn(64, 32, dtype=torch.bfloat16)),
@@ -1093,7 +1093,7 @@ def make_decode_layer_golden_inputs(layer_id: int) -> dict:
     routed_w3, routed_w3_scale = quantize_mxfp4_weight(torch.randn(8, 64, 64))
     shared_scale = pack_mx_b_scale(torch.full((2, 64), 127, dtype=torch.uint8))
     moe = {
-        "gate_weight": torch.randn(8, 64),
+        "gate_weight": torch.randn(8, 64).bfloat16(),
         "correction_bias": torch.randn(8),
         "routed_w1": routed_w1,
         "routed_w1_scale": routed_w1_scale,

@@ -9,6 +9,7 @@
 """使用 CANNBotDSL 实现本地 MoE 发送暂存、接收压紧和 MX 缩放布局转换。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
 import pypto.language as pl
@@ -27,8 +28,8 @@ TASK_TILE = 64
 BYTE_TILE = 256
 
 
-@cb.kernel
-def stage_rows(
+@jit
+def _stage_rows(
     source: cb.Tensor, packed_scale: cb.Tensor, payload: cb.Tensor, scales: cb.Tensor,
     scale_row_begin: cb.ScalarValue, active_rows: cb.ScalarValue,
 ):
@@ -49,53 +50,39 @@ def stage_rows(
             cb.mem_copy(cb.tile_slice(scales, (1, groups), (row, 0)), unpacked)
 
 
+@cb.kernel
+def stage_grid(source: cb.Tensor, packed_scale: cb.Tensor, payload: cb.Tensor,
+               scales: cb.Tensor, num_tokens: cb.ScalarValue):
+    """按八行分配传输数据复制和有效缩放解包。"""
+    groups = source.shape[1] // MX_GROUP
+    active = min(source.shape[0], max(num_tokens, 0))
+    for tile in cb.range(cb.get_block_idx(), source.shape[0] // STAGE_ROW_TILE, cb.get_block_num()):
+        row = tile * STAGE_ROW_TILE
+        live = min(STAGE_ROW_TILE, max(active - row, 0))
+        offset = row // ROW_TILE * ROW_TILE * groups
+        src = source[row:row + STAGE_ROW_TILE, None]
+        factors = packed_scale[0:1, offset:offset + ROW_TILE * groups]
+        dst = payload[row:row + STAGE_ROW_TILE, None]
+        out_scale = scales[row:row + live, None]
+        _stage_rows(src, factors, dst, out_scale, row % ROW_TILE, live)
+
+
 @pl.jit.inline(auto_scope=False)
-def _stage_task(
-    source: pl.Tensor, packed_scale: pl.Tensor, payload: pl.Tensor, scales: pl.Tensor,
-    scale_row_begin: pl.Scalar[pl.INDEX], active_rows: pl.Scalar[pl.INDEX], ready: pl.Scalar[pl.TASK_ID],
-):
-    """派发八行 AIV 任务，确保传输输出区域互不重叠。"""
-    with pl.spmd(1, name_hint="dsl_dispatch_stage", deps=[ready]) as done:
-        stage_rows(source, packed_scale, payload, scales, scale_row_begin, active_rows)
+def stage_local(source: pl.Tensor, packed_scale: pl.Tensor, payload: pl.Tensor, scales: pl.Tensor,
+                num_tokens: pl.Scalar[pl.INT32]):
+    """以一组 AIV SPMD 准备发送数据，保留非有效缩放行。"""
+    rows = pl.tensor.dim(source, 0)
+    active = pl.min(rows, pl.max(pl.cast(num_tokens, pl.INDEX), 0))
+    target = payload[0:rows, :]
+    factors = scales[0:active, :]
+    workers = pl.max(1, pl.min(TASK_TILE, rows // STAGE_ROW_TILE))
+    with pl.spmd(workers, name_hint="dsl_dispatch_stage") as done:
+        stage_grid(source, packed_scale, target, factors, num_tokens)
     return done
 
 
-@pl.jit.inline(auto_scope=False)
-def stage_local(
-    source: pl.Tensor, packed_scale: pl.Tensor, payload: pl.Tensor, scales: pl.Tensor,
-    num_tokens: pl.Scalar[pl.INT32],
-):
-    """在调用者发送前，汇合原始数据复制和缩放解包任务。
-
-    物理行按 M16 对齐。每个八行缩放块独占完整的 64 字节缓存行；
-    经边界截断后的有效计数之外的缩放行保持不变。
-    """
-    rows = pl.tensor.dim(source, 0)
-    width = pl.tensor.dim(source, 1)
-    groups = width // MX_GROUP
-    active = pl.min(rows, pl.max(pl.cast(num_tokens, pl.INDEX), 0))
-    ready = pl.system.task_dummy(deps=[])
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for slot in pl.range(TASK_TILE):
-        completed[slot] = ready
-    for row in pl.parallel(0, rows, STAGE_ROW_TILE):
-        live = pl.min(STAGE_ROW_TILE, pl.max(active - row, 0))
-        scale_begin = row // ROW_TILE * ROW_TILE * groups
-        local_x = pl.slice(source, [STAGE_ROW_TILE, width], [row, 0])
-        local_s = pl.slice(packed_scale, [1, ROW_TILE * groups], [0, scale_begin])
-        out_x = pl.slice(payload, [STAGE_ROW_TILE, width], [row, 0])
-        out_s = pl.slice(scales, [STAGE_ROW_TILE, groups], [row, 0])
-        slot = row // STAGE_ROW_TILE % TASK_TILE
-        previous = completed[slot]
-        scale_row = row % ROW_TILE
-        done = _stage_task(local_x, local_s, out_x, out_s, scale_row, live, previous)
-        completed[slot] = done
-    joined = pl.system.task_dummy(deps=[completed])
-    return joined
-
-
-@cb.kernel
-def gather_rows(
+@jit
+def _gather_rows(
     source: cb.Tensor, source_scale: cb.Tensor, source_weight: cb.Tensor, source_route: cb.Tensor,
     metadata: cb.Tensor, payload: cb.Tensor, scales: cb.Tensor, weights: cb.Tensor, routes: cb.Tensor,
     expert: cb.ScalarValue, row_begin: cb.ScalarValue, row_count: cb.ScalarValue,
@@ -133,64 +120,61 @@ def gather_rows(
     cb.mem_copy(scales.view(dtype=cb.dtypes.uint8), packed)
 
 
-@pl.jit.inline(auto_scope=False)
-def _gather_task(
-    source: pl.Tensor, source_scale: pl.Tensor, source_weight: pl.Tensor, source_route: pl.Tensor,
-    metadata: pl.Tensor, payload: pl.Tensor, scales: pl.Tensor, weights: pl.Tensor, routes: pl.Tensor,
-    expert: pl.Scalar[pl.INDEX], row_begin: pl.Scalar[pl.INDEX], row_count: pl.Scalar[pl.INDEX],
-    ready: pl.Scalar[pl.TASK_ID],
-):
-    """在调用者的所有依赖完成后，提交一个本地接收分块。"""
-    with pl.spmd(1, name_hint="dsl_dispatch_gather", deps=[ready], allow_early_resolve=False) as done:
-        gather_rows(source, source_scale, source_weight, source_route, metadata,
-                    payload, scales, weights, routes, expert, row_begin, row_count)
-    return done
+@cb.kernel
+def gather_grid(source: cb.Tensor, source_scale: cb.Tensor, source_weight: cb.Tensor, source_route: cb.Tensor,
+                metadata: cb.Tensor, counts: cb.Tensor, payload: cb.Tensor, scales: cb.Tensor,
+                weights: cb.Tensor, routes: cb.Tensor):
+    """按专家的 M16 有效块分配工作，保留来源顺序和打包字节。"""
+    experts = counts.shape[0]
+    capacity = payload.shape[0] // experts
+    groups = payload.shape[1] // MX_GROUP
+    worker = cb.get_block_idx()
+    workers = cb.get_block_num()
+    prefix = 0
+    for expert in cb.range(experts):
+        count = counts[expert, 0]
+        tiles = (count + ROW_TILE - 1) // ROW_TILE
+        base = expert * capacity
+        src = source[base:base + capacity, None]
+        source_factors = source_scale[base:base + capacity, None]
+        source_weights = source_weight[base:base + capacity, None]
+        source_routes = source_route[base:base + capacity, None]
+        first = (worker + workers - prefix % workers) % workers
+        for tile in cb.range(first, tiles, workers):
+            row = tile * ROW_TILE
+            live = min(ROW_TILE, count - row)
+            begin = base + row
+            dst = payload[begin:begin + ROW_TILE, None]
+            offset = begin * groups
+            factors = scales[0:1, offset:offset + ROW_TILE * groups]
+            out_weights = weights[begin:begin + ROW_TILE, None]
+            out_routes = routes[begin:begin + ROW_TILE, None]
+            _gather_rows(src, source_factors, source_weights, source_routes, metadata,
+                         dst, factors, out_weights, out_routes, expert, row, live)
+        prefix = prefix + tiles
 
 
 @pl.jit.inline(auto_scope=False)
 def gather_local(
     source: pl.Tensor, source_scale: pl.Tensor, source_weight: pl.Tensor, source_route: pl.Tensor,
-    metadata: pl.Tensor, counts: pl.Tensor,
-    payload: pl.Tensor, scales: pl.Tensor, weights: pl.Tensor, routes: pl.Tensor,
-    wait_ready: pl.Scalar[pl.TASK_ID], push_ready: pl.Scalar[pl.TASK_ID], meta_ready: pl.Scalar[pl.TASK_ID],
+    metadata: pl.Tensor, counts: pl.Tensor, payload: pl.Tensor, scales: pl.Tensor,
+    weights: pl.Tensor, routes: pl.Tensor,
+    wait_ready: pl.Scalar[pl.TASK_ID], publish_ready: pl.Scalar[pl.TASK_ID], meta_ready: pl.Scalar[pl.TASK_ID],
     aux_width: pl.constexpr, route_width: pl.constexpr,
 ):
-    """调度互不重叠的本地接收分块，并汇合其完成句柄。
-
-    容量按 M16 对齐，且各来源的数据通道容量相等。计数与来源元数据一致，
-    每个来源的计数均不超过对应通道容量。
-    输出使用现有专家缓冲区的扁平 ND 存储视图。
-    """
-    experts = pl.tensor.dim(counts, 0)
-    capacity = pl.tensor.dim(payload, 0) // experts
+    """保留三个协议依赖，以一组 AIV SPMD 压紧本地接收区。"""
+    rows = pl.tensor.dim(payload, 0)
     width = pl.tensor.dim(payload, 1)
-    groups = width // MX_GROUP
-    ready = pl.system.task_dummy(deps=[wait_ready, push_ready, meta_ready])
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for slot in pl.range(TASK_TILE):
-        completed[slot] = ready
-    for expert in pl.range(experts):
-        count = pl.cast(pl.read(counts, [expert, 0]), pl.INDEX)
-        base = expert * capacity
-        local_x = pl.slice(source, [capacity, width], [base, 0])
-        local_scale = pl.slice(source_scale, [capacity, groups], [base, 0])
-        local_weight = pl.slice(source_weight, [capacity, aux_width], [base, 0])
-        local_route = pl.slice(source_route, [capacity, route_width], [base, 0])
-        for row in pl.parallel(0, count, ROW_TILE):
-            live = pl.min(ROW_TILE, count - row)
-            out_x = pl.slice(payload, [ROW_TILE, width], [base + row, 0])
-            out_s = pl.slice(scales, [1, ROW_TILE * groups], [0, (base + row) * groups])
-            out_w = pl.slice(weights, [ROW_TILE, 1], [base + row, 0])
-            out_r = pl.slice(routes, [ROW_TILE, 1], [base + row, 0])
-            slot = (expert * (capacity // ROW_TILE) + row // ROW_TILE) % TASK_TILE
-            previous = completed[slot]
-            done = _gather_task(
-                local_x, local_scale, local_weight, local_route, metadata,
-                out_x, out_s, out_w, out_r, expert, row, live, previous,
-            )
-            completed[slot] = done
-    joined = pl.system.task_dummy(deps=[completed])
-    return joined
+    local_x = pl.slice(source, [rows, width], [0, 0])
+    local_scale = pl.slice(source_scale, [rows, width // MX_GROUP], [0, 0])
+    local_weight = pl.slice(source_weight, [rows, aux_width], [0, 0])
+    local_route = pl.slice(source_route, [rows, route_width], [0, 0])
+    ready = pl.system.task_dummy(deps=[wait_ready, publish_ready, meta_ready])
+    workers = pl.min(TASK_TILE, pl.system.available_aiv_count())
+    with pl.spmd(workers, name_hint="dsl_dispatch_gather", deps=[ready], allow_early_resolve=False) as done:
+        gather_grid(local_x, local_scale, local_weight, local_route, metadata, counts,
+                    payload, scales, weights, routes)
+    return done
 
 
 @pl.jit

@@ -125,9 +125,11 @@ def unpack_weight_probe(source: cb.Tensor, output: cb.Tensor):
 def project_up_worker(
     source: cb.Tensor, source_scale: cb.Tensor, counts: cb.Tensor,
     w1: cb.Tensor, w1_scale: cb.Tensor, w3: cb.Tensor, w3_scale: cb.Tensor,
-    gate: cb.Tensor, up: cb.Tensor, worker: cb.ScalarValue,
+    gate: cb.Tensor, up: cb.Tensor,
 ):
     """将专家的有效行投影到对齐的 FP32 gate/up 数据块。"""
+    worker = cb.get_block_idx()
+    workers = cb.get_block_num()
     experts = counts.shape[0]
     stride = source.shape[0] // experts
     hidden = gate.shape[1]
@@ -137,8 +139,8 @@ def project_up_worker(
         count = counts[expert, 0]
         row_blocks = (count + ROW_TILE - 1) // ROW_TILE
         work_count = row_blocks * (hidden // COLUMN_TILE)
-        first = (worker + WORKER_TILE - work_base % WORKER_TILE) % WORKER_TILE
-        for item in cb.range(first, work_count, WORKER_TILE):
+        first = (worker + workers - work_base % workers) % workers
+        for item in cb.range(first, work_count, workers):
             row = item // (hidden // COLUMN_TILE) * ROW_TILE
             column = item % (hidden // COLUMN_TILE)
             valid = min(ROW_TILE, count - row)
@@ -153,9 +155,11 @@ def project_up_worker(
 @cb.kernel
 def activate_worker(
     gate: cb.Tensor, up: cb.Tensor, weights: cb.Tensor, counts: cb.Tensor,
-    payload: cb.Tensor, scales: cb.Tensor, worker: cb.ScalarValue,
+    payload: cb.Tensor, scales: cb.Tensor,
 ):
     """对对齐的专家数据块执行 FP32 带权 SwiGLU 和缩放值向上取整的 MXFP8 量化。"""
+    worker = cb.get_block_idx()
+    workers = cb.get_block_num()
     experts = counts.shape[0]
     stride = weights.shape[0] // experts
     hidden = gate.shape[1]
@@ -169,8 +173,8 @@ def activate_worker(
     for expert in cb.range(experts):
         count = counts[expert, 0]
         row_blocks = (count + ROW_TILE - 1) // ROW_TILE
-        first = (worker + WORKER_TILE - work_base % WORKER_TILE) % WORKER_TILE
-        for block in cb.range(first, row_blocks, WORKER_TILE):
+        first = (worker + workers - work_base % workers) % workers
+        for block in cb.range(first, row_blocks, workers):
             local_row = block * ROW_TILE
             begin = padded_base + local_row
             for row in cb.range(ROW_TILE):
@@ -210,9 +214,11 @@ def activate_worker(
 @cb.kernel
 def project_down_worker(
     source: cb.Tensor, source_scale: cb.Tensor, counts: cb.Tensor,
-    weight: cb.Tensor, weight_scale: cb.Tensor, partial: cb.Tensor, worker: cb.ScalarValue,
+    weight: cb.Tensor, weight_scale: cb.Tensor, partial: cb.Tensor,
 ):
     """使用紧凑、无填充的专家行前缀，写入两份 FP32 split-K 部分和。"""
+    worker = cb.get_block_idx()
+    workers = cb.get_block_num()
     hidden = source.shape[1]
     width = partial.shape[1]
     partial_stride = partial.shape[0] // 2
@@ -223,8 +229,8 @@ def project_down_worker(
         count = counts[expert, 0]
         row_blocks = (count + ROW_TILE - 1) // ROW_TILE
         work_count = row_blocks * 2 * (width // COLUMN_TILE)
-        first = (worker + WORKER_TILE - work_base % WORKER_TILE) % WORKER_TILE
-        for item in cb.range(first, work_count, WORKER_TILE):
+        first = (worker + workers - work_base % workers) % workers
+        for item in cb.range(first, work_count, workers):
             column = item % (width // COLUMN_TILE)
             part = item // (width // COLUMN_TILE) % 2
             row = item // ((width // COLUMN_TILE) * 2) * ROW_TILE
@@ -247,35 +253,23 @@ def routed_ffn(
     input_ready: pl.Scalar[pl.TASK_ID], experts: pl.constexpr, width: pl.constexpr,
     hidden: pl.constexpr, padded_rows: pl.constexpr,
 ):
-    """将本地 FFN 任务替换为三个显式汇合的计算阶段。"""
-    # 各工作任务写入互不重叠的区域；通过显式阶段汇合传递生产者依赖。
+    """由三组 SPMD 依次完成投影、带权量化和下投影。"""
     gate = pl.create_tensor([padded_rows, hidden], dtype=pl.FP32, manual_dep=True)
     up = pl.create_tensor([padded_rows, hidden], dtype=pl.FP32, manual_dep=True)
     s1 = pl.tensor.view(w1_scale, [1, experts * (width // MX_GROUP) * hidden], layout=pl.ND)
     s3 = pl.tensor.view(w3_scale, [1, experts * (width // MX_GROUP) * hidden], layout=pl.ND)
-    projection_done = pl.array.create(WORKER_TILE, pl.TASK_ID)
-    for worker in pl.parallel(WORKER_TILE):
-        with pl.spmd(1, name_hint="dsl_routed_up", deps=[input_ready], sync_start=True) as ready:
-            project_up_worker(source, source_scale, counts, w1, s1, w3, s3, gate, up, worker)
-        projection_done[worker] = ready
-    up_ready = pl.system.task_dummy(deps=[projection_done])
+    workers = pl.min(WORKER_TILE, pl.system.available_cluster_count())
+    with pl.spmd(workers, name_hint="dsl_routed_up", deps=[input_ready], sync_start=True) as up_ready:
+        project_up_worker(source, source_scale, counts, w1, s1, w3, s3, gate, up)
 
     payload = pl.create_tensor([padded_rows, hidden], dtype=pl.FP8E4M3FN, manual_dep=True)
     scales = pl.create_tensor([1, padded_rows * (hidden // MX_GROUP)], dtype=pl.FP8E8M0, manual_dep=True)
-    activation_done = pl.array.create(WORKER_TILE, pl.TASK_ID)
-    for worker in pl.parallel(WORKER_TILE):
-        with pl.spmd(1, name_hint="dsl_routed_act_quant", deps=[up_ready]) as ready:
-            activate_worker(gate, up, weights, counts, payload, scales, worker)
-        activation_done[worker] = ready
-    activation_ready = pl.system.task_dummy(deps=[activation_done])
+    with pl.spmd(WORKER_TILE, name_hint="dsl_routed_act_quant", deps=[up_ready]) as activation_ready:
+        activate_worker(gate, up, weights, counts, payload, scales)
 
     s2 = pl.tensor.view(w2_scale, [1, experts * (hidden // MX_GROUP) * width], layout=pl.ND)
-    down_done = pl.array.create(WORKER_TILE, pl.TASK_ID)
-    for worker in pl.parallel(WORKER_TILE):
-        with pl.spmd(1, name_hint="dsl_routed_down", deps=[activation_ready], sync_start=True) as ready:
-            project_down_worker(payload, scales, counts, w2, s2, partial, worker)
-        down_done[worker] = ready
-    done = pl.system.task_dummy(deps=[down_done])
+    with pl.spmd(workers, name_hint="dsl_routed_down", deps=[activation_ready], sync_start=True) as done:
+        project_down_worker(payload, scales, counts, w2, s2, partial)
     return partial, done
 
 
@@ -304,9 +298,10 @@ def validate_projection(source: pl.Tensor, source_scale: pl.Tensor, packed: pl.T
 @pl.jit
 def validate_activation(
     gate: pl.Tensor, up: pl.Tensor, weights: pl.Tensor, counts: pl.Tensor,
-    payload: pl.Out[pl.Tensor], scales: pl.Out[pl.Tensor], worker: pl.Scalar[pl.INT32],
+    payload: pl.Out[pl.Tensor], scales: pl.Out[pl.Tensor],
 ):
-    activate_worker(gate, up, weights, counts, payload, scales, worker)
+    with pl.spmd(WORKER_TILE, name_hint="dsl_routed_act_quant"):
+        activate_worker(gate, up, weights, counts, payload, scales)
     return payload, scales
 
 
@@ -331,7 +326,7 @@ def golden_activation(tensors):
 
 def build_activation_specs():
     import torch
-    from golden import ScalarSpec, TensorSpec
+    from golden import TensorSpec
 
     generator = torch.Generator().manual_seed(918)
     gate = torch.randn(ROW_TILE, COLUMN_TILE, generator=generator) * 8
@@ -352,7 +347,6 @@ def build_activation_specs():
         TensorSpec("counts", [1, 1], torch.int32, init_value=9),
         TensorSpec("payload", [ROW_TILE, COLUMN_TILE], torch.float8_e4m3fn),
         TensorSpec("scales", [1, ROW_TILE * COLUMN_TILE // MX_GROUP], torch.float8_e8m0fnu),
-        ScalarSpec("worker", torch.int32, 0),
     ]
 
 

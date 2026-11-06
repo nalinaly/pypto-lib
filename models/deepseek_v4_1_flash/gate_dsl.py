@@ -9,6 +9,7 @@
 """使用 CANNBotDSL 实现本地 MoE 路由器归一化、MXFP8 量化、投影和 TopK。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
 from cannbotdsl.ops.cube import set_fp32_mode
@@ -38,17 +39,17 @@ PROJECT_K_TILE = 512
 ROUTE_ROW_TILE = 8
 
 
-@cb.kernel
-def project_scores(
+@jit
+def _project_scores(
     source: cb.Tensor, weight: cb.Tensor, bias: cb.Tensor, scores: cb.Tensor, biased: cb.Tensor,
 ):
-    """计算一个 FP32 M16/N16 路由器分块，并将分数分给两个 AIV。"""
+    """以 BF16 操作数和 FP32 累加计算 M16/N16 分数，并交给两个 AIV。"""
     lane = cb.get_subblock_id()
     set_fp32_mode()
-    a_l1 = RingBuffer(cb.MemLoc.L1, cb.dtypes.float32, cb.make_layout((PROJECT_ROW_TILE, PROJECT_K_TILE)), depth=1)
-    b_l1 = RingBuffer(cb.MemLoc.L1, cb.dtypes.float32, cb.make_layout((PROJECT_COLUMN_TILE, PROJECT_K_TILE)), depth=1)
-    a_l0 = RingBuffer(cb.MemLoc.L0A, cb.dtypes.float32, cb.make_layout((PROJECT_ROW_TILE, PROJECT_K_TILE)), depth=1)
-    b_l0 = RingBuffer(cb.MemLoc.L0B, cb.dtypes.float32, cb.make_layout((PROJECT_COLUMN_TILE, PROJECT_K_TILE)), depth=1)
+    a_l1 = RingBuffer(cb.MemLoc.L1, cb.dtypes.bfloat16, cb.make_layout((PROJECT_ROW_TILE, PROJECT_K_TILE)), depth=1)
+    b_l1 = RingBuffer(cb.MemLoc.L1, cb.dtypes.bfloat16, cb.make_layout((PROJECT_COLUMN_TILE, PROJECT_K_TILE)), depth=1)
+    a_l0 = RingBuffer(cb.MemLoc.L0A, cb.dtypes.bfloat16, cb.make_layout((PROJECT_ROW_TILE, PROJECT_K_TILE)), depth=1)
+    b_l0 = RingBuffer(cb.MemLoc.L0B, cb.dtypes.bfloat16, cb.make_layout((PROJECT_COLUMN_TILE, PROJECT_K_TILE)), depth=1)
     c_l0 = RingBuffer(cb.MemLoc.L0C, cb.dtypes.float32, cb.make_layout((PROJECT_ROW_TILE, PROJECT_COLUMN_TILE)), depth=1)
     cv_shape = (PROJECT_ROW_TILE // 2, PROJECT_COLUMN_TILE)
     logits = RingBuffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout(cv_shape), depth=1)
@@ -92,12 +93,12 @@ def project_scores(
     cb.mem_copy(biased.partition(dim=0, part_id=lane), out_bias)
 
 
-@cb.kernel
-def normalize_rows(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor, valid_rows: cb.ScalarValue):
+@jit
+def _normalize_rows(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor, valid_rows: cb.ScalarValue):
     """使用分块 FP32 求和、BF16 舍入和尾部补零，对八行执行归一化。"""
     raw = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, D)))
     gamma = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((D,)))
-    result = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, D)))
+    result = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, D)))
     cb.mem_copy(gamma, weight)
     for row in cb.range(NORM_ROW_TILE):
         if row < valid_rows:
@@ -127,21 +128,21 @@ def normalize_rows(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor, vali
                     scaled = rr.vmul(value, inverse, mask=full)
                     normalized = rr.vmul(scaled, factor, mask=full)
                     rounded = rr.vcast(normalized, cb.dtypes.bfloat16, mask=full, rounding="rn")
-                    widened = rr.vcast(rounded, cb.dtypes.float32, mask=full)
-                    rr.vstore(result, col, widened, full)
+                    rr.vstore_pack(result, col, rounded, full, pack_mode=rr.PackMode.B32_TO_B16)
         else:
             with cb.vf():
                 full = rr.full_mask()
                 zero = rr.vdups(0.0, cb.dtypes.float32, mask=full)
+                zero_bf16 = rr.vcast(zero, cb.dtypes.bfloat16, mask=full)
                 for col in range(0, D, VECTOR_TILE):
-                    rr.vstore(result, col, zero, full)
+                    rr.vstore_pack(result, col, zero_bf16, full, pack_mode=rr.PackMode.B32_TO_B16)
         cb.mem_copy(cb.tile_slice(output, (1, D), (row, 0)), result)
 
 
-@cb.kernel
-def quantize_rows(source: cb.Tensor, payload: cb.Tensor, scales: cb.Tensor):
+@jit
+def _quantize_rows(source: cb.Tensor, payload: cb.Tensor, scales: cb.Tensor):
     """量化一个 M16/K1024 数据块，并使用配对的 E8M0 缩放值。"""
-    raw = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, QUANT_COLUMN_TILE)))
+    raw = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, QUANT_COLUMN_TILE)))
     values = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((QUANT_COLUMN_TILE + VECTOR_TILE,)))
     packed = Buffer(cb.MemLoc.UB, cb.dtypes.float8_e4m3fn, cb.make_layout((1, QUANT_COLUMN_TILE)))
     codes_shape = (1, QUANT_ROW_TILE * (QUANT_COLUMN_TILE // MX_GROUP))
@@ -153,7 +154,8 @@ def quantize_rows(source: cb.Tensor, payload: cb.Tensor, scales: cb.Tensor):
             zero = rr.vdups(0.0, cb.dtypes.float32, mask=full)
             rr.vstore(values, QUANT_COLUMN_TILE, zero, full)
             for col in range(0, QUANT_COLUMN_TILE, VECTOR_TILE):
-                value = rr.vload(raw, col)
+                loaded = rr.vload_unpack(raw, col, unpack_mode=rr.UnpackMode.B16_TO_B32)
+                value = rr.vcast(loaded, cb.dtypes.float32, mask=full)
                 rr.vstore(values, col, value, full)
             rr.vmem_bar("vst_vld")
             _quant_upward_row(values, packed, codes, row, QUANT_COLUMN_TILE)
@@ -161,8 +163,8 @@ def quantize_rows(source: cb.Tensor, payload: cb.Tensor, scales: cb.Tensor):
     cb.mem_copy(scales.view(dtype=cb.dtypes.uint8), codes)
 
 
-@cb.kernel
-def select_routes(
+@jit
+def _select_routes(
     scores: cb.Tensor, biased: cb.Tensor, indices: cb.Tensor, weights: cb.Tensor,
     valid_rows: cb.ScalarValue,
 ):
@@ -219,88 +221,115 @@ def select_routes(
         cb.mem_copy(cb.tile_slice(weights, (1, TOPK), (row, 0)), cb.tile_slice(selected_scores, (1, TOPK), (0, 0)))
 
 
-@pl.jit.inline(auto_scope=False)
-def _normalize_task(source: pl.Tensor, weight: pl.Tensor, output: pl.Tensor, valid_rows: pl.Scalar[pl.INDEX]):
-    """使用显式类型的有效行数，派发一个归一化叶子任务。"""
-    with pl.spmd(1, name_hint="dsl_gate_norm"):
-        normalize_rows(source, weight, output, valid_rows)
-    return output
+@cb.kernel
+def normalize_gate_grid(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor, active_tokens: cb.ScalarValue):
+    """按八行分配归一化，非有效行仍写零。"""
+    tiles = output.shape[0] // NORM_ROW_TILE
+    for tile in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = tile * NORM_ROW_TILE
+        live = min(NORM_ROW_TILE, max(active_tokens - row, 0))
+        src = source[row:row + NORM_ROW_TILE, None]
+        dst = output[row:row + NORM_ROW_TILE, None]
+        _normalize_rows(src, weight, dst, live)
+
+
+@cb.kernel
+def quantize_gate_grid(source: cb.Tensor, payload: cb.Tensor, scales: cb.Tensor):
+    """按 M16/K1024 分配量化，各块独占打包缩放区域。"""
+    columns = D // QUANT_COLUMN_TILE
+    tiles = source.shape[0] // QUANT_ROW_TILE * columns
+    for work in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = work // columns * QUANT_ROW_TILE
+        col = work % columns * QUANT_COLUMN_TILE
+        src = source[row:row + QUANT_ROW_TILE, col:col + QUANT_COLUMN_TILE]
+        dst = payload[row:row + QUANT_ROW_TILE, col:col + QUANT_COLUMN_TILE]
+        offset = row * (D // MX_GROUP) + col // MX_GROUP * QUANT_ROW_TILE
+        factors = scales[0:1, offset:offset + QUANT_ROW_TILE * (QUANT_COLUMN_TILE // MX_GROUP)]
+        _quantize_rows(src, dst, factors)
+
+
+@cb.kernel
+def project_gate_grid(source: cb.Tensor, weight: cb.Tensor, bias: cb.Tensor,
+                      scores: cb.Tensor, biased: cb.Tensor):
+    """按 M16/N16 分配 MIX 打分，仅写实际专家列。"""
+    columns = weight.shape[0] // PROJECT_COLUMN_TILE
+    tiles = scores.shape[0] // PROJECT_ROW_TILE * columns
+    for work in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = work // columns * PROJECT_ROW_TILE
+        col = work % columns * PROJECT_COLUMN_TILE
+        src = source[row:row + PROJECT_ROW_TILE, None]
+        matrix = weight[col:col + PROJECT_COLUMN_TILE, None]
+        offset = bias[0:1, col:col + PROJECT_COLUMN_TILE]
+        dst = scores[row:row + PROJECT_ROW_TILE, col:col + PROJECT_COLUMN_TILE]
+        dst_bias = biased[row:row + PROJECT_ROW_TILE, col:col + PROJECT_COLUMN_TILE]
+        _project_scores(src, matrix, offset, dst, dst_bias)
+
+
+@cb.kernel
+def route_gate_grid(scores: cb.Tensor, biased: cb.Tensor, indices: cb.Tensor, weights: cb.Tensor,
+                    active_tokens: cb.ScalarValue):
+    """按八行分工，保留块内无效行清零及有效行的排序顺序。"""
+    active = min(indices.shape[0], max(active_tokens, 0))
+    tiles = (indices.shape[0] + ROUTE_ROW_TILE - 1) // ROUTE_ROW_TILE
+    for tile in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = tile * ROUTE_ROW_TILE
+        physical = min(ROUTE_ROW_TILE, indices.shape[0] - row)
+        live = min(physical, max(active - row, 0))
+        src = scores[row:row + physical, None]
+        src_bias = biased[row:row + physical, None]
+        ids = indices[row:row + physical, None]
+        out = weights[row:row + physical, None]
+        _select_routes(src, src_bias, ids, out, live)
 
 
 @pl.jit.inline(auto_scope=False)
 def normalize_gate(source: pl.Tensor, weight: pl.Tensor, output: pl.Tensor, active_tokens: pl.Scalar[pl.INDEX]):
-    """调度路由器带填充的八行归一化任务。"""
-    rows = pl.tensor.dim(output, 0)
-    for row in pl.parallel(0, rows, NORM_ROW_TILE):
-        valid = pl.cast(pl.min(NORM_ROW_TILE, pl.max(active_tokens - row, 0)), pl.INDEX)
-        src = pl.slice(source, [NORM_ROW_TILE, D], [row, 0])
-        dst = pl.slice(output, [NORM_ROW_TILE, D], [row, 0])
-        _normalize_task(src, weight, dst, valid)
+    """以一组 AIV SPMD 归一化全部物理行。"""
+    tiles = pl.tensor.dim(output, 0) // NORM_ROW_TILE
+    workers = pl.max(1, pl.min(tiles, pl.system.available_aiv_count()))
+    with pl.spmd(workers, name_hint="dsl_gate_norm"):
+        normalize_gate_grid(source, weight, output, active_tokens)
     return output
 
 
 @pl.jit.inline(auto_scope=False)
 def quantize_gate(source: pl.Tensor, payload: pl.Tensor, scales: pl.Tensor):
-    """调度互不重叠的 M16/K1024 输入量化任务。"""
-    rows = pl.tensor.dim(source, 0)
-    for row in pl.parallel(0, rows, QUANT_ROW_TILE):
-        for col in pl.parallel(0, D, QUANT_COLUMN_TILE):
-            src = pl.slice(source, [QUANT_ROW_TILE, QUANT_COLUMN_TILE], [row, col])
-            dst = pl.slice(payload, [QUANT_ROW_TILE, QUANT_COLUMN_TILE], [row, col])
-            offset = row * (D // MX_GROUP) + col // MX_GROUP * QUANT_ROW_TILE
-            codes = pl.slice(scales, [1, QUANT_ROW_TILE * (QUANT_COLUMN_TILE // MX_GROUP)], [0, offset])
-            with pl.spmd(1, name_hint="dsl_gate_quant"):
-                quantize_rows(src, dst, codes)
+    """以一组 AIV SPMD 量化全部路由输入。"""
+    tiles = pl.tensor.dim(source, 0) // QUANT_ROW_TILE * (D // QUANT_COLUMN_TILE)
+    workers = pl.max(1, pl.min(tiles, pl.system.available_aiv_count()))
+    with pl.spmd(workers, name_hint="dsl_gate_quant"):
+        quantize_gate_grid(source, payload, scales)
     return payload, scales
 
 
 @pl.jit.inline(auto_scope=False)
-def project_gate(
-    source: pl.Tensor, weight: pl.Tensor, bias: pl.Tensor, scores: pl.Tensor, biased: pl.Tensor,
-    active_tokens: pl.Scalar[pl.INDEX],
-):
-    """调度完整的本地 MIX 投影/打分任务。"""
+def project_gate(source: pl.Tensor, weight: pl.Tensor, bias: pl.Tensor, scores: pl.Tensor, biased: pl.Tensor,
+                 active_tokens: pl.Scalar[pl.INDEX]):
+    """以同步启动的 MIX 网格完成实际专家列的打分。"""
     columns = pl.tensor.dim(weight, 0)
     bias_matrix = pl.reshape(bias, [1, columns])
     task_rows = (pl.max(active_tokens, 1) + PROJECT_ROW_TILE - 1) // PROJECT_ROW_TILE * PROJECT_ROW_TILE
-    for row in pl.parallel(0, task_rows, PROJECT_ROW_TILE):
-        for col in pl.parallel(0, columns, PROJECT_COLUMN_TILE):
-            src = pl.slice(source, [PROJECT_ROW_TILE, D], [row, 0])
-            matrix = pl.slice(weight, [PROJECT_COLUMN_TILE, D], [col, 0])
-            offset = pl.slice(bias_matrix, [1, PROJECT_COLUMN_TILE], [0, col])
-            dst = pl.slice(scores, [PROJECT_ROW_TILE, PROJECT_COLUMN_TILE], [row, col])
-            dst_bias = pl.slice(biased, [PROJECT_ROW_TILE, PROJECT_COLUMN_TILE], [row, col])
-            with pl.spmd(1, name_hint="dsl_gate", sync_start=True):
-                project_scores(src, matrix, offset, dst, dst_bias)
+    target_scores = scores[0:task_rows, 0:columns]
+    target_biased = biased[0:task_rows, 0:columns]
+    tiles = task_rows // PROJECT_ROW_TILE * (columns // PROJECT_COLUMN_TILE)
+    workers = pl.max(1, pl.min(tiles, pl.system.available_cluster_count()))
+    with pl.spmd(workers, name_hint="dsl_gate", sync_start=True):
+        project_gate_grid(source, weight, bias_matrix, target_scores, target_biased)
     return scores, biased
 
 
 @pl.jit.inline(auto_scope=False)
-def _route_task(
-    scores: pl.Tensor, biased: pl.Tensor, indices: pl.Tensor, weights: pl.Tensor,
-    valid_rows: pl.Scalar[pl.INDEX],
-):
-    """使用显式类型的有效行数，派发一个本地路由任务。"""
-    with pl.spmd(1, name_hint="dsl_route_sort"):
-        select_routes(scores, biased, indices, weights, valid_rows)
-    return indices, weights
-
-
-@pl.jit.inline(auto_scope=False)
-def route_gate(
-    scores: pl.Tensor, biased: pl.Tensor, indices: pl.Tensor, weights: pl.Tensor,
-    active_tokens: pl.Scalar[pl.INDEX],
-):
-    """在分数生成后调度八行本地 TopK 任务。"""
-    columns = pl.tensor.dim(scores, 1)
-    task_rows = (pl.max(active_tokens, 1) + ROUTE_ROW_TILE - 1) // ROUTE_ROW_TILE * ROUTE_ROW_TILE
-    for row in pl.parallel(0, task_rows, ROUTE_ROW_TILE):
-        valid = pl.min(ROUTE_ROW_TILE, pl.max(active_tokens - row, 0))
-        src = pl.slice(scores, [ROUTE_ROW_TILE, columns], [row, 0])
-        src_bias = pl.slice(biased, [ROUTE_ROW_TILE, columns], [row, 0])
-        ids = pl.slice(indices, [ROUTE_ROW_TILE, TOPK], [row, 0])
-        out = pl.slice(weights, [ROUTE_ROW_TILE, TOPK], [row, 0])
-        _route_task(src, src_bias, ids, out, valid)
+def route_gate(scores: pl.Tensor, biased: pl.Tensor, indices: pl.Tensor, weights: pl.Tensor,
+               active_tokens: pl.Scalar[pl.INDEX]):
+    """以多核 SPMD 选路，保留末块内无效行的清零。"""
+    active = pl.max(0, pl.min(active_tokens, pl.tensor.dim(indices, 0)))
+    task_rows = (pl.max(active, 1) + ROUTE_ROW_TILE - 1) // ROUTE_ROW_TILE * ROUTE_ROW_TILE
+    task_rows = pl.min(task_rows, pl.tensor.dim(indices, 0))
+    target_indices = indices[0:task_rows, :]
+    target_weights = weights[0:task_rows, :]
+    workers = pl.max(1, pl.min((task_rows + ROUTE_ROW_TILE - 1) // ROUTE_ROW_TILE, pl.system.available_aiv_count()))
+    with pl.spmd(workers, name_hint="dsl_route_sort"):
+        route_gate_grid(scores, biased, target_indices, target_weights, active_tokens)
     return indices, weights
 
 
@@ -318,7 +347,7 @@ def validate_gate_routes(
     num_tokens: pl.Scalar[pl.INT32],
 ):
     active = pl.min(ROUTE_ROW_TILE, pl.max(pl.cast(num_tokens, pl.INDEX), 0))
-    _route_task(scores, biased, indices, weights, active)
+    route_gate(scores, biased, indices, weights, active)
     return indices, weights
 
 
@@ -360,7 +389,7 @@ def build_quant_specs():
     for group in range(D // MX_GROUP):
         source[1, group * MX_GROUP : (group + 1) * MX_GROUP] = patterns[group % len(patterns)]
     return [
-        TensorSpec("source", [QUANT_ROW_TILE, D], torch.float32, init_value=source),
+        TensorSpec("source", [QUANT_ROW_TILE, D], torch.bfloat16, init_value=source.bfloat16()),
         TensorSpec("payload", [QUANT_ROW_TILE, D], torch.float8_e4m3fn),
         TensorSpec("scales", [1, QUANT_ROW_TILE * (D // MX_GROUP)], torch.float8_e8m0fnu),
     ]

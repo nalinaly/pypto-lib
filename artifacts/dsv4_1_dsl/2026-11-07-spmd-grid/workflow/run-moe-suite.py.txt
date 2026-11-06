@@ -1,0 +1,31 @@
+"""通过任务队列依次验证双卡不等长输入和空 rank。"""
+import argparse
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+
+work = Path(__file__).resolve().parent
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', '--device')
+parser.parse_args()
+if not os.environ.get('TASK_DEVICE'):
+    raise SystemExit('设备验证必须通过 task-submit')
+records = []
+for counts, label in [('72,17', 'moe-72-17'), ('72,0', 'moe-72-0')]:
+    command = ['bash', str(work / 'run-case.sh'), str(work / 'run-moe.py'),
+               '--ep', '2', '--experts-per-rank', '8', '--num-tokens-per-rank', counts,
+               '-d', os.environ['TASK_DEVICE']]
+    print('[设备验证] ' + label, flush=True)
+    with (work / (label + '-device.log')).open('w') as output:
+        result = subprocess.run(command, stdout=output, stderr=subprocess.STDOUT)
+    record = json.loads((work / 'moe-result.json').read_text())
+    record['有效行数'] = counts
+    records.append(record)
+    (work / (label + '-result.json')).write_text(json.dumps(record, ensure_ascii=False, indent=2) + '\n')
+    shutil.copytree(work / 'device-output/moe-ep2', work / 'device-output' / label, dirs_exist_ok=True)
+    if result.returncode or not record['passed']:
+        print((work / (label + '-device.log')).read_text()[-6000:], flush=True)
+        raise SystemExit(1)
+print('双卡 MoE 两组用例全部通过', flush=True)

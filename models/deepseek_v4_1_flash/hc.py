@@ -15,7 +15,10 @@ import torch
 import torch.nn.functional as F
 
 from config import FLASH as M, SP_T_DYN, T_DYN
-from hc_dsl import collapse_tile, collapse_norm_row, expand_row, coefficients_row, inverse_rms_row, project_hf32_tile
+from hc_dsl import (
+    collapse_grid, collapse_tail, collapse_norm_grid, expand_grid, coefficients_grid, inverse_rms_grid,
+    project_hf32_grid,
+)
 from hc_dsl import TASK_TILE, PROJECT_ROW_TILE, COLLAPSE_ROW_TILE
 from initialization_dsl import zero_bf16_padding as zero_bf16_padding
 
@@ -42,33 +45,17 @@ PARTIAL_ROWS_DYN = pl.dynamic("HC_PARTIAL_ROWS")
 
 
 @pl.jit.inline
-def hc_sinkhorn(
-    inv_rms: pl.Tensor, partials: pl.Tensor, scale: pl.Tensor, base: pl.Tensor,
-    pre_mix: pl.Tensor, post_mix: pl.Tensor, residual_mix: pl.Tensor,
-):
-    """按行调度 FP32 系数生成，并返回汇合后的 TaskId。"""
+def hc_sinkhorn(inv_rms: pl.Tensor, partials: pl.Tensor, scale: pl.Tensor, base: pl.Tensor,
+                pre_mix: pl.Tensor, post_mix: pl.Tensor, residual_mix: pl.Tensor):
+    """按 token 分工生成系数，并返回整组完成依赖。"""
     tokens = pl.tensor.dim(pre_mix, 0)
-    padded_rows = pl.tensor.dim(inv_rms, 0)
+    pre_view = pl.reshape(pre_mix, [tokens, HC_MULT])
+    post_view = pl.reshape(post_mix, [tokens, HC_MULT])
     residual_flat = pl.reshape(residual_mix, [tokens, HC_MULT * HC_MULT])
-    ready = pl.system.task_dummy(deps=[])
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for i in pl.range(TASK_TILE):
-        completed[i] = ready
-    for row in pl.parallel(tokens):
-        p0 = pl.slice(partials, [1, MIX_PAD], [row, 0])
-        p1 = pl.slice(partials, [1, MIX_PAD], [padded_rows + row, 0])
-        p2 = pl.slice(partials, [1, MIX_PAD], [2 * padded_rows + row, 0])
-        p3 = pl.slice(partials, [1, MIX_PAD], [3 * padded_rows + row, 0])
-        inverse = pl.slice(inv_rms, [1, 1], [row, 0])
-        pre = pl.slice(pre_mix, [1, HC_MULT], [row, 0])
-        post = pl.slice(post_mix, [1, HC_MULT], [row, 0])
-        residual = pl.slice(residual_flat, [1, HC_MULT * HC_MULT], [row, 0])
-        previous = completed[row % TASK_TILE]
-        with pl.spmd(1, name_hint="dsl_mhc_sinkhorn", deps=[previous]) as done:
-            coefficients_row(p0, p1, p2, p3, inverse, scale, base, pre, post, residual)
-        completed[row % TASK_TILE] = done
-    joined = pl.system.task_dummy(deps=[completed])
-    return joined
+    workers = pl.max(1, pl.min(TASK_TILE, tokens))
+    with pl.spmd(workers, name_hint="dsl_mhc_sinkhorn") as done:
+        coefficients_grid(inv_rms, partials, scale, base, pre_view, post_view, residual_flat)
+    return done
 
 
 @pl.jit.inline
@@ -78,25 +65,17 @@ def hc_project_into(x_hc: pl.Tensor, function: pl.Tensor, inv_rms: pl.Tensor, mi
     t_linear = pl.tensor.dim(inv_rms, 0)
     tokens = pl.tensor.dim(x_hc, 0)
     x_flat = pl.reshape(x_hc, [tokens, HC_DIM])
-    for row in pl.parallel(t_dim):
-        rms_source = pl.slice(x_flat, [1, HC_DIM], [row, 0])
-        inverse = pl.slice(inv_rms, [1, 1], [row, 0])
-        with pl.spmd(1, name_hint="dsl_mhc_rms"):
-            inverse_rms_row(rms_source, inverse)
+    inverse = inv_rms[0:t_dim, 0:1]
+    rms_workers = pl.max(1, pl.min(t_dim, pl.system.available_aiv_count()))
+    with pl.spmd(rms_workers, name_hint="dsl_mhc_rms"):
+        inverse_rms_grid(x_flat, inverse)
 
     if hf32:
         row_tiles = (t_dim + PROJECT_ROW_TILE - 1) // PROJECT_ROW_TILE
-        for row_tile in pl.parallel(row_tiles):
-            t0 = row_tile * PROJECT_ROW_TILE
-            rows = pl.min(PROJECT_ROW_TILE, t_dim - t0)
-            for split in pl.parallel(LINEAR_OK):
-                k0 = split * LINEAR_K_PER_SPLIT
-                project_source = pl.slice(x_flat, [PROJECT_ROW_TILE, LINEAR_K_PER_SPLIT], [t0, k0], valid_shape=[rows, LINEAR_K_PER_SPLIT])
-                weight = pl.slice(function, [MIX_HC, LINEAR_K_PER_SPLIT], [0, k0])
-                partial = split * t_linear + t0
-                target = pl.slice(mixes_partials, [PROJECT_ROW_TILE, MIX_PAD], [partial, 0], valid_shape=[rows, MIX_HC])
-                with pl.spmd(1, name_hint="dsl_mhc_hf32"):
-                    project_hf32_tile(project_source, weight, target, t_dim, row_tile)
+        workers = pl.max(1, pl.min(row_tiles * LINEAR_OK, pl.system.available_cluster_count()))
+        target = mixes_partials[:, 0:MIX_HC]
+        with pl.spmd(workers, name_hint="dsl_mhc_hf32"):
+            project_hf32_grid(x_flat, function, target, t_dim)
     else:
         for task in pl.spmd((t_linear // LINEAR_T_TILE) * LINEAR_OK, name_hint="mhc_linear"):
             t0 = (task // LINEAR_OK) * LINEAR_T_TILE
@@ -137,55 +116,38 @@ def hc_project(x_hc: pl.Tensor, function: pl.Tensor, hf32: pl.constexpr):
 
 
 @pl.jit.inline
-def hc_head(
-    x_hc: pl.Tensor,
-    pre_mix: pl.Tensor,
-    output: pl.Tensor,
-):
-    """每两行调度一个 DSL AIV 合并任务，保留 FP32 求和和 BF16 舍入。"""
+def hc_head(x_hc: pl.Tensor, pre_mix: pl.Tensor, output: pl.Tensor):
+    """批量提交两行合并任务，单个尾行保持独立。"""
     tokens = pl.tensor.dim(x_hc, 0)
     x_flat = pl.reshape(x_hc, [tokens, HC_DIM])
-    for row_tile in pl.parallel(tokens // COLLAPSE_ROW_TILE):
-        row = row_tile * COLLAPSE_ROW_TILE
-        source = x_flat[row:row + COLLAPSE_ROW_TILE, :]
-        pre = pre_mix[row:row + COLLAPSE_ROW_TILE, :]
-        target = output[row:row + COLLAPSE_ROW_TILE, :]
-        with pl.spmd(1, name_hint="dsl_hc_collapse", allow_early_resolve=True):
-            collapse_tile(source, pre, target)
+    paired = tokens // COLLAPSE_ROW_TILE * COLLAPSE_ROW_TILE
+    if paired > 0:
+        source = x_flat[0:paired, :]
+        pre = pre_mix[0:paired, :]
+        target = output[0:paired, 0:D]
+        workers = pl.min(paired // COLLAPSE_ROW_TILE, pl.system.available_aiv_count())
+        with pl.spmd(workers, name_hint="dsl_hc_collapse", allow_early_resolve=True):
+            collapse_grid(source, pre, target)
     if tokens % COLLAPSE_ROW_TILE != 0:
         last_row = tokens - 1
         tail_source = x_flat[last_row:last_row + 1, :]
         tail_pre = pre_mix[last_row:last_row + 1, :]
-        tail_target = output[last_row:last_row + 1, :]
+        tail_target = output[last_row:last_row + 1, 0:D]
         with pl.spmd(1, name_hint="dsl_hc_collapse_tail", allow_early_resolve=True):
-            collapse_tile(tail_source, tail_pre, tail_target)
+            collapse_tail(tail_source, tail_pre, tail_target)
     return output
 
 
 @pl.jit.inline
-def hc_head_norm(
-    x_hc: pl.Tensor,
-    pre_mix: pl.Tensor,
-    norm_weight: pl.Tensor[[D], pl.BF16],
-    output: pl.Tensor,
-):
-    """每行调度一个 DSL 合并/RMSNorm 任务，并返回汇合后的 TaskId。"""
+def hc_head_norm(x_hc: pl.Tensor, pre_mix: pl.Tensor, norm_weight: pl.Tensor[[D], pl.BF16], output: pl.Tensor):
+    """按 token 分工完成合并及归一化，并返回整组完成依赖。"""
     tokens = pl.tensor.dim(x_hc, 0)
     x_flat = pl.reshape(x_hc, [tokens, HC_DIM])
-    ready = pl.system.task_dummy(deps=[])
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for i in pl.range(TASK_TILE):
-        completed[i] = ready
-    for row in pl.parallel(tokens):
-        source = pl.slice(x_flat, [1, HC_DIM], [row, 0])
-        pre = pl.slice(pre_mix, [1, HC_MULT], [row, 0])
-        target = pl.slice(output, [1, D], [row, 0])
-        previous = completed[row % TASK_TILE]
-        with pl.spmd(1, name_hint="dsl_hc_collapse_norm", deps=[previous]) as done:
-            collapse_norm_row(source, pre, norm_weight, target)
-        completed[row % TASK_TILE] = done
-    joined = pl.system.task_dummy(deps=[completed])
-    return joined
+    target = output[0:tokens, 0:D]
+    workers = pl.max(1, pl.min(TASK_TILE, tokens))
+    with pl.spmd(workers, name_hint="dsl_hc_collapse_norm") as done:
+        collapse_norm_grid(x_flat, pre_mix, norm_weight, target)
+    return done
 
 
 @pl.jit.inline
@@ -209,33 +171,20 @@ def hc_pre(
 
 
 @pl.jit.inline
-def hc_post(
-    sublayer: pl.Tensor,
-    residual: pl.Tensor,
-    post_mix: pl.Tensor,
-    residual_mix: pl.Tensor,
-    output: pl.Tensor,
-    deps: pl.Array[2, pl.TASK_ID],
-):
-    """在给定生产者依赖完成后，调度 DSL 残差展开。"""
+def hc_post(sublayer: pl.Tensor, residual: pl.Tensor, post_mix: pl.Tensor, residual_mix: pl.Tensor,
+            output: pl.Tensor, deps: pl.Array[2, pl.TASK_ID]):
+    """在两个生产者完成后，以一组 SPMD 展开残差。"""
     tokens = pl.tensor.dim(sublayer, 0)
+    # 多核入口的所有同行视图使用同一个行数表达式。
+    hidden = pl.reshape(sublayer, [tokens, D])
     residual_flat = pl.reshape(residual, [tokens, HC_DIM])
+    post = pl.reshape(post_mix, [tokens, HC_MULT])
     mix_flat = pl.reshape(residual_mix, [tokens, HC_MULT * HC_MULT])
     output_flat = pl.reshape(output, [tokens, HC_DIM])
     ready = pl.system.task_dummy(deps=[deps])
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for i in pl.range(TASK_TILE):
-        completed[i] = ready
-    for row in pl.parallel(tokens):
-        hidden = pl.slice(sublayer, [1, D], [row, 0])
-        skip = pl.slice(residual_flat, [1, HC_DIM], [row, 0])
-        post = pl.slice(post_mix, [1, HC_MULT], [row, 0])
-        mix = pl.slice(mix_flat, [1, HC_MULT * HC_MULT], [row, 0])
-        target = pl.slice(output_flat, [1, HC_DIM], [row, 0])
-        previous = completed[row % TASK_TILE]
-        with pl.spmd(1, name_hint="dsl_hc_post", deps=[previous]) as done:
-            expand_row(hidden, skip, post, mix, target)
-        completed[row % TASK_TILE] = done
+    workers = pl.max(1, pl.min(TASK_TILE, tokens))
+    with pl.spmd(workers, name_hint="dsl_hc_post", deps=[ready]):
+        expand_grid(hidden, residual_flat, post, mix_flat, output_flat)
     return output
 
 

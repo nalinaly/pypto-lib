@@ -9,6 +9,7 @@
 """使用 CANNBotDSL 按 FP32 加法顺序执行本地 MoE 输出归约。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
 import pypto.language as pl
@@ -26,8 +27,8 @@ VECTOR_TILE = 64
 TASK_TILE = 16
 
 
-@cb.kernel
-def combine_rows(
+@jit
+def _combine_rows(
     shared: cb.Tensor, routed: cb.Tensor, output: cb.Tensor,
     active_rows: cb.ScalarValue, store_rows: cb.ScalarValue,
 ):
@@ -60,40 +61,31 @@ def combine_rows(
         cb.mem_copy(cb.tile_slice(output, (1, D), (row, 0)), result)
 
 
-@pl.jit.inline(auto_scope=False)
-def _combine_task(
-    shared: pl.Tensor, routed: pl.Tensor, output: pl.Tensor,
-    active_rows: pl.Scalar[pl.INDEX], store_rows: pl.Scalar[pl.INDEX], ready: pl.Scalar[pl.TASK_ID],
-):
-    """在完成依赖满足后，派发一个本地 AIV 叶子任务。"""
-    with pl.spmd(1, name_hint="dsl_combine_reduce", deps=[ready]) as done:
-        combine_rows(shared, routed, output, active_rows, store_rows)
-    return done
+@cb.kernel
+def combine_grid(shared: cb.Tensor, routed: cb.Tensor, output: cb.Tensor, num_tokens: cb.ScalarValue):
+    """按两行分配本地归约，保留共享专家优先的 FP32 加法顺序。"""
+    active = min(shared.shape[0], max(num_tokens, 0))
+    tiles = (shared.shape[0] + ROW_TILE - 1) // ROW_TILE
+    for tile in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = tile * ROW_TILE
+        physical = min(ROW_TILE, shared.shape[0] - row)
+        live = min(physical, max(active - row, 0))
+        local_shared = shared[row:row + physical, None]
+        local_routed = routed[row * TOPK:(row + physical) * TOPK, None]
+        target = output[row:row + physical, None]
+        _combine_rows(local_shared, local_routed, target, live, physical)
 
 
 @pl.jit.inline(auto_scope=False)
-def combine_local(
-    shared: pl.Tensor, routed: pl.Tensor, output: pl.Tensor,
-    num_tokens: pl.Scalar[pl.INT32], ready: pl.Scalar[pl.TASK_ID],
-):
-    """在调用者的跨卡等待完成后，汇合本地每两行的归约任务。"""
+def combine_local(shared: pl.Tensor, routed: pl.Tensor, output: pl.Tensor,
+                  num_tokens: pl.Scalar[pl.INT32], ready: pl.Scalar[pl.TASK_ID]):
+    """在通信等待完成后，以一组 SPMD 归约本地输出。"""
     rows = pl.tensor.dim(shared, 0)
-    active = pl.min(rows, pl.max(pl.cast(num_tokens, pl.INDEX), 0))
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for slot in pl.range(TASK_TILE):
-        completed[slot] = ready
-    for row in pl.parallel(0, rows, ROW_TILE):
-        physical = pl.min(ROW_TILE, rows - row)
-        live = pl.min(physical, pl.max(active - row, 0))
-        local_shared = pl.slice(shared, [ROW_TILE, D], [row, 0], valid_shape=[physical, D])
-        local_routed = pl.slice(routed, [ROW_TILE * TOPK, D], [row * TOPK, 0], valid_shape=[physical * TOPK, D])
-        destination = pl.slice(output, [ROW_TILE, D], [row, 0], valid_shape=[physical, D])
-        slot = row // ROW_TILE % TASK_TILE
-        previous = completed[slot]
-        done = _combine_task(local_shared, local_routed, destination, live, physical, previous)
-        completed[slot] = done
-    joined = pl.system.task_dummy(deps=[completed])
-    return joined
+    target = output[0:rows, 0:D]
+    workers = pl.max(1, pl.min(TASK_TILE, (rows + ROW_TILE - 1) // ROW_TILE))
+    with pl.spmd(workers, name_hint="dsl_combine_reduce", deps=[ready]) as done:
+        combine_grid(shared, routed, target, num_tokens)
+    return done
 
 
 @pl.jit

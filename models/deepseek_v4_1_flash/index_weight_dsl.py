@@ -9,6 +9,7 @@
 """使用 CANNBotDSL 执行 Indexer head 权重的四路投影及 FP32 顺序合并。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
 import pypto.language as pl
@@ -30,16 +31,16 @@ VECTOR_TILE = 64
 TASK_TILE = 12
 
 
-@cb.kernel
-def project_index_weight_tile(
+@jit
+def _project_index_weight_tile(
     source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor, active_rows: cb.ScalarValue,
 ):
     """以 M80/N32/K256 计算一个 K1280 分段，并写出 FP32 部分和。"""
     project_bf16_nz(source, weight, output, 0, active_rows, ROW_TILE, INDEX_H, REDUCTION_TILE)
 
 
-@cb.kernel
-def reduce_index_weight_tile(
+@jit
+def _reduce_index_weight_tile(
     partials: cb.Tensor, output: cb.Tensor, active_rows: cb.ScalarValue, row: cb.ScalarValue,
 ):
     """按 ((分段 0 + 分段 1) + 分段 2) + 分段 3 合并，最后舍入为 BF16。"""
@@ -64,26 +65,35 @@ def reduce_index_weight_tile(
     cb.mem_copy(output[0:active_rows, None], result[0:active_rows, None])
 
 
-@pl.jit.inline(auto_scope=False)
-def _project_task(
-    source: pl.Tensor, weight: pl.Tensor, output: pl.Tensor,
-    active_rows: pl.Scalar[pl.INDEX], ready: pl.Scalar[pl.TASK_ID],
-):
-    """提交一个独立的本卡 AIC 投影分块。"""
-    with pl.spmd(1, name_hint="dsl_proj_idx_w", deps=[ready]) as done:
-        project_index_weight_tile(source, weight, output, active_rows)
-    return done
+@cb.kernel
+def project_index_weight_grid(source: cb.Tensor, weight: cb.Tensor, partials: cb.Tensor,
+                              num_tokens: cb.ScalarValue):
+    """按 M80 和四个 K1280 分段分配投影。"""
+    active = min(source.shape[0], max(num_tokens, 0))
+    stride = partials.shape[0] // SPLIT_TILE
+    tiles = (active + ROW_TILE - 1) // ROW_TILE * SPLIT_TILE
+    for work in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = work // SPLIT_TILE * ROW_TILE
+        split = work % SPLIT_TILE
+        live = min(ROW_TILE, active - row)
+        begin = split * (D // SPLIT_TILE)
+        src = source[row:row + live, begin:begin + D // SPLIT_TILE]
+        matrix = weight[None, begin * 16:(begin + D // SPLIT_TILE) * 16]
+        offset = split * stride + row
+        dst = partials[offset:offset + live, None]
+        _project_index_weight_tile(src, matrix, dst, live)
 
 
-@pl.jit.inline(auto_scope=False)
-def _reduce_task(
-    partials: pl.Tensor, output: pl.Tensor, active_rows: pl.Scalar[pl.INDEX],
-    row: pl.Scalar[pl.INDEX], ready: pl.Scalar[pl.TASK_ID],
-):
-    """等待投影完成后提交本卡 AIV 合并任务。"""
-    with pl.spmd(1, name_hint="dsl_reduce_idx_w", deps=[ready]) as done:
-        reduce_index_weight_tile(partials, output, active_rows, row)
-    return done
+@cb.kernel
+def reduce_index_weight_grid(partials: cb.Tensor, output: cb.Tensor, num_tokens: cb.ScalarValue):
+    """按 M16 分配合并，四路部分和仍按固定顺序相加。"""
+    active = min(output.shape[0], max(num_tokens, 0))
+    tiles = (active + MERGE_ROW_TILE - 1) // MERGE_ROW_TILE
+    for tile in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = tile * MERGE_ROW_TILE
+        live = min(MERGE_ROW_TILE, active - row)
+        dst = output[row:row + live, None]
+        _reduce_index_weight_tile(partials, dst, live, row)
 
 
 @pl.jit.inline(auto_scope=False)
@@ -91,42 +101,21 @@ def project_index_weights(
     source: pl.Tensor, weight: pl.Tensor[[D, INDEX_H], pl.BF16, pl.NZ], output: pl.Tensor,
     num_tokens: pl.Scalar[pl.INT32], ready: pl.Scalar[pl.TASK_ID],
 ):
-    """由 simpler 调度四路 K1280 投影、FP32 合并及下游完成依赖。"""
+    """依次提交四路投影和 FP32 顺序合并，返回完整权重结果的完成依赖。"""
     tokens = pl.tensor.dim(source, 0)
     active = pl.min(tokens, pl.max(pl.cast(num_tokens, pl.INDEX), 0))
     storage = pl.reshape(weight, [D * INDEX_H])
     raw_weight = pl.reshape(storage, [INDEX_H // 16, D * 16])
     partials = pl.create_tensor([SPLIT_TILE * tokens, INDEX_H], dtype=pl.FP32)
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for slot in pl.range(TASK_TILE):
-        completed[slot] = ready
-    for row in pl.range(0, active, ROW_TILE):
-        physical = pl.min(ROW_TILE, tokens - row)
-        live = pl.min(ROW_TILE, active - row)
-        for split in pl.parallel(SPLIT_TILE):
-            begin = split * (D // SPLIT_TILE)
-            tile = pl.slice(source, [ROW_TILE, D // SPLIT_TILE], [row, begin], valid_shape=[physical, D // SPLIT_TILE])
-            weights = raw_weight[:, begin * 16:(begin + D // SPLIT_TILE) * 16]
-            partial_row = split * tokens + row
-            partial = pl.slice(partials, [ROW_TILE, INDEX_H], [partial_row, 0], valid_shape=[physical, INDEX_H])
-            slot = (row // ROW_TILE * SPLIT_TILE + split) % TASK_TILE
-            previous = completed[slot]
-            done = _project_task(tile, weights, partial, live, previous)
-            completed[slot] = done
-    projected = pl.system.task_dummy(deps=[completed])
-    merged = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for slot in pl.range(TASK_TILE):
-        merged[slot] = projected
-    for row in pl.parallel(0, active, MERGE_ROW_TILE):
-        physical = pl.min(MERGE_ROW_TILE, tokens - row)
-        live = pl.min(MERGE_ROW_TILE, active - row)
-        target = pl.slice(output, [MERGE_ROW_TILE, INDEX_H], [row, 0], valid_shape=[physical, INDEX_H])
-        slot = row // MERGE_ROW_TILE % TASK_TILE
-        previous = merged[slot]
-        done = _reduce_task(partials, target, live, row, previous)
-        merged[slot] = done
-    joined = pl.system.task_dummy(deps=[merged])
-    return joined
+    tiles = (active + ROW_TILE - 1) // ROW_TILE * SPLIT_TILE
+    workers = pl.max(1, pl.min(TASK_TILE, tiles))
+    with pl.spmd(workers, name_hint="dsl_proj_idx_w", deps=[ready]) as projected:
+        project_index_weight_grid(source, raw_weight, partials, num_tokens)
+    target = output[0:active, 0:INDEX_H]
+    merge_workers = pl.max(1, pl.min(TASK_TILE, (active + MERGE_ROW_TILE - 1) // MERGE_ROW_TILE))
+    with pl.spmd(merge_workers, name_hint="dsl_reduce_idx_w", deps=[projected]) as done:
+        reduce_index_weight_grid(partials, target, num_tokens)
+    return done
 
 
 @pl.jit

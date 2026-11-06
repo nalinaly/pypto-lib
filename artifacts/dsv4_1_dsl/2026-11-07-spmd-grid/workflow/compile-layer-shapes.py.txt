@@ -1,0 +1,60 @@
+"""从既有输入读取形状，按新契约编译整层；不复用旧输入和参考输出。"""
+import ast
+import json
+from pathlib import Path
+import sys
+
+import golden
+from golden import ScalarSpec, TensorSpec
+import torch
+import decode_layer
+from config import STATE_CAPACITY
+
+work = Path(__file__).resolve().parent
+model = work.parents[1] / 'pypto-a5-dev/pypto-lib-dsv41-dsl'
+layer = int(sys.argv[sys.argv.index('--layer-id') + 1])
+directories = {
+    0: '_jit_l3_decode_layer_20261104_135301_3gqotj6h',
+    2: '_jit_l3_decode_layer_20261105_160121_u27otki0',
+}
+fixture = model / 'build_output' / directories[layer] / 'data'
+if '--compile-only' not in sys.argv:
+    raise SystemExit('此脚本仅用于编译；设备运行须使用当前入口重新生成数据')
+
+
+def shape_specs(layer_id=0, seed=0):
+    specs = []
+    for name in decode_layer.l3_decode_layer.param_names:
+        path = fixture / 'in' / (name + '.pt')
+        if not path.is_file():
+            path = fixture / 'out' / (name + '.pt')
+        value = torch.load(path, weights_only=True, mmap=True)
+        if value.ndim == 0:
+            specs.append(ScalarSpec(name, value.dtype, value.item()))
+        else:
+            shape = list(value.shape)
+            dtype = torch.bfloat16 if name == 'gate_weight' else value.dtype
+            if name == 'state_cache':
+                shape[2] = STATE_CAPACITY
+            specs.append(TensorSpec(name, shape, dtype))
+    return specs
+
+
+original_run = golden.run
+
+
+def run(**kwargs):
+    result = original_run(**kwargs)
+    record = {'case': 0, 'passed': bool(result.passed), 'error': str(result.error or ''),
+              'work_dir': str(result.work_dir), 'compile_only': True}
+    (work / f'unit-layer{layer}-ep2-compiled.json').write_text(
+        json.dumps([record], ensure_ascii=False, indent=2) + '\n')
+    return result
+
+
+golden.run = run
+namespace = vars(decode_layer).copy()
+namespace['build_tensor_specs'] = shape_specs
+source = Path(decode_layer.__file__)
+main = ast.parse(source.read_text()).body[-1]
+exec(compile(ast.Module(body=main.body, type_ignores=[]), str(source), 'exec'), namespace)

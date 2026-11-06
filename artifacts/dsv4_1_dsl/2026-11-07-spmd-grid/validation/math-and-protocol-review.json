@@ -1,0 +1,166 @@
+{
+  "保留原数学主体": [
+    {
+      "文件": "q_branch_dsl.py",
+      "数学主体": "normalize_quant_rows",
+      "原主体保持": true
+    },
+    {
+      "文件": "q_branch_dsl.py",
+      "数学主体": "query_rope_head",
+      "原主体保持": true
+    },
+    {
+      "文件": "swa_dsl.py",
+      "数学主体": "swa_query",
+      "原主体保持": true
+    },
+    {
+      "文件": "compressor_pool_dsl.py",
+      "数学主体": "pool_state_block",
+      "原主体保持": true
+    },
+    {
+      "文件": "compressor_pool_dsl.py",
+      "数学主体": "publish_compressed_page",
+      "原主体保持": true
+    },
+    {
+      "文件": "hc_dsl.py",
+      "数学主体": "coefficients_row",
+      "原主体保持": true
+    },
+    {
+      "文件": "hc_dsl.py",
+      "数学主体": "inverse_rms_row",
+      "原主体保持": true
+    },
+    {
+      "文件": "hc_dsl.py",
+      "数学主体": "project_hf32_tile",
+      "原主体保持": true
+    },
+    {
+      "文件": "hc_dsl.py",
+      "数学主体": "collapse_tile",
+      "原主体保持": true
+    },
+    {
+      "文件": "hc_dsl.py",
+      "数学主体": "collapse_norm_row",
+      "原主体保持": true
+    },
+    {
+      "文件": "hc_dsl.py",
+      "数学主体": "expand_row",
+      "原主体保持": true
+    },
+    {
+      "文件": "window_kv_dsl.py",
+      "数学主体": "window_kv_page",
+      "原主体保持": true
+    },
+    {
+      "文件": "expert_shared_dsl.py",
+      "数学主体": "shared_swiglu_quant_tile",
+      "原主体保持": true
+    },
+    {
+      "文件": "gate_dsl.py",
+      "数学主体": "project_scores",
+      "原主体保持": false,
+      "变化说明": "按用户确认对齐上游 BF16 权重或归一化存储契约"
+    },
+    {
+      "文件": "gate_dsl.py",
+      "数学主体": "normalize_rows",
+      "原主体保持": false,
+      "变化说明": "按用户确认对齐上游 BF16 权重或归一化存储契约"
+    },
+    {
+      "文件": "gate_dsl.py",
+      "数学主体": "quantize_rows",
+      "原主体保持": false,
+      "变化说明": "按用户确认对齐上游 BF16 权重或归一化存储契约"
+    },
+    {
+      "文件": "gate_dsl.py",
+      "数学主体": "select_routes",
+      "原主体保持": true
+    },
+    {
+      "文件": "mxfp8_dsl.py",
+      "数学主体": "quantize_bf16_tile",
+      "原主体保持": true
+    },
+    {
+      "文件": "expert_shared_projection_dsl.py",
+      "数学主体": "project_tile",
+      "原主体保持": true
+    },
+    {
+      "文件": "index_query_dsl.py",
+      "数学主体": "project_query_mix",
+      "原主体保持": true
+    },
+    {
+      "文件": "compressor_dsl.py",
+      "数学主体": "project_compressor_tile",
+      "原主体保持": true
+    },
+    {
+      "文件": "moe_combine_dsl.py",
+      "数学主体": "combine_rows",
+      "原主体保持": true
+    },
+    {
+      "文件": "o_proj_dsl.py",
+      "数学主体": "rope_quant_head",
+      "原主体保持": true
+    },
+    {
+      "文件": "index_projection_dsl.py",
+      "数学主体": "project_index_key_tile",
+      "原主体保持": true
+    },
+    {
+      "文件": "index_key_dsl.py",
+      "数学主体": "publish_index_page",
+      "原主体保持": true
+    },
+    {
+      "文件": "moe_dispatch_dsl.py",
+      "数学主体": "stage_rows",
+      "原主体保持": true
+    },
+    {
+      "文件": "moe_dispatch_dsl.py",
+      "数学主体": "gather_rows",
+      "原主体保持": true
+    },
+    {
+      "文件": "index_weight_dsl.py",
+      "数学主体": "project_index_weight_tile",
+      "原主体保持": true
+    },
+    {
+      "文件": "index_weight_dsl.py",
+      "数学主体": "reduce_index_weight_tile",
+      "原主体保持": true
+    }
+  ],
+  "通信核数学及访存主体": {
+    "moe_signal_clear": true,
+    "dispatch_meta_publish": true,
+    "dispatch_meta_wait": true,
+    "dispatch_meta_finalize": true,
+    "dispatch_push": true,
+    "dispatch_publish_epoch": true,
+    "dispatch_wait": true,
+    "combine_notify": true,
+    "combine_wait": true,
+    "ffn_reduce_scatter": true,
+    "ffn_reduce": true
+  },
+  "通信依赖更新": "同步上游 #1699：等待锚定 payload 生产者，arrival signal 使用 no_dep_args，本地 gather/归约同时等待 publish/notify 和 wait。通信实现未迁移为 DSL。"
+}

@@ -1,0 +1,41 @@
+"""同一动态张量及其 reshape 传入外部核的最小复现。"""
+import cannbotdsl as cb
+import pypto.language as pl
+import torch
+from pypto.backend import BackendType
+from pypto.runtime import RunConfig,ExecutionMode
+ROWS=pl.dynamic('REPRO_ROWS')
+
+@cb.kernel
+def add_aliases(source:cb.Tensor,view:cb.Tensor,output:cb.Tensor):
+    for row in cb.range(cb.get_block_idx(),source.shape[0],cb.get_block_num()):
+        for col in cb.range(source.shape[1]):
+            output[row,col]=source[row,col]+view[row,col]
+
+@pl.jit.inline(auto_scope=False)
+def helper(source:pl.Tensor,output:pl.Tensor):
+    rows=pl.tensor.dim(source,0)
+    view=pl.reshape(source,[rows,32])
+    with pl.spmd(4):
+        add_aliases(source,view,output)
+    return output
+
+@pl.jit.inline(auto_scope=False)
+def allocate(source:pl.Tensor,output:pl.Tensor):
+    tokens=pl.tensor.dim(source,0)
+    temporary=pl.create_tensor([tokens,32],dtype=pl.FP32)
+    for row in pl.parallel(tokens):
+        with pl.at(level=pl.Level.CORE_GROUP):
+            tile=pl.load(source,[row,0],[1,32])
+            temporary=pl.store(tile,[row,0],temporary)
+    helper(temporary,output)
+    return output
+
+@pl.jit
+def program(source:pl.Tensor[[ROWS,32],pl.FP32],output:pl.Out[pl.Tensor[[ROWS,32],pl.FP32]]):
+    source.bind_dynamic(0,ROWS)
+    allocate(source,output)
+    return output
+
+program.compile(torch.ones(8,32),torch.zeros(8,32),config=RunConfig(backend_type=BackendType.Ascend950,execution_mode=ExecutionMode.ONBOARD))
+print('编译通过')

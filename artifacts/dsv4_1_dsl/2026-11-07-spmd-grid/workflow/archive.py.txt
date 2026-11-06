@@ -1,0 +1,140 @@
+"""归档本轮模型、验证记录和可检查的生成物，不保存二进制或新增校验摘要。"""
+import gzip
+import json
+from pathlib import Path
+import re
+import runpy
+import subprocess
+
+work = Path(__file__).resolve().parent
+workspace = work.parents[1]
+repo = workspace / 'pypto-a5-dev/pypto-lib-dsv41-dsl'
+target = repo / 'artifacts/dsv4_1_dsl/2026-11-07-spmd-grid'
+target.mkdir(parents=True, exist_ok=True)
+
+
+def sanitize(value):
+    value = value.replace(str(workspace), '<workspace>').replace(str(workspace.parent), '<user-home>')
+    return re.sub(r'[ \t]+(?=\n|$)', '', value)
+
+
+def save_text(path, text):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(sanitize(text))
+
+
+def save_compressed(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open('wb') as raw, gzip.GzipFile(fileobj=raw, mode='wb', mtime=0, compresslevel=6) as stream:
+        stream.write(data)
+
+
+changed = subprocess.check_output(['git', 'diff', '--name-only', '--', 'models'], cwd=repo, text=True).splitlines()
+for name in changed:
+    path = repo / name
+    save_text(target / 'model-snapshot' / (path.name + '.txt'), path.read_text())
+
+workflow = ['run-case.sh', 'run-entry.py', 'unit-suite.py', 'build-units.py', 'run-moe.py',
+            'build-moe.py', 'run-moe-suite.py', 'compile-layer-shapes.py',
+            'repro-shape-allocated-alias.py', 'repro-runtime-slice-capacity.py',
+            'unit-cases.json', 'attention-cases.json', 'layer-cases.json']
+for name in workflow:
+    save_text(target / 'workflow' / (name + '.txt' if name.endswith(('.py', '.sh')) else name),
+              (work / name).read_text())
+save_text(target / 'workflow/archive.py.txt', Path(__file__).read_text())
+save_text(target / 'workflow/review-spmd.py.txt', Path('/tmp/review_dsv41_spmd.py').read_text())
+
+for path in work.glob('*.json'):
+    if path.name.startswith(('unit-', 'moe-')) or path.name in {
+        'kernel-inventory.json', 'math-and-protocol-review.json', 'review-decisions.json',
+        'upstream-comparison.json', 'attention-final-binaries.json', 'layer0-binaries.json',
+        'layer2-binaries.json', 'contract-unit-binaries.json', 'index-valid-binaries.json',
+    }:
+        save_text(target / 'validation' / path.name, path.read_text())
+save_text(target / 'validation/spmd-audit.json', Path('/tmp/dsv41-spmd-audit.json').read_text())
+for path in list(work.glob('unit-*-device.log')) + list(work.glob('moe-*-device.log')) + list(work.glob('initial-*.log')):
+    save_text(target / 'validation' / path.name, path.read_text())
+for path in Path('/tmp').glob('spmd-grid-*.log'):
+    if any(word in path.name for word in ('contract', 'final', 'valid', 'layer0', 'layer2', 'precommit', 'repro')):
+        save_text(target / 'validation' / path.name, path.read_text())
+
+records = []
+for path in work.glob('unit-*-compiled.json'):
+    label = path.name.removeprefix('unit-').removesuffix('-compiled.json')
+    for index, record in enumerate(json.loads(path.read_text())):
+        if record['passed']:
+            records.append((f'{label}-{index}', Path(record['work_dir'])))
+moe = json.loads((work / 'moe-compile.json').read_text())
+records.append(('moe-ep2', Path(moe['work_dir'])))
+roots = {}
+external = {}
+inventory = []
+for label, root in records:
+    if root in roots:
+        continue
+    roots[root] = label
+    configs = list(root.rglob('kernel_config.py'))
+    for path in configs:
+        data = runpy.run_path(str(path))
+        directory = path.parent
+        relative = directory.relative_to(root)
+        destination = target / 'generated' / label / relative
+        save_text(destination / 'kernel_config.py.txt', path.read_text())
+        for subdir, pattern in [('orchestration', '*.cpp'), ('host', '*.cpp'), ('ptoas', '*.pto')]:
+            for source in (directory / subdir).glob(pattern):
+                save_text(destination / subdir / (source.name + '.txt'), source.read_text())
+        for kernel in data['KERNELS']:
+            source = Path(kernel['source'])
+            item = {'用例': label, '层级': str(relative), '核名': kernel['name'],
+                    '核类型': kernel['core_type'], 'DSL': bool(kernel.get('external', False))}
+            if kernel.get('external', False):
+                bundle = source.parent
+                if bundle not in external:
+                    name = f"{len(external):03d}-{kernel['name']}"
+                    external[bundle] = name
+                    out = target / 'generated/external' / name
+                    for filename in ('manifest.json', 'entry.cpp', 'device_source.hpp'):
+                        content = sanitize((bundle / filename).read_text())
+                        if filename == 'device_source.hpp':
+                            save_compressed(out / 'device_source.hpp.txt.gz', content.encode())
+                        else:
+                            save_text(out / (filename + '.txt' if filename.endswith('.cpp') else filename), content)
+                item['导出目录'] = 'generated/external/' + external[bundle]
+            else:
+                save_text(destination / 'native' / (source.name + '.txt'), source.read_text())
+            inventory.append(item)
+save_text(target / 'generated/index.json', json.dumps(inventory, ensure_ascii=False, indent=2) + '\n')
+
+outputs = []
+for path in (work / 'device-output').rglob('*.pt'):
+    relative = path.relative_to(work / 'device-output')
+    if relative.parts[0] == 'moe-ep2':
+        continue
+    # 整层保留六个激活边界输出；全部缓存比较结果保存在设备日志。
+    if relative.parts[0].startswith('layer') and path.stem not in {
+        'attention_output', 'attention_hidden', 'attention_pre_mix', 'next_pre_mix', 'x_mixed', 'x_next',
+    }:
+        continue
+    # Attention 的大块历史缓存不重复发布；页发布叶子的完整输出已单独保存。
+    if relative.parts[0].startswith('attn-') and path.stem in {
+        'window_cache', 'window_cache_scale', 'compressed_cache', 'compressed_cache_scale',
+        'index_cache', 'index_cache_scale',
+    }:
+        continue
+    out = target / 'device-output' / relative.with_suffix('.pt.gz')
+    save_compressed(out, path.read_bytes())
+    outputs.append(str(out.relative_to(target)))
+
+# 保存变化契约的真实输入及对应 CPU 参考，其他大型权重通过固定构造器重建。
+for root, label in roots.items():
+    if label.startswith(('layer', 'gate-', 'compressor-pool-')):
+        for direction in ('in', 'out'):
+            for path in (root / 'data' / direction).glob('*.pt'):
+                if label.startswith('layer') and path.stem not in {
+                    'gate_weight', 'state_cache', 'moe_num_tokens', 'attention_num_tokens',
+                }:
+                    continue
+                save_compressed(target / 'fixtures' / label / direction / (path.name + '.gz'), path.read_bytes())
+save_text(target / 'device-output/index.json', json.dumps(outputs, ensure_ascii=False, indent=2) + '\n')
+print('归档目录：', target)
+print('模型文件：', len(changed), '编译目录：', len(roots), 'DSL 导出：', len(external), '设备输出：', len(outputs))

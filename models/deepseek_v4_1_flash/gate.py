@@ -53,7 +53,7 @@ def golden_gate_reference(
 @pl.jit.inline
 def gate_normalized(
     x_normed: pl.Tensor[[T, D], pl.BF16],
-    gate_w: pl.Tensor[[N_EXPERTS, D], pl.FP32],
+    gate_w: pl.Tensor[[N_EXPERTS, D], pl.BF16],
     gate_bias: pl.Tensor[[N_EXPERTS], pl.FP32],
     num_tokens: pl.Scalar[pl.INT32],
     x_norm_mx: pl.Tensor[[T_PAD, D], pl.FP8E4M3FN],
@@ -67,25 +67,25 @@ def gate_normalized(
     if active_tokens > T:
         active_tokens = pl.cast(T, pl.INDEX)
 
-    xg_buf = pl.create_tensor([T_PAD, D], dtype=pl.FP32)
+    xg_buf = pl.create_tensor([T_PAD, D], dtype=pl.BF16)
     for block in pl.spmd(T_PAD // GATE_INPUT_TILE, name_hint="gate_normalized_input"):
         t0 = block * GATE_INPUT_TILE
         valid_rows = pl.min(GATE_INPUT_TILE, pl.max(active_tokens - t0, 0))
         normalized = pl.slice(x_normed, [GATE_INPUT_TILE, D], [t0, 0], valid_shape=[valid_rows, D])
         normalized = pl.fillpad(normalized, pad_value=pl.PadValue.zero)
         normalized = pl.set_validshape(normalized, GATE_INPUT_TILE, D)
-        xg_buf[t0 : t0 + GATE_INPUT_TILE, :] = pl.cast(normalized, pl.FP32)
+        xg_buf[t0 : t0 + GATE_INPUT_TILE, :] = normalized
 
-    return gate_from_fp32(
+    return gate_from_bf16(
         xg_buf, gate_w, gate_bias, num_tokens,
         x_norm_mx, x_norm_scale, indices, weights,
     )
 
 
 @pl.jit.inline
-def gate_from_fp32(
-    xg_buf: pl.Tensor[[T_PAD, D], pl.FP32],
-    gate_w: pl.Tensor[[N_EXPERTS, D], pl.FP32],
+def gate_from_bf16(
+    xg_buf: pl.Tensor[[T_PAD, D], pl.BF16],
+    gate_w: pl.Tensor[[N_EXPERTS, D], pl.BF16],
     gate_bias: pl.Tensor[[N_EXPERTS], pl.FP32],
     num_tokens: pl.Scalar[pl.INT32],
     x_norm_mx: pl.Tensor[[T_PAD, D], pl.FP8E4M3FN],
@@ -116,7 +116,7 @@ def gate_from_fp32(
 def gate(
     x_mixed: pl.Tensor[[T, D], pl.BF16],
     norm_w: pl.Tensor[[D], pl.BF16],
-    gate_w: pl.Tensor[[N_EXPERTS, D], pl.FP32],
+    gate_w: pl.Tensor[[N_EXPERTS, D], pl.BF16],
     gate_bias: pl.Tensor[[N_EXPERTS], pl.FP32],
     num_tokens: pl.Scalar[pl.INT32],
     x_norm_mx: pl.Tensor[[T_PAD, D], pl.FP8E4M3FN],
@@ -124,13 +124,13 @@ def gate(
     indices: pl.Tensor[[T, TOPK], pl.INT32],
     weights: pl.Tensor[[T, TOPK], pl.FP32],
 ):
-    """Normalize router inputs with BF16 rounding and FP32 output."""
+    """将路由输入归一化为 BF16，交给投影及 MXFP8 量化。"""
     active_tokens = pl.cast(num_tokens, pl.INDEX)
     active_tokens = pl.max(active_tokens, 0)
     active_tokens = pl.min(active_tokens, T)
-    xg_buf = pl.create_tensor([T_PAD, D], dtype=pl.FP32)
+    xg_buf = pl.create_tensor([T_PAD, D], dtype=pl.BF16)
     normalize_gate(x_mixed, norm_w, xg_buf, active_tokens)
-    return gate_from_fp32(
+    return gate_from_bf16(
         xg_buf, gate_w, gate_bias, num_tokens,
         x_norm_mx, x_norm_scale, indices, weights,
     )
@@ -140,7 +140,7 @@ def gate(
 def l2_gate(
     x_mixed: pl.Tensor[[T, D], pl.BF16],
     norm_w: pl.Tensor[[D], pl.BF16],
-    gate_w: pl.Tensor[[N_EXPERTS, D], pl.FP32],
+    gate_w: pl.Tensor[[N_EXPERTS, D], pl.BF16],
     gate_bias: pl.Tensor[[N_EXPERTS], pl.FP32],
     layer_id: pl.Scalar[pl.INT32],
     num_tokens: pl.Scalar[pl.INT32],
@@ -168,7 +168,7 @@ def _golden_gate_scores(tensors):
 
     x_norm = golden_rms_norm_tiled(tensors["x_mixed"], tensors["norm_w"]).cpu().float().view(T, D)
 
-    gate_w = tensors["gate_w"].cpu().float()
+    gate_w = tensors["gate_w"].cpu().to(torch.bfloat16).float()
     gate_bias = tensors["gate_bias"].cpu().float()
     logits = x_norm @ gate_w.T
     softplus = logits.clamp(min=0) + torch.log1p(torch.exp(-logits.abs()))
@@ -230,7 +230,7 @@ def golden_gate_normalized_core(tensors):
     import torch
 
     x_norm = tensors["x_normed"].cpu().to(torch.bfloat16).float().view(T, D)
-    gate_w = tensors["gate_w"].cpu().float()
+    gate_w = tensors["gate_w"].cpu().to(torch.bfloat16).float()
     gate_bias = tensors["gate_bias"].cpu().float()
     logits = x_norm @ gate_w.T
     softplus = logits.clamp(min=0) + torch.log1p(torch.exp(-logits.abs()))
@@ -250,7 +250,7 @@ def build_tensor_specs(layer_id=0, num_tokens=T):
         return torch.ones(D)
 
     def init_gate_w():
-        return torch.randn(N_EXPERTS, D) / D ** 0.5
+        return (torch.randn(N_EXPERTS, D) / D ** 0.5).bfloat16()
 
     def init_gate_bias():
         return torch.randn(N_EXPERTS) * 0.1
@@ -276,7 +276,7 @@ def build_tensor_specs(layer_id=0, num_tokens=T):
     return [
         TensorSpec("x_mixed", [T, D], torch.bfloat16, init_value=init_x_mixed),
         TensorSpec("norm_w", [D], torch.bfloat16, init_value=init_norm_w),
-        TensorSpec("gate_w", [N_EXPERTS, D], torch.float32, init_value=init_gate_w),
+        TensorSpec("gate_w", [N_EXPERTS, D], torch.bfloat16, init_value=init_gate_w),
         TensorSpec("gate_bias", [N_EXPERTS], torch.float32, init_value=init_gate_bias),
         ScalarSpec("layer_id", torch.int32, layer_id),
         ScalarSpec("num_tokens", torch.int32, num_tokens),

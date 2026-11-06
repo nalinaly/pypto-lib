@@ -1,0 +1,36 @@
+"""只编译：检查外部核是否将动态切片长度误当成静态父容量。"""
+from pathlib import Path
+import runpy
+
+import cannbotdsl as cb
+import pypto.language as pl
+from pypto.backend import BackendType
+from pypto.runtime import RunConfig, ExecutionMode
+import torch
+
+
+@cb.kernel
+def fill_slice(output: cb.Tensor):
+    for row in cb.range(cb.get_block_idx(), output.shape[0], cb.get_block_num()):
+        for col in cb.range(output.shape[1]):
+            output[row, col] = 1.0
+
+
+@pl.jit
+def program(output: pl.InOut[pl.Tensor[[17, 32], pl.FP32]], valid: pl.Scalar[pl.INDEX]):
+    view = output[0:valid, :]
+    with pl.spmd(4):
+        fill_slice(view)
+    return output
+
+
+compiled = program.compile(torch.full((17, 32), -37.0), 3,
+    config=RunConfig(backend_type=BackendType.Ascend950, execution_mode=ExecutionMode.ONBOARD))
+root = Path(compiled.output_dir)
+config = runpy.run_path(str(root / 'kernel_config.py'))
+source = Path(config['KERNELS'][0]['source']).parent
+print('设备核源文件：', source / 'device_source.hpp')
+for line in (source / 'device_source.hpp').read_text().splitlines():
+    if 'for (' in line and ('< 17;' in line or '< 32;' in line):
+        print(line.strip())
+print('预期第 0 维来自运行时描述符，不能固定为父容量 17；本脚本没有执行 NPU。')

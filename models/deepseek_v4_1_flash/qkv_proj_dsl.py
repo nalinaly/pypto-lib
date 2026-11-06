@@ -26,19 +26,30 @@ HEAD_DIM = M.head_dim
 
 @cb.kernel
 def project_q_a(payload: cb.Tensor, weight: cb.Tensor, activation_scale: cb.Tensor,
-                weight_scale: cb.Tensor, output: cb.Tensor, column: cb.ScalarValue,
-                valid_rows: cb.ScalarValue):
-    """将量化后的隐藏状态投影为 BF16 Query 低秩行。"""
-    _mx_project(payload, weight, activation_scale, weight_scale, output, column, valid_rows)
+                weight_scale: cb.Tensor, output: cb.Tensor, valid_rows: cb.ScalarValue):
+    """按列块分配 QA 投影，保留每个分块的 K 累加顺序。"""
+    for column in cb.range(cb.get_block_idx(), Q_LORA // CUBE_TILE, cb.get_block_num()):
+        begin = column * CUBE_TILE
+        target = output[0:valid_rows, begin:begin + CUBE_TILE]
+        _mx_project(payload, weight, activation_scale, weight_scale, target, column, valid_rows)
 
 
 @cb.kernel
 def project_kv(payload: cb.Tensor, weight: cb.Tensor, activation_scale: cb.Tensor,
-               weight_scale: cb.Tensor, output: cb.Tensor, column: cb.ScalarValue,
-               num_tokens: cb.ScalarValue, row_start: cb.ScalarValue):
-    """将有效行投影为 BF16 KV，并保留非有效区域的原输出。"""
-    valid_rows = min(PADDED_TILE, num_tokens - row_start)
-    _mx_project(payload, weight, activation_scale, weight_scale, output, column, valid_rows)
+               weight_scale: cb.Tensor, output: cb.Tensor, num_tokens: cb.ScalarValue):
+    """按 M80 和输出列分工，保留非有效区域。"""
+    columns = HEAD_DIM // CUBE_TILE
+    tiles = (num_tokens + PADDED_TILE - 1) // PADDED_TILE * columns
+    for work in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = work // columns * PADDED_TILE
+        column = work % columns
+        live = min(PADDED_TILE, num_tokens - row)
+        source = payload[row:row + PADDED_TILE, None]
+        offset = row * (D // MX_GROUP)
+        factors = activation_scale[0:1, offset:offset + PADDED_TILE * (D // MX_GROUP)]
+        begin = column * CUBE_TILE
+        target = output[row:row + live, begin:begin + CUBE_TILE]
+        _mx_project(source, weight, factors, weight_scale, target, column, live)
 
 
 @pl.jit.inline(auto_scope=False)
@@ -55,31 +66,24 @@ def quantize_projection_input(x: pl.Tensor, num_tokens: pl.Scalar[pl.INT32]):
 @pl.jit.inline(auto_scope=False)
 def qa_projection(payload: pl.Tensor, weight: pl.Tensor, activation_scale: pl.Tensor,
                   weight_scale: pl.Tensor, output: pl.Tensor, rows: pl.Scalar[pl.INDEX]):
-    """在一个 M80 激活分组上调度 QA 列块。"""
+    """以一次 SPMD 提交一个 M80 分组的全部 QA 列块。"""
     weight_flat = pl.reshape(weight, [1, D * Q_LORA])
     scale_flat = pl.tensor.view(weight_scale, [1, D // MX_GROUP * Q_LORA], layout=pl.ND)
-    for column in pl.parallel(Q_LORA // CUBE_TILE):
-        dst = pl.slice(output, [PADDED_TILE, CUBE_TILE], [0, column * CUBE_TILE], valid_shape=[rows, CUBE_TILE])
-        with pl.spmd(1, name_hint="dsl_q_proj_a"):
-            project_q_a(payload, weight_flat, activation_scale, scale_flat, dst, column, rows)
+    with pl.spmd(Q_LORA // CUBE_TILE, name_hint="dsl_q_proj_a"):
+        project_q_a(payload, weight_flat, activation_scale, scale_flat, output, rows)
+    return output
 
 
 @pl.jit.inline(auto_scope=False)
 def kv_proj(payload: pl.Tensor, scales: pl.Tensor, wkv: pl.Tensor, wkv_scale: pl.Tensor,
             kv_projection: pl.Tensor, num_tokens: pl.Scalar[pl.INT32]):
-    """按 M80 分组调度共享 KV 投影，确保输出列互不重叠。"""
+    """按行列网格一次提交 KV 投影。"""
     weight_flat = pl.reshape(wkv, [1, D * HEAD_DIM])
     scale_flat = pl.tensor.view(wkv_scale, [1, D // MX_GROUP * HEAD_DIM], layout=pl.ND)
-    for group_start in pl.parallel(0, num_tokens, PADDED_TILE):
-        rows = pl.min(PADDED_TILE, num_tokens - group_start)
-        source = pl.slice(payload, [PADDED_TILE, D], [group_start, 0])
-        scale_start = group_start * (D // MX_GROUP)
-        factors = pl.slice(scales, [1, PADDED_TILE * (D // MX_GROUP)], [0, scale_start])
-        for column in pl.parallel(HEAD_DIM // CUBE_TILE):
-            dst = pl.slice(kv_projection, [PADDED_TILE, CUBE_TILE], [group_start, column * CUBE_TILE],
-                           valid_shape=[rows, CUBE_TILE])
-            with pl.spmd(1, name_hint="dsl_kv_proj", sync_start=True):
-                project_kv(source, weight_flat, factors, scale_flat, dst, column, num_tokens, group_start)
+    tiles = (num_tokens + PADDED_TILE - 1) // PADDED_TILE * (HEAD_DIM // CUBE_TILE)
+    workers = pl.max(1, pl.min(tiles, pl.system.available_cluster_count()))
+    with pl.spmd(workers, name_hint="dsl_kv_proj", sync_start=True):
+        project_kv(payload, weight_flat, scales, scale_flat, kv_projection, num_tokens)
     return kv_projection
 
 

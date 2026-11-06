@@ -1,0 +1,421 @@
+{
+  "日期": "2026-11-07",
+  "状态": "最终版本全部设备校验通过；按原比较器验证",
+  "基线": "1a8e8fb1",
+  "上游参考": {
+    "PyPTO-lib": "89d4c1aa",
+    "CANNBotDSL示例": "fcc6bfd"
+  },
+  "工具链": {
+    "PyPTO": "45f036216b2982d183faa434afe706c6141695f4",
+    "simpler": "6b6b88f2353cca12cfafe809750b50b59931b0d1",
+    "PTO_ISA": "217bb98952a8f9004b95fe938da97d8d5f68f702",
+    "PTOAS": "0.70",
+    "CANNBotDSL": "0.8.1 / 8274a38b",
+    "Python": "3.12.15",
+    "CANN": "环境目录 9.3.0；编译器及 OPP 元数据 9.2.0"
+  },
+  "确认的契约": {
+    "Gate权重": "BF16",
+    "Gate归一化中间值": "BF16",
+    "C2A状态容量": 8
+  },
+  "SPMD": {
+    "生产启动点": 51,
+    "原先单块": 44,
+    "本次改为多块": 40,
+    "原先多块": 7,
+    "现在支持多块": 47,
+    "保留单块": [
+      "dsl_hc_collapse_tail",
+      "dsl_gate_pre_route",
+      "dsl_idx_plan_req",
+      "dsl_idx_plan_pool_runs"
+    ]
+  },
+  "验证": [
+    {
+      "类别": "叶子",
+      "入口": "qkv_proj_dsl.py",
+      "参数": [
+        "--case",
+        "all"
+      ],
+      "用例": "qkv",
+      "通过数": 3
+    },
+    {
+      "类别": "叶子",
+      "入口": "qkv_proj_rope.py",
+      "参数": [
+        "--stage",
+        "all",
+        "--case",
+        "all"
+      ],
+      "用例": "qbranch",
+      "通过数": 6
+    },
+    {
+      "类别": "叶子",
+      "入口": "o_proj_dsl.py",
+      "参数": [
+        "--stage",
+        "rope",
+        "--active",
+        "0"
+      ],
+      "用例": "o-rope-zero",
+      "通过数": 1
+    },
+    {
+      "类别": "叶子",
+      "入口": "o_proj_dsl.py",
+      "参数": [
+        "--stage",
+        "rope",
+        "--active",
+        "17"
+      ],
+      "用例": "o-rope-tail",
+      "通过数": 1
+    },
+    {
+      "类别": "叶子",
+      "入口": "o_proj_dsl.py",
+      "参数": [
+        "--stage",
+        "rope",
+        "--active",
+        "72"
+      ],
+      "用例": "o-rope72",
+      "通过数": 1
+    },
+    {
+      "类别": "叶子",
+      "入口": "o_proj_dsl.py",
+      "参数": [
+        "--stage",
+        "mx",
+        "--active",
+        "17"
+      ],
+      "用例": "o-mx",
+      "通过数": 1
+    },
+    {
+      "类别": "叶子",
+      "入口": "expert_shared_projection_dsl.py",
+      "参数": [
+        "--rows",
+        "17",
+        "--stage",
+        "all"
+      ],
+      "用例": "shared-proj17",
+      "通过数": 2
+    },
+    {
+      "类别": "叶子",
+      "入口": "expert_shared_projection_dsl.py",
+      "参数": [
+        "--rows",
+        "80",
+        "--stage",
+        "all"
+      ],
+      "用例": "shared-proj80",
+      "通过数": 2
+    },
+    {
+      "类别": "叶子",
+      "入口": "expert_shared_dsl.py",
+      "参数": [
+        "--rows",
+        "16",
+        "--case",
+        "all"
+      ],
+      "用例": "shared-act16",
+      "通过数": 2
+    },
+    {
+      "类别": "叶子",
+      "入口": "expert_shared_dsl.py",
+      "参数": [
+        "--rows",
+        "80",
+        "--case",
+        "all"
+      ],
+      "用例": "shared-act80",
+      "通过数": 2
+    },
+    {
+      "类别": "叶子",
+      "入口": "expert_routed_dsl.py",
+      "参数": [
+        "--stage",
+        "all"
+      ],
+      "用例": "routed",
+      "通过数": 3
+    },
+    {
+      "类别": "叶子",
+      "入口": "gate_dsl.py",
+      "参数": [
+        "--stage",
+        "all"
+      ],
+      "用例": "gate",
+      "通过数": 3
+    },
+    {
+      "类别": "叶子",
+      "入口": "hc.py",
+      "参数": [
+        "--batch",
+        "33",
+        "--op",
+        "all"
+      ],
+      "用例": "hc33",
+      "通过数": 6
+    },
+    {
+      "类别": "叶子",
+      "入口": "hc.py",
+      "参数": [
+        "--batch",
+        "72",
+        "--op",
+        "all"
+      ],
+      "用例": "hc72",
+      "通过数": 6
+    },
+    {
+      "类别": "叶子",
+      "入口": "moe_dispatch_dsl.py",
+      "参数": [
+        "--op",
+        "all",
+        "--case",
+        "all"
+      ],
+      "用例": "dispatch",
+      "通过数": 14
+    },
+    {
+      "类别": "叶子",
+      "入口": "moe_combine_dsl.py",
+      "参数": [],
+      "用例": "combine",
+      "通过数": 4
+    },
+    {
+      "类别": "叶子",
+      "入口": "initialization_dsl.py",
+      "参数": [
+        "--case",
+        "all"
+      ],
+      "用例": "init",
+      "通过数": 13
+    },
+    {
+      "类别": "叶子",
+      "入口": "window_kv_dsl.py",
+      "参数": [
+        "--tokens",
+        "72",
+        "--pages",
+        "13"
+      ],
+      "用例": "window",
+      "通过数": 1
+    },
+    {
+      "类别": "叶子",
+      "入口": "window_kv_dsl.py",
+      "参数": [
+        "--replay"
+      ],
+      "用例": "window-replay",
+      "通过数": 1
+    },
+    {
+      "类别": "叶子",
+      "入口": "compressor_dsl.py",
+      "参数": [],
+      "用例": "compressor-proj",
+      "通过数": 5
+    },
+    {
+      "类别": "叶子",
+      "入口": "compressor_pool_dsl.py",
+      "参数": [],
+      "用例": "compressor-pool",
+      "通过数": 6
+    },
+    {
+      "类别": "叶子",
+      "入口": "index_key_dsl.py",
+      "参数": [],
+      "用例": "index-key",
+      "通过数": 5
+    },
+    {
+      "类别": "叶子",
+      "入口": "index_projection_dsl.py",
+      "参数": [],
+      "用例": "index-key-proj",
+      "通过数": 5
+    },
+    {
+      "类别": "叶子",
+      "入口": "index_query_dsl.py",
+      "参数": [],
+      "用例": "index-query",
+      "通过数": 5
+    },
+    {
+      "类别": "叶子",
+      "入口": "index_weight_dsl.py",
+      "参数": [],
+      "用例": "index-weight",
+      "通过数": 5
+    },
+    {
+      "类别": "Attention",
+      "入口": "decode_swa.py",
+      "参数": [],
+      "用例": "attn-swa",
+      "通过数": 1
+    },
+    {
+      "类别": "Attention",
+      "入口": "decode_c2a_full.py",
+      "参数": [],
+      "用例": "attn-c2a-full",
+      "通过数": 1
+    },
+    {
+      "类别": "Attention",
+      "入口": "decode_c2a_reuse.py",
+      "参数": [],
+      "用例": "attn-c2a-reuse",
+      "通过数": 1
+    },
+    {
+      "类别": "Attention",
+      "入口": "decode_c1a_full.py",
+      "参数": [
+        "--golden-data",
+        "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_c1a_full_20261106_165032_as1bbkad/data"
+      ],
+      "用例": "attn-c1a-full",
+      "通过数": 1
+    },
+    {
+      "类别": "Attention",
+      "入口": "decode_c1a_reuse.py",
+      "参数": [],
+      "用例": "attn-c1a-reuse",
+      "通过数": 1
+    },
+    {
+      "类别": "Attention",
+      "入口": "decode_c1a_reindex.py",
+      "参数": [
+        "--start-pos",
+        "4096",
+        "--query-lens",
+        "7",
+        "--golden-data",
+        "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_c1a_reindex_20261106_165113_fes39lbk/data"
+      ],
+      "用例": "attn-reindex-dense",
+      "通过数": 1
+    },
+    {
+      "类别": "Attention",
+      "入口": "decode_c1a_reindex.py",
+      "参数": [
+        "--start-pos",
+        "16384",
+        "--query-lens",
+        "6",
+        "--golden-data",
+        "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_c1a_reindex_20261106_142151_gsv6kyeh/data"
+      ],
+      "用例": "attn-reindex-sparse",
+      "通过数": 1
+    },
+    {
+      "类别": "整层",
+      "入口": "decode_layer.py",
+      "参数": [
+        "--ep",
+        "2",
+        "--layer-id",
+        "0"
+      ],
+      "用例": "layer0-ep2",
+      "通过数": 1
+    },
+    {
+      "类别": "整层",
+      "入口": "decode_layer.py",
+      "参数": [
+        "--ep",
+        "2",
+        "--layer-id",
+        "2"
+      ],
+      "用例": "layer2-ep2",
+      "通过数": 1
+    },
+    {
+      "类别": "双卡 MoE",
+      "用例": "moe-72-17",
+      "通过数": 1,
+      "每卡专家数": 8
+    },
+    {
+      "类别": "双卡 MoE",
+      "用例": "moe-72-0",
+      "通过数": 1,
+      "每卡专家数": 8
+    }
+  ],
+  "最终版本设备用例合计": 114,
+  "整层输出": {
+    "layer0_SWA": 16,
+    "layer2_C2A_full": 16
+  },
+  "整层校验范围": "沿用仓库既有分段比较器；MoE 边界使用实际 attention 结果重算参考，不将其表述为全链路逐元素精度保证。",
+  "整层组合误差诊断": {
+    "layer0": {
+      "relative_l2": 0.14084819,
+      "max_abs": 3.2990062
+    },
+    "layer2": {
+      "relative_l2": 0.02118306,
+      "max_abs": 0.65664196
+    }
+  },
+  "框架问题": [
+    "https://github.com/hw-native-sys/pypto/issues/2047#issuecomment-6689599033",
+    "https://github.com/hw-native-sys/pypto/issues/3324"
+  ],
+  "通信": "同步上游 #1699 的依赖修复；十类生产通信及协议任务仍为 PyPTO，实现主体保持不变。",
+  "未执行": [
+    "正式性能 A/B",
+    "整网及真实 checkpoint",
+    "Prefill 与 TP>1 设备验证"
+  ],
+  "归档": "仅保存可检查源文件、记录、必要夹具和关键设备输出；不重复大块历史缓存和全部模型权重；不添加校验摘要。"
+}

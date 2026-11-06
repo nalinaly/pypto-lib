@@ -9,6 +9,7 @@
 """使用 CANNBotDSL 实现窗口 KV 的 RMSNorm、相邻元素对 RoPE、FP8 量化和缓存发布。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
 import pypto.language as pl
@@ -30,8 +31,8 @@ VECTOR_TILE = 64
 PUBLISH_TASK_TILE = 12
 
 
-@cb.kernel
-def window_kv_page(
+@jit
+def _window_kv_page(
     source: cb.Tensor,
     weight: cb.Tensor,
     cosine: cb.Tensor,
@@ -118,35 +119,31 @@ def window_kv_page(
             cb.mem_copy(cb.tile_slice(scales, (1, HEAD_DIM // CACHE_GROUP), (slot % PAGE_SIZE, 0)), factors)
 
 
+@cb.kernel
+def window_kv_grid(source: cb.Tensor, weight: cb.Tensor, cosine: cb.Tensor, sine: cb.Tensor,
+                   slots: cb.Tensor, cache: cb.Tensor, scales: cb.Tensor, num_tokens: cb.ScalarValue):
+    """每个物理页固定归属一个 block，页内仍按 token 顺序覆盖。"""
+    pages = cache.shape[0] // PAGE_SIZE
+    for page in cb.range(cb.get_block_idx(), pages, cb.get_block_num()):
+        begin = page * PAGE_SIZE
+        payload = cache[begin:begin + PAGE_SIZE, None]
+        factors = scales[begin:begin + PAGE_SIZE, None]
+        _window_kv_page(source, weight, cosine, sine, slots, payload, factors, num_tokens, page)
+
+
 @pl.jit.inline(auto_scope=False)
 def window_publish(
-    source: pl.Tensor,
-    weight: pl.Tensor,
-    cosine: pl.Tensor,
-    sine: pl.Tensor,
-    slots: pl.Tensor,
-    cache: pl.Tensor,
-    scales: pl.Tensor,
-    num_tokens: pl.Scalar[pl.INT32],
-    cache_ready: pl.Scalar[pl.TASK_ID],
+    source: pl.Tensor, weight: pl.Tensor, cosine: pl.Tensor, sine: pl.Tensor, slots: pl.Tensor,
+    cache: pl.Tensor, scales: pl.Tensor, num_tokens: pl.Scalar[pl.INT32], cache_ready: pl.Scalar[pl.TASK_ID],
 ):
-    """调度互不重叠的物理缓存页，并汇合各页的发布任务。"""
+    """以一组 AIV SPMD 发布互不重叠的物理页。"""
     pages = pl.tensor.dim(cache, 0)
-    cache_rows = pl.reshape(cache, [pages, PAGE_SIZE, HEAD_DIM])
-    scale_rows = pl.reshape(scales, [pages, PAGE_SIZE, HEAD_DIM // CACHE_GROUP])
-    completed = pl.array.create(PUBLISH_TASK_TILE, pl.TASK_ID)
-    for worker in pl.range(PUBLISH_TASK_TILE):
-        completed[worker] = cache_ready
-    for page in pl.parallel(pages):
-        payload_page = pl.slice(cache_rows, [1, PAGE_SIZE, HEAD_DIM], [page, 0, 0])
-        payload = pl.reshape(payload_page, [PAGE_SIZE, HEAD_DIM])
-        factor_page = pl.slice(scale_rows, [1, PAGE_SIZE, HEAD_DIM // CACHE_GROUP], [page, 0, 0])
-        factors = pl.reshape(factor_page, [PAGE_SIZE, HEAD_DIM // CACHE_GROUP])
-        previous = completed[page % PUBLISH_TASK_TILE]
-        with pl.spmd(1, name_hint="dsl_window_kv", deps=[previous], sync_start=True) as done:
-            window_kv_page(source, weight, cosine, sine, slots, payload, factors, num_tokens, page)
-        completed[page % PUBLISH_TASK_TILE] = done
-    published = pl.system.task_dummy(deps=[completed])
+    payload = pl.reshape(cache, [pages * PAGE_SIZE, HEAD_DIM])
+    factors = pl.reshape(scales, [pages * PAGE_SIZE, HEAD_DIM // CACHE_GROUP])
+    limit = pl.min(PUBLISH_TASK_TILE, pl.system.available_aiv_count())
+    workers = pl.max(1, pl.min(pages, limit))
+    with pl.spmd(workers, name_hint="dsl_window_kv", deps=[cache_ready], sync_start=True) as published:
+        window_kv_grid(source, weight, cosine, sine, slots, payload, factors, num_tokens)
     return published
 
 

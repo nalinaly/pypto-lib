@@ -9,6 +9,7 @@
 """使用 CANNBotDSL 将压缩 latent 投影为 BF16 Indexer Key。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 import pypto.language as pl
 
 from bf16_projection_dsl import project_bf16_nz
@@ -25,21 +26,24 @@ COLUMN_TILE = 128
 REDUCTION_TILE = 256
 
 
-@cb.kernel
-def project_index_key_tile(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor, active_rows: cb.ScalarValue):
+@jit
+def _project_index_key_tile(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor, active_rows: cb.ScalarValue):
     """以 M16/N128/K256 执行 FP32 累加，最终舍入为 BF16。"""
     project_bf16_nz(source, weight, output, 0, active_rows, ROW_TILE, COLUMN_TILE, REDUCTION_TILE)
 
 
-@pl.jit.inline(auto_scope=False)
-def _project_task(
-    source: pl.Tensor, weight: pl.Tensor, output: pl.Tensor,
-    active_rows: pl.Scalar[pl.INDEX], ready: pl.Scalar[pl.TASK_ID],
-):
-    """在输入依赖完成后派发一个本卡 AIC 分块。"""
-    with pl.spmd(1, name_hint="dsl_proj_idx_k", deps=[ready]) as done:
-        project_index_key_tile(source, weight, output, active_rows)
-    return done
+@cb.kernel
+def project_index_key_grid(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor, num_tokens: cb.ScalarValue):
+    """按 M16 分配 Indexer Key 投影，仅处理有效输出行。"""
+    # 静态容量不能代替动态切片的有效行数，显式携带运行时边界。
+    active = min(output.shape[0], max(num_tokens, 0))
+    tiles = (active + ROW_TILE - 1) // ROW_TILE
+    for tile in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = tile * ROW_TILE
+        live = min(ROW_TILE, active - row)
+        src = source[row:row + live, 0:HEAD_DIM]
+        dst = output[row:row + live, 0:INDEX_DIM]
+        _project_index_key_tile(src, weight, dst, live)
 
 
 @pl.jit.inline(auto_scope=False)
@@ -47,25 +51,16 @@ def project_index_key(
     source: pl.Tensor, weight: pl.Tensor[[HEAD_DIM, INDEX_DIM], pl.BF16, pl.NZ], output: pl.Tensor,
     num_tokens: pl.Scalar[pl.INT32], ready: pl.Scalar[pl.TASK_ID], max_workers: pl.constexpr,
 ):
-    """调度互不重叠的 Key 行块，并汇合供后续缓存发布使用的完成依赖。"""
-    rows = pl.tensor.dim(source, 0)
-    active = pl.min(rows, pl.max(pl.cast(num_tokens, pl.INDEX), 0))
+    """保留输入依赖，以一组 AIC SPMD 提交有效 Key 行块。"""
+    active = pl.min(pl.tensor.dim(source, 0), pl.max(pl.cast(num_tokens, pl.INDEX), 0))
     storage = pl.reshape(weight, [HEAD_DIM * INDEX_DIM])
     raw_weight = pl.reshape(storage, [INDEX_DIM // 16, HEAD_DIM * 16])
-    completed = pl.array.create(max_workers, pl.TASK_ID)
-    for slot in pl.range(max_workers):
-        completed[slot] = ready
-    for row in pl.parallel(0, active, ROW_TILE):
-        physical = pl.min(ROW_TILE, rows - row)
-        live = pl.min(ROW_TILE, active - row)
-        tile = pl.slice(source, [ROW_TILE, HEAD_DIM], [row, 0], valid_shape=[physical, HEAD_DIM])
-        projected = pl.slice(output, [ROW_TILE, INDEX_DIM], [row, 0], valid_shape=[physical, INDEX_DIM])
-        slot = row // ROW_TILE % max_workers
-        previous = completed[slot]
-        done = _project_task(tile, raw_weight, projected, live, previous)
-        completed[slot] = done
-    joined = pl.system.task_dummy(deps=[completed])
-    return joined
+    target = output[0:active, 0:INDEX_DIM]
+    source_view = source[0:active, 0:HEAD_DIM]
+    workers = pl.max(1, pl.min(max_workers, (active + ROW_TILE - 1) // ROW_TILE))
+    with pl.spmd(workers, name_hint="dsl_proj_idx_k", deps=[ready]) as done:
+        project_index_key_grid(source_view, raw_weight, target, num_tokens)
+    return done
 
 
 @pl.jit

@@ -1,0 +1,23 @@
+{
+  "PyPTO-lib上游": {
+    "仓库": "hw-native-sys/pypto-lib",
+    "提交": "89d4c1aa",
+    "参考目录": "pypto-a5-dev/pypto-lib-upstream",
+    "原主目录": "保留 main 工作区的十个未提交文件，未覆盖"
+  },
+  "CANNBotDSL示例上游": {
+    "仓库": "cann/cannbot-dsl",
+    "提交": "fcc6bfd",
+    "更新": "master 从 31bbd70 快进"
+  },
+  "其他相关变化": [
+    "同步上游 #1699 的通信依赖修复：dispatch_wait 依赖 push，combine_wait 依赖 scatter；arrival signal 排除隐式依赖；本地 gather/归约等待 publish/notify 及 wait 同时完成。通信核仍为 PyPTO 实现。",
+    "DSL f482e44 将 L0C 回写裁到真实 M/N 尾块；本分支既有投影 helper 已以有效源 extent 限制 Fixpipe",
+    "DSL 新增 mega_mla，采用按启动 grid 循环分工；原生 window/压缩缓存是 544/320 字节打包记录，与当前分离 payload/scale 契约不同",
+    "DSL 新增 attn_prologue 的 window KV 使用固定 scale=1，RoPE 使用 INTERLEAVE_HALF；当前分支为 group-32 BF16 scale 和相邻对布局，不直接替换该接口"
+  ],
+  "用户已确认并同步": [
+    "Gate 权重及归一化中间值对齐 BF16；调用者、夹具、参考计算共同更新",
+    "C2A STATE_CAPACITY 按每请求 6 个候选 token 向上对齐到 8"
+  ]
+}

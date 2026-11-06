@@ -9,6 +9,7 @@
 """使用 CANNBotDSL 对 ND 权重执行共享专家 MXFP8 投影。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 from cannbotdsl.ops.memcpy import copy_options
 from cannbotdsl.ring_buffer import RingBuffer
 import pypto.language as pl
@@ -32,8 +33,8 @@ COLUMN_TILE = 128
 REDUCTION_TILE = 256
 
 
-@cb.kernel
-def project_tile(
+@jit
+def _project_tile(
     payload: cb.Tensor,
     weight: cb.Tensor,
     activation_scale: cb.Tensor,
@@ -88,43 +89,36 @@ def project_tile(
     cb.mem_copy(output[0:valid_rows, None], valid)
 
 
-@pl.jit.inline(auto_scope=False)
-def _project_task(
-    payload: pl.Tensor,
-    weight: pl.Tensor,
-    activation_scale: pl.Tensor,
-    weight_scale: pl.Tensor,
-    output: pl.Tensor,
-    column: pl.Scalar[pl.INDEX],
-    valid_rows: pl.Scalar[pl.INDEX],
-):
-    """使用显式类型的运行时边界，派发一个 AIC 投影分块。"""
-    with pl.spmd(1, name_hint="dsl_shared_projection", sync_start=True):
-        project_tile(payload, weight, activation_scale, weight_scale, output, column, valid_rows)
-    return output
+@cb.kernel
+def project_shared_grid(payload: cb.Tensor, weight: cb.Tensor, activation_scale: cb.Tensor,
+                        weight_scale: cb.Tensor, output: cb.Tensor):
+    """按 M16/N128 分配共享专家投影，尾块仅写有效行。"""
+    columns = weight.shape[1] // COLUMN_TILE
+    tiles = (output.shape[0] + ROW_TILE - 1) // ROW_TILE * columns
+    for work in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = work // columns * ROW_TILE
+        column = work % columns
+        live = min(ROW_TILE, output.shape[0] - row)
+        source = payload[row:row + ROW_TILE, None]
+        offset = row * (payload.shape[1] // MX_GROUP)
+        factors = activation_scale[0:1, offset:offset + ROW_TILE * (payload.shape[1] // MX_GROUP)]
+        begin = column * COLUMN_TILE
+        target = output[row:row + live, begin:begin + COLUMN_TILE]
+        _project_tile(source, weight, factors, weight_scale, target, column, live)
 
 
 @pl.jit.inline(auto_scope=False)
-def project_shared(
-    payload: pl.Tensor,
-    weight: pl.Tensor,
-    activation_scale: pl.Tensor,
-    weight_scale: pl.Tensor,
-    output: pl.Tensor,
-):
-    """按 M16/N128 分块调度共享专家投影。"""
+def project_shared(payload: pl.Tensor, weight: pl.Tensor, activation_scale: pl.Tensor,
+                   weight_scale: pl.Tensor, output: pl.Tensor):
+    """以一次 SPMD 调度共享专家的全部行列分块。"""
     rows = pl.tensor.dim(output, 0)
     reduction = pl.tensor.dim(payload, 1)
     columns = pl.tensor.dim(weight, 1)
     weight_factors = pl.tensor.view(weight_scale, [1, reduction // MX_GROUP * columns], layout=pl.ND)
-    for row_start in pl.parallel(0, rows, ROW_TILE):
-        valid_rows = pl.min(ROW_TILE, rows - row_start)
-        source = pl.slice(payload, [ROW_TILE, reduction], [row_start, 0])
-        scale_offset = row_start * (reduction // MX_GROUP)
-        source_factors = pl.slice(activation_scale, [1, ROW_TILE * (reduction // MX_GROUP)], [0, scale_offset])
-        for column in pl.parallel(columns // COLUMN_TILE):
-            destination = pl.slice(output, [ROW_TILE, COLUMN_TILE], [row_start, column * COLUMN_TILE], valid_shape=[valid_rows, COLUMN_TILE])
-            _project_task(source, weight, source_factors, weight_factors, destination, column, valid_rows)
+    tiles = (rows + ROW_TILE - 1) // ROW_TILE * (columns // COLUMN_TILE)
+    workers = pl.max(1, pl.min(tiles, pl.system.available_cluster_count()))
+    with pl.spmd(workers, name_hint="dsl_shared_projection", sync_start=True):
+        project_shared_grid(payload, weight, activation_scale, weight_factors, output)
     return output
 
 

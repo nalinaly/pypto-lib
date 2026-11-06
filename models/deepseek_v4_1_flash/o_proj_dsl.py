@@ -9,6 +9,7 @@
 """使用 CANNBotDSL 实现逆 RoPE 和 OCP MXFP8 输出投影。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
 import pypto.language as pl
@@ -29,8 +30,8 @@ O_WIDTH = O_GROUPS * O_RANK
 HIDDEN = M.hidden_size
 
 
-@cb.kernel
-def rope_quant_head(
+@jit
+def _rope_quant_head(
     source: cb.Tensor,
     cosine: cb.Tensor,
     sine: cb.Tensor,
@@ -91,87 +92,92 @@ def rope_quant_head(
 
 
 @cb.kernel
-def project_o_a(
-    payload: cb.Tensor, weight: cb.Tensor, activation_scale: cb.Tensor,
-    weight_scale: cb.Tensor, output: cb.Tensor, column: cb.ScalarValue,
-):
-    _mx_project(payload, weight, activation_scale, weight_scale, output, column, PADDED_TILE)
+def project_o_a(payload: cb.Tensor, weight: cb.Tensor, activation_scale: cb.Tensor,
+                weight_scale: cb.Tensor, output: cb.Tensor):
+    """按分组和列块分配 WoA 投影。"""
+    columns = O_RANK // CUBE_TILE
+    for work in cb.range(cb.get_block_idx(), O_GROUPS * columns, cb.get_block_num()):
+        group = work // columns
+        column = work % columns
+        row = group * PADDED_TILE
+        source = payload[row:row + PADDED_TILE, None]
+        matrix = weight[group:group + 1, None]
+        factors = activation_scale[group:group + 1, None]
+        weight_factors = weight_scale[group:group + 1, None]
+        begin = group * O_RANK + column * CUBE_TILE
+        target = output[0:PADDED_TILE, begin:begin + CUBE_TILE]
+        _mx_project(source, matrix, factors, weight_factors, target, column, PADDED_TILE)
 
 
 @cb.kernel
-def project_o_b(
-    payload: cb.Tensor, weight: cb.Tensor, activation_scale: cb.Tensor,
-    weight_scale: cb.Tensor, output: cb.Tensor, column: cb.ScalarValue,
-    valid_rows: cb.ScalarValue,
-):
-    _mx_project(payload, weight, activation_scale, weight_scale, output, column, valid_rows)
+def project_o_b(payload: cb.Tensor, weight: cb.Tensor, activation_scale: cb.Tensor,
+                weight_scale: cb.Tensor, output: cb.Tensor, valid_rows: cb.ScalarValue):
+    """按 WoB 列块分工，最终只写有效行。"""
+    columns = weight.shape[1] // payload.shape[1] // CUBE_TILE
+    for column in cb.range(cb.get_block_idx(), columns, cb.get_block_num()):
+        begin = column * CUBE_TILE
+        target = output[0:valid_rows, begin:begin + CUBE_TILE]
+        _mx_project(payload, weight, activation_scale, weight_scale, target, column, valid_rows)
+
+
+@cb.kernel
+def rope_quant_grid(attended: cb.Tensor, cosine: cb.Tensor, sine: cb.Tensor,
+                    payload: cb.Tensor, scales: cb.Tensor, active_rows: cb.ScalarValue):
+    """按行块和头分工，独占对应分组中的 MXFP8 缩放存储。"""
+    heads = attended.shape[1] // HEAD_DIM
+    tiles = PADDED_TILE // ROW_TILE * heads
+    for work in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        head = work % heads
+        row = work // heads * ROW_TILE
+        live = max(0, min(ROW_TILE, active_rows - row))
+        first = min(row, attended.shape[0])
+        begin = head * HEAD_DIM
+        src = attended[first:first + live, begin:begin + HEAD_DIM]
+        cos = cosine[first:first + live, None]
+        sin = sine[first:first + live, None]
+        group = head // (GROUP_WIDTH // HEAD_DIM)
+        local = head % (GROUP_WIDTH // HEAD_DIM)
+        dst_row = group * PADDED_TILE + row
+        dst_col = local * HEAD_DIM
+        dst = payload[dst_row:dst_row + ROW_TILE, dst_col:dst_col + HEAD_DIM]
+        offset = row * (GROUP_WIDTH // MX_GROUP) + local * ROW_TILE * (HEAD_DIM // MX_GROUP)
+        factors = scales[group:group + 1, offset:offset + ROW_TILE * (HEAD_DIM // MX_GROUP)]
+        _rope_quant_head(src, cos, sin, dst, factors, active_rows, work)
 
 
 @pl.jit.inline(auto_scope=False)
-def rope_quant(
-    attended: pl.Tensor,
-    cosine: pl.Tensor,
-    sine: pl.Tensor,
-    payload: pl.Tensor,
-    scales: pl.Tensor,
-    active_rows: pl.Scalar[pl.INT32],
-):
-    """按头和 token 分块调度，确保打包缩放值的写入区域互不重叠。"""
+def rope_quant(attended: pl.Tensor, cosine: pl.Tensor, sine: pl.Tensor,
+               payload: pl.Tensor, scales: pl.Tensor, active_rows: pl.Scalar[pl.INT32]):
+    """以一组 AIV SPMD 完成输出 RoPE 和分组量化。"""
     heads = pl.tensor.dim(attended, 1) // HEAD_DIM
-    ready = pl.system.task_dummy(deps=[])
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for i in pl.range(TASK_TILE):
-        completed[i] = ready
-    for tile in pl.parallel((PADDED_TILE // ROW_TILE) * heads):
-        head = tile % heads
-        t0 = (tile // heads) * ROW_TILE
-        active = pl.max(pl.min(ROW_TILE, active_rows - t0), 0)
-        source_start = pl.min(t0, pl.tensor.dim(attended, 0))
-        source = pl.slice(attended, [active, HEAD_DIM], [source_start, head * HEAD_DIM])
-        cos_tile = pl.slice(cosine, [active, ROPE_DIM // 2], [source_start, 0])
-        sin_tile = pl.slice(sine, [active, ROPE_DIM // 2], [source_start, 0])
-        group = head // (GROUP_WIDTH // HEAD_DIM)
-        local_head = head % (GROUP_WIDTH // HEAD_DIM)
-        dst = pl.slice(payload, [ROW_TILE, HEAD_DIM], [group * PADDED_TILE + t0, local_head * HEAD_DIM])
-        scale_offset = t0 * (GROUP_WIDTH // MX_GROUP) + local_head * ROW_TILE * (HEAD_DIM // MX_GROUP)
-        factors = pl.slice(scales, [1, ROW_TILE * (HEAD_DIM // MX_GROUP)], [group, scale_offset])
-        previous = completed[tile % TASK_TILE]
-        with pl.spmd(1, name_hint="dsl_o_rope_quant", deps=[previous]) as done:
-            rope_quant_head(source, cos_tile, sin_tile, dst, factors, active_rows, tile)
-        completed[tile % TASK_TILE] = done
-    joined = pl.system.task_dummy(deps=[completed])
-    return joined
+    workers = pl.max(1, pl.min(TASK_TILE, PADDED_TILE // ROW_TILE * heads))
+    with pl.spmd(workers, name_hint="dsl_o_rope_quant") as done:
+        rope_quant_grid(attended, cosine, sine, payload, scales, active_rows)
+    return done
 
 
 @pl.jit.inline(auto_scope=False)
 def grouped_projection(payload: pl.Tensor, weight: pl.Tensor, activation_scale: pl.Tensor,
                        weight_scale: pl.Tensor, output: pl.Tensor):
-    """在八个独立分组中调度互不重叠的 WoA 列块。"""
+    """合并八组 WoA 的独立列块提交。"""
     weight_flat = pl.reshape(weight, [O_GROUPS, GROUP_WIDTH * O_RANK])
     scale_flat = pl.reshape(weight_scale, [O_GROUPS, GROUP_WIDTH // MX_GROUP * O_RANK])
-    for group in pl.parallel(O_GROUPS):
-        a = pl.slice(payload, [PADDED_TILE, GROUP_WIDTH], [group * PADDED_TILE, 0])
-        w = pl.slice(weight_flat, [1, GROUP_WIDTH * O_RANK], [group, 0])
-        sa = pl.slice(activation_scale, [1, PADDED_TILE * (GROUP_WIDTH // MX_GROUP)], [group, 0])
-        sb = pl.slice(scale_flat, [1, GROUP_WIDTH // MX_GROUP * O_RANK], [group, 0])
-        for column in pl.parallel(O_RANK // CUBE_TILE):
-            dst = pl.slice(output, [PADDED_TILE, CUBE_TILE], [0, group * O_RANK + column * CUBE_TILE])
-            with pl.spmd(1, name_hint="dsl_o_proj_a"):
-                project_o_a(a, w, sa, sb, dst, column)
+    workers = pl.min(O_GROUPS * (O_RANK // CUBE_TILE), pl.system.available_cluster_count())
+    with pl.spmd(workers, name_hint="dsl_o_proj_a"):
+        project_o_a(payload, weight_flat, activation_scale, scale_flat, output)
+    return output
 
 
 @pl.jit.inline(auto_scope=False)
 def output_projection(payload: pl.Tensor, weight: pl.Tensor, activation_scale: pl.Tensor,
-                      weight_scale: pl.Tensor, output: pl.Tensor,
-                      rows: pl.Scalar[pl.INDEX]):
-    """保留 WoB 的打包字节格式，并调度最终的列块。"""
+                      weight_scale: pl.Tensor, output: pl.Tensor, rows: pl.Scalar[pl.INDEX]):
+    """以一组 AIC SPMD 完成 WoB 输出投影。"""
     weight_flat = pl.reshape(weight, [1, O_WIDTH * HIDDEN])
     scale_flat = pl.tensor.view(weight_scale, [1, O_WIDTH // MX_GROUP * HIDDEN], layout=pl.ND)
-    for column in pl.parallel(HIDDEN // CUBE_TILE):
-        dst = pl.slice(output, [PADDED_TILE, CUBE_TILE], [0, column * CUBE_TILE],
-                       valid_shape=[rows, CUBE_TILE])
-        with pl.spmd(1, name_hint="dsl_o_proj_b"):
-            project_o_b(payload, weight_flat, activation_scale, scale_flat, dst, column, rows)
+    workers = pl.min(HIDDEN // CUBE_TILE, pl.system.available_cluster_count())
+    with pl.spmd(workers, name_hint="dsl_o_proj_b"):
+        project_o_b(payload, weight_flat, activation_scale, scale_flat, output, rows)
+    return output
 
 
 @pl.jit
@@ -235,18 +241,11 @@ def build_rope_specs(active=17):
 
 @pl.jit
 def mx_projection_validation(
-    payload: pl.Tensor,
-    weight: pl.Tensor,
-    activation_scale: pl.Tensor,
-    weight_scale: pl.Tensor,
-    output: pl.Out[pl.Tensor[[O_ROWS, 256], pl.BF16]],
-    rows: pl.Scalar[pl.INDEX],
+    payload: pl.Tensor, weight: pl.Tensor, activation_scale: pl.Tensor, weight_scale: pl.Tensor,
+    output: pl.Out[pl.Tensor[[O_ROWS, 256], pl.BF16]], rows: pl.Scalar[pl.INDEX],
 ):
-    columns = pl.tensor.dim(output, 1) // CUBE_TILE
-    for column in pl.parallel(columns):
-        tile = pl.slice(output, [O_ROWS, CUBE_TILE], [0, column * CUBE_TILE])
-        with pl.spmd(1, name_hint="dsl_mx_projection"):
-            project_o_b(payload, weight, activation_scale, weight_scale, tile, column, rows)
+    with pl.spmd(256 // CUBE_TILE, name_hint="dsl_mx_projection"):
+        project_o_b(payload, weight, activation_scale, weight_scale, output, rows)
     return output
 
 

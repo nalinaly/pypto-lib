@@ -66,8 +66,8 @@ def _softmax_four(value, mask):
     return rr.vadds(normalized, HC_EPS, mask=mask)
 
 
-@cb.kernel
-def coefficients_row(
+@jit
+def _coefficients_row(
     partial0: cb.Tensor, partial1: cb.Tensor, partial2: cb.Tensor, partial3: cb.Tensor,
     inverse: cb.Tensor, scale: cb.Tensor, base: cb.Tensor,
     pre: cb.Tensor, post: cb.Tensor, residual: cb.Tensor,
@@ -152,8 +152,8 @@ def coefficients_row(
     cb.mem_copy(residual, cb.tile_slice(comb_ub, (1, HC_MULT * HC_MULT), (0, 0)))
 
 
-@cb.kernel
-def inverse_rms_row(source: cb.Tensor, output: cb.Tensor):
+@jit
+def _inverse_rms_row(source: cb.Tensor, output: cb.Tensor):
     """根据原始四路 FP32 数据流计算 RMS 倒数。"""
     raw = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, HC_DIM)))
     result = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
@@ -173,8 +173,8 @@ def inverse_rms_row(source: cb.Tensor, output: cb.Tensor):
     cb.mem_copy(output, cb.tile_slice(result, (1, 1), (0, 0)))
 
 
-@cb.kernel
-def project_hf32_tile(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor,
+@jit
+def _project_hf32_tile(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor,
                       num_tokens: cb.ScalarValue, row_tile: cb.ScalarValue):
     """对一个 M16 split-K 分块执行投影，使用中点远离零舍入的 HF32 和 K64 FP32 累加。"""
     active = min(PROJECT_ROW_TILE, num_tokens - row_tile * PROJECT_ROW_TILE)
@@ -199,8 +199,8 @@ def project_hf32_tile(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor,
     cb.mem_copy(output[0:active, 0:MIX_HC], valid)
 
 
-@cb.kernel
-def collapse_tile(source: cb.Tensor, pre_mix: cb.Tensor, output: cb.Tensor):
+@jit
+def _collapse_tile(source: cb.Tensor, pre_mix: cb.Tensor, output: cb.Tensor):
     """逐行合并最多两个 token 的四路 FP32 状态，并舍入为 BF16。"""
     raw = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, HC_DIM)))
     result = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, D)))
@@ -219,8 +219,8 @@ def collapse_tile(source: cb.Tensor, pre_mix: cb.Tensor, output: cb.Tensor):
         cb.mem_copy(cb.tile_slice(output, (1, D), (row, 0)), result)
 
 
-@cb.kernel
-def collapse_norm_row(source: cb.Tensor, pre_mix: cb.Tensor, weight: cb.Tensor, output: cb.Tensor):
+@jit
+def _collapse_norm_row(source: cb.Tensor, pre_mix: cb.Tensor, weight: cb.Tensor, output: cb.Tensor):
     """对一行执行 FP32 两两求和、BF16 舍入，再执行 RMSNorm。"""
     raw = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, HC_DIM)))
     gamma = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((D,)))
@@ -257,8 +257,8 @@ def collapse_norm_row(source: cb.Tensor, pre_mix: cb.Tensor, weight: cb.Tensor, 
     cb.mem_copy(output, result)
 
 
-@cb.kernel
-def expand_row(sublayer: cb.Tensor, residual: cb.Tensor, post_mix: cb.Tensor,
+@jit
+def _expand_row(sublayer: cb.Tensor, residual: cb.Tensor, post_mix: cb.Tensor,
                residual_mix: cb.Tensor, output: cb.Tensor):
     """按顺序执行不融合的加法，将一行展开为四路 FP32 数据流。"""
     hidden = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, D)))
@@ -287,3 +287,88 @@ def expand_row(sublayer: cb.Tensor, residual: cb.Tensor, post_mix: cb.Tensor,
                 value = rr.vadd(value, term3, mask=full)
                 rr.vstore(result, col, value, full)
         cb.mem_copy(cb.tile_slice(output, (1, D), (0, out_h)), result)
+
+
+@cb.kernel
+def coefficients_grid(inverse: cb.Tensor, partials: cb.Tensor, scale: cb.Tensor, base: cb.Tensor,
+                      pre: cb.Tensor, post: cb.Tensor, residual: cb.Tensor):
+    """按 token 分配系数生成，split-K 部分和仍按原顺序归约。"""
+    stride = inverse.shape[0]
+    for row in cb.range(cb.get_block_idx(), pre.shape[0], cb.get_block_num()):
+        p0 = partials[row:row + 1, 0:MIX_TILE]
+        p1 = partials[stride + row:stride + row + 1, 0:MIX_TILE]
+        p2 = partials[2 * stride + row:2 * stride + row + 1, 0:MIX_TILE]
+        p3 = partials[3 * stride + row:3 * stride + row + 1, 0:MIX_TILE]
+        inv = inverse[row:row + 1, 0:1]
+        dst_pre = pre[row:row + 1, None]
+        dst_post = post[row:row + 1, None]
+        dst_residual = residual[row:row + 1, None]
+        _coefficients_row(p0, p1, p2, p3, inv, scale, base, dst_pre, dst_post, dst_residual)
+
+
+@cb.kernel
+def inverse_rms_grid(source: cb.Tensor, output: cb.Tensor):
+    """按 token 分配四路原始数据的 RMS 倒数计算。"""
+    for row in cb.range(cb.get_block_idx(), output.shape[0], cb.get_block_num()):
+        src = source[row:row + 1, None]
+        dst = output[row:row + 1, None]
+        _inverse_rms_row(src, dst)
+
+
+@cb.kernel
+def project_hf32_grid(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor,
+                     num_tokens: cb.ScalarValue):
+    """按 M16 和四个 K 分段分配 HF32 投影。"""
+    padded_rows = output.shape[0] // HC_MULT
+    tiles = (num_tokens + PROJECT_ROW_TILE - 1) // PROJECT_ROW_TILE * HC_MULT
+    for work in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        tile = work // HC_MULT
+        split = work % HC_MULT
+        row = tile * PROJECT_ROW_TILE
+        live = min(PROJECT_ROW_TILE, num_tokens - row)
+        begin = split * (HC_DIM // HC_MULT)
+        src = source[row:row + live, begin:begin + HC_DIM // HC_MULT]
+        matrix = weight[None, begin:begin + HC_DIM // HC_MULT]
+        offset = split * padded_rows + row
+        dst = output[offset:offset + live, None]
+        _project_hf32_tile(src, matrix, dst, num_tokens, tile)
+
+
+@cb.kernel
+def collapse_grid(source: cb.Tensor, pre: cb.Tensor, output: cb.Tensor):
+    """按两行分配 FP32 合并和 BF16 舍入。"""
+    tiles = source.shape[0] // COLLAPSE_ROW_TILE
+    for tile in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = tile * COLLAPSE_ROW_TILE
+        src = source[row:row + COLLAPSE_ROW_TILE, None]
+        coefficients = pre[row:row + COLLAPSE_ROW_TILE, None]
+        dst = output[row:row + COLLAPSE_ROW_TILE, None]
+        _collapse_tile(src, coefficients, dst)
+
+
+@cb.kernel
+def collapse_tail(source: cb.Tensor, pre: cb.Tensor, output: cb.Tensor):
+    """保留单个尾行的合并任务。"""
+    _collapse_tile(source, pre, output)
+
+
+@cb.kernel
+def collapse_norm_grid(source: cb.Tensor, pre: cb.Tensor, weight: cb.Tensor, output: cb.Tensor):
+    """按 token 分配合并、BF16 舍入和 RMSNorm。"""
+    for row in cb.range(cb.get_block_idx(), output.shape[0], cb.get_block_num()):
+        src = source[row:row + 1, None]
+        coefficients = pre[row:row + 1, None]
+        dst = output[row:row + 1, None]
+        _collapse_norm_row(src, coefficients, weight, dst)
+
+
+@cb.kernel
+def expand_grid(sublayer: cb.Tensor, residual: cb.Tensor, post: cb.Tensor, mix: cb.Tensor, output: cb.Tensor):
+    """按 token 分配四路残差展开。"""
+    for row in cb.range(cb.get_block_idx(), output.shape[0], cb.get_block_num()):
+        hidden = sublayer[row:row + 1, None]
+        skip = residual[row:row + 1, None]
+        post_row = post[row:row + 1, None]
+        mix_row = mix[row:row + 1, None]
+        dst = output[row:row + 1, None]
+        _expand_row(hidden, skip, post_row, mix_row, dst)

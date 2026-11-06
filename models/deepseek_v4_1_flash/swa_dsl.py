@@ -9,6 +9,7 @@
 """使用 CANNBotDSL 实现 SWA 缓存收集、BF16 Cube 注意力和 sink 归一化。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
 from cannbotdsl.ring_buffer import RingBuffer
@@ -31,8 +32,8 @@ VECTOR_TILE = 64
 TASK_TILE = 12
 
 
-@cb.kernel
-def swa_query(
+@jit
+def _swa_query(
     query: cb.Tensor,
     cache: cb.Tensor,
     scales: cb.Tensor,
@@ -152,33 +153,32 @@ def swa_query(
         cb.mem_copy(target.partition(dim=0, part_id=lane), result)
 
 
+@cb.kernel
+def swa_queries(query: cb.Tensor, cache: cb.Tensor, scales: cb.Tensor, indices: cb.Tensor,
+                sink: cb.Tensor, output: cb.Tensor, num_tokens: cb.ScalarValue):
+    """每个 MIX block 顺序处理若干完整 Query。"""
+    for token in cb.range(cb.get_block_idx(), num_tokens, cb.get_block_num()):
+        q = cb.tile_slice(query, (HEADS, HEAD_DIM), (token, 0))
+        selected = indices[token:token + 1, None]
+        target = cb.tile_slice(output, (HEADS, HEAD_DIM), (token, 0))
+        _swa_query(q, cache, scales, selected, sink, target)
+
+
 @pl.jit.inline(auto_scope=False)
 def swa_attention_dsl(
-    query: pl.Tensor,
-    cache: pl.Tensor,
-    scales: pl.Tensor,
-    indices: pl.Tensor,
-    sink: pl.Tensor,
-    output: pl.Tensor,
-    num_tokens: pl.Scalar[pl.INT32],
-    source_ready: pl.Scalar[pl.TASK_ID],
+    query: pl.Tensor, cache: pl.Tensor, scales: pl.Tensor, indices: pl.Tensor, sink: pl.Tensor,
+    output: pl.Tensor, num_tokens: pl.Scalar[pl.INT32], source_ready: pl.Scalar[pl.TASK_ID],
 ):
-    """调度完整的 Query 窗口，并汇合消费缓存的任务。"""
+    """使用一组同步启动的 MIX block 消费窗口缓存并完成所有 Query。"""
     rows = pl.tensor.dim(cache, 0) * WINDOW
     payload = pl.reshape(cache, [rows, HEAD_DIM])
     factors = pl.reshape(scales, [rows, HEAD_DIM // CACHE_GROUP])
     sinks = pl.reshape(sink, [1, HEADS])
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for worker in pl.range(TASK_TILE):
-        completed[worker] = source_ready
-    for token in pl.parallel(num_tokens):
-        q_slice = pl.slice(query, [1, HEADS * HEAD_DIM], [token, 0])
-        q_row = pl.reshape(q_slice, [HEADS, HEAD_DIM])
-        index_row = pl.slice(indices, [1, WINDOW], [token, 0])
-        out_slice = pl.slice(output, [1, HEADS * HEAD_DIM], [token, 0])
-        out_row = pl.reshape(out_slice, [HEADS, HEAD_DIM])
-        previous = completed[token % TASK_TILE]
-        with pl.spmd(1, name_hint="dsl_swa", deps=[previous], sync_start=True) as done:
-            swa_query(q_row, payload, factors, index_row, sinks, out_row)
-        completed[token % TASK_TILE] = done
-    return pl.system.task_dummy(deps=[completed])
+    query_rows = pl.tensor.dim(query, 0)
+    queries = pl.reshape(query, [query_rows * HEADS, HEAD_DIM])
+    output_rows = pl.tensor.dim(output, 0)
+    result = pl.reshape(output, [output_rows * HEADS, HEAD_DIM])
+    workers = pl.max(1, pl.min(num_tokens, pl.min(TASK_TILE, pl.system.available_cluster_count())))
+    with pl.spmd(workers, name_hint="dsl_swa", deps=[source_ready], sync_start=True) as done:
+        swa_queries(queries, payload, factors, indices, sinks, result, num_tokens)
+    return done

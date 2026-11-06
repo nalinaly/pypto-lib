@@ -1,0 +1,267 @@
+{
+  "推荐按分块整合": [
+    {
+      "task": "dsl_q_norm_quant",
+      "file": "q_branch_dsl.py",
+      "line": 141
+    },
+    {
+      "task": "dsl_q_proj_b",
+      "file": "q_branch_dsl.py",
+      "line": 154
+    },
+    {
+      "task": "dsl_q_rope",
+      "file": "q_branch_dsl.py",
+      "line": 177
+    },
+    {
+      "task": "dsl_q_proj_a",
+      "file": "qkv_proj_dsl.py",
+      "line": 63
+    },
+    {
+      "task": "dsl_kv_proj",
+      "file": "qkv_proj_dsl.py",
+      "line": 81
+    },
+    {
+      "task": "dsl_mhc_sinkhorn",
+      "file": "hc.py",
+      "line": 67
+    },
+    {
+      "task": "dsl_mhc_rms",
+      "file": "hc.py",
+      "line": 84
+    },
+    {
+      "task": "dsl_mhc_hf32",
+      "file": "hc.py",
+      "line": 98
+    },
+    {
+      "task": "dsl_hc_collapse",
+      "file": "hc.py",
+      "line": 153
+    },
+    {
+      "task": "dsl_hc_collapse_norm",
+      "file": "hc.py",
+      "line": 184
+    },
+    {
+      "task": "dsl_hc_post",
+      "file": "hc.py",
+      "line": 236
+    },
+    {
+      "task": "dsl_swa",
+      "file": "swa_dsl.py",
+      "line": 181
+    },
+    {
+      "task": "dsl_sh_act_quant",
+      "file": "expert_shared_dsl.py",
+      "line": 98
+    },
+    {
+      "task": "dsl_routed_up",
+      "file": "expert_routed_dsl.py",
+      "line": 258
+    },
+    {
+      "task": "dsl_routed_act_quant",
+      "file": "expert_routed_dsl.py",
+      "line": 267
+    },
+    {
+      "task": "dsl_routed_down",
+      "file": "expert_routed_dsl.py",
+      "line": 275
+    },
+    {
+      "task": "dsl_gate_norm",
+      "file": "gate_dsl.py",
+      "line": 225
+    },
+    {
+      "task": "dsl_gate_quant",
+      "file": "gate_dsl.py",
+      "line": 252
+    },
+    {
+      "task": "dsl_gate",
+      "file": "gate_dsl.py",
+      "line": 273
+    },
+    {
+      "task": "dsl_route_sort",
+      "file": "gate_dsl.py",
+      "line": 284
+    },
+    {
+      "task": "dsl_mxfp8_quant",
+      "file": "mxfp8_dsl.py",
+      "line": 191
+    },
+    {
+      "task": "dsl_shared_projection",
+      "file": "expert_shared_projection_dsl.py",
+      "line": 102
+    },
+    {
+      "task": "dsl_idx_q",
+      "file": "index_query_dsl.py",
+      "line": 83
+    },
+    {
+      "task": "dsl_proj_cmp",
+      "file": "compressor_dsl.py",
+      "line": 83
+    },
+    {
+      "task": "dsl_combine_reduce",
+      "file": "moe_combine_dsl.py",
+      "line": 69
+    },
+    {
+      "task": "dsl_o_rope_quant",
+      "file": "o_proj_dsl.py",
+      "line": 139
+    },
+    {
+      "task": "dsl_o_proj_a",
+      "file": "o_proj_dsl.py",
+      "line": 159
+    },
+    {
+      "task": "dsl_o_proj_b",
+      "file": "o_proj_dsl.py",
+      "line": 173
+    },
+    {
+      "task": "dsl_proj_idx_k",
+      "file": "index_projection_dsl.py",
+      "line": 40
+    },
+    {
+      "task": "dsl_dispatch_stage",
+      "file": "moe_dispatch_dsl.py",
+      "line": 58
+    },
+    {
+      "task": "dsl_dispatch_gather",
+      "file": "moe_dispatch_dsl.py",
+      "line": 144
+    },
+    {
+      "task": "dsl_proj_idx_w",
+      "file": "index_weight_dsl.py",
+      "line": 73
+    },
+    {
+      "task": "dsl_reduce_idx_w",
+      "file": "index_weight_dsl.py",
+      "line": 84
+    }
+  ],
+  "保留页或状态块归属后整合": [
+    {
+      "task": "dsl_c2a_pool_state",
+      "file": "compressor_pool_dsl.py",
+      "line": 152
+    },
+    {
+      "task": "dsl_c2a_publish",
+      "file": "compressor_pool_dsl.py",
+      "line": 165
+    },
+    {
+      "task": "dsl_window_kv",
+      "file": "window_kv_dsl.py",
+      "line": 146
+    },
+    {
+      "task": "dsl_idx_k_norm_rope_publish",
+      "file": "index_key_dsl.py",
+      "line": 95
+    }
+  ],
+  "低优先级": [
+    {
+      "task": "dsl_c2a_clear",
+      "file": "compressor_pool_dsl.py",
+      "line": 140
+    },
+    {
+      "task": "dsl_decode_sp_zero_padding",
+      "file": "initialization_dsl.py",
+      "line": 83
+    },
+    {
+      "task": "dsl_unused_attention_output",
+      "file": "initialization_dsl.py",
+      "line": 95
+    }
+  ],
+  "保留单任务": [
+    {
+      "task": "dsl_hc_collapse_tail",
+      "file": "hc.py",
+      "line": 160
+    },
+    {
+      "task": "dsl_gate_pre_route",
+      "file": "initialization_dsl.py",
+      "line": 106
+    },
+    {
+      "task": "dsl_idx_plan_req",
+      "file": "index_plan_dsl.py",
+      "line": 94
+    },
+    {
+      "task": "dsl_idx_plan_pool_runs",
+      "file": "index_plan_dsl.py",
+      "line": 105
+    }
+  ],
+  "已有多核": [
+    {
+      "task": "dsl_idx_score_topk",
+      "file": "index_score_dsl.py",
+      "line": 533
+    },
+    {
+      "task": "dsl_c1a_compress",
+      "file": "compressor_publish_dsl.py",
+      "line": 88
+    },
+    {
+      "task": "dsl_index_pool",
+      "file": "index_pool_dsl.py",
+      "line": 247
+    },
+    {
+      "task": "dsl_c1a_proj_cmp",
+      "file": "compressor_dsl.py",
+      "line": 72
+    },
+    {
+      "task": "dsl_sparse_attn",
+      "file": "sparse_attention_dsl.py",
+      "line": 266
+    },
+    {
+      "task": "dsl_idx_gather_pool",
+      "file": "index_gather_dsl.py",
+      "line": 125
+    },
+    {
+      "task": "dsl_idx_plan_pool",
+      "file": "index_route_dsl.py",
+      "line": 131
+    }
+  ]
+}

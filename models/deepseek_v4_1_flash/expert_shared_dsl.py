@@ -9,6 +9,7 @@
 """使用 CANNBotDSL 实现共享专家 SwiGLU 和缩放值向上取整的 MXFP8 量化。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
 import pypto.language as pl
@@ -30,8 +31,8 @@ QUANT_TILE = 768
 VECTOR_TILE = 64
 
 
-@cb.kernel
-def shared_swiglu_quant_tile(
+@jit
+def _shared_swiglu_quant_tile(
     gate: cb.Tensor,
     up: cb.Tensor,
     payload: cb.Tensor,
@@ -78,25 +79,29 @@ def shared_swiglu_quant_tile(
     cb.mem_copy(scales.view(dtype=cb.dtypes.uint8), codes)
 
 
+@cb.kernel
+def shared_swiglu_quant_grid(gate: cb.Tensor, up: cb.Tensor, payload: cb.Tensor, scales: cb.Tensor):
+    """按 M16/K768 分工，各 block 独占打包缩放值区域。"""
+    columns = gate.shape[1] // QUANT_TILE
+    tiles = gate.shape[0] // ROW_TILE * columns
+    for work in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = work // columns
+        column = work % columns
+        g = cb.tile_slice(gate, (ROW_TILE, QUANT_TILE), (row, column))
+        u = cb.tile_slice(up, (ROW_TILE, QUANT_TILE), (row, column))
+        out = cb.tile_slice(payload, (ROW_TILE, QUANT_TILE), (row, column))
+        offset = row * ROW_TILE * (gate.shape[1] // MX_GROUP) + column * ROW_TILE * (QUANT_TILE // MX_GROUP)
+        factors = scales[0:1, offset:offset + ROW_TILE * (QUANT_TILE // MX_GROUP)]
+        _shared_swiglu_quant_tile(g, u, out, factors)
+
+
 @pl.jit.inline(auto_scope=False)
-def shared_swiglu_quant(
-    gate: pl.Tensor,
-    up: pl.Tensor,
-    payload: pl.Tensor,
-    scales: pl.Tensor,
-):
-    """调度 M16 激活分块，确保打包缩放值的区域互不重叠。"""
-    rows = pl.tensor.dim(gate, 0)
-    width = pl.tensor.dim(gate, 1)
-    for row_start in pl.parallel(0, rows, ROW_TILE):
-        for column_start in pl.parallel(0, width, QUANT_TILE):
-            gate_tile = pl.slice(gate, [ROW_TILE, QUANT_TILE], [row_start, column_start])
-            up_tile = pl.slice(up, [ROW_TILE, QUANT_TILE], [row_start, column_start])
-            dst = pl.slice(payload, [ROW_TILE, QUANT_TILE], [row_start, column_start])
-            scale_offset = row_start * (width // MX_GROUP) + column_start // MX_GROUP * ROW_TILE
-            scale_tile = pl.slice(scales, [1, ROW_TILE * (QUANT_TILE // MX_GROUP)], [0, scale_offset])
-            with pl.spmd(1, name_hint="dsl_sh_act_quant"):
-                shared_swiglu_quant_tile(gate_tile, up_tile, dst, scale_tile)
+def shared_swiglu_quant(gate: pl.Tensor, up: pl.Tensor, payload: pl.Tensor, scales: pl.Tensor):
+    """以多核 SPMD 提交共享专家的激活量化阶段。"""
+    tiles = pl.tensor.dim(gate, 0) // ROW_TILE * (pl.tensor.dim(gate, 1) // QUANT_TILE)
+    workers = pl.max(1, pl.min(tiles, pl.system.available_aiv_count()))
+    with pl.spmd(workers, name_hint="dsl_sh_act_quant"):
+        shared_swiglu_quant_grid(gate, up, payload, scales)
     return payload, scales
 
 

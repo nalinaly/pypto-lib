@@ -1,0 +1,374 @@
+# Copyright (c) PyPTO Contributors.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
+"""实现 mHC 系数生成、延迟合并/RMSNorm 和 FP32 残差展开。"""
+
+import cannbotdsl as cb
+from cannbotdsl import reg as rr
+from cannbotdsl.buffer import Buffer
+from cannbotdsl.lang.jit import jit
+from cannbotdsl.ops.cube import enable_hf32, set_hf32_round_mode
+from cannbotdsl.ring_buffer import RingBuffer
+from config import FLASH as M
+
+
+# 模型配置
+D = M.hidden_size
+HC_MULT = M.hc_mult
+HC_DIM = M.hc_dim
+EPS = M.rms_norm_eps
+HC_EPS = M.hc_eps
+HC_ITERATIONS = M.hc_sinkhorn_iters
+MIX_HC = M.mix_hc
+
+# 分块参数
+VECTOR_TILE = 64
+TASK_TILE = 12
+PROJECT_ROW_TILE = 16
+PROJECT_K_TILE = 64
+MIX_TILE = 32
+COLLAPSE_ROW_TILE = 2
+
+
+@jit
+def _collapse_four(raw, column, p0, p1, p2, p3, mask):
+    """按两两相加顺序合并四路 FP32 加权数据。"""
+    y0 = rr.vmuls(rr.vload(raw, column), p0, mask=mask)
+    y1 = rr.vmuls(rr.vload(raw, D + column), p1, mask=mask)
+    y2 = rr.vmuls(rr.vload(raw, 2 * D + column), p2, mask=mask)
+    y3 = rr.vmuls(rr.vload(raw, 3 * D + column), p3, mask=mask)
+    pair01 = rr.vadd(y0, y1, mask=mask)
+    pair23 = rr.vadd(y2, y3, mask=mask)
+    return rr.vadd(pair01, pair23, mask=mask)
+
+
+@jit
+def _sum_four(value, mask):
+    """广播四个 FP32 元素两两相加后的总和。"""
+    a = rr.vgather_reg(value, rr.vdups(0, cb.dtypes.uint32))
+    b = rr.vgather_reg(value, rr.vdups(1, cb.dtypes.uint32))
+    c = rr.vgather_reg(value, rr.vdups(2, cb.dtypes.uint32))
+    d = rr.vgather_reg(value, rr.vdups(3, cb.dtypes.uint32))
+    return rr.vadd(rr.vadd(a, b, mask=mask), rr.vadd(c, d, mask=mask), mask=mask)
+
+
+@jit
+def _softmax_four(value, mask):
+    """逐行执行 softmax，再加上 mHC 初始 epsilon。"""
+    maximum = rr.vdup(rr.vreduce_max(value, mask=mask), mask=mask)
+    exponential = rr.vexp(rr.vsub(value, maximum, mask=mask), mask=mask)
+    normalized = rr.vdiv(exponential, _sum_four(exponential, mask), mask=mask)
+    return rr.vadds(normalized, HC_EPS, mask=mask)
+
+
+@jit
+def _coefficients_row(
+    partial0: cb.Tensor, partial1: cb.Tensor, partial2: cb.Tensor, partial3: cb.Tensor,
+    inverse: cb.Tensor, scale: cb.Tensor, base: cb.Tensor,
+    pre: cb.Tensor, post: cb.Tensor, residual: cb.Tensor,
+):
+    """归约四份 split-K 部分和，并生成一行延迟 mHC 系数。"""
+    p0 = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    p1 = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    p2 = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    p3 = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    bias = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((VECTOR_TILE,)))
+    pre_ub = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    post_ub = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    comb_ub = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    cb.mem_copy(cb.tile_slice(p0, (1, MIX_TILE), (0, 0)), partial0)
+    cb.mem_copy(cb.tile_slice(p1, (1, MIX_TILE), (0, 0)), partial1)
+    cb.mem_copy(cb.tile_slice(p2, (1, MIX_TILE), (0, 0)), partial2)
+    cb.mem_copy(cb.tile_slice(p3, (1, MIX_TILE), (0, 0)), partial3)
+    cb.mem_copy(cb.tile_slice(bias, (MIX_HC,), (0,)), base)
+    inv = inverse[0, 0]
+    s0 = scale[0]
+    s1 = scale[1]
+    s2 = scale[2]
+    with cb.vf():
+        full = rr.full_mask()
+        live = rr.update_mask(MIX_HC, elem_bits=32)[0]
+        four = rr.update_mask(HC_MULT, elem_bits=32)[0]
+        mixed = rr.vadd(rr.vload(p0), rr.vload(p1), mask=live)
+        mixed = rr.vadd(mixed, rr.vload(p2), mask=live)
+        mixed = rr.vadd(mixed, rr.vload(p3), mask=live)
+        mixed = rr.vmuls(mixed, inv, mask=live)
+        lane = rr.varange(0, cb.dtypes.uint32)
+        column = rr.vbitwise_and(lane, rr.vdups(3, cb.dtypes.uint32), mask=full)
+        post_index = rr.vadds(column, 4, mask=full)
+        row0_index = rr.vadds(column, 8, mask=full)
+        row1_index = rr.vadds(column, 12, mask=full)
+        row2_index = rr.vadds(column, 16, mask=full)
+        row3_index = rr.vadds(column, 20, mask=full)
+        biases = rr.vload(bias)
+        pre_value = rr.vmuls(rr.vgather_reg(mixed, column), s0, mask=four)
+        pre_value = rr.vadd(pre_value, rr.vgather_reg(biases, column), mask=four)
+        post_value = rr.vmuls(rr.vgather_reg(mixed, post_index), s1, mask=four)
+        post_value = rr.vadd(post_value, rr.vgather_reg(biases, post_index), mask=four)
+        m0 = rr.vmuls(rr.vgather_reg(mixed, row0_index), s2, mask=four)
+        m0 = rr.vadd(m0, rr.vgather_reg(biases, row0_index), mask=four)
+        m1 = rr.vmuls(rr.vgather_reg(mixed, row1_index), s2, mask=four)
+        m1 = rr.vadd(m1, rr.vgather_reg(biases, row1_index), mask=four)
+        m2 = rr.vmuls(rr.vgather_reg(mixed, row2_index), s2, mask=four)
+        m2 = rr.vadd(m2, rr.vgather_reg(biases, row2_index), mask=four)
+        m3 = rr.vmuls(rr.vgather_reg(mixed, row3_index), s2, mask=four)
+        m3 = rr.vadd(m3, rr.vgather_reg(biases, row3_index), mask=four)
+        one = rr.vdups(1.0, cb.dtypes.float32, mask=four)
+        pre_exp = rr.vexp(rr.vmuls(pre_value, -1.0, mask=four), mask=four)
+        pre_sigmoid = rr.vdiv(one, rr.vadds(pre_exp, 1.0, mask=four), mask=four)
+        post_exp = rr.vexp(rr.vmuls(post_value, -1.0, mask=four), mask=four)
+        post_sigmoid = rr.vdiv(one, rr.vadds(post_exp, 1.0, mask=four), mask=four)
+        rr.vstore(pre_ub, 0, rr.vadds(pre_sigmoid, HC_EPS, mask=four), four)
+        rr.vstore(post_ub, 0, rr.vmuls(post_sigmoid, 2.0, mask=four), four)
+        m0 = _softmax_four(m0, four)
+        m1 = _softmax_four(m1, four)
+        m2 = _softmax_four(m2, four)
+        m3 = _softmax_four(m3, four)
+        for iteration in range(HC_ITERATIONS):
+            if iteration > 0:
+                m0 = rr.vdiv(m0, rr.vadds(_sum_four(m0, four), HC_EPS, mask=four), mask=four)
+                m1 = rr.vdiv(m1, rr.vadds(_sum_four(m1, four), HC_EPS, mask=four), mask=four)
+                m2 = rr.vdiv(m2, rr.vadds(_sum_four(m2, four), HC_EPS, mask=four), mask=four)
+                m3 = rr.vdiv(m3, rr.vadds(_sum_four(m3, four), HC_EPS, mask=four), mask=four)
+            total = rr.vadd(m0, m1, mask=four)
+            total = rr.vadd(total, m2, mask=four)
+            total = rr.vadd(total, m3, mask=four)
+            total = rr.vadds(total, HC_EPS, mask=four)
+            m0 = rr.vdiv(m0, total, mask=four)
+            m1 = rr.vdiv(m1, total, mask=four)
+            m2 = rr.vdiv(m2, total, mask=four)
+            m3 = rr.vdiv(m3, total, mask=four)
+        rr.vscatter(comb_ub, m0, column, mask=four)
+        rr.vscatter(comb_ub, m1, post_index, mask=four)
+        rr.vscatter(comb_ub, m2, row0_index, mask=four)
+        rr.vscatter(comb_ub, m3, row1_index, mask=four)
+    cb.mem_copy(pre, cb.tile_slice(pre_ub, (1, HC_MULT), (0, 0)))
+    cb.mem_copy(post, cb.tile_slice(post_ub, (1, HC_MULT), (0, 0)))
+    cb.mem_copy(residual, cb.tile_slice(comb_ub, (1, HC_MULT * HC_MULT), (0, 0)))
+
+
+@jit
+def _inverse_rms_row(source: cb.Tensor, output: cb.Tensor):
+    """根据原始四路 FP32 数据流计算 RMS 倒数。"""
+    raw = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, HC_DIM)))
+    result = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, VECTOR_TILE)))
+    cb.mem_copy(raw, source)
+    with cb.vf():
+        full = rr.full_mask()
+        accum = rr.vdups(0.0, cb.dtypes.float32, mask=full)
+        for col in range(0, HC_DIM, VECTOR_TILE):
+            value = rr.vload(raw, col)
+            accum = rr.vadd(accum, rr.vmul(value, value, mask=full), mask=full)
+        total = rr.vreduce_sum(accum, mask=full)
+        mean = rr.vmuls(total, 1.0 / HC_DIM, mask=full)
+        denominator = rr.vsqrt(rr.vadds(mean, EPS, mask=full), mask=full)
+        one = rr.vdups(1.0, cb.dtypes.float32, mask=full)
+        inverse = rr.vdiv(one, denominator, mask=full, precision_mode=True)
+        rr.vstore(result, 0, inverse, full)
+    cb.mem_copy(output, cb.tile_slice(result, (1, 1), (0, 0)))
+
+
+@jit
+def _project_hf32_tile(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor,
+                      num_tokens: cb.ScalarValue, row_tile: cb.ScalarValue):
+    """对一个 M16 split-K 分块执行投影，使用中点远离零舍入的 HF32 和 K64 FP32 累加。"""
+    active = min(PROJECT_ROW_TILE, num_tokens - row_tile * PROJECT_ROW_TILE)
+    enable_hf32()
+    set_hf32_round_mode("rna")
+    a_l1 = RingBuffer(cb.MemLoc.L1, cb.dtypes.float32, cb.make_layout((PROJECT_ROW_TILE, PROJECT_K_TILE)), depth=1)
+    b_l1 = RingBuffer(cb.MemLoc.L1, cb.dtypes.float32, cb.make_layout((MIX_TILE, PROJECT_K_TILE)), depth=1)
+    a_l0 = RingBuffer(cb.MemLoc.L0A, cb.dtypes.float32, cb.make_layout((PROJECT_ROW_TILE, PROJECT_K_TILE)), depth=1)
+    b_l0 = RingBuffer(cb.MemLoc.L0B, cb.dtypes.float32, cb.make_layout((MIX_TILE, PROJECT_K_TILE)), depth=1)
+    c_l0 = RingBuffer(cb.MemLoc.L0C, cb.dtypes.float32, cb.make_layout((PROJECT_ROW_TILE, MIX_TILE)), depth=1)
+    accumulator = c_l0.next_write()
+    for k in cb.range((HC_DIM // HC_MULT) // PROJECT_K_TILE):
+        a = a_l1.next_write()
+        b = b_l1.next_write()
+        cb.mem_copy(a, cb.tile_slice(source[0:active, None], (PROJECT_ROW_TILE, PROJECT_K_TILE), (0, k)))
+        cb.mem_copy(b, cb.tile_slice(weight, (MIX_TILE, PROJECT_K_TILE), (0, k)))
+        cb.mem_copy(a_l0.next_write(), a_l1.next_read())
+        cb.mem_copy(b_l0.next_write(), b_l1.next_read())
+        cb.matmul(accumulator, a_l0.next_read(), b_l0.next_read(), init=k == 0)
+    result = c_l0.next_read()
+    valid = cb.from_tensor(result, layout=cb.make_layout((active, MIX_HC)), physical_layout=result.physical_layout)
+    cb.mem_copy(output[0:active, 0:MIX_HC], valid)
+
+
+@jit
+def _collapse_tile(source: cb.Tensor, pre_mix: cb.Tensor, output: cb.Tensor):
+    """逐行合并最多两个 token 的四路 FP32 状态，并舍入为 BF16。"""
+    raw = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, HC_DIM)))
+    result = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, D)))
+    for row in cb.range(source.shape[0]):
+        cb.mem_copy(raw, cb.tile_slice(source, (1, HC_DIM), (row, 0)))
+        p0 = pre_mix[row, 0]
+        p1 = pre_mix[row, 1]
+        p2 = pre_mix[row, 2]
+        p3 = pre_mix[row, 3]
+        with cb.vf():
+            full = rr.full_mask()
+            for col in range(0, D, VECTOR_TILE):
+                mixed = _collapse_four(raw, col, p0, p1, p2, p3, full)
+                rounded = rr.vcast(mixed, cb.dtypes.bfloat16, mask=full, rounding="rn")
+                rr.vstore_pack(result, col, rounded, full, pack_mode=rr.PackMode.B32_TO_B16)
+        cb.mem_copy(cb.tile_slice(output, (1, D), (row, 0)), result)
+
+
+@jit
+def _collapse_norm_row(source: cb.Tensor, pre_mix: cb.Tensor, weight: cb.Tensor, output: cb.Tensor):
+    """对一行执行 FP32 两两求和、BF16 舍入，再执行 RMSNorm。"""
+    raw = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, HC_DIM)))
+    gamma = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((D,)))
+    values = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((D,)))
+    result = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, D)))
+    cb.mem_copy(raw, source)
+    cb.mem_copy(gamma, weight)
+    p0 = pre_mix[0, 0]
+    p1 = pre_mix[0, 1]
+    p2 = pre_mix[0, 2]
+    p3 = pre_mix[0, 3]
+    with cb.vf():
+        full = rr.full_mask()
+        accum = rr.vdups(0.0, cb.dtypes.float32, mask=full)
+        for col in range(0, D, VECTOR_TILE):
+            mixed = _collapse_four(raw, col, p0, p1, p2, p3, full)
+            rounded = rr.vcast(mixed, cb.dtypes.bfloat16, mask=full, rounding="rn")
+            value = rr.vcast(rounded, cb.dtypes.float32, mask=full)
+            rr.vstore(values, col, value, full)
+            accum = rr.vadd(accum, rr.vmul(value, value, mask=full), mask=full)
+        rr.vmem_bar("vst_vld")
+        total = rr.vreduce_sum(accum, mask=full)
+        mean = rr.vmuls(total, 1.0 / D, mask=full)
+        denominator = rr.vsqrt(rr.vadds(mean, EPS, mask=full), mask=full)
+        one = rr.vdups(1.0, cb.dtypes.float32, mask=full)
+        inverse = rr.vdup(rr.vdiv(one, denominator, mask=full, precision_mode=True), mask=full)
+        for col in range(0, D, VECTOR_TILE):
+            g16 = rr.vload_unpack(gamma, col, unpack_mode=rr.UnpackMode.B16_TO_B32)
+            factor = rr.vcast(g16, cb.dtypes.float32, mask=full)
+            scaled = rr.vmul(rr.vload(values, col), inverse, mask=full)
+            normalized = rr.vmul(scaled, factor, mask=full)
+            rounded_out = rr.vcast(normalized, cb.dtypes.bfloat16, mask=full, rounding="rn")
+            rr.vstore_pack(result, col, rounded_out, full, pack_mode=rr.PackMode.B32_TO_B16)
+    cb.mem_copy(output, result)
+
+
+@jit
+def _expand_row(sublayer: cb.Tensor, residual: cb.Tensor, post_mix: cb.Tensor,
+               residual_mix: cb.Tensor, output: cb.Tensor):
+    """按顺序执行不融合的加法，将一行展开为四路 FP32 数据流。"""
+    hidden = Buffer(cb.MemLoc.UB, cb.dtypes.bfloat16, cb.make_layout((1, D)))
+    raw = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, HC_DIM)))
+    result = Buffer(cb.MemLoc.UB, cb.dtypes.float32, cb.make_layout((1, D)))
+    cb.mem_copy(hidden, sublayer)
+    cb.mem_copy(raw, residual)
+    for out_h in cb.range(HC_MULT):
+        post = post_mix[0, out_h]
+        r0 = residual_mix[0, out_h]
+        r1 = residual_mix[0, HC_MULT + out_h]
+        r2 = residual_mix[0, 2 * HC_MULT + out_h]
+        r3 = residual_mix[0, 3 * HC_MULT + out_h]
+        with cb.vf():
+            full = rr.full_mask()
+            for col in range(0, D, VECTOR_TILE):
+                x16 = rr.vload_unpack(hidden, col, unpack_mode=rr.UnpackMode.B16_TO_B32)
+                value = rr.vmuls(rr.vcast(x16, cb.dtypes.float32, mask=full), post, mask=full)
+                term0 = rr.vmuls(rr.vload(raw, col), r0, mask=full)
+                value = rr.vadd(value, term0, mask=full)
+                term1 = rr.vmuls(rr.vload(raw, D + col), r1, mask=full)
+                value = rr.vadd(value, term1, mask=full)
+                term2 = rr.vmuls(rr.vload(raw, 2 * D + col), r2, mask=full)
+                value = rr.vadd(value, term2, mask=full)
+                term3 = rr.vmuls(rr.vload(raw, 3 * D + col), r3, mask=full)
+                value = rr.vadd(value, term3, mask=full)
+                rr.vstore(result, col, value, full)
+        cb.mem_copy(cb.tile_slice(output, (1, D), (0, out_h)), result)
+
+
+@cb.kernel
+def coefficients_grid(inverse: cb.Tensor, partials: cb.Tensor, scale: cb.Tensor, base: cb.Tensor,
+                      pre: cb.Tensor, post: cb.Tensor, residual: cb.Tensor):
+    """按 token 分配系数生成，split-K 部分和仍按原顺序归约。"""
+    stride = inverse.shape[0]
+    for row in cb.range(cb.get_block_idx(), pre.shape[0], cb.get_block_num()):
+        p0 = partials[row:row + 1, 0:MIX_TILE]
+        p1 = partials[stride + row:stride + row + 1, 0:MIX_TILE]
+        p2 = partials[2 * stride + row:2 * stride + row + 1, 0:MIX_TILE]
+        p3 = partials[3 * stride + row:3 * stride + row + 1, 0:MIX_TILE]
+        inv = inverse[row:row + 1, 0:1]
+        dst_pre = pre[row:row + 1, None]
+        dst_post = post[row:row + 1, None]
+        dst_residual = residual[row:row + 1, None]
+        _coefficients_row(p0, p1, p2, p3, inv, scale, base, dst_pre, dst_post, dst_residual)
+
+
+@cb.kernel
+def inverse_rms_grid(source: cb.Tensor, output: cb.Tensor):
+    """按 token 分配四路原始数据的 RMS 倒数计算。"""
+    for row in cb.range(cb.get_block_idx(), output.shape[0], cb.get_block_num()):
+        src = source[row:row + 1, None]
+        dst = output[row:row + 1, None]
+        _inverse_rms_row(src, dst)
+
+
+@cb.kernel
+def project_hf32_grid(source: cb.Tensor, weight: cb.Tensor, output: cb.Tensor,
+                     num_tokens: cb.ScalarValue):
+    """按 M16 和四个 K 分段分配 HF32 投影。"""
+    padded_rows = output.shape[0] // HC_MULT
+    tiles = (num_tokens + PROJECT_ROW_TILE - 1) // PROJECT_ROW_TILE * HC_MULT
+    for work in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        tile = work // HC_MULT
+        split = work % HC_MULT
+        row = tile * PROJECT_ROW_TILE
+        live = min(PROJECT_ROW_TILE, num_tokens - row)
+        begin = split * (HC_DIM // HC_MULT)
+        src = source[row:row + live, begin:begin + HC_DIM // HC_MULT]
+        matrix = weight[None, begin:begin + HC_DIM // HC_MULT]
+        offset = split * padded_rows + row
+        dst = output[offset:offset + live, None]
+        _project_hf32_tile(src, matrix, dst, num_tokens, tile)
+
+
+@cb.kernel
+def collapse_grid(source: cb.Tensor, pre: cb.Tensor, output: cb.Tensor):
+    """按两行分配 FP32 合并和 BF16 舍入。"""
+    tiles = source.shape[0] // COLLAPSE_ROW_TILE
+    for tile in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = tile * COLLAPSE_ROW_TILE
+        src = source[row:row + COLLAPSE_ROW_TILE, None]
+        coefficients = pre[row:row + COLLAPSE_ROW_TILE, None]
+        dst = output[row:row + COLLAPSE_ROW_TILE, None]
+        _collapse_tile(src, coefficients, dst)
+
+
+@cb.kernel
+def collapse_tail(source: cb.Tensor, pre: cb.Tensor, output: cb.Tensor):
+    """保留单个尾行的合并任务。"""
+    _collapse_tile(source, pre, output)
+
+
+@cb.kernel
+def collapse_norm_grid(source: cb.Tensor, pre: cb.Tensor, weight: cb.Tensor, output: cb.Tensor):
+    """按 token 分配合并、BF16 舍入和 RMSNorm。"""
+    for row in cb.range(cb.get_block_idx(), output.shape[0], cb.get_block_num()):
+        src = source[row:row + 1, None]
+        coefficients = pre[row:row + 1, None]
+        dst = output[row:row + 1, None]
+        _collapse_norm_row(src, coefficients, weight, dst)
+
+
+@cb.kernel
+def expand_grid(sublayer: cb.Tensor, residual: cb.Tensor, post: cb.Tensor, mix: cb.Tensor, output: cb.Tensor):
+    """按 token 分配四路残差展开。"""
+    for row in cb.range(cb.get_block_idx(), output.shape[0], cb.get_block_num()):
+        hidden = sublayer[row:row + 1, None]
+        skip = residual[row:row + 1, None]
+        post_row = post[row:row + 1, None]
+        mix_row = mix[row:row + 1, None]
+        dst = output[row:row + 1, None]
+        _expand_row(hidden, skip, post_row, mix_row, dst)

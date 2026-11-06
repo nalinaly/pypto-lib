@@ -9,6 +9,7 @@
 """使用一个 DSL MIX 分块完成 Indexer Query 投影、RoPE 和 FP4/E8M0 量化。"""
 
 import cannbotdsl as cb
+from cannbotdsl.lang.jit import jit
 from cannbotdsl import reg as rr
 from cannbotdsl.buffer import Buffer
 from cannbotdsl.ring_buffer import RingBuffer
@@ -34,8 +35,8 @@ VECTOR_TILE = 64
 TASK_TILE = 32
 
 
-@cb.kernel
-def project_query_mix(
+@jit
+def _project_query_mix(
     payload: cb.Tensor, weight: cb.Tensor, activation_scale: cb.Tensor, weight_scale: cb.Tensor,
     cosine: cb.Tensor, sine: cb.Tensor, output: cb.Tensor, output_scale: cb.Tensor,
     head: cb.ScalarValue, active_rows: cb.ScalarValue,
@@ -73,17 +74,27 @@ def project_query_mix(
         cb.mem_copy(scale_dst.view(dtype=cb.dtypes.uint8), scale_src)
 
 
-@pl.jit.inline(auto_scope=False)
-def _query_task(
-    payload: pl.Tensor, weight: pl.Tensor, activation_scale: pl.Tensor, weight_scale: pl.Tensor,
-    cosine: pl.Tensor, sine: pl.Tensor, output: pl.Tensor, output_scale: pl.Tensor,
-    head: pl.Scalar[pl.INDEX], active_rows: pl.Scalar[pl.INDEX], ready: pl.Scalar[pl.TASK_ID],
-):
-    """向 simpler 提交一个同时包含投影和向量后处理的 MIX 任务。"""
-    with pl.spmd(1, name_hint="dsl_idx_q", deps=[ready], sync_start=True) as done:
-        project_query_mix(payload, weight, activation_scale, weight_scale,
-                          cosine, sine, output, output_scale, head, active_rows)
-    return done
+@cb.kernel
+def project_query_grid(payload: cb.Tensor, weight: cb.Tensor, activation_scale: cb.Tensor,
+                       weight_scale: cb.Tensor, cosine: cb.Tensor, sine: cb.Tensor,
+                       output: cb.Tensor, output_scale: cb.Tensor, num_tokens: cb.ScalarValue):
+    """按 M80 和 head 分配融合 Query 投影、RoPE 及量化。"""
+    active = min(output.shape[0], max(num_tokens, 0))
+    tiles = (active + ROW_TILE - 1) // ROW_TILE * INDEX_H
+    for work in cb.range(cb.get_block_idx(), tiles, cb.get_block_num()):
+        row = work // INDEX_H * ROW_TILE
+        head = work % INDEX_H
+        live = min(ROW_TILE, active - row)
+        source = payload[row:row + ROW_TILE, None]
+        offset = row * (Q_LORA // CACHE_GROUP)
+        factors = activation_scale[0:1, offset:offset + ROW_TILE * (Q_LORA // CACHE_GROUP)]
+        cos = cosine[row:row + live, None]
+        sin = sine[row:row + live, None]
+        begin = head * PACKED_DIM
+        target = output[row:row + live, begin:begin + PACKED_DIM]
+        scale_begin = head * SCALE_DIM
+        target_scale = output_scale[row:row + live, scale_begin:scale_begin + SCALE_DIM]
+        _project_query_mix(source, weight, factors, weight_scale, cos, sin, target, target_scale, head, live)
 
 
 @pl.jit.inline(auto_scope=False)
@@ -92,30 +103,22 @@ def project_index_query(
     cosine: pl.Tensor, sine: pl.Tensor, output: pl.Tensor, output_scale: pl.Tensor,
     num_tokens: pl.Scalar[pl.INT32], ready: pl.Scalar[pl.TASK_ID],
 ):
-    """按 M80 和 head 分发融合分块，汇合 Query 数据及缩放值的完成依赖。"""
-    tokens = pl.tensor.dim(output, 0)
-    active = pl.min(tokens, pl.max(pl.cast(num_tokens, pl.INDEX), 0))
+    """保留输入完成依赖，以一组 MIX SPMD 完成全部有效 Query。"""
+    active = pl.min(pl.tensor.dim(output, 0), pl.max(pl.cast(num_tokens, pl.INDEX), 0))
     weight_flat = pl.reshape(weight, [1, Q_LORA * INDEX_H * INDEX_DIM])
     scale_flat = pl.tensor.view(weight_scale, [1, (Q_LORA // CACHE_GROUP) * INDEX_H * INDEX_DIM], layout=pl.ND)
-    input_scale_flat = pl.reshape(activation_scale, [1, pl.tensor.dim(payload, 0) * (Q_LORA // CACHE_GROUP)])
-    completed = pl.array.create(TASK_TILE, pl.TASK_ID)
-    for slot in pl.range(TASK_TILE):
-        completed[slot] = ready
-    for row in pl.range(0, active, ROW_TILE):
-        live = pl.min(ROW_TILE, active - row)
-        physical = pl.min(ROW_TILE, tokens - row)
-        source = payload[row:row + ROW_TILE, :]
-        scales = input_scale_flat[:, row * (Q_LORA // CACHE_GROUP):(row + ROW_TILE) * (Q_LORA // CACHE_GROUP)]
-        cos = pl.slice(cosine, [ROW_TILE, ROPE_DIM // 2], [row, 0], valid_shape=[physical, ROPE_DIM // 2])
-        sin = pl.slice(sine, [ROW_TILE, ROPE_DIM // 2], [row, 0], valid_shape=[physical, ROPE_DIM // 2])
-        for head in pl.parallel(INDEX_H):
-            target = pl.slice(output, [ROW_TILE, PACKED_DIM], [row, head * (PACKED_DIM)], valid_shape=[physical, PACKED_DIM])
-            factors = pl.slice(output_scale, [ROW_TILE, SCALE_DIM], [row, head * (SCALE_DIM)], valid_shape=[physical, SCALE_DIM])
-            previous = completed[head % TASK_TILE]
-            done = _query_task(source, weight_flat, scales, scale_flat, cos, sin, target, factors, head, live, previous)
-            completed[head % TASK_TILE] = done
-    joined = pl.system.task_dummy(deps=[completed])
-    return joined
+    input_scale = pl.reshape(activation_scale, [1, pl.tensor.dim(payload, 0) * (Q_LORA // CACHE_GROUP)])
+    target = output[0:active, :]
+    factors = output_scale[0:active, :]
+    cosine_view = cosine[0:active, :]
+    sine_view = sine[0:active, :]
+    tiles = (active + ROW_TILE - 1) // ROW_TILE * INDEX_H
+    limit = pl.min(TASK_TILE, pl.system.available_cluster_count())
+    workers = pl.max(1, pl.min(tiles, limit))
+    with pl.spmd(workers, name_hint="dsl_idx_q", deps=[ready], sync_start=True) as done:
+        project_query_grid(payload, weight_flat, input_scale, scale_flat, cosine_view, sine_view,
+                           target, factors, num_tokens)
+    return done
 
 
 @pl.jit

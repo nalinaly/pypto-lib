@@ -1,0 +1,53 @@
+import ast,json
+from pathlib import Path
+root=Path('<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash')
+functions={}
+imports={}
+for p in root.glob('*.py'):
+ tree=ast.parse(p.read_text())
+ imports[p.stem]={a.asname or a.name:(n.module or '')+'.'+a.name for n in tree.body if isinstance(n,ast.ImportFrom) for a in n.names}
+ for n in tree.body:
+  if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)):
+   functions[p.stem+'.'+n.name]=(p,n)
+def resolve(key,seen=None):
+ seen=set() if seen is None else seen
+ if key in seen:return key
+ seen.add(key)
+ module,_,name=key.rpartition('.')
+ target=imports.get(module,{}).get(name)
+ return resolve(target,seen) if target else key
+lookup={}
+for key,(p,fn) in functions.items():
+ calls=set()
+ for n in ast.walk(fn):
+  if isinstance(n,ast.Call) and isinstance(n.func,ast.Name):
+   target=resolve(p.stem+'.'+n.func.id)
+   if target in functions:calls.add(target)
+ lookup[key]=sorted(calls)
+reachable=set()
+def walk(k):
+ if k in reachable:return
+ reachable.add(k)
+ for c in lookup.get(k,[]):walk(c)
+walk('decode_layer.l3_decode_layer')
+sites=[]
+for key,(p,fn) in functions.items():
+ def scan(n,loops):
+  now=loops
+  if isinstance(n,(ast.For,ast.AsyncFor)):
+   now=loops+[ast.unparse(n.target)+' in '+ast.unparse(n.iter)]
+  if isinstance(n,ast.Call) and ast.unparse(n.func)=='pl.spmd':
+   kws={kw.arg:ast.unparse(kw.value) for kw in n.keywords}
+   sites.append({'file':p.name,'line':n.lineno,'fn':key,'blocks':ast.unparse(n.args[0]) if n.args else '', 'hint':kws.get('name_hint',''),'loops':loops,'sync_start':kws.get('sync_start','False'),'deps':kws.get('deps',''),'decode_reachable':key in reachable,'callers':[k for k,c in lookup.items() if key in c]})
+  for child in ast.iter_child_nodes(n):scan(child,now)
+ scan(fn,[])
+for r in sites:r['dsl']=r['hint'].startswith("'dsl_")
+selected=[r for r in sites if r['dsl']]
+result={'sites':sites,'call_graph':lookup,'reachable':sorted(reachable)}
+Path('/tmp/dsv41-spmd-audit.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
+print('DSL调用点',len(selected),'可达',sum(x['decode_reachable'] for x in selected),'spmd1',sum(x['blocks']=='1' for x in selected),'可达spmd1',sum(x['blocks']=='1' and x['decode_reachable'] for x in selected))
+for r in selected:
+ print(f"{r['file']}:{r['line']} {r['hint']} blocks={r['blocks']} reachable={r['decode_reachable']} loops={'; '.join(r['loops']) or '-'}")
+print('非DSL标记的可达SPMD:')
+for r in sites:
+ if r['decode_reachable'] and not r['dsl']: print(r['file'],r['line'],r['hint'])
