@@ -14,6 +14,7 @@ from index_pool_dsl import (
     index_pool_block_capacity as index_pool_block_capacity,
 )
 
+from index_gather_dsl import gather_candidate_cache
 from index_projection_dsl import project_index_key
 from index_key_dsl import publish_index_rows
 from index_weight_dsl import project_index_weights
@@ -194,64 +195,15 @@ def _score_select_pool(
     gathered_rows = panels * 256
     total_rows = tokens * gathered_rows
     total_scales = total_rows * _SCALE_COUNT
-    cache_pages = pl.tensor.dim(index_cache, 0)
-    cache_rows = cache_pages * 128
-    cache_flat = pl.reshape(index_cache, [cache_rows, INDEX_DIM // 2])
-    scale_flat = pl.reshape(index_cache_scale, [cache_rows // 8, 32])
     payloads = pl.create_tensor([total_rows, INDEX_DIM // 2], dtype=pl.UINT8)
     scales = pl.create_tensor([1, total_scales], dtype=pl.FP8E8M0)
     valid = pl.create_tensor([1, total_rows], dtype=pl.INT32)
     physical = pl.create_tensor([1, total_rows], dtype=pl.INT32)
     runs = pl.create_tensor([4, tokens + 1], dtype=pl.INT32)
-    table_width = pl.tensor.dim(block_table, 1)
-    request_count = pl.tensor.dim(block_table, 0)
-    with pl.spmd(32, name_hint="idx_gather_pool", deps=[cache_ready, pool_ready]) as gather_tid:
-        worker = pl.tile.get_block_idx()
-        for work in pl.range(worker, num_tokens * panels, 32):
-            token = work // panels
-            panel = work % panels
-            slot_begin = panel * 32
-            count = pl.max(0, pl.min(pl.read(pool_block_counts, [token]), capacity))
-            request = pl.read(request_ids, [token])
-            visible = pl.max(0, pl.read(lengths, [token]))
-            packed = pl.tile.full([256, INDEX_DIM // 2], dtype=pl.INT8, value=0)
-            raw_scale = pl.tile.full([1, 256 * _SCALE_COUNT], dtype=pl.INT8, value=127)
-            valid_lanes = pl.tile.full([1, 256], dtype=pl.INT32, value=0)
-            physical_lanes = pl.tile.full([1, 256], dtype=pl.INT32, value=-1)
-            for block in pl.range(32):
-                slot = slot_begin + block
-                if slot < count:
-                    logical_block = pl.read(pool_block_ids, [token, slot])
-                    if logical_block >= 0 and logical_block < (visible + 7) // 8:
-                        logical_page = logical_block // 16
-                        if request >= 0 and request < request_count and logical_page < table_width:
-                            page = pl.read(block_table, [pl.cast(request, pl.INDEX), logical_page])
-                            if page >= 0 and page < cache_pages:
-                                physical_row = pl.cast(page, pl.INDEX) * 128 + (logical_block % 16) * 8
-                                payload_raw = pl.load(cache_flat, [physical_row, 0], [8, INDEX_DIM // 2], target_memory=pl.MemorySpace.Vec)
-                                payload = pl.reinterpret_view(payload_raw, pl.INT8)
-                                packed[block * 8:block * 8 + 8, :] = payload
-                                scales_raw = pl.load(scale_flat, [physical_row // 8, 0], [1, 32], target_memory=pl.MemorySpace.Vec)
-                                block_scale_bytes = pl.reinterpret_view(scales_raw, pl.UINT8)
-                                block_scales = pl.reinterpret_view(block_scale_bytes, pl.INT8)
-                                raw_scale[:, block * 32:block * 32 + 32] = block_scales
-                                lanes = pl.tile.arange(0, [1, 8], dtype=pl.INT32)
-                                remaining = pl.cast(pl.min(8, visible - logical_block * 8), pl.INT32)
-                                lane_valid = pl.tile.cmps(lanes, remaining, cmp_type=2)
-                                ones = pl.tile.full([1, 8], dtype=pl.INT32, value=1)
-                                block_valid = pl.tile.select(lane_valid, ones, 0)
-                                block_physical = pl.add(lanes, pl.cast(physical_row, pl.INT32))
-                                block_physical = pl.tile.select(lane_valid, block_physical, -1)
-                                valid_lanes[:, block * 8:block * 8 + 8] = block_valid
-                                physical_lanes[:, block * 8:block * 8 + 8] = block_physical
-            row_offset = token * gathered_rows + panel * 256
-            packed_bytes = pl.reinterpret_view(packed, pl.UINT8)
-            pl.store(packed_bytes, [row_offset, 0], payloads)
-            scale_bytes = pl.reinterpret_view(raw_scale, pl.UINT8)
-            scale_storage = pl.reinterpret_view(scale_bytes, pl.FP8E8M0)
-            pl.store(scale_storage, [0, row_offset * _SCALE_COUNT], scales)
-            pl.store(valid_lanes, [0, row_offset], valid)
-            pl.store(physical_lanes, [0, row_offset], physical)
+    gather_tid = gather_candidate_cache(
+        index_cache, index_cache_scale, block_table, request_ids, lengths, pool_block_ids, pool_block_counts,
+        payloads, scales, valid, physical, num_tokens, cache_ready, pool_ready,
+    )
     with pl.at(level=pl.Level.CORE_GROUP, name_hint="idx_plan_pool_runs", deps=[pool_ready]) as runs_tid:
         for token in pl.range(num_tokens):
             count = pl.max(0, pl.min(pl.read(pool_block_counts, [token]), capacity))

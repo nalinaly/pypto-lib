@@ -1,0 +1,7 @@
+[收集分支确认] {'tokens': 6, 'capacity': 2048, 'counts': [2048, 2048, 2048, 2048, 2048, 2048], 'visible_blocks': [2049, 2049, 2049, 2049, 2049, 2049], '全部进入稀疏收集分支': True}
+[RUN] compile ...
+2026-11-06 14:37:32.454 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable '_attended' in function 'attend_packed' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/sparse_attention.py:1695:9
+2026-11-06 14:37:32.454 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'scores_tid' in function 'score_select_reindex' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_indexer.py:155:9
+[RUN] compile done (14.53s)
+[RUN] PASS (14.53s)
+[集成产物] <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_c1a_reindex_20261106_143732_evx8fedw

@@ -1,0 +1,157 @@
+"""归档候选缓存收集的实际设备输出、固定基线回放及生成物。"""
+
+import gzip
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+
+
+workspace = Path(__file__).resolve().parents[2]
+model = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl"
+work = workspace / "artifacts/dsv41-index-gather-dsl"
+archive = model / "artifacts/dsv4_1_dsl/2026-11-06-index-gather"
+inventory = []
+
+
+def capture(source, target, binary=False):
+    source = Path(source)
+    destination = archive / target
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if binary:
+        with source.open("rb") as inp, gzip.open(destination, "wb") as out:
+            shutil.copyfileobj(inp, out)
+    else:
+        text = source.read_text().replace(str(workspace), "<workspace>")
+        text = text.replace(str(workspace.parent), "<user-home>")
+        destination.write_text("\n".join(line.rstrip() for line in text.splitlines()).rstrip() + "\n")
+    source_name = str(source.relative_to(workspace)) if source.is_relative_to(workspace) else source.name
+    inventory.append({"path": str(destination.relative_to(archive)), "source": source_name,
+                      "bytes": destination.stat().st_size, "encoding": "gzip" if binary else "utf-8"})
+
+
+def require_pass(name, count, outputs=None):
+    source = Path(f"/tmp/index-gather-{name}.log")
+    text = source.read_text()
+    if len(re.findall(r"^\[RUN\] PASS", text, re.MULTILINE)) != count:
+        raise RuntimeError(name + " 的通过数量不符")
+    if outputs is not None and len(re.findall(r"^\[RUN\]   '[^']+' PASS", text, re.MULTILINE)) != outputs:
+        raise RuntimeError(name + " 的输出通过数量不符")
+    capture(source, f"validation/{name}.log.txt")
+    return text
+
+
+def generated(label, directory, fixtures=False):
+    for name in ("kernel_config.py", "compiled_meta.json", "distributed_meta.json"):
+        source = directory / name
+        if source.is_file():
+            capture(source, f"generated/{label}/{name}.txt")
+    for source in sorted((directory / "orchestration").glob("*.cpp")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    for source in sorted((directory / "orchestration").glob("*.py")):
+        capture(source, f"generated/{label}/orchestration/{source.name}.txt")
+    if label.startswith("native-"):
+        for source in sorted((directory / "kernels").rglob("*.cpp")):
+            relative = source.relative_to(directory / "kernels")
+            capture(source, f"generated/{label}/kernels/{relative}.txt")
+        for source in sorted((directory / "ptoas").glob("*.pto")):
+            capture(source, f"generated/{label}/ptoas/{source.name}.txt")
+    config = directory / "kernel_config.py"
+    if config.is_file():
+        for name, entry in re.findall(r'"name": "([^"]+)", "source": \'([^\']+)\'', config.read_text()):
+            if name == "gather_pool":
+                for filename in ("entry.cpp", "device_source.hpp", "manifest.json"):
+                    capture(Path(entry).parent / filename, f"generated/{label}/foreign/{name}/{filename}.txt")
+    if fixtures:
+        # data/out 保存 CPU 参考；真实设备输出来自 compare_fn，单独归档。
+        for source in sorted((directory / "data").rglob("*.pt")):
+            capture(source, Path("fixtures") / label / f"{source.relative_to(directory / 'data')}.gz", True)
+
+
+require_pass("all-compile", 14)
+require_pass("reindex-compile", 1)
+require_pass("cases", 14, 56)
+require_pass("baseline", 1, 11)
+require_pass("reindex", 1, 11)
+precommit = Path("/tmp/index-gather-precommit.log")
+if precommit.is_file():
+    if precommit.read_text().count("Passed") != 4:
+        raise RuntimeError("四项预提交检查必须全部通过")
+    capture(precommit, "validation/precommit.log.txt")
+
+records = json.loads((work / "native-comparison.json").read_text())
+if len(records) != 7 or any(row["不同字节数"] for row in records):
+    raise RuntimeError("七组原核对照必须逐字节一致")
+if not any(row.get("有效搬运覆盖全部256种编码") for row in records):
+    raise RuntimeError("必须实际搬运并验证全部 256 种 payload/E8M0 编码")
+capture(work / "native-comparison.json", "validation/native-comparison.json")
+capture(work / "routing-evidence.json", "validation/routing-evidence.json")
+for row in records:
+    case = "-".join(map(str, row["case"]))
+    for source_label, label in (("DSL", "dsl"), ("PyPTO", "native")):
+        for name in ("payload", "scales", "valid", "physical"):
+            capture(work / "device-output" / case / source_label / f"{name}.pt",
+                    f"device-output/{case}/{label}/{name}.pt.gz", True)
+
+for name in ("index_gather_dsl", "decode_indexer"):
+    capture(model / "models/deepseek_v4_1_flash" / f"{name}.py", f"model-snapshot/{name}.py.txt")
+for name in ("decode_indexer_baseline.py", "native_gather.py", "compare_native.py", "run_baseline.py",
+             "run_reindex.py", "run-suite.sh", "archive.py"):
+    capture(work / name, f"workflow/{name}.txt")
+capture(work / "initial-validation-name-collision.log", "validation/initial-harness-error.log.txt")
+capture(workspace / "artifacts/dsv41-index-query-dsl/run-case.sh", "workflow/run-case.sh.txt")
+capture(workspace / "artifacts/dsv41-semantic-review/run_case.py", "workflow/run_case.py.txt")
+for index, directory in enumerate(dict.fromkeys(row["DSL"] for row in records)):
+    generated(f"case-{index}", Path(directory), fixtures=True)
+for index, directory in enumerate(dict.fromkeys(row["PyPTO"] for row in records)):
+    generated(f"native-{index}", Path(directory))
+
+integration = {}
+for label in ("baseline", "reindex"):
+    record = json.loads((work / f"{label}-result.json").read_text())
+    if not record["passed"] or record.get("compile_only", False):
+        raise RuntimeError(label + " 必须是通过设备验证的记录")
+    capture(work / f"{label}-result.json", f"validation/{label}-result.json")
+    directory = Path(record["work_dir"])
+    integration[label] = str(directory.relative_to(model))
+    generated(label, directory)
+    for child in sorted((directory / "next_levels").glob("*")):
+        generated(f"{label}/{child.name}", child)
+
+# 只保留证明分支选择的少量输入，完整权重沿用本地固定基线。
+baseline_data = model / integration["baseline"] / "data"
+for name in ("compressed_lens", "pool_block_counts", "pool_block_ids", "request_ids", "num_tokens"):
+    capture(baseline_data / "in" / f"{name}.pt", f"routing-inputs/{name}.pt.gz", True)
+
+
+def revision(path):
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=path, text=True).strip()
+
+
+summary = {
+    "状态": "PASS", "分支": "dsv4.1-dsl", "模型基线": "169211a6",
+    "PyPTO版本": revision(workspace / "issue75-env/pypto-pr"),
+    "DSL版本": "0.8.1", "DSL源码": revision(workspace / "cannbot-dsl-dev"),
+    "替换任务": "idx_gather_pool", "新任务": "dsl_idx_gather_pool",
+    "调度": "单个 AIV SPMD 任务，保留 32 worker、256 行分块及 cache_ready/pool_ready 依赖。",
+    "输出": "FP4 payload、E8M0 scale 原始字节、有效标记、物理行号。",
+    "契约": "无效项为 payload=0/scale字节127/valid=0/physical=-1；合法因果尾块仍复制完整8行，只屏蔽尾部标记及映射；非有效token不写输出。",
+    "验证": {
+        "原核对照": "7 组各运行 DSL 与原 PyPTO，四个真实设备输出及保护区逐字节一致。",
+        "字节覆盖": "实际搬运并检查全部 0..255 payload 与 E8M0 编码，包括不能按普通浮点数比较的编码。",
+        "边界": "容量1/32/33/65、重复块、非法请求/页/块、因果尾部、零有效token、跨worker轮转及额外保护分块。",
+        "完整reindex": "固定原生基线输入和 CPU 参考，6个Query、start-pos=16384，11项输出通过原比较器。",
+        "路由确认": "全部6个Query均有2049个可见块、仅2048个候选块，明确进入稀疏收集分支。",
+        "编译": "7组两种实现共14次编译及完整动态入口编译通过；编译记录与设备验证记录区分保存。",
+        "未执行": "整网、真实checkpoint及正式性能A/B；本轮只替换decode reindex的本地收集任务。",
+    },
+    "验证修正": "原核对照脚本初次提取时出现局部变量重名，已修正且重新编译、完成全部设备对照；初次日志仅供追溯。",
+    "通信修改": False, "PyPTO框架修改": False, "DSL框架修改": False, "精度阈值修改": False,
+    "集成生成目录": integration,
+    "固定参考": str(baseline_data.relative_to(model)),
+    "归档说明": "device-output保存compare_fn实际设备输出；fixtures/*/out是CPU参考。编译目录复用时保存最后一组输入，其余可按固定规则重建；整图权重不重复保存。",
+    "files": inventory,
+}
+(archive / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+print(f"已归档 {len(inventory)} 个文件：{archive}")

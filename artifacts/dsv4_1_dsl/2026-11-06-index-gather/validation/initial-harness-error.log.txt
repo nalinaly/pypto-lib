@@ -1,0 +1,65 @@
+任务已提交: task_20261106_142948_377026116166 (断开后可用 task-submit --wait task_20261106_142948_377026116166 重连)
+等待任务执行: task_20261106_142948_377026116166 (Ctrl+C 终止任务)
+[npu-lock] 获取设备 2 的锁 (无超时)...
+[npu-lock] 已获取设备 2 的锁 (pid=3770449)
+[INDEX_GATHER_COMPARE] DSL (7, 33, 6)
+[RUN] compile ...
+[RUN] compile done (0.34s)
+[RUN] generate inputs ...
+[RUN] generate inputs done (0.00s)
+[RUN] compute golden ...
+[RUN] compute golden done (0.00s)
+[RUN] runtime ...
+[mono_ns=264356223871320][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=0 hid=0 depth=0 name=chip.prewarm.build ts=264356200318520 dur=23538720
+[mono_ns=264356233812220][T0xffffaf020020][TIMING] log_callable_image: Callable image: device=2 runner=0xaaab0dccfd00 chip_hash=0xd22436758bded0af chip_dev=0x12000001c000 upload_bytes=626888 children=1
+[mono_ns=264356233828200][T0xffffaf020020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaab0dccfd00 chip_hash=0xd22436758bded0af chip_dev=0x12000001c000 func_id=0 code_begin=0x1200000b4860 code_end_exclusive=0x1200000b5098 code_bytes=2104 code_fnv1a64=0x8fce1c8a05b3cd80
+[mono_ns=264356233835480][T0xffffaf020020][TIMING] record_device_orch_callable: [device_runner_base.cpp:2432] Callable registration: device=2 runner=0xaaab0dccfd00 cid=0 chip_hash=0xd22436758bded0af aicore_image_hash=0xee754b96b2cca551 orch_hash=0xf5c82092bfa268a3 orch_bytes=606928
+[mono_ns=264356241789220][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=2 name=chip.run.bind.args ts=264356241783930 dur=2210
+[mono_ns=264356241810740][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=2 name=chip.run.bind.prebuilt ts=264356241799070 dur=10200
+[mono_ns=264356241814000][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=1 name=chip.run.bind ts=264356241732500 dur=80020
+[mono_ns=264356241816320][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=1 name=chip.run.publish_image ts=264356241815220 dur=110
+[mono_ns=264356244407250][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=1 name=chip.run.stage_inputs ts=264356241817750 dur=2588010
+[mono_ns=264356256982080][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=1 name=chip.run.prepare_execution ts=264356244887900 dur=12092350
+[mono_ns=264356258812910][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=2 name=chip.run.runner_run.aicpu_launch ts=264356258809940 dur=0
+[mono_ns=264356259947430][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=1 name=chip.run.runner_run ts=264356256998510 dur=2947070
+[mono_ns=264356261767390][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=1 name=chip.run.validate ts=264356259961130 dur=1804430
+[mono_ns=264356261778550][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=2 name=chip.run.runner_run.device_wall ts=0 dur=527408 clk=dev dev_id=2 dev_start_cycle=264560926093201 dev_end_cycle=264560926620609 dev_cnt_hz=1000000000
+[mono_ns=264356261781830][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=3 name=chip.run.runner_run.device_wall.preamble ts=0 dur=404877 clk=dev
+[mono_ns=264356261784880][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=3 name=chip.run.runner_run.device_wall.graph_build ts=37141 dur=469452 clk=dev
+[mono_ns=264356261787550][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=3 name=chip.run.runner_run.device_wall.config_validate ts=44996 dur=6896 clk=dev
+[mono_ns=264356261793020][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=3 name=chip.run.runner_run.device_wall.arena_wire ts=51931 dur=14989 clk=dev
+[mono_ns=264356261795500][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=3 name=chip.run.runner_run.device_wall.sm_reset ts=66960 dur=19621 clk=dev
+[mono_ns=264356261798030][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=3 name=chip.run.runner_run.device_wall.post_orch ts=506972 dur=11445 clk=dev
+[mono_ns=264356261799990][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=3 name=chip.run.runner_run.device_wall.orch ts=87985 dur=40237 clk=dev
+[mono_ns=264356261802230][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=3 name=chip.run.runner_run.device_wall.sched ts=406039 dur=56080 clk=dev
+[mono_ns=264356261810240][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=2 name=chip.run.runner_run.device_boundaries ts=264356261808890 dur=0 clk=dev dev_id=2 aic_start=264560924374 aic_rc=0 wo_end=0 wo_rc=-1000 ts_hz=1000000
+[mono_ns=264356261813250][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=1 name=chip.run.claim_release ts=264356261811880 dur=460
+[mono_ns=264356261818980][T0xffffaf020020][TIMING] emit_host_span: [STRACE] v=1 pid=3770531 tid=3770531 inv=1 hid=f5c82092bfa268a3 depth=0 name=chip.run ts=264356241662160 dur=20155290 run_id=0 dispatch_id=0 slot_id=0 generation=1 run_epoch=1
+[mono_ns=264356268920250][T0xffffaf020020][TIMING] finalize_common_impl: [device_runner_base.cpp:3022] Callable image freed: device=2 runner=0xaaab0dccfd00 chip_hash=0xd22436758bded0af chip_dev=0x12000001c000 upload_bytes=626888
+[RUN] runtime done (4.73s)
+[RUN] validate ...
+[RUN]   'payload' PASS  shape=(3840, 64) dtype=torch.uint8 (compare)
+[RUN]   'scales' PASS  shape=(1, 15360) dtype=torch.float8_e8m0fnu (compare)
+[RUN]   'valid' PASS  shape=(1, 3840) dtype=torch.int32 (compare)
+[RUN]   'physical' PASS  shape=(1, 3840) dtype=torch.int32 (compare)
+[RUN] validate done (0.47s)
+[RUN] PASS (5.55s)
+[产物] <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_validate_gather_20261106_142950_9xbsffk_
+[INDEX_GATHER_COMPARE] PyPTO (7, 33, 6)
+[RUN] compile ...
+[RUN] compile done (0.10s)
+Error: Cannot reassign 'payload' with a different type: was pl.Tensor[[3840, 64], pl.UINT8], got pl.Tile[[8, 64], pl.INT8, pl.Mem.Vec]
+  --> <workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py:49:33
+   |
+47 |                                 physical_row = pl.cast(page, pl.INDEX) * 128 + logical_block % 16 * 8
+48 |                                 payload_raw = pl.load(cache_flat, [physical_row, 0], [8, INDEX_DIM // 2], target_memory=pl.MemorySpace.Vec)
+49 |                                 payload = pl.reinterpret_view(payload_raw, pl.INT8)
+   |                                 ^^^^^^^
+50 |                                 packed[block * 8:block * 8 + 8, :] = payload
+51 |                                 scales_raw = pl.load(scale_flat, [physical_row // 8, 0], [1, 32], target_memory=pl.MemorySpace.Vec)
+   |
+   = help: Use a different variable name for tensors with different shapes or dtypes
+
+note: run with `PTO_BACKTRACE=1` environment variable to display a backtrace.
+[npu-lock] 已释放设备 2 的锁
+=== 任务失败 (exit=1) ===

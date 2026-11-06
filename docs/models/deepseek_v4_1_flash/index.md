@@ -774,6 +774,45 @@ exact equality. The archive compares actual device tensors from the DSL,
 original decode selector and original prefill selector on the same inputs.
 See the [candidate-pool evidence archive](../../../artifacts/dsv4_1_dsl/2026-11-06-index-pool/README.txt).
 
+## Candidate cache gathering in one DSL AIV task
+
+The sparse C1A reindex path calls
+[`index_gather_dsl.py`](../../../models/deepseek_v4_1_flash/index_gather_dsl.py)
+to collect candidate cache rows before the existing MIX scoring and TopK task.
+One `dsl_idx_gather_pool` AIV SPMD launch preserves the original 32-worker
+partitioning and both `cache_ready` and `pool_ready` dependencies. Each work
+item gathers 32 candidate blocks, or 256 rows, into the existing compact
+buffers. Routing and run metadata planning retain their PyPTO implementation.
+
+FP4 payload and E8M0 scales are copied as raw bytes, without numeric conversion.
+An invalid request, block or physical page produces zero payload, scale byte
+127, validity zero and physical row `-1`. A valid causal tail block still
+copies all eight payload and scale rows; only validity and physical-row
+mapping suppress positions beyond the visible length. Inactive token regions
+remain untouched. Repeated candidate IDs retain their original order.
+
+The operation uses local cache pointers and bounded UB staging buffers. It
+does not add cross-device communication or a launch-wide barrier. The four
+output buffers and the completion handle consumed by the MIX task retain
+their existing interfaces.
+
+With an A5 device allocated through the task queue:
+
+```bash
+python models/deepseek_v4_1_flash/index_gather_dsl.py --case all -d "$TASK_DEVICE"
+python models/deepseek_v4_1_flash/decode_c1a_reindex.py --start-pos 16384 --query-lens 6 -d "$TASK_DEVICE"
+```
+
+The core entry checks payload, scale bytes, validity, physical rows, inactive
+regions and an extra output panel at zero tolerance. Cases include panel
+boundaries, invalid metadata, causal tails, repeated blocks, worker reuse,
+zero active tokens and all 256 payload/scale byte codes. All seven cases
+match the original PyPTO task byte-for-byte on actual device outputs.
+The reindex command uses 2048 retained blocks for 2049 visible blocks,
+forcing the sparse gather branch for all six queries; all eleven outputs
+pass the existing comparators. Execution records and generated artifacts are in the
+[gather evidence archive](../../../artifacts/dsv4_1_dsl/2026-11-06-index-gather/README.txt).
+
 ## DSL development branch and evidence
 
 Continue DSL implementation and evidence collection on

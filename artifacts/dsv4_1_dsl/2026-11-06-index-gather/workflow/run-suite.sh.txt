@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# 顺序使用一张 A5，验证原始字节与完整稀疏 reindex 分支。
+gather_workspace=<workspace>
+gather_runner="$gather_workspace/artifacts/dsv41-index-query-dsl/run-case.sh"
+gather_work="$gather_workspace/artifacts/dsv41-index-gather-dsl"
+bash "$gather_runner" "$gather_work/compare_native.py" 2>&1 | tee /tmp/index-gather-cases.log
+bash "$gather_runner" "$gather_work/run_reindex.py" 2>&1 | tee /tmp/index-gather-reindex.log

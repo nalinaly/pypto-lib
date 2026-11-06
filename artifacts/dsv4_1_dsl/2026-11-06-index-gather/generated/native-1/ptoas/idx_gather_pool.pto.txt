@@ -1,0 +1,208 @@
+module attributes {pto.target_arch = "a5"} {
+  func.func @idx_gather_pool(%arg0: !pto.ptr<i32>, %arg1: !pto.ptr<i32>, %arg2: !pto.ptr<i32>, %arg3: !pto.ptr<i32>, %arg4: !pto.ptr<i32>, %arg5: !pto.ptr<ui8>, %arg6: !pto.ptr<!pto.f8E8M0>, %arg7: !pto.ptr<ui8>, %arg8: !pto.ptr<!pto.f8E8M0>, %arg9: !pto.ptr<i32>, %arg10: !pto.ptr<i32>, %arg11: i32, %arg12: index, %arg13: index, %arg14: index, %arg15: index, %arg16: index, %arg17: index, %arg18: index, %__pypto_spmd_block_idx: i32, %__pypto_spmd_block_num: i32) attributes {pto.kernel_kind = #pto.kernel_kind<vector>} {
+  %c0_i64 = arith.constant 0 : i64
+  %c16384_i64 = arith.constant 16384 : i64
+  %c17408_i64 = arith.constant 17408 : i64
+  %c18432_i64 = arith.constant 18432 : i64
+  %c19456_i64 = arith.constant 19456 : i64
+  %c19968_i64 = arith.constant 19968 : i64
+  %c20000_i64 = arith.constant 20000 : i64
+  %c20032_i64 = arith.constant 20032 : i64
+  %c20064_i64 = arith.constant 20064 : i64
+  %c3_index = arith.constant 3 : index
+  %c1_index = arith.constant 1 : index
+  %c5_index = arith.constant 5 : index
+  %c64_index = arith.constant 64 : index
+  %c32_index = arith.constant 32 : index
+  %c1024_index = arith.constant 1024 : index
+  %c4096_index = arith.constant 4096 : index
+  %c0_index = arith.constant 0 : index
+  %c256_index = arith.constant 256 : index
+  %c0_i8 = arith.constant 0 : i8
+  %c127_i8 = arith.constant 127 : i8
+  %c0_i32 = arith.constant 0 : i32
+  %cn1_i32 = arith.constant -1 : i32
+  %c7_index = arith.constant 7 : index
+  %c8_index = arith.constant 8 : index
+  %c16_index = arith.constant 16 : index
+  %c128_index = arith.constant 128 : index
+  %c1_i32 = arith.constant 1 : i32
+  %c4_index = arith.constant 4 : index
+  %pool_counts__ssa_v0_view = pto.make_tensor_view %arg0, shape = [%c3_index], strides = [%c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?xi32> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %requests__ssa_v0_view = pto.make_tensor_view %arg1, shape = [%c3_index], strides = [%c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?xi32> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %lengths__ssa_v0_view = pto.make_tensor_view %arg2, shape = [%c3_index], strides = [%c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?xi32> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %pool_ids__ssa_v0_view = pto.make_tensor_view %arg3, shape = [%c3_index, %c1_index], strides = [%c1_index, %c3_index] {layout = #pto.layout<dn>} : !pto.tensor_view<?x?xi32> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %table__ssa_v0_view = pto.make_tensor_view %arg4, shape = [%c3_index, %c5_index], strides = [%c5_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xi32> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %cache_flat__ssa_v0_view = pto.make_tensor_view %arg5, shape = [%arg18, %c64_index], strides = [%c64_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xui8> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %77 = arith.floordivsi %arg18, %c8_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %scale_flat__ssa_v0_view = pto.make_tensor_view %arg6, shape = [%77, %c32_index], strides = [%c32_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?x!pto.f8E8M0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %payload__ssa_v0_view = pto.make_tensor_view %arg7, shape = [%c1024_index, %c64_index], strides = [%c64_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xui8> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %scales__ssa_v0_view = pto.make_tensor_view %arg8, shape = [%c1_index, %c4096_index], strides = [%c4096_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?x!pto.f8E8M0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %valid__ssa_v0_view = pto.make_tensor_view %arg9, shape = [%c1_index, %c1024_index], strides = [%c1024_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xi32> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %physical__ssa_v0_view = pto.make_tensor_view %arg10, shape = [%c1_index, %c1024_index], strides = [%c1024_index, %c1_index] {layout = #pto.layout<nd>} : !pto.tensor_view<?x?xi32> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %packed__phi_v7 = pto.alloc_tile addr = %c0_i64 valid_row = %c256_index valid_col = %c64_index : !pto.tile_buf<loc=vec, dtype=i8, rows=256, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %physical_lanes__phi_v7 = pto.alloc_tile addr = %c18432_i64 valid_row = %c1_index valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %raw_scale__phi_v7 = pto.alloc_tile addr = %c16384_i64 valid_row = %c1_index valid_col = %c1024_index : !pto.tile_buf<loc=vec, dtype=i8, rows=1, cols=1024, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %valid_lanes__phi_v7 = pto.alloc_tile addr = %c17408_i64 valid_row = %c1_index valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %packed__phi_v6 = pto.alloc_tile addr = %c0_i64 valid_row = %c256_index valid_col = %c64_index : !pto.tile_buf<loc=vec, dtype=i8, rows=256, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %physical_lanes__phi_v6 = pto.alloc_tile addr = %c18432_i64 valid_row = %c1_index valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %raw_scale__phi_v6 = pto.alloc_tile addr = %c16384_i64 valid_row = %c1_index valid_col = %c1024_index : !pto.tile_buf<loc=vec, dtype=i8, rows=1, cols=1024, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %valid_lanes__phi_v6 = pto.alloc_tile addr = %c17408_i64 valid_row = %c1_index valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %packed__phi_v5 = pto.alloc_tile addr = %c0_i64 valid_row = %c256_index valid_col = %c64_index : !pto.tile_buf<loc=vec, dtype=i8, rows=256, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %physical_lanes__phi_v5 = pto.alloc_tile addr = %c18432_i64 valid_row = %c1_index valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %raw_scale__phi_v5 = pto.alloc_tile addr = %c16384_i64 valid_row = %c1_index valid_col = %c1024_index : !pto.tile_buf<loc=vec, dtype=i8, rows=1, cols=1024, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %valid_lanes__phi_v5 = pto.alloc_tile addr = %c17408_i64 valid_row = %c1_index valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %packed__phi_v4 = pto.alloc_tile addr = %c0_i64 valid_row = %c256_index valid_col = %c64_index : !pto.tile_buf<loc=vec, dtype=i8, rows=256, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %physical_lanes__phi_v4 = pto.alloc_tile addr = %c18432_i64 valid_row = %c1_index valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %raw_scale__phi_v4 = pto.alloc_tile addr = %c16384_i64 valid_row = %c1_index valid_col = %c1024_index : !pto.tile_buf<loc=vec, dtype=i8, rows=1, cols=1024, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %valid_lanes__phi_v4 = pto.alloc_tile addr = %c17408_i64 valid_row = %c1_index valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":25:5)
+  %worker__ssa_v0 = arith.index_cast %__pypto_spmd_block_idx : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":26:9)
+  %0 = arith.index_cast %arg11 : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":27:9)
+  %1 = arith.muli %0, %arg12 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":27:9)
+  scf.for %work__idx_v0 = %worker__ssa_v0 to %1 step %c32_index {
+    %2 = arith.floordivsi %work__idx_v0, %arg12 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":28:13)
+    %3 = arith.remsi %work__idx_v0, %arg12 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":29:13)
+    %4 = arith.cmpi slt, %3, %c0_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":29:13)
+    %5 = arith.cmpi slt, %arg12, %c0_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":29:13)
+    %6 = arith.xori %4, %5 : i1 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":29:13)
+    %7 = arith.cmpi ne, %3, %c0_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":29:13)
+    %8 = arith.andi %7, %6 : i1 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":29:13)
+    %9 = arith.addi %3, %arg12 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":29:13)
+    %10 = arith.select %8, %9, %3 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":29:13)
+    %11 = arith.muli %10, %c32_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":30:13)
+    %t__tile = pto.load %arg0[%2] : !pto.ptr<i32> -> i32 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":31:13)
+    %12 = arith.index_cast %t__tile : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":31:13)
+    %13 = arith.minsi %12, %arg13 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":31:13)
+    %14 = arith.maxsi %13, %c0_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":31:13)
+    %request__tile = pto.load %arg1[%2] : !pto.ptr<i32> -> i32 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":32:13)
+    %15 = pto.load %arg2[%2] : !pto.ptr<i32> -> i32 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":33:13)
+    %16 = arith.index_cast %15 : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":33:13)
+    %17 = arith.maxsi %16, %c0_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":33:13)
+    %packed__ssa_v0 = pto.alloc_tile addr = %c0_i64 valid_row = %c256_index valid_col = %c64_index : !pto.tile_buf<loc=vec, dtype=i8, rows=256, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":34:13)
+    pto.texpands ins(%c0_i8 : i8) outs(%packed__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i8, rows=256, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":34:13)
+    %raw_scale__ssa_v0 = pto.alloc_tile addr = %c16384_i64 valid_row = %c1_index valid_col = %c1024_index : !pto.tile_buf<loc=vec, dtype=i8, rows=1, cols=1024, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":35:13)
+    pto.texpands ins(%c127_i8 : i8) outs(%raw_scale__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i8, rows=1, cols=1024, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":35:13)
+    %valid_lanes__ssa_v0 = pto.alloc_tile addr = %c17408_i64 valid_row = %c1_index valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":36:13)
+    pto.texpands ins(%c0_i32 : i32) outs(%valid_lanes__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":36:13)
+    %physical_lanes__ssa_v0 = pto.alloc_tile addr = %c18432_i64 valid_row = %c1_index valid_col = %c256_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":37:13)
+    pto.texpands ins(%cn1_i32 : i32) outs(%physical_lanes__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":37:13)
+    scf.for %block__idx_v0 = %c0_index to %c32_index step %c1_index {
+      %18 = arith.addi %11, %block__idx_v0 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":39:17)
+      %19 = arith.cmpi slt, %18, %14 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":40:17)
+      scf.if %19 {
+        %flat_offset_mul = arith.muli %2, %c1_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":41:21)
+        %flat_offset = arith.addi %flat_offset_mul, %18 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":41:21)
+        %logical_block__tile = pto.load %arg3[%flat_offset] : !pto.ptr<i32> -> i32 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":41:21)
+        %20 = arith.index_cast %logical_block__tile : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":42:21)
+        %21 = arith.cmpi sle, %c0_index, %20 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":42:21)
+        %22 = arith.index_cast %logical_block__tile : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":42:21)
+        %23 = arith.addi %17, %c7_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":42:21)
+        %24 = arith.floordivsi %23, %c8_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":42:21)
+        %25 = arith.cmpi slt, %22, %24 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":42:21)
+        %26 = arith.andi %21, %25 : i1 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":42:21)
+        scf.if %26 {
+          %27 = arith.index_cast %logical_block__tile : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":43:25)
+          %28 = arith.floordivsi %27, %c16_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":43:25)
+          %29 = arith.index_cast %request__tile : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":44:25)
+          %30 = arith.cmpi sle, %c0_index, %29 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":44:25)
+          %31 = arith.index_cast %request__tile : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":44:25)
+          %32 = arith.cmpi slt, %31, %arg14 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":44:25)
+          %33 = arith.andi %30, %32 : i1 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":44:25)
+          %34 = arith.cmpi slt, %28, %arg15 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":44:25)
+          %35 = arith.andi %33, %34 : i1 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":44:25)
+          scf.if %35 {
+            %36 = arith.index_cast %request__tile : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":45:29)
+            %37 = arith.muli %36, %c5_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":45:29)
+            %38 = arith.addi %37, %28 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":45:29)
+            %page__tile = pto.load %arg4[%38] : !pto.ptr<i32> -> i32 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":45:29)
+            %39 = arith.index_cast %page__tile : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":46:29)
+            %40 = arith.cmpi sle, %c0_index, %39 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":46:29)
+            %41 = arith.index_cast %page__tile : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":46:29)
+            %42 = arith.cmpi slt, %41, %arg16 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":46:29)
+            %43 = arith.andi %40, %42 : i1 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":46:29)
+            scf.if %43 {
+              %44 = arith.index_cast %page__tile : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":47:33)
+              %45 = arith.muli %44, %c128_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":47:33)
+              %46 = arith.index_cast %logical_block__tile : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":47:33)
+              %47 = arith.remsi %46, %c16_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":47:33)
+              %48 = arith.cmpi slt, %47, %c0_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":47:33)
+              %49 = arith.addi %47, %c16_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":47:33)
+              %50 = arith.select %48, %49, %47 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":47:33)
+              %51 = arith.muli %50, %c8_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":47:33)
+              %52 = arith.addi %45, %51 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":47:33)
+              %payload_raw__ssa_v0 = pto.alloc_tile addr = %c19456_i64 valid_row = %c8_index valid_col = %c64_index : !pto.tile_buf<loc=vec, dtype=ui8, rows=8, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":48:33)
+              %53 = arith.maxsi %52, %c0_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":48:33)
+              %cache_flat__ssa_v0_pview = pto.partition_view %cache_flat__ssa_v0_view, offsets = [%53, %c0_index], sizes = [%c8_index, %c64_index] : !pto.tensor_view<?x?xui8> -> !pto.partition_tensor_view<8x64xui8> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":48:33)
+              pto.tload ins(%cache_flat__ssa_v0_pview : !pto.partition_tensor_view<8x64xui8>) outs(%payload_raw__ssa_v0 : !pto.tile_buf<loc=vec, dtype=ui8, rows=8, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":48:33)
+              %tile_payload__ssa_v0 = pto.alloc_tile addr = %c19456_i64 valid_row = %c8_index valid_col = %c64_index : !pto.tile_buf<loc=vec, dtype=i8, rows=8, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":49:33)
+              %54 = arith.muli %block__idx_v0, %c8_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":50:33)
+              %assemble_view = pto.subview %packed__ssa_v0[%54, %c0_index] sizes [8, 64] valid [%c8_index, %c64_index] : !pto.tile_buf<loc=vec, dtype=i8, rows=256, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> -> !pto.tile_buf<loc=vec, dtype=i8, rows=8, cols=64, v_row=8, v_col=64, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":50:33)
+              pto.tmov ins(%tile_payload__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i8, rows=8, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%assemble_view : !pto.tile_buf<loc=vec, dtype=i8, rows=8, cols=64, v_row=8, v_col=64, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":50:33)
+              %scales_raw__ssa_v0 = pto.alloc_tile addr = %c19456_i64 valid_row = %c1_index valid_col = %c32_index : !pto.tile_buf<loc=vec, dtype=!pto.f8E8M0, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":51:33)
+              %55 = arith.floordivsi %52, %c8_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":51:33)
+              %56 = arith.maxsi %55, %c0_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":51:33)
+              %scale_flat__ssa_v0_pview = pto.partition_view %scale_flat__ssa_v0_view, offsets = [%56, %c0_index], sizes = [%c1_index, %c32_index] : !pto.tensor_view<?x?x!pto.f8E8M0> -> !pto.partition_tensor_view<1x32x!pto.f8E8M0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":51:33)
+              pto.tload ins(%scale_flat__ssa_v0_pview : !pto.partition_tensor_view<1x32x!pto.f8E8M0>) outs(%scales_raw__ssa_v0 : !pto.tile_buf<loc=vec, dtype=!pto.f8E8M0, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":51:33)
+              %block_scale_bytes__ssa_v0 = pto.alloc_tile addr = %c19456_i64 valid_row = %c1_index valid_col = %c32_index : !pto.tile_buf<loc=vec, dtype=ui8, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":52:33)
+              %block_scales__ssa_v0 = pto.alloc_tile addr = %c19456_i64 valid_row = %c1_index valid_col = %c32_index : !pto.tile_buf<loc=vec, dtype=i8, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":53:33)
+              %57 = arith.muli %block__idx_v0, %c32_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":54:33)
+              %58 = pto.subview %raw_scale__ssa_v0[%c0_index, %57] sizes [1, 32] valid [%c1_index, %c32_index] : !pto.tile_buf<loc=vec, dtype=i8, rows=1, cols=1024, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> -> !pto.tile_buf<loc=vec, dtype=i8, rows=1, cols=32, v_row=1, v_col=32, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":54:33)
+              pto.tmov ins(%block_scales__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i8, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%58 : !pto.tile_buf<loc=vec, dtype=i8, rows=1, cols=32, v_row=1, v_col=32, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":54:33)
+              %lanes__ssa_v0 = pto.alloc_tile addr = %c19456_i64 valid_row = %c1_index valid_col = %c8_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":55:33)
+              pto.tci ins(%c0_i32 : i32) outs(%lanes__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) {descending = false} loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":55:33)
+              %59 = arith.index_cast %logical_block__tile : i32 to index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":56:33)
+              %60 = arith.muli %59, %c8_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":56:33)
+              %61 = arith.subi %17, %60 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":56:33)
+              %62 = arith.minsi %61, %c8_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":56:33)
+              %63 = arith.index_cast %62 : index to i32 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":56:33)
+              %lane_valid__ssa_v0 = pto.alloc_tile addr = %c19968_i64 valid_row = %c1_index valid_col = %c1_index : !pto.tile_buf<loc=vec, dtype=ui8, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":57:33)
+              pto.tcmps ins(%lanes__ssa_v0, %63 {cmpMode = #pto<cmp lt>} : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>, i32) outs(%lane_valid__ssa_v0 : !pto.tile_buf<loc=vec, dtype=ui8, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":57:33)
+              %ones__ssa_v0 = pto.alloc_tile addr = %c20000_i64 valid_row = %c1_index valid_col = %c8_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":58:33)
+              pto.texpands ins(%c1_i32 : i32) outs(%ones__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":58:33)
+              %block_valid__sel_tmp_tmp_v0 = pto.alloc_tile addr = %c20032_i64 valid_row = %c1_index valid_col = %c32_index : !pto.tile_buf<loc=vec, dtype=ui8, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":59:33)
+              %block_valid__ssa_v0 = pto.alloc_tile addr = %c20000_i64 valid_row = %c1_index valid_col = %c8_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":59:33)
+              pto.tsels ins(%lane_valid__ssa_v0, %ones__ssa_v0, %block_valid__sel_tmp_tmp_v0, %c0_i32 : !pto.tile_buf<loc=vec, dtype=ui8, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>, !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>, !pto.tile_buf<loc=vec, dtype=ui8, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>, i32) outs(%block_valid__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":59:33)
+              %block_physical__ssa_v0 = pto.alloc_tile addr = %c19456_i64 valid_row = %c1_index valid_col = %c8_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":60:33)
+              %64 = arith.index_cast %52 : index to i32 loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":60:33)
+              pto.tadds ins(%lanes__ssa_v0, %64 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>, i32) outs(%block_physical__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":60:33)
+              %block_physical_v1__sel_tmp_tmp_v1 = pto.alloc_tile addr = %c20064_i64 valid_row = %c1_index valid_col = %c32_index : !pto.tile_buf<loc=vec, dtype=ui8, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":61:33)
+              %block_physical_v1__ssa_v0 = pto.alloc_tile addr = %c19456_i64 valid_row = %c1_index valid_col = %c8_index : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":61:33)
+              pto.tsels ins(%lane_valid__ssa_v0, %block_physical__ssa_v0, %block_physical_v1__sel_tmp_tmp_v1, %cn1_i32 : !pto.tile_buf<loc=vec, dtype=ui8, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>, !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>, !pto.tile_buf<loc=vec, dtype=ui8, rows=1, cols=32, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>, i32) outs(%block_physical_v1__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":61:33)
+              %65 = arith.muli %block__idx_v0, %c8_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":62:33)
+              %66 = pto.subview %valid_lanes__ssa_v0[%c0_index, %65] sizes [1, 8] valid [%c1_index, %c8_index] : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> -> !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=1, v_col=8, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":62:33)
+              pto.tmov ins(%block_valid__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%66 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=1, v_col=8, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":62:33)
+              %67 = arith.muli %block__idx_v0, %c8_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":63:33)
+              %68 = pto.subview %physical_lanes__ssa_v0[%c0_index, %67] sizes [1, 8] valid [%c1_index, %c8_index] : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> -> !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=1, v_col=8, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":63:33)
+              pto.tmov ins(%block_physical_v1__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%68 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=8, v_row=1, v_col=8, blayout=row_major, slayout=none_box, fractal=512, pad=0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":63:33)
+            } else {
+            }
+          } else {
+          }
+        } else {
+        }
+      } else {
+      }
+    }
+    %69 = arith.muli %2, %arg17 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":64:13)
+    %70 = arith.muli %10, %c256_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":64:13)
+    %71 = arith.addi %69, %70 : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":64:13)
+    %packed_bytes__ssa_v0 = pto.alloc_tile addr = %c0_i64 valid_row = %c256_index valid_col = %c64_index : !pto.tile_buf<loc=vec, dtype=ui8, rows=256, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":65:13)
+    %72 = arith.maxsi %71, %c0_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":66:13)
+    %payload__ssa_v0_pview = pto.partition_view %payload__ssa_v0_view, offsets = [%72, %c0_index], sizes = [%c256_index, %c64_index] : !pto.tensor_view<?x?xui8> -> !pto.partition_tensor_view<256x64xui8> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":66:13)
+    pto.tstore ins(%packed_bytes__ssa_v0 : !pto.tile_buf<loc=vec, dtype=ui8, rows=256, cols=64, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%payload__ssa_v0_pview : !pto.partition_tensor_view<256x64xui8>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":66:13)
+    %scale_bytes__ssa_v0 = pto.alloc_tile addr = %c16384_i64 valid_row = %c1_index valid_col = %c1024_index : !pto.tile_buf<loc=vec, dtype=ui8, rows=1, cols=1024, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":67:13)
+    %scale_storage__ssa_v0 = pto.alloc_tile addr = %c16384_i64 valid_row = %c1_index valid_col = %c1024_index : !pto.tile_buf<loc=vec, dtype=!pto.f8E8M0, rows=1, cols=1024, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":68:13)
+    %73 = arith.muli %71, %c4_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":69:13)
+    %74 = arith.maxsi %73, %c0_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":69:13)
+    %scales__ssa_v0_pview = pto.partition_view %scales__ssa_v0_view, offsets = [%c0_index, %74], sizes = [%c1_index, %c1024_index] : !pto.tensor_view<?x?x!pto.f8E8M0> -> !pto.partition_tensor_view<1x1024x!pto.f8E8M0> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":69:13)
+    pto.tstore ins(%scale_storage__ssa_v0 : !pto.tile_buf<loc=vec, dtype=!pto.f8E8M0, rows=1, cols=1024, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%scales__ssa_v0_pview : !pto.partition_tensor_view<1x1024x!pto.f8E8M0>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":69:13)
+    %75 = arith.maxsi %71, %c0_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":70:13)
+    %valid__ssa_v0_pview = pto.partition_view %valid__ssa_v0_view, offsets = [%c0_index, %75], sizes = [%c1_index, %c256_index] : !pto.tensor_view<?x?xi32> -> !pto.partition_tensor_view<1x256xi32> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":70:13)
+    pto.tstore ins(%valid_lanes__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%valid__ssa_v0_pview : !pto.partition_tensor_view<1x256xi32>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":70:13)
+    %76 = arith.maxsi %71, %c0_index : index loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":71:13)
+    %physical__ssa_v0_pview = pto.partition_view %physical__ssa_v0_view, offsets = [%c0_index, %76], sizes = [%c1_index, %c256_index] : !pto.tensor_view<?x?xi32> -> !pto.partition_tensor_view<1x256xi32> loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":71:13)
+    pto.tstore ins(%physical_lanes__ssa_v0 : !pto.tile_buf<loc=vec, dtype=i32, rows=1, cols=256, v_row=?, v_col=?, blayout=row_major, slayout=none_box, fractal=512, pad=0>) outs(%physical__ssa_v0_pview : !pto.partition_tensor_view<1x256xi32>) loc("<workspace>/artifacts/dsv41-index-gather-dsl/native_gather.py":71:13)
+  }
+  return
+  }
+}

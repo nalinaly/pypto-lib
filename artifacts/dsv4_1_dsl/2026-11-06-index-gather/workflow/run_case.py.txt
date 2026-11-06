@@ -1,0 +1,21 @@
+"""Run one existing validation entry with bounded native compilation."""
+
+import os
+from pathlib import Path
+import runpy
+import sys
+from concurrent.futures import ThreadPoolExecutor
+
+from pypto.runtime import device_runner
+
+
+def bounded_executor(max_workers, *args, **kwargs):
+    limit = int(os.environ["PYPTO_BUILD_JOBS"])
+    return ThreadPoolExecutor(min(max_workers, limit), *args, **kwargs)
+
+
+device_runner.ThreadPoolExecutor = bounded_executor
+entry = Path(sys.argv[1]).resolve()
+sys.argv = [str(entry), *sys.argv[2:]]
+sys.path.insert(0, str(entry.parent))
+runpy.run_path(str(entry), run_name="__main__")

@@ -1,0 +1,31 @@
+"""通过冻结的 Indexer 实现执行完整 reindex，保存可回放的输入和 CPU 参考。"""
+
+import json
+from pathlib import Path
+import runpy
+import sys
+
+import golden
+import decode_indexer_baseline
+
+
+work = Path(__file__).resolve().parent
+workspace = work.parents[1]
+entry = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_c1a_reindex.py"
+original_run = golden.run
+
+
+def capture_result(*args, **kwargs):
+    result = original_run(*args, **kwargs)
+    compile_only = bool(kwargs.get("compile_only", False))
+    record = {"passed": result.passed, "compile_only": compile_only, "work_dir": str(result.work_dir)}
+    name = "baseline-compile-result.json" if compile_only else "baseline-result.json"
+    (work / name).write_text(json.dumps(record, indent=2) + "\n")
+    print(f"[基线产物] {result.work_dir}", flush=True)
+    return result
+
+
+golden.run = capture_result
+sys.modules["decode_indexer"] = decode_indexer_baseline
+sys.argv = [str(entry), *sys.argv[1:]]
+runpy.run_path(str(entry), run_name="__main__")

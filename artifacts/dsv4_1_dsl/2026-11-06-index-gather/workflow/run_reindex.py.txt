@@ -1,0 +1,47 @@
+"""校验固定输入一定进入收集分支，再执行当前完整 C1A reindex 入口。"""
+
+import json
+from pathlib import Path
+import runpy
+import sys
+
+import golden
+import torch
+
+
+work = Path(__file__).resolve().parent
+workspace = work.parents[1]
+entry = workspace / "pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_c1a_reindex.py"
+baseline = json.loads((work / "baseline-result.json").read_text())
+if not baseline["passed"] or baseline.get("compile_only", False):
+    raise RuntimeError("不能使用未通过的原生基线")
+fixture = Path(baseline["work_dir"]) / "data"
+lengths = torch.load(fixture / "in/compressed_lens.pt", weights_only=True)
+counts = torch.load(fixture / "in/pool_block_counts.pt", weights_only=True)
+ids = torch.load(fixture / "in/pool_block_ids.pt", weights_only=True)
+tokens = int(torch.load(fixture / "in/num_tokens.pt", weights_only=True))
+visible_blocks = (lengths[:tokens].clamp_min(0) + 7) // 8
+sparse = (counts[:tokens] != visible_blocks) | (lengths[:tokens] > ids.shape[1] * 8)
+if not bool(sparse.all()):
+    raise RuntimeError("固定用例必须对每个 Query 强制进入候选缓存收集分支")
+evidence = {"tokens": tokens, "capacity": ids.shape[1], "counts": counts[:tokens].tolist(),
+            "visible_blocks": visible_blocks.tolist(), "全部进入稀疏收集分支": True}
+(work / "routing-evidence.json").write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n")
+print(f"[收集分支确认] {evidence}", flush=True)
+original_run = golden.run
+
+
+def capture_result(*args, **kwargs):
+    result = original_run(*args, **kwargs)
+    compile_only = bool(kwargs.get("compile_only", False))
+    record = {"passed": result.passed, "compile_only": compile_only, "work_dir": str(result.work_dir)}
+    name = "reindex-compile-result.json" if compile_only else "reindex-result.json"
+    (work / name).write_text(json.dumps(record, indent=2) + "\n")
+    print(f"[集成产物] {result.work_dir}", flush=True)
+    return result
+
+
+golden.run = capture_result
+sys.argv = [str(entry), "--start-pos", "16384", "--query-lens", "6",
+            "--golden-data", str(fixture), "--save-data", *sys.argv[1:]]
+runpy.run_path(str(entry), run_name="__main__")
