@@ -1,0 +1,115 @@
+"""从官方转换结果绘制总览，并生成可缩放的离线泳道查看器。"""
+from collections import defaultdict
+import json
+import math
+from pathlib import Path
+import re
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt, font_manager
+from matplotlib.collections import PolyCollection
+from matplotlib.patches import Patch
+
+root = Path(__file__).resolve().parent
+kernels = {x['func_id']: x for x in json.loads((root/'kernel-names.json').read_text())}
+summary = json.loads((root/'summary.json').read_text())
+palette = {
+    'DSL AIC': '#4355b9', 'DSL AIV': '#29a6b0', '通信/协议': '#cf5673', '原生计算': '#d89138',
+    'Bootstrap': '#707a90', 'Complete': '#599bd6', 'Resolve': '#8b61bc', 'StateProbe': '#bf8453',
+    'Dispatch': '#35aa74', 'Worksteal': '#e69d3a', 'Refill': '#319591', 'Idle': '#dce2eb',
+}
+variants=[]
+for level in (1,3):
+    for rank in (0,1):
+        meta=next(x for x in summary['files'] if x['level']==level and x['rank']==rank)
+        trace=json.loads((root/meta['file']).read_text())['traceEvents']
+        processes={e['pid']:e['args']['name'] for e in trace if e.get('ph')=='M' and e['name']=='process_name'}
+        threads={(e['pid'],e['tid']):e['args']['name'] for e in trace if e.get('ph')=='M' and e['name']=='thread_name'}
+        selected=[]
+        for e in trace:
+            if e.get('ph')!='X' or e.get('dur',-1)<0: continue
+            process=processes.get(e.get('pid'))
+            if process not in ('Worker View','AICore Scheduler'): continue
+            lane=threads.get((e['pid'],e['tid']),'')
+            if not lane.startswith(('AIC_','AIV_','Scheduler_')): continue
+            args=e.get('args',{})
+            if process=='Worker View':
+                m=re.search(r'FuncId:(\d+)',args.get('event-hint',''))
+                assert m, e
+                kernel=kernels[int(m[1])]
+                if kernel['external']:
+                    cat='DSL AIC' if kernel['core_type']=='aic' else 'DSL AIV'
+                elif any(t in kernel['name'] for t in ('dispatch','combine','signal','reduce_scatter')):
+                    cat='通信/协议'
+                else: cat='原生计算'
+                family=e['name'].split('(t')[0]
+                task=args.get('taskId',-1)
+            else:
+                cat=e['name'].split('(')[0].strip()
+                if cat not in palette: cat=args.get('phase','Idle').replace('_',' ').title().replace(' ','')
+                assert cat in palette, cat
+                family=cat
+                task=args.get('task_id',-1)
+            selected.append((lane,float(e['ts']),float(e['dur']),family,cat,task))
+        lanes=sorted({e[0] for e in selected},key=lambda x: (0 if x.startswith('AIC_') else 1 if x.startswith('AIV_') else 2,int(x.split('_')[1])))
+        names=list(dict.fromkeys(e[3] for e in selected))
+        lane_index={s:i for i,s in enumerate(lanes)}; name_index={s:i for i,s in enumerate(names)}
+        start=min(e[1] for e in selected)
+        events=[[lane_index[e[0]],round((e[1]-start)/1000,6),round(e[2]/1000,6),name_index[e[3]],list(palette).index(e[4]),e[5]] for e in selected]
+        events.sort(key=lambda x:(x[0],x[1]))
+        end=max(e[1]+e[2] for e in events)
+        focus=min((e[1] for e in events if 'score_topk' in names[e[3]]),default=0)
+        variant={'level':level,'rank':rank,'lanes':lanes,'names':names,'events':events,'span_ms':end,
+                 'focus':[max(0,focus-.05),min(end,focus+2.0)],'dropped':meta['丢弃空闲记录'],'trace':meta['file']}
+        assert sum(1 for e in events if e[4]<4)==56260
+        variants.append(variant)
+        print('数据整理',level,rank,len(events),end,flush=True)
+        del trace,selected
+
+font_manager.fontManager.addfont('/usr/share/fonts/google-droid-fonts/DroidSansFallback.ttf')
+plt.rcParams.update({'font.family':['DejaVu Sans','Droid Sans Fallback'],'font.size':9,'axes.unicode_minus':False})
+colors=list(palette.values())
+def draw(ax,v,scheduler,limits):
+    lanes=[(i,n) for i,n in enumerate(v['lanes']) if n.startswith('Scheduler_')==scheduler]
+    positions={i:y for y,(i,n) in enumerate(lanes)}
+    vertices=[]; cs=[]
+    for lane,start,dur,name,cat,task in v['events']:
+        if lane not in positions or start+dur<limits[0] or start>limits[1]: continue
+        y=positions[lane]
+        x0=max(start,limits[0]); x1=min(start+dur,limits[1])
+        vertices.append([(x0,y-.39),(x1,y-.39),(x1,y+.39),(x0,y+.39)])
+        cs.append(colors[cat])
+    ax.add_collection(PolyCollection(vertices,facecolors=cs,edgecolors='none',rasterized=True))
+    ax.set_xlim(*limits); ax.set_ylim(len(lanes)-.5,-.5)
+    ticks=list(range(0,len(lanes),8))
+    ax.set_yticks(ticks,[lanes[i][1] for i in ticks],fontsize=7)
+    ax.grid(axis='x',alpha=.2); ax.set_axisbelow(True)
+    ax.set_xlabel('时间 / ms（本次采集相对时间）')
+    for side in ('top','right'): ax.spines[side].set_visible(False)
+    if not scheduler: ax.axhline(31.5,color='#8a94a5',lw=.6)
+
+for v in variants:
+    if v['rank']!=0: continue
+    level=v['level']; rows=2 if level==3 else 1
+    fig,axs=plt.subplots(rows,2,figsize=(19,11 if rows==2 else 7),squeeze=False,gridspec_kw={'width_ratios':[2.2,1]})
+    fig.subplots_adjust(left=.065,right=.99,top=.86,bottom=.14,wspace=.12,hspace=.28)
+    for row in range(rows):
+        draw(axs[row,0],v,row==1,(0,v['span_ms']))
+        draw(axs[row,1],v,row==1,v['focus'])
+        kind='AICore 调度相位' if row else '96 条 AIC / AIV 任务泳道'
+        axs[row,0].set_title(kind+' · 40 层总览',loc='left',fontsize=11)
+        axs[row,1].set_title(kind+' · 首次 Indexer 附近放大',loc='left',fontsize=11)
+        axs[row,0].axvspan(*v['focus'],facecolor='#92a0b5',alpha=.15)
+    fig.suptitle(f'DSV4.1 完整 Decode · HBG / fwic AICore · 采集级别 L{level}',fontsize=19,x=.065,ha='left',y=.97)
+    fig.text(.065,.916,'40 层  ·  EP2  ·  72 个有效 token  ·  rank 0 / 设备 0  ·  56,260 条核执行记录  ·  零权重冒烟通过',fontsize=11,color='#475569')
+    keys=list(palette) if level==3 else list(palette)[:4]
+    fig.legend(handles=[Patch(color=palette[k],label=k) for k in keys],loc='lower left',bbox_to_anchor=(.06,.04),ncol=6,frameon=False)
+    note=f'L3 丢弃 {v["dropped"]:,} 条 idle 样本；任务记录完整。空白不能据此解释为真实空闲。' if level==3 else '色块为核任务接收至完成；横向不可见的小任务可在交互图中放大。'
+    fig.text(.065,.024,note+'  L1/L3 为独立采集，不用于性能 A/B。',fontsize=9,color='#64748b')
+    fig.savefig(root/f'decode40-L{level}.png',dpi=140,facecolor='white')
+    plt.close(fig)
+
+payload=json.dumps({'variants':variants,'palette':palette},ensure_ascii=False,separators=(',',':'))
+html=(root/'viewer.template.html').read_text().replace('__DATA__',payload)
+(root/'index.html').write_text(html)
+(root/'plot-summary.json').write_text(json.dumps([{k:v for k,v in d.items() if k not in ('events','names','lanes')} for d in variants],ensure_ascii=False,indent=2)+'\n')

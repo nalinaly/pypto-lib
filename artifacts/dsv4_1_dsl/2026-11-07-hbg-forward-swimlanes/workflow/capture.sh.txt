@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd <workspace>/issue75-env/pypto-pr
+source <workspace>/artifacts/dsv41-hbg-forward-20261107/env.sh
+cd "$PYPTO_LIB_ROOT"
+for level in 1 3; do
+    export DSV41_SWIMLANE_LEVEL="$level"
+    export DSV41_CAPTURE_DIR="<workspace>/artifacts/dsv41-hbg-forward-swimlanes-20261107/L$level"
+    mkdir -p "$DSV41_CAPTURE_DIR/ascend"
+    export ASCEND_PROCESS_LOG_PATH="$DSV41_CAPTURE_DIR/ascend"
+    python "<workspace>/artifacts/dsv41-hbg-forward-20261107/run.py" "<workspace>/artifacts/dsv41-hbg-forward-swimlanes-20261107/capture_forward.py" -d "$TASK_DEVICE" > "$DSV41_CAPTURE_DIR/run.log" 2>&1
+    tail -n 3 "$DSV41_CAPTURE_DIR/run.log"
+done

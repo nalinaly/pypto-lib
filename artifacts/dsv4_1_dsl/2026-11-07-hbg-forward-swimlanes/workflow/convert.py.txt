@@ -1,0 +1,14 @@
+"""保留 AICore 迁移调度的未知映射，禁止离线工具推测固定核归属。"""
+import simpler_setup.tools.swimlane_converter as converter
+
+read_records = converter._decode_perf_data
+def read_without_static_mapping(*args, **kwargs):
+    data = read_records(*args, **kwargs)
+    if data.get('scheduler_task_producer') == 'aicore' and not data.get('core_to_thread'):
+        # 工作窃取没有固定的核到调度器归属；-1 表示未知。
+        # 仅省略无依据的调度器到执行核箭头，保留全部任务、相位和 DAG 依赖。
+        data['core_to_thread'] = [-1] * (1 + max(t['core_id'] for t in data['tasks']))
+    return data
+converter._decode_perf_data = read_without_static_mapping
+if __name__ == '__main__':
+    raise SystemExit(converter.main())

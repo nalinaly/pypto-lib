@@ -1,0 +1,139 @@
+issue75-env/pypto-pr/src/codegen/orchestration/orchestration_task_dispatch.cpp
+737:   // 编译期校验只能识别部分核数表达式；在提交前用实际设备规模检查动态值和常量。
+738:   // 将错误交给正常提交路径处理，避免任何参与核在不完整的屏障前等待。
+739:   const bool clusters = paired_aiv || kind == "aic_only" || RequiresDualAivDispatch(kernel);
+740:   const std::string query = clusters ? "rt_available_cluster_count()" : "rt_available_aiv_count()";
+741:   pre_lines.push_back("if (" + RenderLaunchCoreNum(core_num) + " != " + query + ") {");
+742:   pre_lines.push_back("    " + task_var +
+743:                       ".set_error(\"External hard syncall requires full runtime core occupancy\");");
+744:   pre_lines.push_back("}");
+745: }
+
+pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/src/common/host_build_graph/host/orchestrator.cpp
+767: TaskOutputTensors OrchestratorState::submit_task(const MixedKernels &mixed_kernels, const CoreTaskArgs &args) {
+768:     if (!require_device_arguments(this, args)) return {};
+769:     auto *orch = this;
+770:
+771:     // Orchestration API should short-circuit after fatal, but keep this entry
+772:     // robust as a no-op in case a caller reaches it directly.
+773:     if (orch->is_fatal()) {
+774:         return TaskOutputTensors{};
+775:     }
+776:
+777:     // Validate Arg construction (errors recorded by add_input/add_output/etc.)
+778:     if (args.has_error()) {
+779:         LOG_ERROR("========================================");
+780:         LOG_ERROR("FATAL: Invalid Arg Detected!");
+781:         LOG_ERROR("========================================");
+782:         LOG_ERROR("Error: %s", args.error_msg() ? args.error_msg() : "(unknown)");
+783:         LOG_ERROR("  tensor_count: %d, scalar_count: %d", args.tensor_count(), args.scalar_count());
+784:         LOG_ERROR("This is a bug in the orchestration code.");
+785:         LOG_ERROR("========================================");
+786:         orch_mark_fatal(orch, SIMPLER_ERROR_INVALID_ARGS);
+787:         return TaskOutputTensors{};
+788:     }
+789:     // === Validate submit inputs ===
+790:     LaneMask active_mask = mixed_kernels.to_lanes();
+791:     if (active_mask.is_empty()) {
+
+pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/src/a5/runtime/host_build_graph/host/runtime_maker.cpp
+2251:     // edges. Uploading it would launch the device on an incomplete graph and surface
+2252:     // the cause as whatever the device notices second, usually a scheduler timeout.
+2253:     if (orchestrator.is_fatal()) {
+2254:         // The latched code is the diagnosis, so it is what the caller sees — through the
+2255:         // same mapping the run path uses, since a caller cannot tell which of the two
+2256:         // noticed.
+2257:         const int32_t orch_error = orchestrator.fatal_code.load(std::memory_order_acquire);
+2258:         const int32_t status = runtime_status_from_error_code(orch_error);
+2259:         LOG_RUNTIME_FAILURE(orch_error, SIMPLER_ERROR_NONE, status);
+2260:         LOG_ERROR(
+2261:             "host-orch: refusing to upload an incomplete graph after %" PRIu64 " heap bytes",
+2262:             orchestrator.task_allocator.heap_used_bytes()
+2263:         );
+2264:         return status;
+
+pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/src/a5/runtime/tensormap_and_ringbuffer/runtime/orchestrator.cpp
+1303: TaskOutputTensors OrchestratorState::submit_task(const MixedKernels &mixed_kernels, const CoreTaskArgs &args) {
+1304:     if (!require_device_arguments(this, args)) return {};
+1305:     auto *orch = this;
+1306:     // Orchestration API should short-circuit after fatal, but keep this entry
+1307:     // robust as a no-op in case a caller reaches it directly.
+1308:     if (orch->fatal) {
+1309:         return TaskOutputTensors{};
+1310:     }
+1311:
+1312:     // Validate Arg construction (errors recorded by add_input/add_output/etc.)
+1313:     if (args.has_error) {
+1314:         LOG_ERROR("========================================");
+1315:         LOG_ERROR("FATAL: Invalid Arg Detected!");
+1316:         LOG_ERROR("========================================");
+1317:         LOG_ERROR("Error: %s", args.error_msg ? args.error_msg : "(unknown)");
+1318:         LOG_ERROR("  tensor_count: %d, scalar_count: %d", args.tensor_count(), args.scalar_count());
+1319:         LOG_ERROR("This is a bug in the orchestration code.");
+1320:         LOG_ERROR("========================================");
+1321:         orch_mark_fatal(orch, SIMPLER_ERROR_INVALID_ARGS);
+1322:         return TaskOutputTensors{};
+1323:     }
+1324:     const auto &predicate = args.predicate();
+
+pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/src/a5/runtime/tensormap_and_ringbuffer/aicpu/aicpu_executor.cpp
+1285:
+1286:     if (runtime_rc != 0) {
+1287:         LOG_ERROR("aicpu_execute: simpler runtime failed with rc=%d", runtime_rc);
+1288:         return runtime_rc;
+1289:     }
+1290:
+1291:     if (rc != 0) {
+1292:         return rc;
+1293:     }
+1294:
+1295:     LOG_INFO("%s", "aicpu_execute: Kernel execution completed successfully");
+1296:     return 0;
+1297: }
+
+pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/src/a5/platform/onboard/aicpu/kernel.cpp
+139:
+140:     int rc = aicpu_execute(runtime);
+141:     if (rc != 0) {
+142:         LOG_ERROR("simpler_aicpu_exec: aicpu_execute failed with rc=%d", rc);
+143:         return rc;
+144:     }
+145:
+146:     // Run-wall end is stamped by run_wall's destructor (covers the early return
+147:     // above too); host reduces max(end) - min(start) → ns.
+148:     return rc;
+
+pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/src/common/platform/onboard/host/c_api_shared.cpp
+2968:     if (export_clock_log && !export_host_clock_alignment_log(output_prefix, trace_inv, clock_log_offset)) {
+2969:         return PTO_RUNTIME_ERR_INTERNAL;
+2970:     }
+2971:     if (validation_rc != 0) return validation_rc;
+2972:     if (resources_rc != 0) return resources_rc;
+2973:     if ((launched || recorded) && execution_rc != 0) return execution_rc;
+2974:     // Last: a standalone workspace-reclamation failure is still a failure, and
+2975:     // with nothing above it to report this is where the caller learns of it.
+2976:     if (reclaim_rc != 0) return reclaim_rc;
+2977:     if (no_submission && !launched) publish_released_preparation(state, run_epoch);
+2978:     return (launched || recorded) ? execution_rc : 0;
+
+pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/src/a5/runtime/host_build_graph/runtime/scheduler/scheduler_types.h
+656: inline constexpr uint32_t SCHEDULER_MIX_QUEUE = 2;
+657: inline constexpr uint32_t SCHEDULER_CLUSTER_CAPACITY = SCHEDULER_WORKER_CAPACITY / 3;
+658: inline constexpr uint32_t SCHEDULER_ACTIVITY_CAPACITY = 1024;
+659: inline constexpr uint64_t SCHEDULER_PROFILING_TASK_TIMING_LEVEL = 1;
+660: inline constexpr uint64_t SCHEDULER_PROFILING_SCHEDULE_TIMING_LEVEL = 2;
+
+pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/src/a5/runtime/host_build_graph/runtime/scheduler/scheduler_ready.h
+748: inline __aicore__ void scheduler_append_idle_activity(
+749:     __gm__ void *scheduler_state_base, SchedulerLocalState *context, uint64_t start_cycles, uint64_t end_cycles
+750: ) {
+751:     __gm__ SchedulerActivityBuffer *buffer = scheduler_activity_buffer_at(scheduler_state_base, context);
+752:     if (buffer == nullptr || end_cycles < start_cycles) return;
+753:     const uint64_t capture_counts = scheduler_gm_query_u32_pair(&buffer->committed);
+754:     const uint32_t committed = static_cast<uint32_t>(capture_counts);
+755:     if (committed >= SCHEDULER_ACTIVITY_CAPACITY) {
+756:         scheduler_gm_store(buffer->dropped, static_cast<uint32_t>(capture_counts >> 32) + 1);
+757:         return;
+758:     }
+759:     __gm__ SchedulerIdleRecord *record = &buffer->records[committed];
+760:     record->start_time = start_cycles;

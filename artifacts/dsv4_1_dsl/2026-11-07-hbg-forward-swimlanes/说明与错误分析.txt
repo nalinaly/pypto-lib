@@ -1,0 +1,87 @@
+DSV4.1 完整 decode：L1/L3 泳道与非法 syncall 启动分析
+
+实测范围
+
+PyPTO f3fe4058、模型 aa826de8、simpler f1c21abf7，A5 双卡 0/1。
+40 层、EP2、72 个有效 token、每卡 64 个路由专家，使用既有零权重冒烟夹具。
+L1/L3 均重新运行并通过原输出检查，两卡调度模式均为 resident（mode=1，
+publication=2）。每级执行一次依赖图采集和一次独立计时；不作为性能 A/B。
+本次不修改 PyPTO、DSL 或 simpler 的执行代码，也不执行 hash 校验。
+
+如何看图
+
+index.html 可离线打开、切换 L1/L3 和 rank 0/1，缩放、平移、搜索任务。
+decode40-L1.png 展示 rank 0 的 96 条 AIC/AIV 任务泳道。
+decode40-L3.png 在任务泳道下方增加 96 条 AICore 调度相位。
+右侧放大的是首次 Indexer MIX TopK 附近；深蓝/青色为 DSL，红色为原生
+通信/协议，橙色为其他原生计算。所有色块来自实测时间，不是示意图。
+traces/ 中的四份 JSON 可导入 Perfetto；仓库归档中以 .json.gz 保存，先解压。
+各卡以本卡、本次采集为时间基准，此页面没有做跨卡时钟对齐。
+
+每卡、每级均有 56,260 条核执行记录；两级的逻辑任务/块/子核标识可对照。
+L3 的调度相位来自 AICore，rank 0/1 分别有 200,424 / 201,086 条。
+其中 idle 是每个调度器最多保存 1,024 条的独立固定缓冲区：rank 0 丢弃
+5,440 条，rank 1 丢弃 6,446 条，均有 64 个流标为截断。其他相位从任务
+记录导出；没有为了补齐图而推测空闲区间，不能据此计算完整空闲占比。
+
+旧离线转换器在缺少固定 core_to_thread 时会做时间投票。fwic 的工作窃取
+不能假定执行核固定归属于某个调度器，而且全网会触发极慢的嵌套扫描。
+convert.py 仅对归一化后的 AICore 数据将该未知映射保持为 -1，调用官方
+转换器绘制任务、调度相位和 DAG；不绘制无法确认的调度器到执行核箭头。
+原始采集文件不变。函数名从实际 kernel_config.py 和 deps.json 恢复。
+
+问题一：HBG 建图返回 -5
+
+这是预期的负例拒绝。测试将 workers 作为运行时标量，并传入 4：
+
+    with pl.spmd(workers, sync_start=True):
+        exchange(...)  # DSL 内有 cb.global_sync_all()
+
+这个硬件全核屏障要求完整的运行时可用核集合。sync_start 只保证这一个
+任务的参与核同步开始，不会把 4 个 block 自动扩展为全部可用 block。
+普通、没有全核屏障的 spmd(4) 是合法的，已有正常设备用例通过。
+
+PyPTO 的生成代码先比较 workers 与 rt_available_cluster_count()，不等时
+给任务参数设置错误。HBG 在 Host 上构图，submit_task 记录 INVALID_ARGS，
+并在上传、执行该非法图之前结束准备。日志是 orch_error_code=5、
+sched_error_code=0、runtime_status=-5；Python 在 prepare_native_run 得到 -5。
+这说明保护生效，不是 HBG 不支持 MIX/syncall，也不是模型精度错误。
+
+问题二：TMR 最终返回 507018
+
+需要修正此前“fwic 的 TMR 异常退出问题”这一笼统定性：这次失败的直接
+触发是负例仍要求最终异常为 -5，而当前 runtime 保留优先级更高的 SDK 错误。
+有两个同时存在的错误通道：
+
+1. TMR 在设备 AICPU 编排时执行相同检查，记录逻辑错误 INVALID_ARGS(5)，
+   在提交目标 DSL 任务之前返回；目标 DSL 没有进入那个全核屏障。
+2. aicpu_execute 读取到 -5，并直接把非零值返回给平台 AICPU 入口。
+   当时设备日志明确写着 aicpu_execute failed with rc=-5；随后 CANN 的
+   流同步报告 ACL_ERROR_RT_AICPU_EXCEPTION，即 507018。
+3. Host 仍读取并打印本次 run 的逻辑错误 -5，但对外返回原生错误 507018。
+   lane 进入故障清理，设备随后被运行时复位并确认干净。复位是后果，
+   不是最初导致错误的地方。
+
+旧版 6b6b88f2 的 copy_back_run_outputs_impl 会用 runtime_status 覆盖成功
+返回值，从而使外层优先返回 -5。当前 f1c21abf7 包含上游提交 313499d61，
+它删除了这段覆盖逻辑。对应上游 PR #2829 明确说明了“原生错误保持优先”
+的设计。因此不能把这个测试失败直接认定为 fwic 调度算法回归，更没有
+证据说明这里发生了 syncall 死锁。
+https://github.com/hw-native-sys/simpler/pull/2829
+
+处理方向
+
+若沿用新版错误契约，应让负例同时验证逻辑错误确为 INVALID_ARGS、非法
+任务未被提交，以及 SDK 故障的隔离/清理；不能仅把正则放宽到任意 507018。
+若希望受控非法参数只返回 -5、无需触发设备故障，则需要在 simpler TMR
+执行器/平台结果协议中分开逻辑失败与 AICPU 算子执行失败：保存本次 run
+失败终态、正常结束工作线程，并由 Host 读取该终态。只把入口返回改成 0
+可能丢失逻辑错误；只把 507018 替换为 -5 又可能掩盖真实 SDK 故障。
+该方向属于运行时错误协议，不需要 CANNBotDSL 增加 PyPTO 专用代码。
+
+证据
+
+summary.json：各卡采集级别、记录数、丢弃数。
+L1/L3 的 run.log、forward-result.json：实际执行与结果检查。
+errors/：两项负例的 Host 日志、TMR 当时的设备日志、源码行号摘录及版本差异。
+执行图与负例是不同的运行，不能将负例的 507018 当成完整 forward 的错误。

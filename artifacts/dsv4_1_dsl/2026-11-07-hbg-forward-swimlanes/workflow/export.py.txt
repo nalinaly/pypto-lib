@@ -1,0 +1,53 @@
+"""通过 simpler 自带转换器导出真实泳道，保留采集完整性信息。"""
+from concurrent.futures import ThreadPoolExecutor
+import json
+from pathlib import Path
+import runpy
+import subprocess
+import sys
+
+from simpler_setup.tools.swimlane_converter import read_perf_data
+
+root = Path(__file__).resolve().parent
+compiled = Path(json.loads((root.parent / 'dsv41-hbg-forward-20261107/forward-compile.json').read_text())['work_dir'])
+config = compiled / 'next_levels/l2_decode_fwd/kernel_config.py'
+kernels = runpy.run_path(str(config))['KERNELS']
+names = {'level': 2, 'orchestrator_name': 'l2_decode_fwd',
+         'callable_id_to_name': {str(k['func_id']): k['name'] for k in kernels}}
+(root / 'traces').mkdir(exist_ok=True)
+
+def export(pair):
+    level, rank = pair
+    directory = root / f'L{level}/dfx_outputs/rank{rank}/d0'
+    assert json.loads((root / f'L{level}/forward-result.json').read_text())['通过']
+    records = read_perf_data(directory / 'chip_swimlane_records.json')
+    assert records['chip_swimlane_level'] == level
+    assert len(records['tasks']) > 0
+    streams = records.get('scheduler_streams', [])
+    if level == 3:
+        assert records['scheduler_task_producer'] == 'aicore'
+        assert len(streams) == 96
+    (directory / 'name_map.json').write_text(json.dumps(names, ensure_ascii=False, indent=2) + '\n')
+    assert (directory / 'deps.json').exists()
+    dest = root / f'traces/decode40-L{level}-rank{rank}.json'
+    with (root / f'L{level}/export-rank{rank}.log').open('w') as log:
+        subprocess.run([sys.executable, str(root / 'convert.py'),
+                        str(directory / 'chip_swimlane_records.json'),
+                        '--func-names', str(directory / 'name_map.json'),
+                        '--deps-json', str(directory / 'deps.json'), '-o', str(dest)],
+                       stdout=log, stderr=subprocess.STDOUT, check=True)
+    result = {'level': level, 'rank': rank, '通过': True, 'file': str(dest.relative_to(root)),
+              '核执行记录': len(records['tasks']), '核数': len({t['core_id'] for t in records['tasks']}),
+              '调度来源': records.get('scheduler_task_producer'),
+              '调度记录': sum(s['capture']['committed'] for s in streams),
+              '丢弃空闲记录': sum(s['capture']['dropped'] for s in streams),
+              '截断调度流': sum(bool(s['capture']['truncated']) for s in streams)}
+    print(json.dumps(result, ensure_ascii=False), flush=True)
+    return result
+
+with ThreadPoolExecutor(max_workers=2) as pool:
+    rows = list(pool.map(export, [(l, r) for l in (1,3) for r in (0,1)]))
+(root / 'summary.json').write_text(json.dumps({'PyPTO': 'f3fe4058', '模型': 'aa826de8',
+    '运行时': 'f1c21abf7', '层数': 40, '有效行数': 72, '专家数每卡': 64,
+    '范围': '零权重冒烟，L1/L3 为独立采集；每次各有依赖图和计时两个执行轮次',
+    'files': rows}, ensure_ascii=False, indent=2) + '\n')
