@@ -1,0 +1,105 @@
+<workspace>/issue75-env/pypto-pr/python/pypto/runtime/kernel_compiler.py:40: RuntimePinWarning: runtime/ is at f1c21abf77c7 but this PyPTO commit pins 6b6b88f2353c. You are running a runtime other than the one this PyPTO was tested against.
+  git submodule update --init runtime
+  check_runtime_pin()
+执行环境 <workspace>/issue75-env/pypto-pr/python/pypto/__init__.py <workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/python/simpler/__init__.py f1c21abf77c73cb6f03dd67de51f667755a1bfcb
+[RUN] compile ...
+META_TRACE gather_local dispatch ({'source': TensorMeta(shape=(10240, 5120), dtype=int8, layout=None), 'source_scale': TensorMeta(shape=(10240, 160), dtype=uint8, layout=None), 'source_weight': TensorMeta(shape=(10240, 8), dtype=fp32, layout=None), 'source_route': TensorMeta(shape=(10240, 8), dtype=int32, layout=None), 'metadata': TensorMeta(shape=(2, 64), dtype=int32, layout=None), 'counts': TensorMeta(shape=(64, 1), dtype=int32, layout=None), 'payload': TensorMeta(shape=(10240, 5120), dtype=fp8e4m3fn, layout=TensorLayout.ND), 'scales': TensorMeta(shape=(1, 1638400), dtype=fp8e8m0, layout=None), 'weights': TensorMeta(shape=(10240, 1), dtype=fp32, layout=TensorLayout.ND), 'routes': TensorMeta(shape=(10240, 1), dtype=int32, layout=TensorLayout.ND)}, {})
+META_LOCALS {'source': ('TensorMeta(shape=(10240, 5120), dtype=int8, layout=None)', []), 'source_scale': ('TensorMeta(shape=(10240, 160), dtype=uint8, layout=None)', []), 'source_weight': ('TensorMeta(shape=(10240, 8), dtype=fp32, layout=None)', []), 'source_route': ('TensorMeta(shape=(10240, 8), dtype=int32, layout=None)', []), 'metadata': ('TensorMeta(shape=(2, 64), dtype=int32, layout=None)', []), 'counts': ('TensorMeta(shape=(64, 1), dtype=int32, layout=None)', []), 'payload': ('TensorMeta(shape=(10240, 5120), dtype=fp8e4m3fn, layout=TensorLayout.ND)', []), 'scales': ('TensorMeta(shape=(1, 1638400), dtype=fp8e8m0, layout=None)', []), 'weights': ('TensorMeta(shape=(10240, 1), dtype=fp32, layout=TensorLayout.ND)', []), 'routes': ('TensorMeta(shape=(10240, 1), dtype=int32, layout=TensorLayout.ND)', []), 'local_x': ('TensorMeta(shape=(10240, 5120), dtype=int8, layout=None)', [0, 1]), 'local_scale': ('TensorMeta(shape=(10240, 160), dtype=uint8, layout=None)', [0, 1]), 'local_weight': ('TensorMeta(shape=(10240, 8), dtype=fp32, layout=None)', [0]), 'local_route': ('TensorMeta(shape=(10240, 8), dtype=int32, layout=None)', [0])}
+META_TRACE gather_grid gather_local ({'source': TensorMeta(shape=(DynDim(name='_jitdyn_gather_grid_source_d0', literal='_jitdyn_gather_grid_source_d0', static_bound=1, synthesized=True), DynDim(name='_jitdyn_gather_grid_source_d1', literal='_jitdyn_gather_grid_source_d1', static_bound=1, synthesized=True)), dtype=int8, layout=None), 'source_scale': TensorMeta(shape=(DynDim(name='_jitdyn_gather_grid_source_scale_d0', literal='_jitdyn_gather_grid_source_scale_d0', static_bound=1, synthesized=True), DynDim(name='_jitdyn_gather_grid_source_scale_d1', literal='_jitdyn_gather_grid_source_scale_d1', static_bound=1, synthesized=True)), dtype=uint8, layout=None), 'source_weight': TensorMeta(shape=(DynDim(name='_jitdyn_gather_grid_source_weight_d0', literal='_jitdyn_gather_grid_source_weight_d0', static_bound=1, synthesized=True), 8), dtype=fp32, layout=None), 'source_route': TensorMeta(shape=(DynDim(name='_jitdyn_gather_grid_source_route_d0', literal='_jitdyn_gather_grid_source_route_d0', static_bound=1, synthesized=True), 8), dtype=int32, layout=None), 'metadata': TensorMeta(shape=(2, 64), dtype=int32, layout=None), 'counts': TensorMeta(shape=(64, 1), dtype=int32, layout=None), 'payload': TensorMeta(shape=(10240, 5120), dtype=fp8e4m3fn, layout=TensorLayout.ND), 'scales': TensorMeta(shape=(1, 1638400), dtype=fp8e8m0, layout=None), 'weights': TensorMeta(shape=(10240, 1), dtype=fp32, layout=TensorLayout.ND), 'routes': TensorMeta(shape=(10240, 1), dtype=int32, layout=TensorLayout.ND)}, {})
+META_SEED {'source': ('TensorMeta(shape=(10240, 5120), dtype=int8, layout=None)', []), 'source_scale': ('TensorMeta(shape=(10240, 160), dtype=uint8, layout=None)', []), 'source_weight': ('TensorMeta(shape=(10240, 8), dtype=fp32, layout=None)', []), 'source_route': ('TensorMeta(shape=(10240, 8), dtype=int32, layout=None)', []), 'metadata': ('TensorMeta(shape=(2, 64), dtype=int32, layout=None)', []), 'counts': ('TensorMeta(shape=(64, 1), dtype=int32, layout=None)', []), 'payload': ('TensorMeta(shape=(10240, 5120), dtype=fp8e4m3fn, layout=TensorLayout.ND)', []), 'scales': ('TensorMeta(shape=(1, 1638400), dtype=fp8e8m0, layout=None)', []), 'weights': ('TensorMeta(shape=(10240, 1), dtype=fp32, layout=TensorLayout.ND)', []), 'routes': ('TensorMeta(shape=(10240, 1), dtype=int32, layout=TensorLayout.ND)', [])}
+META_TRACE gather_local dispatch ({'source': TensorMeta(shape=(10240, 5120), dtype=int8, layout=None), 'source_scale': TensorMeta(shape=(10240, 160), dtype=uint8, layout=None), 'source_weight': TensorMeta(shape=(10240, 8), dtype=fp32, layout=None), 'source_route': TensorMeta(shape=(10240, 8), dtype=int32, layout=None), 'metadata': TensorMeta(shape=(2, 64), dtype=int32, layout=None), 'counts': TensorMeta(shape=(64, 1), dtype=int32, layout=None), 'payload': TensorMeta(shape=(10240, 5120), dtype=fp8e4m3fn, layout=TensorLayout.ND), 'scales': TensorMeta(shape=(1, 1638400), dtype=fp8e8m0, layout=None), 'weights': TensorMeta(shape=(10240, 1), dtype=fp32, layout=TensorLayout.ND), 'routes': TensorMeta(shape=(10240, 1), dtype=int32, layout=TensorLayout.ND)}, {})
+META_LOCALS {'source': ('TensorMeta(shape=(10240, 5120), dtype=int8, layout=None)', []), 'source_scale': ('TensorMeta(shape=(10240, 160), dtype=uint8, layout=None)', []), 'source_weight': ('TensorMeta(shape=(10240, 8), dtype=fp32, layout=None)', []), 'source_route': ('TensorMeta(shape=(10240, 8), dtype=int32, layout=None)', []), 'metadata': ('TensorMeta(shape=(2, 64), dtype=int32, layout=None)', []), 'counts': ('TensorMeta(shape=(64, 1), dtype=int32, layout=None)', []), 'payload': ('TensorMeta(shape=(10240, 5120), dtype=fp8e4m3fn, layout=TensorLayout.ND)', []), 'scales': ('TensorMeta(shape=(1, 1638400), dtype=fp8e8m0, layout=None)', []), 'weights': ('TensorMeta(shape=(10240, 1), dtype=fp32, layout=TensorLayout.ND)', []), 'routes': ('TensorMeta(shape=(10240, 1), dtype=int32, layout=TensorLayout.ND)', []), 'local_x': ('TensorMeta(shape=(10240, 5120), dtype=int8, layout=None)', [0, 1]), 'local_scale': ('TensorMeta(shape=(10240, 160), dtype=uint8, layout=None)', [0, 1]), 'local_weight': ('TensorMeta(shape=(10240, 8), dtype=fp32, layout=None)', [0]), 'local_route': ('TensorMeta(shape=(10240, 8), dtype=int32, layout=None)', [0])}
+META_TRACE gather_grid gather_local ({'source': TensorMeta(shape=(DynDim(name='_jitdyn_gather_grid_source_d0', literal='_jitdyn_gather_grid_source_d0', static_bound=1, synthesized=True), DynDim(name='_jitdyn_gather_grid_source_d1', literal='_jitdyn_gather_grid_source_d1', static_bound=1, synthesized=True)), dtype=int8, layout=None), 'source_scale': TensorMeta(shape=(DynDim(name='_jitdyn_gather_grid_source_scale_d0', literal='_jitdyn_gather_grid_source_scale_d0', static_bound=1, synthesized=True), DynDim(name='_jitdyn_gather_grid_source_scale_d1', literal='_jitdyn_gather_grid_source_scale_d1', static_bound=1, synthesized=True)), dtype=uint8, layout=None), 'source_weight': TensorMeta(shape=(DynDim(name='_jitdyn_gather_grid_source_weight_d0', literal='_jitdyn_gather_grid_source_weight_d0', static_bound=1, synthesized=True), 8), dtype=fp32, layout=None), 'source_route': TensorMeta(shape=(DynDim(name='_jitdyn_gather_grid_source_route_d0', literal='_jitdyn_gather_grid_source_route_d0', static_bound=1, synthesized=True), 8), dtype=int32, layout=None), 'metadata': TensorMeta(shape=(2, 64), dtype=int32, layout=None), 'counts': TensorMeta(shape=(64, 1), dtype=int32, layout=None), 'payload': TensorMeta(shape=(10240, 5120), dtype=fp8e4m3fn, layout=TensorLayout.ND), 'scales': TensorMeta(shape=(1, 1638400), dtype=fp8e8m0, layout=None), 'weights': TensorMeta(shape=(10240, 1), dtype=fp32, layout=TensorLayout.ND), 'routes': TensorMeta(shape=(10240, 1), dtype=int32, layout=TensorLayout.ND)}, {})
+META_SEED {'source': ('TensorMeta(shape=(10240, 5120), dtype=int8, layout=None)', []), 'source_scale': ('TensorMeta(shape=(10240, 160), dtype=uint8, layout=None)', []), 'source_weight': ('TensorMeta(shape=(10240, 8), dtype=fp32, layout=None)', []), 'source_route': ('TensorMeta(shape=(10240, 8), dtype=int32, layout=None)', []), 'metadata': ('TensorMeta(shape=(2, 64), dtype=int32, layout=None)', []), 'counts': ('TensorMeta(shape=(64, 1), dtype=int32, layout=None)', []), 'payload': ('TensorMeta(shape=(10240, 5120), dtype=fp8e4m3fn, layout=TensorLayout.ND)', []), 'scales': ('TensorMeta(shape=(1, 1638400), dtype=fp8e8m0, layout=None)', []), 'weights': ('TensorMeta(shape=(10240, 1), dtype=fp32, layout=TensorLayout.ND)', []), 'routes': ('TensorMeta(shape=(10240, 1), dtype=int32, layout=TensorLayout.ND)', [])}
+[RUN] compile done (26.27s)
+Traceback (most recent call last):
+  File "<workspace>/artifacts/dsv41-hbg-forward-20261107/run.py", line 36, in <module>
+    runpy.run_path(str(entry), run_name='__main__')
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "<workspace>/artifacts/dsv41-hbg-forward-20261107/forward.py", line 95, in <module>
+    namespace = runpy.run_path(str(entry), run_name='__main__')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_fwd.py", line 1255, in <module>
+    result = run(
+             ^^^^
+  File "<workspace>/artifacts/dsv41-hbg-forward-20261107/forward.py", line 51, in compile_forward
+    result = original_run(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1565, in _run_pipeline
+    compiled = compile_step(cfg, compile_state)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1741, in _compile
+    return fn.compile(*dummy_args, config=cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1462, in compile
+    compiled, _ordered_args, _run_config = self._resolve_compiled(args, kwargs, allow_signature_mode=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1194, in _resolve_compiled
+    prepared_contexts = self._build_contexts(
+                        ^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1900, in _build_contexts
+    apply_external_spec(contexts[-1], dep._external_builder(contexts[-1]))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 297, in build
+    return _build(target, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/cannbotdsl.py", line 242, in _build
+    exported = exporter.export_source_bundle(kernel, arguments)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/_cannbotdsl_source.py", line 256, in export_source_bundle
+    device, debug, _ = kernel_materialize._materialize_device_function(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/kernel_materialize.py", line 360, in _materialize_device_function
+    _build_device_entry(
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/kernel_materialize.py", line 330, in _build_device_entry
+    _trace_device_entry(fn, call_plan, ir_builder, entry_block)
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/compiler/kernel_materialize.py", line 285, in _trace_device_entry
+    result = ir_builder(*ir_args, **ir_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/moe_dispatch_dsl.py", line 154, in gather_grid
+    prefix = prefix + tiles
+                 ~~~^~~~~~~
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/runtime/control_flow.py", line 395, in for_region
+    result = body_fn(iv, *_state_arguments(body_state))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/moe_dispatch_dsl.py", line 153, in __cannbotdsl_for_body_0
+    dst, factors, out_weights, out_routes, expert, row, live)
+                                                   ^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/runtime/control_flow.py", line 395, in for_region
+    result = body_fn(iv, *_state_arguments(body_state))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/moe_dispatch_dsl.py", line 152, in __cannbotdsl_for_body_1
+    _gather_rows(src, source_factors, source_weights, source_routes, metadata,
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/call_context.py", line 72, in dispatch_call
+    return target(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/lang/jit.py", line 64, in __call__
+    return self._invoke(None, self._surface, args, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/lang/jit.py", line 78, in _invoke
+    return ir_builder(*call_args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/moe_dispatch_dsl.py", line 94, in _gather_rows
+    raw = Buffer(cb.MemLoc.UB, cb.dtypes.int8, cb.make_layout((1, width)))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/core/frontend/call_context.py", line 72, in dispatch_call
+    return target(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/buffer.py", line 170, in __new__
+    result = _allocate_tensor_memory(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/.venv/lib/python3.12/site-packages/cannbotdsl/buffer.py", line 83, in _allocate_tensor_memory
+    size_bytes = cannir.tensor_storage_bytes(tensor_type, 0)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: Tensor storage requires finite static shape and stride bounds

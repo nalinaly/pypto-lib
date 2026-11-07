@@ -1,0 +1,58 @@
+任务已提交: task_20261107_015052_161922715652 (断开后可用 task-submit --wait task_20261107_015052_161922715652 重连)
+等待任务执行: task_20261107_015052_161922715652 (Ctrl+C 终止任务)
+[npu-lock] 获取设备 2 的锁 (无超时)...
+[npu-lock] 已获取设备 2 的锁 (pid=1619400)
+<workspace>/issue75-env/pypto-pr/python/pypto/runtime/kernel_compiler.py:40: RuntimePinWarning: runtime/ is at f1c21abf77c7 but this PyPTO commit pins 6b6b88f2353c. You are running a runtime other than the one this PyPTO was tested against.
+  git submodule update --init runtime
+  check_runtime_pin()
+执行环境 <workspace>/issue75-env/pypto-pr/python/pypto/__init__.py <workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/python/simpler/__init__.py f1c21abf77c73cb6f03dd67de51f667755a1bfcb
+[mono_ns=305223462478110][T0xffff9c830020][TIMING] log_callable_image: Callable image: device=2 runner=0xaaaaf8739a80 chip_hash=0x2a28b516acb02410 chip_dev=0x12000001c000 upload_bytes=835536 children=2
+[mono_ns=305223462506170][T0xffff9c830020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaf8739a80 chip_hash=0x2a28b516acb02410 chip_dev=0x12000001c000 func_id=0 code_begin=0x1200000e78f0 code_end_exclusive=0x1200000e7a70 code_bytes=384 code_fnv1a64=0xb20df4d4a1e2df5b
+[mono_ns=305223462510240][T0xffff9c830020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaaaf8739a80 chip_hash=0x2a28b516acb02410 chip_dev=0x12000001c000 func_id=1 code_begin=0x1200000e7b30 code_end_exclusive=0x1200000e7f70 code_bytes=1088 code_fnv1a64=0x6fffaf8dea73dbb1
+[mono_ns=305223466146980][T0xffff9c830020][TIMING] record_host_orch_callable: [device_runner_base.cpp:2770] Callable registration: device=2 runner=0xaaaaf8739a80 cid=0 chip_hash=0x2a28b516acb02410 aicore_image_hash=0x7daa736ec3f18533 host_dlopen_count=1
+[mono_ns=305223470400090][T0xffff9c830020][ERROR] submit_task: [orchestrator.cpp:779] ========================================
+[mono_ns=305223470414050][T0xffff9c830020][ERROR] submit_task: [orchestrator.cpp:780] FATAL: Invalid Arg Detected!
+[mono_ns=305223470415760][T0xffff9c830020][ERROR] submit_task: [orchestrator.cpp:781] ========================================
+[mono_ns=305223470417030][T0xffff9c830020][ERROR] submit_task: [orchestrator.cpp:782] Error: External hard syncall requires full runtime core occupancy
+[mono_ns=305223470418450][T0xffff9c830020][ERROR] submit_task: [orchestrator.cpp:783]   tensor_count: 4, scalar_count: 0
+[mono_ns=305223470423600][T0xffff9c830020][ERROR] submit_task: [orchestrator.cpp:784] This is a bug in the orchestration code.
+[mono_ns=305223470424810][T0xffff9c830020][ERROR] submit_task: [orchestrator.cpp:785] ========================================
+[mono_ns=305223470429410][T0xffff9c830020][ERROR] run_host_orchestration: [runtime_maker.cpp:2259] simpler runtime failed: orch_error_code=5 sched_error_code=0 runtime_status=-5
+[mono_ns=305223470433470][T0xffff9c830020][ERROR] run_host_orchestration: [runtime_maker.cpp:2259] error detail: orch_error_code=5 INVALID_ARGS - an orchestration API rejected its arguments (bad alloc_tensors info, illegal nested scope, unknown task id in set_dependencies, or an CoreTaskArgs carrying an error flag)
+[mono_ns=305223470435770][T0xffff9c830020][ERROR] run_host_orchestration: [runtime_maker.cpp:2259] error hint: an orchestration bug, not a capacity problem -- resizing the rings will not help; recheck the arguments of the orchestration API calls listed above. See docs/troubleshooting/device-error-codes.md
+[mono_ns=305223470437070][T0xffff9c830020][ERROR] run_host_orchestration: [runtime_maker.cpp:2260] host-orch: refusing to upload an incomplete graph after 0 heap bytes
+[mono_ns=305223470442880][T0xffff9c830020][ERROR] bind_callable_to_runtime_impl: [runtime_maker.cpp:2850] host-orch: orchestration run failed
+[mono_ns=305223470450590][T0xffff9c830020][TIMING] emit_host_span: [STRACE] v=1 pid=1619440 tid=1619440 inv=1 hid=0 depth=1 name=chip.run.bind ts=305223466986250 dur=3461330
+[mono_ns=305223470462100][T0xffff9c830020][TIMING] emit_host_span: [STRACE] v=1 pid=1619440 tid=1619440 inv=1 hid=0 depth=0 name=chip.run ts=305223466931140 dur=3528660 run_id=0 dispatch_id=0 slot_id=0 generation=1 run_epoch=1
+[mono_ns=305223470551400][T0xffff9c830020][TIMING] emit_host_span: [STRACE] v=1 pid=1619440 tid=1619440 inv=0 hid=0 depth=1 name=chip.run.borrow_release ts=305223470548700 dur=0 ctx=0xaaaaf8739a80 borrow=1 ep=0 gen=1 disp=0 slot=0 run=0 proof=1 keep=0
+[mono_ns=305223482987060][T0xffff9c830020][TIMING] finalize_common_impl: [device_runner_base.cpp:3372] Callable image freed: device=2 runner=0xaaaaf8739a80 chip_hash=0x2a28b516acb02410 chip_dev=0x12000001c000 upload_bytes=835536
+F
+=================================== FAILURES ===================================
+_____________ test_cannbotdsl_rejects_partial_dynamic_barrier[hbg] _____________
+tests/st/runtime/external_kernel/test_cannbotdsl.py:202: in test_cannbotdsl_rejects_partial_dynamic_barrier
+    with pytest.raises(RuntimeError, match=r"finalize_native_run failed with code -5\b"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'finalize_native_run failed with code -5\\b'
+E     Actual message: 'prepare_native_run failed with code -5 (run_id=0 slot=0 generation=1 dispatch_id=0 run_epoch=1)'
+=============================== warnings summary ===============================
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_rejects_partial_dynamic_barrier[hbg]
+  <workspace>/issue75-env/pypto-pr/tests/st/conftest.py:584: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    return RunConfig(
+
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_rejects_partial_dynamic_barrier[hbg]
+  /home/server-toolkits/miniconda3/lib/python3.12/dataclasses.py:1588: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    return obj.__class__(**changes)
+
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_rejects_partial_dynamic_barrier[hbg]
+  <jit:program>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_rejects_partial_dynamic_barrier[hbg]
+  <jit:program>:9: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_rejects_partial_dynamic_barrier[hbg]
+1 failed, 13 deselected, 4 warnings in 7.86s
+[npu-lock] 已释放设备 2 的锁
+=== 任务失败 (exit=1) ===

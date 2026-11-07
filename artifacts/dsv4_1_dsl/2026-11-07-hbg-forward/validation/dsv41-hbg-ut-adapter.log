@@ -1,0 +1,114 @@
+<workspace>/issue75-env/pypto-pr/python/pypto/runtime/kernel_compiler.py:40: RuntimePinWarning: runtime/ is at f1c21abf77c7 but this PyPTO commit pins 6b6b88f2353c. You are running a runtime other than the one this PyPTO was tested against.
+  git submodule update --init runtime
+  check_runtime_pin()
+执行环境 <workspace>/issue75-env/pypto-pr/python/pypto/__init__.py <workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/python/simpler/__init__.py f1c21abf77c73cb6f03dd67de51f667755a1bfcb
+bringing up nodes...
+bringing up nodes...
+
+.......F...........                                                      [100%]
+=================================== FAILURES ===================================
+__ test_bare_inline_helper_keeps_runtime_slice_extent[BackendType.Ascend950] ___
+[gw1] linux -- Python 3.12.15 <workspace>/pypto-a5-dev/pypto-lib-dsv41-hbg-static/.venv/bin/python
+<workspace>/issue75-env/pypto-pr/python/pypto/ir/instruments.py:89: in _after_pass
+    reparsed = parse(printed, filename="<roundtrip>")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/language/parser/text_parser.py:267: in parse
+    exec(compiled_code, exec_ns)
+<workspace>/issue75-env/pypto-pr/python/pypto/language/parser/decorator.py:1398: in program
+    return _decorator(cls)
+           ^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/language/parser/decorator.py:1170: in _decorator
+    return _parse_program_body(c, strict_ssa, closure_vars)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/language/parser/decorator.py:1332: in _parse_program_body
+    ir_func = parser.parse_function(
+<workspace>/issue75-env/pypto-pr/python/pypto/language/parser/ast_parser.py:391: in parse_function
+    param_type, param_direction = self.type_resolver.resolve_param_type(arg.annotation)
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/language/parser/type_resolver.py:471: in resolve_param_type
+    resolved = self.resolve_type(type_node)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/language/parser/type_resolver.py:543: in resolve_type
+    return self._resolve_subscript_type(type_node)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/language/parser/type_resolver.py:759: in _resolve_subscript_type
+    shape = self._to_ir_shape(self._parse_shape(shape_node))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/language/parser/type_resolver.py:1341: in _parse_shape
+    return self._parse_shape_elements(shape_node.elts)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/language/parser/type_resolver.py:1449: in _parse_shape_elements
+    dims.append(self._resolve_shape_dim(elt))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/language/parser/type_resolver.py:1619: in _resolve_shape_dim
+    raise ParserTypeError(
+E   pypto.language.parser.diagnostics.exceptions.ParserTypeError: Unknown shape variable: rows_inline0__ssa_v0
+
+The above exception was the direct cause of the following exception:
+<workspace>/issue75-env/pypto-pr/tests/ut/jit/test_cannbotdsl_adapter.py:228: in test_bare_inline_helper_keeps_runtime_slice_extent
+    compiled = entry.compile(torch.zeros(17, 32), 3, config=RunConfig(backend_type=ascend_backend))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py:1462: in compile
+    compiled, _ordered_args, _run_config = self._resolve_compiled(args, kwargs, allow_signature_mode=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/server-toolkits/miniconda3/lib/python3.12/contextlib.py:81: in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py:1284: in _resolve_compiled
+    compiled = self._cache[key] = build()
+                                  ^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py:1217: in build
+    return self._compile(
+<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py:1687: in _compile
+    return ir_compile(parsed, skip_ptoas=skip_ptoas, **ir_compile_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/ir/compile.py:467: in compile
+    result = _compile_to_files(
+<workspace>/issue75-env/pypto-pr/python/pypto/ir/compile.py:649: in _compile_to_files
+    pipeline = _run_pass_pipeline(
+<workspace>/issue75-env/pypto-pr/python/pypto/ir/compile.py:287: in _run_pass_pipeline
+    transformed_program = pm.run_passes(
+<workspace>/issue75-env/pypto-pr/tests/ut/jit/conftest.py:60: in run_verified
+    return run_passes(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/ir/pass_manager.py:495: in run_passes
+    return self._pipeline.run(input_ir)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<workspace>/issue75-env/pypto-pr/python/pypto/ir/instruments.py:97: in _after_pass
+    raise RuntimeError(
+E   RuntimeError: [RoundtripInstrument] Parse failed after pass 'OutlineClusterScopes'.
+E
+E   Error: Unknown shape variable: rows_inline0__ssa_v0
+E     --> <roundtrip>:13:68
+E      |
+E   11 |         pass
+E   12 |     @pl.function(type=pl.FunctionType.Spmd)
+E   13 |     def entry_spmd_0(self, view_inline1__ssa_v0: pl.Out[pl.Tensor[[rows_inline0__ssa_v0, 32], pl.FP32]]):
+E      |                                                                    ^^^^^^^^^^^^^^^^^^^^ Unknown shape variable: rows_inline0__ssa_v0
+E   14 |         view_inline1__ssa_v1: pl.Tensor[[rows_inline0__ssa_v0, 32], pl.FP32] = self.fill(view_inline1__ssa_v0)
+E   15 |     @pl.function(type=pl.FunctionType.Orchestration, level=pl.Level.CHIP, role=pl.Role.Orchestrator)
+E      |
+E      = help: Use an integer, pl.dynamic() variable, or a Scalar variable defined earlier
+=============================== warnings summary ===============================
+tests/ut/jit/test_cannbotdsl_adapter.py::test_discovery_without_provider_hook[BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_same_kernel_switches_runtime_without_reusing_foreign_wrapper[BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_same_kernel_switches_runtime_without_reusing_foreign_wrapper[BackendType.Ascend950]
+  <jit:entry>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_cannbotdsl_adapter.py::test_bare_inline_helper_keeps_runtime_slice_extent[BackendType.Ascend950]
+  <jit:entry>:7: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape0-second_dtype0-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape1-second_dtype1-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape2-second_dtype2-BackendType.Ascend950]
+  <string>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape0-second_dtype0-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape1-second_dtype1-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape2-second_dtype2-BackendType.Ascend950]
+  <string>:10: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/ut/jit/test_cannbotdsl_adapter.py::test_bare_inline_helper_keeps_runtime_slice_extent[BackendType.Ascend950]
+1 failed, 18 passed, 10 warnings in 4.64s

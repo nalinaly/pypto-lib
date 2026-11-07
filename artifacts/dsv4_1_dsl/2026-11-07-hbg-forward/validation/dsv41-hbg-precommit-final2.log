@@ -1,0 +1,43 @@
+check-headers............................................................Passed
+check-english-only.......................................................Passed
+check-docs-en-zh-parity..................................................Passed
+check-docs-nav...........................................................Passed
+check-docs-symbol-coverage...............................................Passed
+check-no-broad-raises....................................................Passed
+check-environment-inputs.................................................Passed
+check-emitter-check-classification.......................................Passed
+check-op-name-literals...................................................Passed
+check-function-attr-key-parity...........................................Passed
+check-op-docstring-parity................................................Passed
+check-ir-property-parity.................................................Passed
+check-property-set-doc-parity............................................Passed
+check for added large files..............................................Passed
+check yaml...............................................................Passed
+fix end of files.........................................................Passed
+trim trailing whitespace.................................................Passed
+clang-format.............................................................Passed
+cpplint..................................................................Passed
+markdownlint-cli2........................................................Passed
+ruff check...............................................................Failed
+- hook id: ruff-check
+- exit code: 1
+
+E501 Line too long (113 > 110)
+   --> tests/ut/jit/test_cannbotdsl_adapter.py:238:111
+    |
+236 |     assert "arg0.shape[0] = t0->shapes[0];" in source
+237 |     manifest = json.loads(wrappers[0].with_name("manifest.json").read_text())
+238 |     shape_fields = [f["dimension"] for f in manifest["parameters"][0]["dynamic_fields"] if f["field"] == "shape"]
+    |                                                                                                               ^^^
+239 |     assert shape_fields == [0]
+    |
+
+Found 1 error.
+
+ruff format..............................................................Failed
+- hook id: ruff-format
+- files were modified by this hook
+
+1 file reformatted, 1072 files left unchanged
+
+pyright..................................................................Passed

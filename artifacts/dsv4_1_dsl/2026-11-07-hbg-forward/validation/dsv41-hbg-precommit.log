@@ -1,0 +1,502 @@
+check-headers............................................................Passed
+check-english-only.......................................................Passed
+check-docs-en-zh-parity..................................................Passed
+check-docs-nav...........................................................Passed
+check-docs-symbol-coverage...............................................Passed
+check-no-broad-raises....................................................Passed
+check-environment-inputs.................................................Passed
+check-emitter-check-classification.......................................Passed
+check-op-name-literals...................................................Passed
+check-function-attr-key-parity...........................................Passed
+check-op-docstring-parity................................................Passed
+check-ir-property-parity.................................................Passed
+check-property-set-doc-parity............................................Passed
+check for added large files..............................................Passed
+check yaml...............................................................Passed
+fix end of files.........................................................Passed
+trim trailing whitespace.................................................Passed
+clang-format.............................................................Failed
+- hook id: clang-format
+- exit code: 1
+
+Executable `clang-format` not found
+
+cpplint..................................................................Passed
+markdownlint-cli2........................................................Failed
+- hook id: markdownlint-cli2
+- files were modified by this hook
+
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/language/03-memory.md docs/zh/dev/codegen/01-orchestration_codegen.md docs/en/dev/codegen/05-simt-lowering.md docs/zh/user/language/06-syntax.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/51-materialize_dist_tensor_ctx.md docs/en/user/performance/05-memory.md docs/en/dev/passes/91-utility_passes.md docs/zh/user/performance/index.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/00-getting_started.md docs/en/dev/08-entry-points.md docs/zh/user/performance/03-dependencies.md docs/zh/dev/passes/51-materialize_dist_tensor_ctx.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/precision/00-workflow.md docs/en/dev/passes/17-block_mx_scale_tensor_views.md docs/zh/user/tutorials/02-matmul.md docs/zh/user/distributed/index.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/21-infer_tile_memory_space.md docs/zh/user/execution/01-run.md docs/en/user/performance/06-host.md docs/en/dev/language/index.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/passes/08-outline_graph_scopes.md docs/en/dev/language/05-cache-policy.md docs/zh/dev/passes/10-outline_cluster_scopes.md docs/en/reference/pto-isa/01-tpush_tpop.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: .claude/rules/language-policy.md docs/en/dev/passes/32-lower_pipeline_loops.md docs/en/user/tutorials/05-scheduling-tuning.md docs/en/user/tools/03-ir-trace.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/passes/47-expand_manual_phase_fence.md docs/en/user/tasks/02-submit.md docs/zh/user/language/00-types.md docs/zh/dev/passes/29-normalize_return_order.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/distributed/06-hello_rank.md docs/zh/user/performance/02-runtime-overhead.md docs/en/user/tasks/00-model.md docs/zh/dev/language/03-functions.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/language/02-manual_dependencies.md docs/en/user/distributed/17-broadcast.md docs/zh/user/performance/06-host.md docs/en/user/03-programming-model.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/language/04-external-kernels.md docs/zh/dev/03-runtime-replay.md docs/en/dev/10-jit-cache.md docs/en/user/tutorials/03-mixed-kernel.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: .claude/rules/explaining-problems.md docs/zh/dev/passes/06-flatten_call_expr.md docs/zh/dev/passes/01-inline_functions.md docs/zh/dev/passes/loop-carried-dep-compression.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/tools/01-torch-codegen.md docs/zh/dev/08-artifact-identity.md docs/zh/dev/backend/01-sync_resources.md docs/en/user/tools/04-runtime-dfx.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: .claude/rules/cross-layer-sync.md docs/en/dev/07-memory-map.md docs/zh/user/01-installation.md docs/en/dev/ir/03-structural_comparison.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/precision/00-workflow.md .claude/skills/compare-codegen/SKILL.md docs/zh/dev/passes/05-simplify.md README.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/passes/19-auto_tile_matmul_l0.md .claude/rules/documentation.md docs/en/dev/passes/27-split_vector_kernel.md docs/zh/user/execution/index.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/04-convert_to_ssa.md docs/zh/dev/07-memory-map.md docs/en/user/language/04-scopes.md docs/zh/dev/passes/22-insert_mx_scale_addr.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/tasks/03-tuning.md docs/en/user/index.md docs/zh/dev/passes/56-materialize_valid_shape_symbols.md docs/zh/dev/passes/33-canonicalize_io_order.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/ptoas-op-status.md docs/en/dev/passes/43-lower_l2_tensor_collectives.md docs/en/dev/passes/22-insert_mx_scale_addr.md docs/en/dev/passes/44-legalize_spmd_launches.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/06-flatten_call_expr.md docs/zh/dev/passes/28-stamp_tfree_split.md docs/en/dev/passes/01-inline_functions.md docs/zh/user/tutorials/01-reduction-softmax.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/reference/pto-isa/00-cluster_architecture.md docs/en/dev/passes/05-simplify.md .gemini/styleguide.md docs/en/dev/passes/13-optimize_orch_tensors.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/codegen/05-simt-lowering.md docs/en/user/precision/index.md .claude/skills/weekly-changelog/SKILL.md docs/zh/user/performance/05-memory.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/48-synthesize_allreduce_signals.md docs/en/dev/ir/02-types.md docs/zh/user/appendix/00-feature-matrix.md .claude/rules/worktree-builds.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/performance/01-task-granularity.md docs/zh/dev/language/01-statements.md docs/en/reference/index.md docs/zh/dev/passes/39-memory_reuse.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/passes/34-materialize_tensor_strides.md docs/zh/dev/passes/25-expand_mixed_kernel.md docs/zh/dev/ir/00-overview.md docs/en/dev/passes/50-lower_host_tensor_collectives.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: .github/copilot-instructions.md docs/en/dev/language/03-functions.md docs/zh/dev/passes/04-convert_to_ssa.md docs/en/user/tools/00-debugging.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/distributed/01-collectives.md docs/zh/dev/passes/37-init_memref.md docs/zh/user/distributed/20-all_to_all.md docs/en/dev/01-compile-profiling.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/tools/00-debugging.md docs/en/user/tutorials/index.md docs/zh/user/tools/04-runtime-dfx.md docs/zh/dev/distributed_ops.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/distributed/19-reduce_scatter.md docs/en/user/language/05-directives.md docs/en/dev/ptoas-op-status.md docs/zh/dev/passes/26-inject_gm_pipe_buffer.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/reference/pto-isa/00-cluster_architecture.md docs/zh/user/distributed/11-put_get.md docs/en/user/language/06-syntax.md docs/en/user/distributed/04-debugging.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/tasks/index.md src/ir/op/README.md docs/zh/reference/index.md docs/en/dev/passes/45-derive_call_directions.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/distributed/04-debugging.md docs/en/dev/index.md docs/zh/user/performance/00-swimlane.md docs/zh/dev/08-entry-points.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/99-verifier.md docs/zh/dev/passes/36-specialize_simt_helpers.md docs/en/dev/passes/54-classify_iter_arg_carry.md docs/zh/dev/passes/00-pass_manager.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/language/06-register-operations.md docs/en/dev/passes/26-inject_gm_pipe_buffer.md docs/en/dev/ir/08-param-directions.md docs/en/dev/codegen/02-kernel_wrapper.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/07-ir-lower-trace.md docs/zh/dev/ir/03-structural_comparison.md docs/en/dev/05-runtime-ring-sizing.md docs/en/dev/ir/05-tensor-tile-ops.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/tools/06-incore-trace.md docs/zh/user/03-programming-model.md docs/en/dev/passes/02-unroll_loops.md docs/en/user/distributed/16-allreduce_reveal.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/57-lower_tile_to_buffer.md docs/en/index.md docs/zh/user/index.md docs/en/user/execution/index.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/distributed/05-tutorials.md docs/zh/api/optimizations.md docs/en/user/tutorials/04-task-graph.md docs/en/user/performance/04-incore.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/passes/42-fuse_create_assemble_to_slice.md .claude/rules/first-principles.md docs/zh/dev/runtime/kernel-mode.md docs/zh/dev/language/05-cache-policy.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/28-stamp_tfree_split.md docs/en/dev/ir/09-multi_output_ops.md docs/en/user/01-installation.md docs/en/dev/ir/07-parser.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/03-logging.md docs/zh/dev/passes/44-legalize_spmd_launches.md docs/en/dev/04-simulator-trace-cleaning.md docs/en/user/distributed/10-remote_load_store.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/09-artifact-store.md docs/zh/user/appendix/01-faq.md docs/zh/dev/codegen/04-simt-native-validation.md docs/zh/user/ops/01-catalog.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/passes/91-utility_passes.md docs/zh/api/system.md .claude/rules/ir-kind-traits.md docs/zh/user/tools/05-replay.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/language/01-functions.md docs/zh/dev/passes/20-canonicalize_tile_slice.md docs/en/dev/08-artifact-identity.md docs/en/dev/codegen/03-vpto-vf-integration.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/performance/02-runtime-overhead.md docs/en/user/tools/05-replay.md docs/zh/dev/00-ecosystem.md docs/en/dev/passes/03-ctrl_flow_transform.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/41-fold_no_op_reshape.md docs/zh/dev/passes/32-lower_pipeline_loops.md docs/zh/user/distributed/02-primitives.md docs/zh/user/distributed/03-execution.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/codegen/01-orchestration_codegen.md python/pypto/language/parser/README.md docs/zh/dev/passes/41-fold_no_op_reshape.md docs/zh/dev/passes/11-deduplicate_outlined_kernels.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/47-expand_manual_phase_fence.md docs/en/dev/passes/34-materialize_tensor_strides.md docs/zh/dev/01-compile-profiling.md docs/zh/user/tutorials/index.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: .claude/skills/add-op/reference.md docs/zh/dev/passes/54-classify_iter_arg_carry.md docs/en/user/distributed/20-all_to_all.md .claude/skills/code-review/SKILL.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/performance/00-swimlane.md docs/en/user/tasks/03-tuning.md docs/zh/user/distributed/00-model.md docs/zh/api/array.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/passes/17-block_mx_scale_tensor_views.md docs/zh/user/language/index.md docs/zh/dev/passes/18-legalize_tile_cast.md docs/zh/dev/04-simulator-trace-cleaning.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/debug/00-torch_codegen.md docs/zh/user/distributed/14-allreduce_two_phase.md docs/en/user/execution/00-compile.md docs/en/dev/ir/01-hierarchy.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/reference/pto-isa/index.md docs/en/dev/backend/01-sync_resources.md docs/en/user/distributed/02-primitives.md docs/en/dev/ir/11-simt.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/04-dev-container.md docs/en/user/distributed/index.md docs/en/dev/03-runtime-replay.md docs/zh/dev/passes/57-lower_tile_to_buffer.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/35-materialize_simt_outputs.md docs/zh/user/appendix/index.md docs/en/user/tools/index.md docs/en/dev/passes/07-outline_hierarchy_scopes.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/tutorials/02-matmul.md docs/en/dev/ir/00-overview.md docs/en/api/array.md .claude/rules/plans-and-proposals.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/distributed/18-allgather.md docs/en/dev/passes/37-init_memref.md docs/zh/user/distributed/19-reduce_scatter.md docs/en/dev/passes/14-lower_composite_ops.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/distributed/12-dynamic_rank_count.md docs/en/api/prefetch.md docs/zh/user/distributed/05-tutorials.md docs/en/dev/passes/utils.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: .claude/rules/documentation-length.md docs/zh/user/precision/index.md docs/en/user/appendix/00-feature-matrix.md README.zh-CN.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: .claude/rules/pass-context-config.md .claude/rules/python-style.md docs/zh/dev/passes/15-flatten_tile_nd_to_2d.md docs/en/user/distributed/03-execution.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/tools/06-incore-trace.md docs/en/dev/ir/10-operator-effects.md docs/zh/user/distributed/08-window_buffer.md docs/zh/user/04-dev-container.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/tools/index.md docs/zh/user/language/04-scopes.md docs/en/dev/backend/index.md docs/en/user/performance/03-dependencies.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/passes/55-insert_comm_fence.md docs/en/dev/03-runtime-dfx.md docs/zh/api/tile.md docs/en/api/tile.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: .claude/rules/error-checking.md docs/en/dev/codegen/04-simt-native-validation.md docs/zh/reference/pto-isa/01-tpush_tpop.md docs/en/dev/passes/55-insert_comm_fence.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/distributed/10-remote_load_store.md docs/zh/user/language/01-functions.md docs/zh/dev/10-jit-cache.md docs/zh/dev/03-runtime-dfx.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: .claude/rules/problem-handling.md docs/en/dev/passes/18-legalize_tile_cast.md docs/zh/user/tutorials/00-elementwise.md docs/zh/dev/passes/09-outline_incore_scopes.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/09-artifact-store.md docs/en/dev/passes/42-fuse_create_assemble_to_slice.md docs/zh/user/distributed/13-allreduce_mesh.md docs/zh/user/language/02-control-flow.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/56-materialize_valid_shape_symbols.md docs/en/user/ops/01-catalog.md docs/zh/user/distributed/17-broadcast.md docs/en/reference/pto-isa/index.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/passes/53-materialize_runtime_scopes.md docs/en/user/appendix/01-faq.md docs/zh/dev/passes/24-lower_auto_vector_split.md docs/en/user/tasks/index.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/language/index.md docs/zh/dev/ir/06-builder.md docs/zh/dev/ir/08-param-directions.md docs/en/user/distributed/06-hello_rank.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/ir/01-hierarchy.md docs/zh/dev/ir/05-tensor-tile-ops.md docs/en/dev/passes/30-skew_cross_core_pipeline.md docs/zh/dev/passes/13-optimize_orch_tensors.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/tutorials/01-reduction-softmax.md docs/en/dev/passes/12-convert_tensor_to_tile_ops.md docs/en/dev/passes/33-canonicalize_io_order.md docs/en/dev/passes/loop-carried-dep-compression.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/ir/index.md docs/en/user/tutorials/00-elementwise.md docs/zh/dev/passes/14-lower_composite_ops.md docs/zh/dev/passes/03-ctrl_flow_transform.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/passes/38-materialize_semantic_aliases.md docs/zh/user/distributed/01-collectives.md docs/en/dev/passes/15-flatten_tile_nd_to_2d.md docs/zh/dev/ir/11-simt.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/49-materialize_comm_domain_scopes.md .claude/skills/add-op/SKILL.md .claude/rules/pass-doc-ordering.md docs/zh/dev/passes/45-derive_call_directions.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/ir/05-operators.md docs/en/api/system.md docs/en/user/distributed/12-dynamic_rank_count.md docs/zh/user/distributed/09-barrier.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/02-quickstart.md docs/zh/dev/debug/index.md docs/zh/user/tutorials/05-scheduling-tuning.md docs/en/user/distributed/00-model.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/distributed_ops.md docs/en/user/distributed/11-put_get.md docs/zh/dev/passes/utils.md docs/en/user/performance/01-task-granularity.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/tools/02-memory-map.md docs/zh/dev/passes/27-split_vector_kernel.md docs/zh/dev/passes/50-lower_host_tensor_collectives.md docs/en/dev/passes/92-diagnostics.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: .claude/rules/pass-submit-awareness.md docs/zh/dev/ir/07-parser.md docs/zh/dev/passes/23-resolve_backend_op_layouts.md docs/zh/dev/passes/40-allocate_memory_addr.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/distributed/21-putting_it_together.md docs/zh/dev/backend/00-backend_handler.md docs/zh/user/distributed/16-allreduce_reveal.md docs/en/dev/backend/02-macro_resources.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/fp4.md docs/en/user/ops/index.md docs/zh/dev/03-logging.md docs/en/dev/passes/23-resolve_backend_op_layouts.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/29-normalize_return_order.md docs/en/dev/passes/11-deduplicate_outlined_kernels.md docs/en/dev/ir/04-serialization.md docs/zh/user/tools/02-memory-map.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/52-legalize_graph_boundary.md docs/en/dev/passes/36-specialize_simt_helpers.md docs/en/dev/ir/index.md docs/zh/user/tasks/02-submit.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/ir/05-operators.md docs/en/user/tools/01-torch-codegen.md docs/zh/dev/passes/43-lower_l2_tensor_collectives.md docs/en/dev/language/01-statements.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/06-persistent-l3.md .claude/rules/pass-complexity.md docs/zh/user/tutorials/03-mixed-kernel.md docs/zh/user/language/05-directives.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/codegen/00-pto_codegen.md docs/zh/api/language.md docs/en/dev/passes/40-allocate_memory_addr.md docs/zh/dev/passes/02-unroll_loops.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/performance/index.md docs/zh/user/ops/00-dispatch.md docs/en/dev/codegen/index.md docs/zh/user/distributed/07-programming_model.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/fp4.md docs/zh/dev/06-persistent-l3.md tests/st/README.md docs/zh/dev/codegen/02-kernel_wrapper.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/backend/02-macro_resources.md docs/zh/dev/05-runtime-ring-sizing.md docs/zh/index.md docs/en/dev/language/06-register-operations.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/24-lower_auto_vector_split.md docs/zh/dev/backend/index.md docs/en/reference/pto-isa/02-buffer_management.md docs/zh/dev/passes/48-synthesize_allreduce_signals.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/distributed/15-allreduce_ring.md docs/zh/user/tasks/01-scopes.md docs/en/api/language.md docs/en/dev/backend/00-backend_handler.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/user/precision/01-cases.md docs/zh/dev/language/02-manual_dependencies.md docs/zh/user/ops/index.md docs/zh/dev/index.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/index.md docs/zh/dev/passes/92-diagnostics.md docs/en/user/tasks/01-scopes.md docs/en/dev/codegen/00-pto_codegen.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/distributed/14-allreduce_two_phase.md docs/en/dev/ir/06-builder.md docs/zh/user/performance/04-incore.md docs/zh/dev/passes/12-convert_tensor_to_tile_ops.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/19-auto_tile_matmul_l0.md docs/en/dev/passes/00-pass_manager.md docs/zh/user/distributed/21-putting_it_together.md .claude/rules/reply-language.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/53-materialize_runtime_scopes.md docs/en/user/language/02-control-flow.md docs/zh/dev/passes/49-materialize_comm_domain_scopes.md docs/zh/dev/codegen/03-vpto-vf-integration.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/ops/00-dispatch.md docs/en/user/distributed/15-allreduce_ring.md docs/zh/reference/pto-isa/02-buffer_management.md docs/en/dev/language/04-external-kernels.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: .claude/rules/pass-synchronization.md docs/zh/user/distributed/18-allgather.md docs/zh/dev/passes/35-materialize_simt_outputs.md docs/zh/dev/passes/46-auto_derive_task_dependencies.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/language/00-python_syntax.md docs/zh/dev/ir/09-multi_output_ops.md docs/zh/user/tutorials/04-task-graph.md docs/zh/dev/codegen/index.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/passes/21-infer_tile_memory_space.md docs/en/dev/passes/39-memory_reuse.md .claude/CLAUDE.md docs/zh/dev/ir/02-types.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: SECURITY.md docs/en/user/distributed/09-barrier.md docs/en/user/execution/01-run.md docs/en/api/optimizations.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/20-canonicalize_tile_slice.md docs/zh/dev/passes/index.md .claude/rules/core-development.md docs/en/dev/language/00-python_syntax.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/02-error-handling.md docs/en/dev/passes/08-outline_graph_scopes.md docs/zh/dev/07-ir-lower-trace.md docs/en/dev/passes/16-block_nz_tensor_views.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: AGENTS.md .claude/rules/operator-identity-checks.md docs/zh/dev/ir/04-serialization.md docs/zh/dev/passes/52-legalize_graph_boundary.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/46-auto_derive_task_dependencies.md .claude/skills/testing/SKILL.md docs/en/user/distributed/07-programming_model.md .claude/rules/testing-and-examples.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/distributed/08-window_buffer.md docs/en/dev/passes/31-lower_pipeline_to_slots.md docs/zh/dev/passes/31-lower_pipeline_to_slots.md docs/zh/user/execution/00-compile.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/api/tensor.md docs/en/user/language/00-types.md docs/en/user/00-getting_started.md docs/zh/user/tools/03-ir-trace.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/distributed/13-allreduce_mesh.md docs/en/api/index.md docs/en/user/appendix/index.md docs/en/user/language/03-memory.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/38-materialize_semantic_aliases.md docs/zh/user/tasks/00-model.md docs/en/dev/00-ecosystem.md docs/en/dev/passes/09-outline_incore_scopes.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/precision/01-cases.md docs/en/api/tensor.md docs/en/dev/02-error-handling.md docs/zh/dev/passes/99-verifier.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/user/language/index.md docs/zh/dev/passes/16-block_nz_tensor_views.md docs/en/dev/debug/index.md docs/zh/dev/debug/00-torch_codegen.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/passes/25-expand_mixed_kernel.md docs/zh/api/prefetch.md docs/zh/dev/passes/30-skew_cross_core_pipeline.md docs/en/user/02-quickstart.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/en/dev/runtime/kernel-mode.md docs/en/dev/passes/10-outline_cluster_scopes.md docs/zh/dev/passes/07-outline_hierarchy_scopes.md docs/zh/api/index.md
+Linting: 4 file(s)
+Summary: 0 error(s)
+markdownlint-cli2 v0.20.0 (markdownlint v0.40.0)
+Finding: docs/zh/dev/ir/10-operator-effects.md
+Linting: 1 file(s)
+Summary: 0 error(s)
+
+ruff check...............................................................Failed
+- hook id: ruff-check
+- exit code: 1
+
+Executable `ruff` not found
+
+ruff format..............................................................Failed
+- hook id: ruff-format
+- exit code: 1
+
+Executable `ruff` not found
+
+pyright..................................................................Passed

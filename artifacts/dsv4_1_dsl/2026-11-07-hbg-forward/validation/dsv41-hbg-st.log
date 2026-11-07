@@ -1,0 +1,32 @@
+任务已提交: task_20261107_012636_132619215563 (断开后可用 task-submit --wait task_20261107_012636_132619215563 重连)
+等待任务执行: task_20261107_012636_132619215563 (Ctrl+C 终止任务)
+[npu-lock] 获取设备 0 的锁 (无超时)...
+[npu-lock] 已获取设备 0 的锁 (pid=1326308)
+<workspace>/issue75-env/pypto-pr/python/pypto/runtime/kernel_compiler.py:40: RuntimePinWarning: runtime/ is at f1c21abf77c7 but this PyPTO commit pins 6b6b88f2353c. You are running a runtime other than the one this PyPTO was tested against.
+  git submodule update --init runtime
+  check_runtime_pin()
+执行环境 <workspace>/issue75-env/pypto-pr/python/pypto/__init__.py <workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/python/simpler/__init__.py f1c21abf77c73cb6f03dd67de51f667755a1bfcb
+FFF
+=================================== FAILURES ===================================
+__________________ test_cannbotdsl_partial_spmd_context[tmr] ___________________
+<workspace>/issue75-env/pypto-pr/tests/st/runtime/external_kernel/test_cannbotdsl.py:81: running the test EXITED with status 3
+__________________ test_cannbotdsl_partial_spmd_context[hbg] ___________________
+<workspace>/issue75-env/pypto-pr/tests/st/runtime/external_kernel/test_cannbotdsl.py:81: running the test EXITED with status 3
+_____________ test_cannbotdsl_runtime_slice_preserves_tail[tmr-0] ______________
+<workspace>/issue75-env/pypto-pr/tests/st/runtime/external_kernel/test_cannbotdsl.py:105: running the test EXITED with status 3
+=============================== warnings summary ===============================
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_partial_spmd_context[tmr]
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_partial_spmd_context[hbg]
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_runtime_slice_preserves_tail[tmr-0]
+  /home/server-toolkits/miniconda3/lib/python3.12/multiprocessing/popen_fork.py:66: DeprecationWarning: This process (pid=1326352) is multi-threaded, use of fork() may lead to deadlocks in the child.
+    self.pid = os.fork()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_partial_spmd_context[tmr]
+FAILED tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_partial_spmd_context[hbg]
+FAILED tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_runtime_slice_preserves_tail[tmr-0]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 3 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+3 failed, 3 warnings in 14.96s
+[npu-lock] 已释放设备 0 的锁
+=== 任务失败 (exit=1) ===

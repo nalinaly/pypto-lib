@@ -1,0 +1,18 @@
+<workspace>/issue75-env/pypto-pr/python/pypto/runtime/kernel_compiler.py:40: RuntimePinWarning: runtime/ is at f1c21abf77c7 but this PyPTO commit pins 6b6b88f2353c. You are running a runtime other than the one this PyPTO was tested against.
+  git submodule update --init runtime
+  check_runtime_pin()
+执行环境 <workspace>/issue75-env/pypto-pr/python/pypto/__init__.py <workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/python/simpler/__init__.py f1c21abf77c73cb6f03dd67de51f667755a1bfcb
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_bare_inline_helper_specializes_runtime_slice_extent[BackendType.Ascend950] _
+<workspace>/issue75-env/pypto-pr/tests/ut/jit/test_cannbotdsl_adapter.py:237: in test_bare_inline_helper_specializes_runtime_slice_extent
+    assert "arg0.shape[1] = 32;" in source
+E   assert 'arg0.shape[1] = 32;' in '#include "c_api/asc_simd.h"\n#include "tensormap_and_ringbuffer/tensor.h"\n#include "intrinsic.h"\n#pragma push_macro...(PIPE_ALL);\n    asc_dcci_entire_out();\n    dsb(DSB_DDR);\n    set_atomic_none();\n    asc_set_ctrl(saved_ctrl);\n}\n'
+=============================== warnings summary ===============================
+tests/ut/jit/test_cannbotdsl_adapter.py::test_bare_inline_helper_specializes_runtime_slice_extent[BackendType.Ascend950]
+  <jit:entry>:7: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/ut/jit/test_cannbotdsl_adapter.py::test_bare_inline_helper_specializes_runtime_slice_extent[BackendType.Ascend950]
+1 failed, 18 deselected, 1 warning in 0.31s

@@ -1,0 +1,95 @@
+任务已提交: task_20261107_015151_163445011482 (断开后可用 task-submit --wait task_20261107_015151_163445011482 重连)
+等待任务执行: task_20261107_015151_163445011482 (Ctrl+C 终止任务)
+[npu-lock] 获取设备 2 的锁 (无超时)...
+[npu-lock] 已获取设备 2 的锁 (pid=1634620)
+<workspace>/issue75-env/pypto-pr/python/pypto/runtime/kernel_compiler.py:40: RuntimePinWarning: runtime/ is at f1c21abf77c7 but this PyPTO commit pins 6b6b88f2353c. You are running a runtime other than the one this PyPTO was tested against.
+  git submodule update --init runtime
+  check_runtime_pin()
+执行环境 <workspace>/issue75-env/pypto-pr/python/pypto/__init__.py <workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/python/simpler/__init__.py f1c21abf77c73cb6f03dd67de51f667755a1bfcb
+[mono_ns=305281344153450][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=0 hid=0 depth=0 name=chip.prewarm.build ts=305281322517040 dur=21628410
+[mono_ns=305281353205020][T0xffffbe538020][TIMING] log_callable_image: Callable image: device=2 runner=0xaaab185431c0 chip_hash=0xde72399de799b6be chip_dev=0x12000001d000 upload_bytes=613456 children=2
+[mono_ns=305281353217950][T0xffffbe538020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaab185431c0 chip_hash=0xde72399de799b6be chip_dev=0x12000001d000 func_id=0 code_begin=0x1200000b25b0 code_end_exclusive=0x1200000b2730 code_bytes=384 code_fnv1a64=0xb20df4d4a1e2df5b
+[mono_ns=305281353222320][T0xffffbe538020][TIMING] log_callable_image: Callable code: device=2 runner=0xaaab185431c0 chip_hash=0xde72399de799b6be chip_dev=0x12000001d000 func_id=1 code_begin=0x1200000b27f0 code_end_exclusive=0x1200000b2c30 code_bytes=1088 code_fnv1a64=0x6fffaf8dea73dbb1
+[mono_ns=305281353229850][T0xffffbe538020][TIMING] record_device_orch_callable: [device_runner_base.cpp:2727] Callable registration: device=2 runner=0xaaab185431c0 cid=0 chip_hash=0xde72399de799b6be aicore_image_hash=0x7daa736ec3f18533 orch_hash=0x223ac43709ad3a67 orch_bytes=593936
+[mono_ns=305281359632750][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=2 name=chip.run.bind.args ts=305281359629400 dur=900
+[mono_ns=305281359641720][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=2 name=chip.run.bind.prebuilt ts=305281359638820 dur=1640
+[mono_ns=305281359644710][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=1 name=chip.run.bind ts=305281359606520 dur=36900
+[mono_ns=305281359647320][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=1 name=chip.run.publish_image ts=305281359646180 dur=70
+[mono_ns=305281360654750][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=1 name=chip.run.stage_inputs ts=305281359651120 dur=999100
+[mono_ns=305281372395840][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=1 name=chip.run.prepare_execution ts=305281360662280 dur=11730280
+[mono_ns=305281373435700][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=1 name=chip.run.proof.record ts=305281373432490 dur=0 f=0xaaab14ddd090 e=0xaaab186b01d8 s=0xaaab1b07b5d8 role=0 ep=1 gen=1 disp=0 slot=0
+[mono_ns=305281373443210][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=2 name=chip.run.runner_run.aicpu_launch ts=305281373441660 dur=0
+[mono_ns=305281373458640][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=1 name=chip.run.proof.record ts=305281373456110 dur=0 f=0xaaab14ddd090 e=0xaaab1af36598 s=0xaaab1af37108 role=1 ep=1 gen=1 disp=0 slot=0
+[mono_ns=305281382746550][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=0 hid=0 depth=1 name=chip.run.proof.event_wait ts=305281382742360 dur=0 e=0xaaab1af36598 rc=0 status_valid=0 status=0 timeout_ms=50000 fresh=1
+[mono_ns=305281382757290][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=0 hid=0 depth=1 name=chip.run.proof.consume ts=305281382755700 dur=0 f=0xaaab14ddd090 e=0xaaab1af36598 role=1 ep=1 gen=1 disp=0 slot=0 op=wait rc=0 c=1 cache=0 owner=1
+[mono_ns=305281382768310][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=0 hid=0 depth=1 name=chip.run.proof.event_wait ts=305281382766990 dur=0 e=0xaaab186b01d8 rc=0 status_valid=0 status=0 timeout_ms=50000 fresh=1
+[mono_ns=305281382771480][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=0 hid=0 depth=1 name=chip.run.proof.consume ts=305281382770230 dur=0 f=0xaaab14ddd090 e=0xaaab186b01d8 role=0 ep=1 gen=1 disp=0 slot=0 op=wait rc=0 c=1 cache=0 owner=1
+[mono_ns=305281382947910][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=1 name=chip.run.runner_run ts=305281372414900 dur=10530840
+[mono_ns=305281382955470][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=2 name=chip.run.runner_run.device_wall ts=0 dur=663635 clk=dev dev_id=2 dev_start_cycle=305485890835548 dev_end_cycle=305485891499183 dev_cnt_hz=1000000000
+[mono_ns=305281382958340][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=3 name=chip.run.runner_run.device_wall.preamble ts=0 dur=369298 clk=dev
+[mono_ns=305281382961520][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=3 name=chip.run.runner_run.device_wall.graph_build ts=14703 dur=624089 clk=dev
+[mono_ns=305281382966190][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=3 name=chip.run.runner_run.device_wall.config_validate ts=15152 dur=1574 clk=dev
+[mono_ns=305281382968290][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=3 name=chip.run.runner_run.device_wall.arena_wire ts=16761 dur=1883 clk=dev
+[mono_ns=305281382974320][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=3 name=chip.run.runner_run.device_wall.sm_reset ts=18665 dur=2945 clk=dev
+[mono_ns=305281382977210][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=3 name=chip.run.runner_run.device_wall.post_orch ts=639115 dur=3406 clk=dev
+[mono_ns=305281382980280][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=3 name=chip.run.runner_run.device_wall.orch ts=21882 dur=614942 clk=dev
+[mono_ns=305281382991760][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=2 name=chip.run.runner_run.device_boundaries ts=305281382990310 dur=0 clk=host dev_id=2 aic_start=305485889968 aic_rc=0 wo_end=0 wo_rc=-1000 ts_hz=1000000
+[mono_ns=305281382998620][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=1 name=chip.run.claim_release ts=305281382997240 dur=270
+[mono_ns=305281383009200][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=0 hid=0 depth=1 name=chip.run.borrow_release ts=305281383005640 dur=0 ctx=0xaaab185431c0 borrow=1 ep=1 gen=1 disp=0 slot=0 run=0 proof=1 keep=0
+[mono_ns=305281383026510][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=0 hid=0 depth=1 name=chip.run.proof.observe_begin ts=305281383025060 dur=0 ep=1 gen=1 disp=0 slot=0 aicpu=0xaaab1af37108 aicore=0xaaab1b07b5d8
+[mono_ns=305281383314680][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=0 hid=0 depth=1 name=chip.run.proof.stream_wait ts=305281383312890 dur=0 role=AICPU s=0xaaab1af37108 rc=507018 timeout_ms=50000 fresh=1
+[mono_ns=305281383325920][T0xffffbe538020][ERROR] sync_stream_pair: [device_runner_base.cpp:3926] aclrtSynchronizeStreamWithTimeout (AICPU) failed: 507018
+[mono_ns=305281383328220][T0xffffbe538020][ERROR] sync_stream_pair: [device_runner_base.cpp:3927] ACL error detail: 507018 ACL_ERROR_RT_AICPU_EXCEPTION - an AICPU task raised an exception; several distinct on-device mechanisms all surface as this one generic code
+[mono_ns=305281383330620][T0xffffbe538020][ERROR] sync_stream_pair: [device_runner_base.cpp:3927] ACL error hint: do NOT read this as 'deadlock' or 'OOM' on its own -- it is a generic host-side code. Grep the host log for 'orch_error_code=' / 'sched_error_code=' / 'sub_class=' to get the device-classified reason, and read the device log for the detector that fired. See docs/troubleshooting/device-error-codes.md
+[mono_ns=305281383435020][T0xffffbe538020][ERROR] sync_stream_pair: [device_runner_base.cpp:3927] ACL recent error message: E39999: Internal error!
+E39999[PID: 1634661] 2026-11-07-01:52:00.843.140 (E39999):  The error from device(chipId:0, dieId:0), serial number is 277, an exception occurred during AICPU execution, stream_id:253, task_pos:9, errcode:21008, msg:inner error.[FUNC:ProcessStarsAicpuErrorInfo][FILE:device_error_proc.cc][LINE:1254]
+TraceBack (most recent call last):
+       An error occurred in~
+[mono_ns=305281383443420][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=0 hid=0 depth=1 name=chip.run.proof.observe_return ts=305281383441770 dur=0 ep=1 gen=1 disp=0 slot=0 rc=507018 cached=1 physical=1 polled=0 poll=0 retained=1
+[mono_ns=305281383606100][T0xffffbe538020][ERROR] log_run_failure: [device_runner_base.cpp:2292] Run device failure: device=2 runner=0xaaab185431c0 rc=507018 run_epoch=1 generation=1 dispatch_id=0 pipeline_slot=0 cid=0 chip_hash=0xde72399de799b6be chip_dev=0x12000001d000 runtime_args=(nil)
+[mono_ns=305281383623060][T0xffffbe538020][WARN] recover_device_or_mark_unusable: [device_runner.cpp:1218] AICore error 507018: device drained, but force-resetting in finalize regardless (drain success does not prove the card is clean)
+[mono_ns=305281383637370][T0xffffbe538020][ERROR] operator(): [device_runner_base.cpp:4875] device fault reported: device_id=2 stream_id=253 task_id=16 error_code=507018 thread_id=1634661 (device-level; not attributed to any run)
+[mono_ns=305281383647480][T0xffffbe538020][ERROR] consume_device_fault_notices: [device_runner_base.cpp:4925] device 2: fault channel matched 1 notice(s) to its run streams (first code=507018, generation=0). Admission is refused until a confirmed reset retires this generation; no run's outcome is changed by it.
+[mono_ns=305281383649750][T0xffffbe538020][WARN] finalize_native_run: [c_api_shared.cpp:2810] device fault channel matched 1 notice(s) to this runner's run streams while finalizing run_id=0 dispatch_id=0 slot_id=0 generation=1 run_epoch=1; this run's own outcome is unchanged and the device refuses further admission
+[mono_ns=305281383652920][T0xffffbe538020][ERROR] copy_back_run_outputs_impl: [runtime_maker.cpp:1097] simpler runtime failed: orch_error_code=5 sched_error_code=0 runtime_status=-5
+[mono_ns=305281383655400][T0xffffbe538020][ERROR] copy_back_run_outputs_impl: [runtime_maker.cpp:1097] error detail: orch_error_code=5 INVALID_ARGS - an orchestration API rejected its arguments (bad alloc_tensors info, illegal nested scope, unknown task id in set_dependencies, or an CoreTaskArgs carrying an error flag)
+[mono_ns=305281383658680][T0xffffbe538020][ERROR] copy_back_run_outputs_impl: [runtime_maker.cpp:1097] error hint: an orchestration bug, not a capacity problem -- resizing the rings will not help; recheck the arguments of the orchestration API calls listed above. See docs/troubleshooting/device-error-codes.md
+[mono_ns=305281383660870][T0xffffbe538020][WARN] copy_back_run_outputs_impl: [runtime_maker.cpp:1119] Skipping tensor copy-back because execution failed
+[mono_ns=305281383663920][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=1 name=chip.run.validate ts=305281383652080 dur=10780
+[mono_ns=305281383671870][T0xffffbe538020][TIMING] emit_host_span: [STRACE] v=1 pid=1634661 tid=1634661 inv=1 hid=223ac43709ad3a67 depth=0 name=chip.run ts=305281359589830 dur=24080810 run_id=0 dispatch_id=0 slot_id=0 generation=1 run_epoch=1
+[mono_ns=305287633652030][T0xffffbe538020][WARN] force_reset_device: [device_runner.cpp:1379] force_reset_device: aclrtResetDeviceForce(2) cleared the poisoned card (probe confirmed clean)
+[mono_ns=305287633680000][T0xffffbe538020][WARN] retire_device_generation_after_confirmed_reset: [device_runner_base.cpp:4837] device 2: confirmed reset retired the suspect generation; fault notices reported before it are no longer this device's (generation is now 1)
+[mono_ns=305293850951740][T0xffffbe538020][WARN] finalize_common_impl: [device_runner_base.cpp:3234] Fatal teardown: force reset/quarantine finished; skipping per-resource RTS destroy/free calls
+[mono_ns=305293851254520][T0xffffbe538020][TIMING] finalize_common_impl: [device_runner_base.cpp:3379] Callable images abandoned: device=2 runner=0xaaab185431c0 count=1
+[mono_ns=305293851291140][T0xffffbe538020][WARN] finalize_common_impl: [device_runner_base.cpp:3582] Fatal teardown: host-side ownership cleared without further device calls
+[mono_ns=305293851292980][T0xffffbe538020][WARN] finalize_impl: [device_runner.cpp:1467] DeviceRunner finalized after fatal device failure
+F
+=================================== FAILURES ===================================
+_____________ test_cannbotdsl_rejects_partial_dynamic_barrier[tmr] _____________
+tests/st/runtime/external_kernel/test_cannbotdsl.py:204: in test_cannbotdsl_rejects_partial_dynamic_barrier
+    with pytest.raises(RuntimeError, match=rf"{phase}_native_run failed with code -5\b"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'finalize_native_run failed with code -5\\b'
+E     Actual message: 'chip run lane is poisoned: finalize_native_run failed with code 507018 (run_id=0 slot=0 generation=1 dispatch_id=0 run_epoch=1)'
+=============================== warnings summary ===============================
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_rejects_partial_dynamic_barrier[tmr]
+  <workspace>/issue75-env/pypto-pr/tests/st/conftest.py:584: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    return RunConfig(
+
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_rejects_partial_dynamic_barrier[tmr]
+  /home/server-toolkits/miniconda3/lib/python3.12/dataclasses.py:1588: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    return obj.__class__(**changes)
+
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_rejects_partial_dynamic_barrier[tmr]
+  <jit:program>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_rejects_partial_dynamic_barrier[tmr]
+  <jit:program>:9: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_rejects_partial_dynamic_barrier[tmr]
+1 failed, 13 deselected, 4 warnings in 19.44s
+[npu-lock] 已释放设备 2 的锁
+=== 任务失败 (exit=1) ===

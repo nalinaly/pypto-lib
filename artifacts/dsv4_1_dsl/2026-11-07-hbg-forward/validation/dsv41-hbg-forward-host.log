@@ -1,0 +1,82 @@
+<workspace>/issue75-env/pypto-pr/python/pypto/runtime/kernel_compiler.py:40: RuntimePinWarning: runtime/ is at f1c21abf77c7 but this PyPTO commit pins 6b6b88f2353c. You are running a runtime other than the one this PyPTO was tested against.
+  git submodule update --init runtime
+  check_runtime_pin()
+执行环境 <workspace>/issue75-env/pypto-pr/python/pypto/__init__.py <workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/python/simpler/__init__.py f1c21abf77c73cb6f03dd67de51f667755a1bfcb
+[RUN] compile ...
+2026-11-07 01:49:47.634 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable '_attended' in function 'attend_packed' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/sparse_attention.py:1695:9
+2026-11-07 01:49:47.634 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'scores_tid' in function 'decode_c2a_indexer' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_indexer.py:295:5
+2026-11-07 01:49:47.634 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable 'scores_tid' in function 'score_select_reindex' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_indexer.py:83:9
+2026-11-07 01:49:52.094 I | [perf_hint] 1 hint across 1 site; see <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_fwd_20261107_014947_0ytjkpgl/report/perf_hints.log
+2026-11-07 01:49:52.108 I | [perf_hint] 3 hints across 1 site; see <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_fwd_20261107_014947_0ytjkpgl/report/perf_hints.log
+2026-11-07 01:49:52.649 I | [perf_hint] 6 hints across 6 sites; see <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_fwd_20261107_014947_0ytjkpgl/report/perf_hints.log
+HOST_MIXED []
+HOST_READS ['runs_inline12684__ssa_v0', 'flags_inline12669__ssa_v0', 'moe_num_tokens__ssa_v0', 'attention_num_tokens__ssa_v0', 'runs_inline10566__ssa_v0', 'runs_inline12101__ssa_v0']
+DEVICE_MIXED ['runs_inline10587__ssa_v0', 'runs_inline12705__ssa_v0', 'runs_inline10566__ssa_v0', 'runs_inline12684__ssa_v0', 'flags_inline12680__ssa_v0', 'runs_inline12101__ssa_v0', 'runs_inline12122__ssa_v0']
+Failed to generate orchestration 'l2_decode_fwd': host_build_graph requires separate tensor arguments for host tensor.read/write and device kernels. Pass the control tensor and device tensor in separate parameters.
+[RUN] compile done (49.15s)
+Traceback (most recent call last):
+  File "<workspace>/artifacts/dsv41-hbg-forward-20261107/run.py", line 36, in <module>
+    runpy.run_path(str(entry), run_name='__main__')
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "<workspace>/artifacts/dsv41-hbg-forward-20261107/forward.py", line 113, in <module>
+    namespace = runpy.run_path(str(entry), run_name='__main__')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/decode_fwd.py", line 1255, in <module>
+    result = run(
+             ^^^^
+  File "<workspace>/artifacts/dsv41-hbg-forward-20261107/forward.py", line 69, in compile_forward
+    result = original_run(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1816, in run
+    return _run_pipeline(
+           ^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1565, in _run_pipeline
+    compiled = compile_step(cfg, compile_state)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/golden/runner.py", line 1741, in _compile
+    return fn.compile(*dummy_args, config=cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1462, in compile
+    compiled, _ordered_args, _run_config = self._resolve_compiled(args, kwargs, allow_signature_mode=True)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1284, in _resolve_compiled
+    compiled = self._cache[key] = build()
+                                  ^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1217, in build
+    return self._compile(
+           ^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/jit/decorator.py", line 1687, in _compile
+    return ir_compile(parsed, skip_ptoas=skip_ptoas, **ir_compile_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/ir/compile.py", line 467, in compile
+    result = _compile_to_files(
+             ^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/ir/compile.py", line 684, in _compile_to_files
+    files = generate(
+            ^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/backend/pto_backend.py", line 1962, in generate
+    return _generate_with_distributed(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/backend/pto_backend.py", line 2033, in _generate_with_distributed
+    chip_files = _generate_single_chip(
+                 ^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/issue75-env/pypto-pr/python/pypto/backend/pto_backend.py", line 2543, in _generate_single_chip
+    raise PartialCodegenError(report, result_files)
+pypto.backend.pto_backend.PartialCodegenError: 1 function(s) failed to compile:
+
+  Function       | Error
+  ---------------+--------------------------------------------------------------
+  l2_decode_fwd  | host_build_graph requires separate tensor arguments for host
+                 | tensor.read/write and device kernels. Pass the control
+                 | tensor and device tensor in separate parameters.
+  ---------------+--------------------------------------------------------------
+
+  Full details: <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/build_output/_jit_l3_decode_fwd_20261107_014947_0ytjkpgl/next_levels/l2_decode_fwd/report/codegen_errors.txt

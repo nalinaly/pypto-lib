@@ -1,0 +1,218 @@
+<workspace>/issue75-env/pypto-pr/python/pypto/runtime/kernel_compiler.py:40: RuntimePinWarning: runtime/ is at f1c21abf77c7 but this PyPTO commit pins 6b6b88f2353c. You are running a runtime other than the one this PyPTO was tested against.
+  git submodule update --init runtime
+  check_runtime_pin()
+执行环境 <workspace>/issue75-env/pypto-pr/python/pypto/__init__.py <workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/python/simpler/__init__.py f1c21abf77c73cb6f03dd67de51f667755a1bfcb
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [  3%]
+........................................................................ [  7%]
+.................................F...................................... [ 11%]
+........................................................................ [ 14%]
+........................................................................ [ 18%]
+........................................................................ [ 22%]
+........................................................................ [ 25%]
+........................................................................ [ 29%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 40%]
+........................................................................ [ 44%]
+........................................................................ [ 48%]
+........................................................................ [ 51%]
+........................................................................ [ 55%]
+........................................................................ [ 59%]
+........................................................................ [ 62%]
+........................................................................ [ 66%]
+........................................................................ [ 70%]
+........................................................................ [ 73%]
+........................................................................ [ 77%]
+........................................................................ [ 81%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 96%]
+........................................................................ [ 99%]
+....                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_bare_inline_helper_specializes_runtime_slice_extent[BackendType.Ascend950] _
+[gw1] linux -- Python 3.12.15 <workspace>/pypto-a5-dev/pypto-lib-dsv41-hbg-static/.venv/bin/python
+<workspace>/issue75-env/pypto-pr/tests/ut/jit/test_cannbotdsl_adapter.py:237: in test_bare_inline_helper_specializes_runtime_slice_extent
+    assert "arg0.shape[1] = 32;" in source
+E   assert 'arg0.shape[1] = 32;' in '#include "c_api/asc_simd.h"\n#include "tensormap_and_ringbuffer/tensor.h"\n#include "intrinsic.h"\n#pragma push_macro...(PIPE_ALL);\n    asc_dcci_entire_out();\n    dsb(DSB_DDR);\n    set_atomic_none();\n    asc_set_ctrl(saved_ctrl);\n}\n'
+=============================== warnings summary ===============================
+tests/ut/jit/test_cache.py::TestResolveEnablePyptoL0cDoubleBuffer::test_run_config_field_wins_over_default
+  <workspace>/issue75-env/pypto-pr/tests/ut/jit/test_cache.py:553: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    cfg = RunConfig(platform="a2a3", memory_planner=MemoryPlanner.PTOAS)
+
+tests/ut/jit/test_cache.py::TestResolveEnablePyptoL0cDoubleBuffer::test_unset_run_config_field_defers_to_context
+  <workspace>/issue75-env/pypto-pr/tests/ut/jit/test_cache.py:557: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    cfg = RunConfig(platform="a2a3")
+
+tests/ut/jit/test_artifact_cache.py::test_forked_child_does_not_wait_for_parent_build
+  /home/server-toolkits/miniconda3/lib/python3.12/multiprocessing/popen_fork.py:66: DeprecationWarning: This process (pid=1666316) is multi-threaded, use of fork() may lead to deadlocks in the child.
+    self.pid = os.fork()
+
+tests/ut/jit/test_cannbotdsl_adapter.py::test_discovery_without_provider_hook[BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_same_kernel_switches_runtime_without_reusing_foreign_wrapper[BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_same_kernel_switches_runtime_without_reusing_foreign_wrapper[BackendType.Ascend950]
+  <jit:entry>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_cannbotdsl_adapter.py::test_bare_inline_helper_specializes_runtime_slice_extent[BackendType.Ascend950]
+  <jit:entry>:7: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_cannbotdsl_adapter.py: 3 warnings
+tests/ut/jit/test_extern_kernel.py: 23 warnings
+  <string>:5: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape0-second_dtype0-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape1-second_dtype1-BackendType.Ascend950]
+tests/ut/jit/test_cannbotdsl_adapter.py::test_nested_foreign_calls_preserve_tensor_specializations[second_shape2-second_dtype2-BackendType.Ascend950]
+  <string>:10: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_decorator.py::TestClosureConstantFolding::test_rebound_closure_cell_recompiles_instead_of_reusing
+  <workspace>/issue75-env/pypto-pr/tests/ut/jit/test_decorator.py:5868: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    compiled_before = entry.compile(a, out, config=RunConfig(platform="a2a3sim"))
+
+tests/ut/jit/test_decorator.py::TestClosureConstantFolding::test_rebound_closure_cell_recompiles_instead_of_reusing
+  <workspace>/issue75-env/pypto-pr/tests/ut/jit/test_decorator.py:5870: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    compiled_after = entry.compile(a, out, config=RunConfig(platform="a2a3sim"))
+
+tests/ut/jit/test_decorator.py::TestClosureConstantFolding::test_rebound_closure_cell_recompiles_instead_of_reusing
+  <workspace>/issue75-env/pypto-pr/tests/ut/jit/test_decorator.py:5874: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    assert entry.compile(a, out, config=RunConfig(platform="a2a3sim")) is compiled_after
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_inline_compiled_program_drops_dep_function
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_inline_body_spliced_into_entry
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'add_inline' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['c']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_nested_inline_compiles
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'leaf' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['out']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_nested_inline_compiles
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'mid' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['out']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_nested_inline_diamond
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'shared' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['out']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_nested_inline_diamond
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'a_helper' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['out']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_nested_inline_diamond
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'b_helper' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['out']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_mixed_positional_and_keyword_call
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'helper' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['out']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_inline_multi_return_tuple_unpack
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_inline_multi_return_direct_return
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'two_returns' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['o0', 'o1']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_inline_with_reshape_compiles
+tests/ut/jit/test_decorator.py::TestInlineFuncIntegration::test_inline_with_subscript_slice_compiles
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'copy_inline' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['y']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_extern_kernel.py: 10 warnings
+  <string>:9: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_extern_kernel.py::test_foreign_workspace_writeback_preserves_shape_expression[mixed]
+  <string>:11: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+tests/ut/jit/test_jit_compile_extraction.py::TestCompileForwardsRunConfig::test_compile_extracts_config_kwarg
+  <workspace>/issue75-env/pypto-pr/tests/ut/jit/test_jit_compile_extraction.py:255: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    compiled = add_kernel.compile(a, b, c, config=RunConfig(platform="a2a3sim"))
+
+tests/ut/jit/test_jit_compile_extraction.py::TestConstexprThroughDeps::test_two_callers_of_one_dep_each_get_a_function
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'left' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['o']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_jit_compile_extraction.py::TestConstexprThroughDeps::test_two_callers_of_one_dep_each_get_a_function
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'right' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['o']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_qwen3_decode_lower
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_input_rmsnorm_keeps_four_stages_and_shared_scratch
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'input_rmsnorm' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['normed_states']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_qwen3_decode_lower
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_input_rmsnorm_keeps_four_stages_and_shared_scratch
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'q_projection' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['q_proj']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_qwen3_decode_lower
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_input_rmsnorm_keeps_four_stages_and_shared_scratch
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'k_projection' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['k_proj']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_qwen3_decode_lower
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_input_rmsnorm_keeps_four_stages_and_shared_scratch
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'v_projection' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['v_proj']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_qwen3_decode_lower
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_input_rmsnorm_keeps_four_stages_and_shared_scratch
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'rope_kv_cache_update' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['k_cache', 'v_cache', 'all_q_padded']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_qwen3_decode_lower
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_input_rmsnorm_keeps_four_stages_and_shared_scratch
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'out_projection_residual' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['resid1_tile']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_qwen3_decode_lower
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_input_rmsnorm_keeps_four_stages_and_shared_scratch
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'post_rmsnorm' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['post_norm_tile']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_qwen3_decode_lower
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_input_rmsnorm_keeps_four_stages_and_shared_scratch
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'mlp_block' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['mlp_tile']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_qwen3_decode_lower
+tests/ut/jit/test_qwen3_decode.py::TestQwen3JITLowering::test_input_rmsnorm_keeps_four_stages_and_shared_scratch
+  <workspace>/issue75-env/pypto-pr/python/pypto/jit/specializer.py:2272: DeprecationWarning: @pl.jit.inline helper 'down_projection_residual' uses pl.Out[...]/pl.InOut[...] on parameter(s) ['out']. Direction annotations are deprecated for inline helpers because the body is spliced at the call site before SSA conversion — tensor writes reach the caller's storage while name rebindings stay local. Drop the wrapper; bare pl.Tensor[...] works the same.
+    return self._specialize_python_function(ctx)
+
+tests/ut/jit/test_split_k.py::test_acc_to_bf16_gm_store_compiles_on_both_backends[a2a3]
+tests/ut/jit/test_split_k.py::test_acc_to_bf16_gm_store_compiles_on_both_backends[a5]
+  <workspace>/issue75-env/pypto-pr/tests/ut/jit/test_split_k.py:621: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    config=RunConfig(platform=platform),
+
+tests/ut/jit/test_spmd.py::test_inline_spmd_reads_loop_carried_tensor
+  <workspace>/issue75-env/pypto-pr/tests/ut/jit/test_spmd.py:343: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    compiled = repro.compile(config=RunConfig(platform="a5", save_kernels_dir=str(tmp_path / "compiled")))
+
+tests/ut/jit/test_warmup.py::test_warmup_honors_fresh_output_and_platform
+  <workspace>/issue75-env/pypto-pr/tests/ut/jit/test_warmup.py:158: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    config = RunConfig(platform="a2a3", save_kernels_dir=str(tmp_path / "fresh"))
+
+tests/ut/codegen/test_external_kernel.py::test_external_mixed_kernel_codegen
+  <workspace>/issue75-env/pypto-pr/tests/ut/codegen/test_external_kernel.py:101: DeprecationWarning: ir.compile(platform=...) is deprecated; use backend_type and execution_mode instead.
+    ir_compile(program, skip_ptoas=False, platform="a2a3", output_dir=str(out_dir))
+
+tests/ut/codegen/test_external_kernel.py::test_all_external_graph_emits_manifest_when_ptoas_is_skipped
+  <workspace>/issue75-env/pypto-pr/tests/ut/codegen/test_external_kernel.py:133: DeprecationWarning: ir.compile(platform=...) is deprecated; use backend_type and execution_mode instead.
+    ir_compile(program, skip_ptoas=True, platform="a2a3", output_dir=str(out_dir))
+
+tests/ut/jit/test_specialize.py: 10 warnings
+  <workspace>/issue75-env/pypto-pr/tests/ut/jit/test_specialize.py:332: DeprecationWarning: RunConfig(platform=...) is deprecated; use backend_type and execution_mode instead.
+    return RunConfig(platform="a2a3", distributed_config=DistributedConfig(device_ids=[0, 1]))
+
+tests/ut/ir/transforms/test_verify_hard_syncall_occupancy.py::TestHardSyncallOccupancy::test_legacy_function_attr_is_used_when_dispatch_has_no_spec
+tests/ut/ir/transforms/test_verify_hard_syncall_occupancy.py::TestHardSyncallOccupancy::test_dispatch_spec_overrides_a_legacy_function_attr
+  <string>:17: DeprecationWarning: @pl.function(attrs={...}) is deprecated: a decorator is evaluated before the signature binds, so it cannot reference parameters. Use pl.func_attr({...}) as the first statement of the function body instead.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/ut/jit/test_cannbotdsl_adapter.py::test_bare_inline_helper_specializes_runtime_slice_extent[BackendType.Ascend950]
+1 failed, 1947 passed, 101 warnings in 302.80s (0:05:02)

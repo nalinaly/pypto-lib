@@ -1,0 +1,82 @@
+[INFO] Building for platforms: a5
+[INFO]   Building a5/host_build_graph...
+[INFO] Compiling AICore, AICPU, Host in parallel...
+[INFO] [AICORE] Running CMake configuration...
+[INFO] [AICPU] Running CMake configuration...
+[INFO] [HOST] Running CMake configuration...
+[INFO]   Building a5/tensormap_and_ringbuffer...
+[INFO] Compiling AICore, AICPU, Host in parallel...
+[INFO] [HOST] Running CMake configuration...
+[INFO] [AICPU] Running CMake configuration...
+[INFO] [AICORE] Running CMake configuration...
+[INFO] [AICPU] Running Build...
+[INFO] [AICPU] Running Build...
+[INFO] [AICORE] Running Build...
+[INFO] [AICORE] Running Build...
+[INFO] [HOST] Running Build...
+[INFO] [HOST] Running Build...
+[INFO] Build complete!
+[ERROR] [AICORE] Build failed with exit code -15
+[ERROR] [AICORE] Build stdout:
+[ 11%] Compiling aicore_legacy_executor for AIV
+[ 22%] Compiling kernel for AIV
+[ 33%] Compiling aicore_executor for AIV
+note: src/a5/runtime/host_build_graph/aicore/aicore_legacy_executor.cpp:202:31: Identify the scenario where the NOP instruction is inserted to prevent a running failure.
+[ 44%] Compiling aicore_legacy_executor for AIC
+note: src/a5/runtime/host_build_graph/aicore/aicore_legacy_executor.cpp:202:31: Identify the scenario where the NOP instruction is inserted to prevent a running failure.
+[ 55%] Compiling kernel for AIC
+[ 66%] Compiling aicore_executor for AIC
+[ERROR] [AICORE] Build stderr:
+[local-build-limit] cmake --build: 2 workers
+gmake[2]: *** [CMakeFiles/aicore_kernel.dir/build.make:89: aicore_executor_aic.o] Terminated
+gmake[2]: *** Waiting for unfinished jobs....
+gmake[2]: *** [CMakeFiles/aicore_kernel.dir/build.make:104: aicore_executor_aiv.o] Terminated
+gmake[1]: *** [CMakeFiles/Makefile2:87: CMakeFiles/aicore_kernel.dir/all] Error 2
+gmake: *** [Makefile:91: all] Error 2
+[ERROR]   Failed to build a5/host_build_graph: Build failed for AICORE with exit code -15
+Traceback (most recent call last):
+  File "<stdin>", line 6, in <module>
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "<workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/simpler_setup/build_runtimes.py", line 341, in <module>
+    main()
+  File "<workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/simpler_setup/build_runtimes.py", line 324, in main
+    build_all(
+  File "<workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/simpler_setup/build_runtimes.py", line 250, in build_all
+    future.result()
+  File "/home/server-toolkits/miniconda3/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/server-toolkits/miniconda3/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/simpler_setup/build_runtimes.py", line 238, in _build_runtime
+    builder.get_binaries(
+  File "<workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/simpler_setup/runtime_builder.py", line 465, in get_binaries
+    aicore_path = fut_aicore.result()
+                  ^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/server-toolkits/miniconda3/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/server-toolkits/miniconda3/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/simpler_setup/runtime_builder.py", line 444, in _compile_target
+    return compiler.compile(  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/simpler_setup/runtime_compiler.py", line 399, in compile
+    return _build(str(platform_build_dir))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/simpler_setup/runtime_compiler.py", line 337, in _build
+    binary_path = self._run_compilation(
+                  ^^^^^^^^^^^^^^^^^^^^^^
+  File "<workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/simpler_setup/runtime_compiler.py", line 514, in _run_compilation
+    self._run_build_step(build_cmd, build_dir, platform, "Build")
+  File "<workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/simpler_setup/runtime_compiler.py", line 435, in _run_build_step
+    raise RuntimeError(f"{step_name} failed for {platform} with exit code {result.returncode}")
+RuntimeError: Build failed for AICORE with exit code -15

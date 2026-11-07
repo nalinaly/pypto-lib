@@ -1,0 +1,65 @@
+任务已提交: task_20261107_013000_136839113635 (断开后可用 task-submit --wait task_20261107_013000_136839113635 重连)
+等待任务执行: task_20261107_013000_136839113635 (Ctrl+C 终止任务)
+[npu-lock] 获取设备 1 的锁 (无超时)...
+[npu-lock] 已获取设备 1 的锁 (pid=1369137)
+<workspace>/issue75-env/pypto-pr/python/pypto/runtime/kernel_compiler.py:40: RuntimePinWarning: runtime/ is at f1c21abf77c7 but this PyPTO commit pins 6b6b88f2353c. You are running a runtime other than the one this PyPTO was tested against.
+  git submodule update --init runtime
+  check_runtime_pin()
+执行环境 <workspace>/issue75-env/pypto-pr/python/pypto/__init__.py <workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/python/simpler/__init__.py f1c21abf77c73cb6f03dd67de51f667755a1bfcb
+FF
+=================================== FAILURES ===================================
+__________________ test_cannbotdsl_partial_spmd_context[tmr] ___________________
+<workspace>/issue75-env/pypto-pr/tests/st/runtime/external_kernel/test_cannbotdsl.py:81: running the test EXITED with status 3
+------------------------------- captured stderr --------------------------------
+[mono_ns=303968588228270][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=0 hid=0 depth=0 name=chip.prewarm.build ts=303968565364500 dur=22857310
+[mono_ns=303968595813020][T0xffff8c819020][TIMING] log_callable_image: Callable image: device=1 runner=0xaaaad83dfe00 chip_hash=0xcce5e7e7d48f7f8b chip_dev=0x12000001d000 upload_bytes=609416 children=1
+[mono_ns=303968595821840][T0xffff8c819020][TIMING] log_callable_image: Callable code: device=1 runner=0xaaaad83dfe00 chip_hash=0xcce5e7e7d48f7f8b chip_dev=0x12000001d000 func_id=0 code_begin=0x1200000b1b30 code_end_exclusive=0x1200000b1c58 code_bytes=296 code_fnv1a64=0x616cdfd606bc9294
+[mono_ns=303968595827760][T0xffff8c819020][TIMING] record_device_orch_callable: [device_runner_base.cpp:2727] Callable registration: device=1 runner=0xaaaad83dfe00 cid=0 chip_hash=0xcce5e7e7d48f7f8b aicore_image_hash=0x1d869685cdd6d65f orch_hash=0x54fc5b20ed9c6471 orch_bytes=591280
+[mono_ns=303968602194190][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=2 name=chip.run.bind.args ts=303968602191700 dur=430
+[mono_ns=303968602202260][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=2 name=chip.run.bind.prebuilt ts=303968602199930 dur=1190
+[mono_ns=303968602204790][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=1 name=chip.run.bind ts=303968602169600 dur=34120
+[mono_ns=303968602207100][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=1 name=chip.run.publish_image ts=303968602206030 dur=90
+[mono_ns=303968602209350][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=1 name=chip.run.stage_inputs ts=303968602208380 dur=40
+[mono_ns=303968611389630][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=1 name=chip.run.prepare_execution ts=303968602218040 dur=9168610
+[mono_ns=303968611963260][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=1 name=chip.run.proof.record ts=303968611960890 dur=0 f=0xaaaad4ed1ba0 e=0xaaaad854ccc8 s=0xaaaadaf18138 role=0 ep=1 gen=1 disp=0 slot=0
+[mono_ns=303968611970520][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=2 name=chip.run.runner_run.aicpu_launch ts=303968611969340 dur=0
+[mono_ns=303968611985670][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=1 name=chip.run.proof.record ts=303968611984300 dur=0 f=0xaaaad4ed1ba0 e=0xaaaadadd26a8 s=0xaaaadadd3c68 role=1 ep=1 gen=1 disp=0 slot=0
+[mono_ns=303968612957210][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=0 hid=0 depth=1 name=chip.run.proof.event_query ts=303968612955330 dur=0 e=0xaaaad854ccc8 rc=0 status_valid=1 status=1 timeout_ms=0 fresh=1
+[mono_ns=303968612964590][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=0 hid=0 depth=1 name=chip.run.proof.consume ts=303968612963060 dur=0 f=0xaaaad4ed1ba0 e=0xaaaad854ccc8 role=0 ep=1 gen=1 disp=0 slot=0 op=query rc=0 c=1 cache=0 owner=1
+[mono_ns=303968612968180][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=0 hid=0 depth=1 name=chip.run.proof.event_query ts=303968612967030 dur=0 e=0xaaaadadd26a8 rc=0 status_valid=1 status=1 timeout_ms=0 fresh=1
+[mono_ns=303968612973620][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=0 hid=0 depth=1 name=chip.run.proof.consume ts=303968612972330 dur=0 f=0xaaaad4ed1ba0 e=0xaaaadadd26a8 role=1 ep=1 gen=1 disp=0 slot=0 op=query rc=0 c=1 cache=0 owner=1
+[mono_ns=303968613002000][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=1 name=chip.run.runner_run ts=303968611405400 dur=1595290
+[mono_ns=303968613005440][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=2 name=chip.run.runner_run.device_wall ts=0 dur=417052 clk=dev dev_id=1 dev_start_cycle=225555307316888 dev_end_cycle=225555307733940 dev_cnt_hz=1000000000
+[mono_ns=303968613007740][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=3 name=chip.run.runner_run.device_wall.preamble ts=0 dur=355632 clk=dev
+[mono_ns=303968613009870][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=3 name=chip.run.runner_run.device_wall.graph_build ts=13436 dur=392883 clk=dev
+[mono_ns=303968613011970][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=3 name=chip.run.runner_run.device_wall.config_validate ts=14385 dur=1518 clk=dev
+[mono_ns=303968613014020][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=3 name=chip.run.runner_run.device_wall.arena_wire ts=15928 dur=2048 clk=dev
+[mono_ns=303968613016050][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=3 name=chip.run.runner_run.device_wall.sm_reset ts=18000 dur=2678 clk=dev
+[mono_ns=303968613020530][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=3 name=chip.run.runner_run.device_wall.post_orch ts=406828 dur=4673 clk=dev
+[mono_ns=303968613022610][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=3 name=chip.run.runner_run.device_wall.orch ts=20734 dur=15597 clk=dev
+[mono_ns=303968613024630][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=3 name=chip.run.runner_run.device_wall.sched ts=355319 dur=20659 clk=dev
+[mono_ns=303968613301390][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=2 name=chip.run.runner_run.device_boundaries ts=303968613299990 dur=0 clk=host dev_id=1 aic_start=225555306790 aic_rc=0 wo_end=0 wo_rc=-1000 ts_hz=1000000
+[mono_ns=303968613306560][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=1 name=chip.run.claim_release ts=303968613305400 dur=190
+[mono_ns=303968613314390][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=0 hid=0 depth=1 name=chip.run.borrow_release ts=303968613311380 dur=0 ctx=0xaaaad83dfe00 borrow=1 ep=1 gen=1 disp=0 slot=0 run=0 proof=1 keep=0
+[mono_ns=303968613326100][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=0 hid=0 depth=1 name=chip.run.proof.observe_begin ts=303968613324880 dur=0 ep=1 gen=1 disp=0 slot=0 aicpu=0xaaaadadd3c68 aicore=0xaaaadaf18138
+[mono_ns=303968613332100][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=0 hid=0 depth=1 name=chip.run.proof.stream_wait ts=303968613330910 dur=0 role=AICPU s=0xaaaadadd3c68 rc=0 timeout_ms=50000 fresh=1
+[mono_ns=303968613337570][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=0 hid=0 depth=1 name=chip.run.proof.stream_wait ts=303968613336500 dur=0 role=AICore s=0xaaaadaf18138 rc=0 timeout_ms=50000 fresh=1
+[mono_ns=303968613340510][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=0 hid=0 depth=1 name=chip.run.proof.observe_return ts=303968613339330 dur=0 ep=1 gen=1 disp=0 slot=0 rc=0 cached=1 physical=1 polled=0 poll=0 retained=1
+[mono_ns=303968613365600][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=1 name=chip.run.validate ts=303968613346050 dur=18330
+[mono_ns=303968613372250][T0xffff8c819020][TIMING] emit_host_span: [STRACE] v=1 pid=1369699 tid=1369699 inv=1 hid=54fc5b20ed9c6471 depth=0 name=chip.run ts=303968602151460 dur=11219400 run_id=0 dispatch_id=0 slot_id=0 generation=1 run_epoch=1
+[mono_ns=303968619832260][T0xffff8c819020][TIMING] finalize_common_impl: [device_runner_base.cpp:3372] Callable image freed: device=1 runner=0xaaaad83dfe00 chip_hash=0xcce5e7e7d48f7f8b chip_dev=0x12000001d000 upload_bytes=609416
+__________________ test_cannbotdsl_partial_spmd_context[hbg] ___________________
+<workspace>/issue75-env/pypto-pr/tests/st/runtime/external_kernel/test_cannbotdsl.py:81: running the test EXITED with status 3
+=============================== warnings summary ===============================
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_partial_spmd_context[tmr]
+tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_partial_spmd_context[hbg]
+  /home/server-toolkits/miniconda3/lib/python3.12/multiprocessing/popen_fork.py:66: DeprecationWarning: This process (pid=1369174) is multi-threaded, use of fork() may lead to deadlocks in the child.
+    self.pid = os.fork()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_partial_spmd_context[tmr]
+FAILED tests/st/runtime/external_kernel/test_cannbotdsl.py::test_cannbotdsl_partial_spmd_context[hbg]
+2 failed, 12 deselected, 2 warnings in 9.32s
+[npu-lock] 已释放设备 1 的锁
+=== 任务失败 (exit=1) ===

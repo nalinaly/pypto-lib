@@ -1,0 +1,8 @@
+<workspace>/issue75-env/pypto-pr/python/pypto/runtime/kernel_compiler.py:40: RuntimePinWarning: runtime/ is at f1c21abf77c7 but this PyPTO commit pins 6b6b88f2353c. You are running a runtime other than the one this PyPTO was tested against.
+  git submodule update --init runtime
+  check_runtime_pin()
+执行环境 <workspace>/issue75-env/pypto-pr/python/pypto/__init__.py <workspace>/pypto-a5-dev/logs/ds41-hbg-forward40-20261107/runtime-snapshot/python/simpler/__init__.py f1c21abf77c73cb6f03dd67de51f667755a1bfcb
+[RUN] compile ...
+2026-11-07 01:58:17.930 W | [warning] [UnusedVariableCheck] (pipeline_input) Unused variable '_attended' in function 'attend_packed' at <workspace>/pypto-a5-dev/pypto-lib-dsv41-dsl/models/deepseek_v4_1_flash/sparse_attention.py:1695:9
+[RUN] compile done (12.38s)
+[RUN] PASS (12.38s)
